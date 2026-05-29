@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="교육팀 TMS">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="180" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0e1626"/>
+      <stop offset="100%" stop-color="#080c14"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+  </defs>
+  <rect width="180" height="180" rx="40" fill="url(#bg)"/>
+  <text x="90" y="46" text-anchor="middle" fill="#f8fafc" font-family="system-ui,-apple-system,sans-serif" font-weight="700" font-size="26">TMS</text>
+  <text x="90" y="66" text-anchor="middle" fill="#94a3b8" font-family="system-ui,-apple-system,sans-serif" font-weight="600" font-size="13">교육팀</text>
+  <rect x="44" y="98" width="20" height="44" rx="5" fill="url(#bar)"/>
+  <rect x="80" y="78" width="20" height="64" rx="5" fill="url(#bar)"/>
+  <rect x="116" y="58" width="20" height="84" rx="5" fill="#0ea5e9"/>
+</svg>

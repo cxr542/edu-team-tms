@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "npm install",
+  "buildCommand": "npm run build:team",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/((?!api/|assets/|ledger-snapshot\\.json|journal-snapshot\\.json|favicon\\.svg|manifest\\.webmanifest|apple-touch-icon\\.svg|icon-512\\.svg|okestro-logo-white\\.png).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

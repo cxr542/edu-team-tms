@@ -1,0 +1,31 @@
+{
+  "name": "tms-app",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "import:excel": "node scripts/import-team-building-excel.mjs",
+    "publish:team": "node scripts/publish-team-snapshot.mjs",
+    "publish:journal": "node scripts/publish-journal-snapshot.mjs",
+    "build:team": "npm run publish:team && npm run publish:journal && vite build",
+    "build": "vite build",
+    "deploy:vercel": "npm run build:team && npx vercel deploy --prod",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.4.0",
+    "canvas-confetti": "^1.6.0",
+    "lucide-react": "^0.344.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.1.6"
+  }
+}

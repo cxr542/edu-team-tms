@@ -1,0 +1,33 @@
+{
+  "name": "교육팀 TMS",
+  "short_name": "교육팀 TMS",
+  "description": "교육팀 팀 빌딩비 조회·관리",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#080c14",
+  "theme_color": "#10b981",
+  "lang": "ko",
+  "dir": "ltr",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.svg",
+      "sizes": "180x180",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

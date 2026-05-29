@@ -1,0 +1,135 @@
+import { LEAVE_MEMO_TASK_RE } from './journalLeavePresets';
+
+export const LUNCH_HOURS = 1.5;
+export const WORK_DAY_HOURS = 8;
+export const LUNCH_LEAVE_MM = Math.round((LUNCH_HOURS / WORK_DAY_HOURS) * 10000) / 10000;
+
+export function roundMm(v) {
+  return Math.round(v * 10000) / 10000;
+}
+
+export function hoursToMm(hours) {
+  return roundMm((Number(hours) || 0) / WORK_DAY_HOURS);
+}
+
+export function getTaskMmAxis(task) {
+  if (task.mmAxis === 'work' || task.mmAxis === 'improve') return task.mmAxis;
+  return task.cat === 'ai' ? 'improve' : 'work';
+}
+
+export function sumDayWorkHours(data) {
+  return data.tasks.reduce((sum, t) => {
+    if (LEAVE_MEMO_TASK_RE.test(t.title)) return sum;
+    return sum + (Number(t.actual) || 0);
+  }, 0);
+}
+
+export function getExpectedWorkHours(data) {
+  if (data.holiday && data.mm.leave >= 1) return 0;
+  if ((Number(data.mm.leave) || 0) >= 0.5 - 0.001) {
+    return Math.max(0, WORK_DAY_HOURS * 0.5 - LUNCH_HOURS);
+  }
+  return WORK_DAY_HOURS - LUNCH_HOURS;
+}
+
+export function getDayHoursInfo(data) {
+  const expected = getExpectedWorkHours(data);
+  if (expected === 0) return { show: false };
+  const total = sumDayWorkHours(data);
+  return {
+    show: true,
+    total,
+    expected,
+    isShort: total + 0.001 < expected,
+  };
+}
+
+export function getDayAvailableMm(data) {
+  if (data.holiday && (Number(data.mm.leave) || 0) >= 1) return 1;
+  return roundMm(1 - LUNCH_LEAVE_MM);
+}
+
+export function sumDayMm(data) {
+  const m = data.mm;
+  return Math.min(1, (Number(m.work) || 0) + (Number(m.improve) || 0) + (Number(m.leave) || 0));
+}
+
+export function recalcDayMmFromHours(data) {
+  if (data.holiday && (Number(data.mm.leave) || 0) >= 1) {
+    data.mm = { work: 0, improve: 0, leave: 1 };
+    return;
+  }
+  const leave = roundMm(Number(data.mm.leave) || 0);
+  data.mm.leave = leave;
+  let workH = 0;
+  let improveH = 0;
+  data.tasks.forEach((t) => {
+    if (LEAVE_MEMO_TASK_RE.test(t.title)) return;
+    const h = Number(t.actual) || 0;
+    if (getTaskMmAxis(t) === 'improve') improveH += h;
+    else workH += h;
+  });
+  let work = hoursToMm(workH);
+  let improve = hoursToMm(improveH);
+  const cap = Math.max(0, roundMm(1 - leave));
+  const sum = work + improve;
+  if (sum > cap && sum > 0) {
+    const scale = cap / sum;
+    work = roundMm(work * scale);
+    improve = roundMm(improve * scale);
+  }
+  data.mm.work = work;
+  data.mm.improve = improve;
+}
+
+export function getWeekMmStats(weekDays, month, getDayData) {
+  const inMonthDays = weekDays.filter((d) => d.getMonth() === month);
+  const count = inMonthDays.length;
+  if (count === 0) return { available: 0, logged: 0, shortage: 0, pct: 100 };
+  let availableSum = 0;
+  let loggedSum = 0;
+  inMonthDays.forEach((d) => {
+    const key = dateKey(d.getFullYear(), d.getMonth(), d.getDate());
+    const data = getDayData(key);
+    availableSum += getDayAvailableMm(data);
+    loggedSum += sumDayMm(data);
+  });
+  const available = availableSum / 5;
+  const logged = loggedSum / 5;
+  const shortage = Math.max(0, available - logged);
+  const pct = available > 0 ? Math.min(100, (logged / available) * 100) : 100;
+  return { available, logged, shortage, pct, count };
+}
+
+export function pad(n) {
+  return String(n).padStart(2, '0');
+}
+
+export function dateKey(y, m, d) {
+  return `${y}-${pad(m + 1)}-${pad(d)}`;
+}
+
+export function getWeeksInMonth(year, month) {
+  const weeks = [];
+  const first = new Date(year, month, 1);
+  const last = new Date(year, month + 1, 0);
+  let d = new Date(first);
+  const dow = d.getDay();
+  const diff = dow === 0 ? -6 : 1 - dow;
+  d.setDate(d.getDate() + diff);
+  let w = 0;
+  while (d <= last || weeks.length === 0) {
+    const days = [];
+    for (let i = 0; i < 5; i++) {
+      const copy = new Date(d);
+      copy.setDate(d.getDate() + i);
+      days.push(copy);
+    }
+    const inMonth = days.some((x) => x.getMonth() === month);
+    if (inMonth) weeks.push({ index: ++w, days, key: `w${w}` });
+    d.setDate(d.getDate() + 7);
+    if (weeks.length >= 6) break;
+    if (d > last && weeks.length > 0) break;
+  }
+  return weeks;
+}

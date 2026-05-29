@@ -1,0 +1,1851 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TMS 일일 업무일지 — UI 프로토타입</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-primary: #080c14;
+      --bg-secondary: #0e1626;
+      --bg-tertiary: #17243c;
+      --border: rgba(16, 185, 129, 0.08);
+      --border-hover: rgba(16, 185, 129, 0.25);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #475569;
+      --primary: #10b981;
+      --secondary: #0ea5e9;
+      --accent: #f59e0b;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --cat-edu: #10b981;
+      --cat-prep: #0ea5e9;
+      --cat-ai: #a78bfa;
+      --cat-other: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Pretendard', system-ui, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+    .app {
+      display: flex;
+      height: 100vh;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 280px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      flex-shrink: 0;
+    }
+
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .logo-box {
+      padding: 0.65rem 0.85rem;
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      font-weight: 800;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      color: #fff;
+    }
+
+    .logo-divider {
+      width: 1px;
+      height: 3rem;
+      background: linear-gradient(180deg, transparent, rgba(16,185,129,0.45), transparent);
+    }
+
+    .logo-title { font-size: 1.375rem; font-weight: 700; letter-spacing: -0.03em; }
+
+    .nav { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: 0.15s;
+      text-decoration: none;
+    }
+
+    .nav-item:hover { color: var(--text-primary); background: rgba(255,255,255,0.02); }
+
+    .nav-item.active {
+      color: #fff;
+      background: rgba(16,185,129,0.08);
+      border-color: rgba(16,185,129,0.2);
+    }
+
+    .nav-item svg { flex-shrink: 0; }
+
+    .proto-badge {
+      margin-top: auto;
+      padding: 0.75rem;
+      border-radius: var(--radius-sm);
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.25);
+      font-size: 0.72rem;
+      color: var(--accent);
+      line-height: 1.45;
+    }
+
+    .user-section {
+      margin-top: 1rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--secondary), var(--primary));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.85rem;
+      border: 2px solid var(--border);
+    }
+
+    .user-section h4 { font-size: 0.9rem; }
+    .user-section p { font-size: 0.75rem; color: var(--text-secondary); }
+
+    .main {
+      flex: 1;
+      min-height: 0;
+      padding: 2rem 2.5rem;
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    .glow {
+      position: fixed;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .glow-1 { top: -100px; left: 200px; background: radial-gradient(circle, rgba(14,165,233,0.08) 0%, transparent 70%); }
+    .glow-2 { bottom: -200px; right: 0; background: radial-gradient(circle, rgba(16,185,129,0.06) 0%, transparent 70%); }
+
+    .content { position: relative; z-index: 1; max-width: none; width: 100%; }
+
+    /* 1번: 월·KPI·M/M 요약만 .main 스크롤 시 상단 고정 */
+    .journal-sticky-top {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding-top: 0.25rem;
+      padding-bottom: 1rem;
+      margin-bottom: 0.5rem;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 10px 24px rgba(8, 12, 20, 0.92);
+    }
+
+    .journal-sticky-top .page-header { margin-bottom: 0; }
+    .journal-sticky-top .kpi-strip { margin-bottom: 0; }
+    .journal-sticky-top .mm-progress-panel { margin-bottom: 0; }
+
+    .page-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .month-nav {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .month-nav button {
+      width: 36px; height: 36px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .month-nav button:hover { border-color: var(--border-hover); }
+
+    .month-nav h1 { font-size: 1.5rem; font-weight: 700; min-width: 140px; text-align: center; }
+
+    .author-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      font-size: 0.875rem;
+    }
+
+    .author-chip span { color: var(--text-secondary); }
+
+    .actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1rem;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 0.8125rem;
+      cursor: pointer;
+      border: 1px solid transparent;
+      font-family: inherit;
+      transition: 0.15s;
+    }
+
+    .btn-primary { background: var(--primary); color: #042f1a; }
+    .btn-primary:hover { filter: brightness(1.08); }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border-color: var(--border);
+    }
+
+    .btn-secondary:hover { border-color: var(--border-hover); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border-color: var(--border);
+    }
+
+    .kpi-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+      padding: 1rem 1.25rem;
+      border-radius: var(--radius-md);
+      background: rgba(16,185,129,0.06);
+      border: 1px solid rgba(16,185,129,0.15);
+    }
+
+    .kpi-strip div { font-size: 0.75rem; color: var(--text-secondary); }
+    .kpi-strip strong { display: block; font-size: 1.125rem; color: var(--primary); margin-top: 0.15rem; }
+
+    .mm-progress-panel {
+      margin-bottom: 2rem;
+      padding: 1.125rem 1.35rem;
+      border-radius: var(--radius-md);
+      background: rgba(14,165,233,0.07);
+      border: 1px solid rgba(14,165,233,0.18);
+    }
+
+    .mm-progress-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.5rem 1rem;
+      margin-bottom: 0.65rem;
+    }
+
+    .mm-progress-head h2 {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .mm-progress-meta {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .mm-progress-meta strong { color: var(--secondary); }
+
+    .mm-progress-meta .shortage {
+      color: #fca5a5;
+      font-weight: 700;
+    }
+
+    .progress-track {
+      height: 12px;
+      background: rgba(0,0,0,0.35);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.35s ease;
+      background: linear-gradient(90deg, #10b981, #0ea5e9);
+    }
+
+    .progress-fill.warn {
+      background: linear-gradient(90deg, #f59e0b, #ef4444);
+    }
+
+    .week-block { margin-bottom: 2.5rem; }
+
+    .week-head {
+      margin-bottom: 0.75rem;
+    }
+
+    .week-title-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .week-title {
+      font-size: 1.0625rem;
+      font-weight: 700;
+      color: var(--secondary);
+      margin: 0;
+    }
+
+    .week-mm-meta {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .week-mm-meta .shortage { color: #fca5a5; font-weight: 700; }
+
+    .week-progress-track {
+      height: 8px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .week-progress-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(16,185,129,0.85), rgba(14,165,233,0.85));
+    }
+
+    .week-progress-fill.warn {
+      background: linear-gradient(90deg, rgba(245,158,11,0.9), rgba(239,68,68,0.85));
+    }
+
+    .week-title-old {
+      font-size: 1.0625rem;
+      font-weight: 700;
+      color: var(--secondary);
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .week-table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: rgba(14,22,38,0.6);
+    }
+
+    table.week-table {
+      width: 100%;
+      min-width: 1320px;
+      border-collapse: collapse;
+      font-size: 0.975rem;
+    }
+
+    .week-table th {
+      background: rgba(14,165,233,0.12);
+      color: var(--text-primary);
+      font-weight: 700;
+      padding: 0.85rem 0.65rem;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.06);
+      white-space: nowrap;
+      font-size: 1rem;
+    }
+
+    .week-table th.col-name { width: 88px; }
+    .week-table th.col-day { min-width: 200px; }
+    .week-table th.col-summary { min-width: 220px; background: rgba(14,165,233,0.18); }
+    .week-table th.col-next { min-width: 220px; background: rgba(14,165,233,0.18); }
+
+    .week-table td {
+      vertical-align: top;
+      padding: 0.75rem;
+      border: 1px solid rgba(255,255,255,0.05);
+      background: var(--bg-secondary);
+    }
+
+    .week-table td.name-cell {
+      text-align: center;
+      font-weight: 700;
+      font-size: 1rem;
+      background: var(--bg-tertiary);
+    }
+
+    .day-cell { min-height: 200px; }
+    .day-cell.is-holiday { background: rgba(245,158,11,0.06); }
+    .day-cell.is-selected { outline: 2px solid rgba(16,185,129,0.45); outline-offset: -2px; }
+    .day-cell.is-today {
+      box-shadow: inset 0 0 0 2px rgba(14, 165, 233, 0.55);
+      background: rgba(14, 165, 233, 0.06);
+    }
+
+    .day-cell.is-today .day-header { color: var(--secondary); }
+
+    .mm-auto-preview {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      padding: 0.5rem 0.65rem;
+      border-radius: 8px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .today-pill {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      padding: 0.1rem 0.4rem;
+      border-radius: 999px;
+      background: rgba(14, 165, 233, 0.2);
+      color: #7dd3fc;
+      margin-left: 0.25rem;
+    }
+
+    .day-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.35rem;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .day-header {
+      font-size: 0.9375rem;
+      color: var(--text-secondary);
+      font-weight: 700;
+    }
+
+    .hours-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .hours-badge.short {
+      background: rgba(239,68,68,0.14);
+      color: #fca5a5;
+      border: 1px solid rgba(239,68,68,0.3);
+    }
+
+    .hours-badge.ok {
+      background: rgba(16,185,129,0.12);
+      color: #6ee7b7;
+      border: 1px solid rgba(16,185,129,0.25);
+    }
+
+    .task-list { list-style: none; margin-bottom: 0.5rem; }
+
+    .task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.35rem;
+      padding: 0.35rem 0.4rem;
+      margin-bottom: 0.25rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.12s;
+      border: 1px solid transparent;
+    }
+
+    .task-item:hover {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,255,255,0.06);
+    }
+
+    .task-item.selected {
+      background: rgba(16,185,129,0.1);
+      border-color: rgba(16,185,129,0.25);
+    }
+
+    .cat-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-top: 0.35rem;
+      flex-shrink: 0;
+    }
+
+    .task-text { flex: 1; line-height: 1.45; font-size: 0.9375rem; }
+    .task-text small { display: block; color: var(--text-muted); font-size: 0.8125rem; margin-top: 0.2rem; }
+
+    .task-mm-pill {
+      flex-shrink: 0;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .task-mm-pill.work { background: rgba(14, 165, 233, 0.18); color: #7dd3fc; }
+    .task-mm-pill.improve { background: rgba(168, 85, 247, 0.2); color: #d8b4fe; }
+
+    .done-mark { color: var(--primary); font-size: 0.8125rem; flex-shrink: 0; }
+
+    .mm-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 1px dashed rgba(255,255,255,0.08);
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+
+    .mm-chip {
+      background: rgba(0,0,0,0.25);
+      padding: 0.2rem 0.45rem;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-family: inherit;
+      color: inherit;
+      font-size: inherit;
+    }
+
+    .mm-chip:hover { border-color: rgba(16,185,129,0.35); color: var(--primary); }
+    .mm-chip.leave-active { background: rgba(245,158,11,0.15); color: var(--accent); border-color: rgba(245,158,11,0.35); }
+
+    .day-actions {
+      display: flex;
+      gap: 0.35rem;
+      margin-top: 0.45rem;
+    }
+
+    .add-btn {
+      flex: 1;
+      padding: 0.45rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      background: transparent;
+      border: 1px dashed rgba(255,255,255,0.12);
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .add-btn:hover { color: var(--primary); border-color: rgba(16,185,129,0.35); }
+
+    .holiday-label {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 0.75rem 0.5rem;
+      text-align: center;
+      background: rgba(245,158,11,0.08);
+      border-radius: 6px;
+      margin-bottom: 0.35rem;
+    }
+
+    .holiday-mm-badge {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 0.35rem;
+    }
+
+    .leave-btn {
+      padding: 0.45rem 0.55rem;
+      font-size: 0.8125rem;
+      color: var(--accent);
+      background: rgba(245,158,11,0.08);
+      border: 1px solid rgba(245,158,11,0.25);
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .leave-btn:hover { background: rgba(245,158,11,0.15); }
+
+    .summary-cell, .next-cell { font-size: 1rem; line-height: 1.6; }
+
+    .summary-cell textarea,
+    .next-cell textarea {
+      width: 100%;
+      min-height: 168px;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.9375rem;
+      padding: 0.6rem 0.65rem;
+      resize: vertical;
+      line-height: 1.55;
+    }
+
+    .summary-cell textarea:focus,
+    .next-cell textarea:focus { outline: none; border-color: var(--border-hover); }
+
+    .edit-panel {
+      position: fixed;
+      top: 0; right: 0;
+      width: min(400px, 100vw);
+      height: 100vh;
+      background: var(--bg-secondary);
+      border-left: 1px solid var(--border-hover);
+      box-shadow: -8px 0 32px rgba(0,0,0,0.4);
+      z-index: 100;
+      transform: translateX(100%);
+      transition: transform 0.25s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .edit-panel.open { transform: translateX(0); }
+
+    .panel-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-header h3 { font-size: 1rem; }
+
+    .panel-close {
+      background: none; border: none;
+      color: var(--text-secondary);
+      font-size: 1.25rem;
+      cursor: pointer;
+    }
+
+    .panel-body { padding: 1.25rem 1.5rem; overflow-y: auto; flex: 1; }
+
+    .field { margin-bottom: 1rem; }
+    .field label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.35rem;
+    }
+
+    .field input, .field select, .field textarea {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,0.1);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.875rem;
+    }
+
+    .field textarea { min-height: 72px; resize: vertical; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 1.25rem 0 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .checkbox-row {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+    }
+
+    .checkbox-row label { display: flex; align-items: center; gap: 0.35rem; cursor: pointer; }
+
+    .panel-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 90;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+
+    .overlay.open { opacity: 1; pointer-events: auto; }
+
+    .modal {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0.95);
+      width: min(420px, calc(100vw - 2rem));
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-hover);
+      border-radius: var(--radius-md);
+      z-index: 110;
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.2s;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+
+    .modal.open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .modal-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+    }
+
+    .modal-body { padding: 1.25rem; }
+
+    .cat-pills { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+    .cat-pill {
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      font-family: inherit;
+    }
+
+    .cat-pill.selected { border-color: currentColor; color: #fff; }
+
+    .preset-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .preset-btn {
+      padding: 0.75rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      line-height: 1.35;
+    }
+
+    .preset-btn:hover { border-color: var(--border-hover); }
+    .preset-btn small { display: block; font-weight: 400; color: var(--text-secondary); margin-top: 0.2rem; font-size: 0.72rem; }
+    .preset-btn.accent { border-color: rgba(245,158,11,0.35); background: rgba(245,158,11,0.08); }
+
+    .day-mm-target {
+      font-size: 0.8125rem;
+      color: var(--secondary);
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .modal-footer {
+      padding: 1rem 1.25rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-hover);
+      padding: 0.75rem 1.25rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.8125rem;
+      z-index: 200;
+      transition: transform 0.3s;
+      pointer-events: none;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 900px) {
+      html, body { overflow: auto; height: auto; }
+      .app { flex-direction: column; height: auto; min-height: 100vh; overflow: visible; }
+      .sidebar { width: 100%; height: auto; position: static; }
+      .main { padding: 1.25rem; min-height: auto; overflow: visible; }
+      .journal-sticky-top { position: relative; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="logo-row">
+        <div class="logo-box">OKESTRO</div>
+        <div class="logo-divider"></div>
+        <div class="logo-title">교육팀 TMS</div>
+      </div>
+
+      <nav class="nav">
+        <a class="nav-item" href="#" onclick="showToast('장부 화면은 본 프로토타입 범위 외'); return false;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          월별 지출 장부
+        </a>
+        <a class="nav-item active" href="#">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          일일 업무일지
+        </a>
+      </nav>
+
+      <div class="proto-badge">
+        UI v3 · 1주차↑<br />
+        h→M/M자동<br />
+        Cmd+Shift+R
+      </div>
+
+      <div class="user-section">
+        <div class="avatar">윤</div>
+        <div>
+          <h4>김윤형</h4>
+          <p>구성원 A · 강사</p>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="glow glow-1"></div>
+      <div class="glow glow-2"></div>
+
+      <div class="content">
+        <div class="journal-sticky-top">
+        <header class="page-header">
+          <div class="month-nav">
+            <button type="button" id="prevMonth" aria-label="이전 달">◀</button>
+            <h1 id="monthLabel">2026년 5월</h1>
+            <button type="button" id="nextMonth" aria-label="다음 달">▶</button>
+          </div>
+          <div class="author-chip">
+            작성자 <strong>김윤형</strong> <span>(A · 강사)</span>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn btn-primary" id="exportBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              KPI 엑셀 내보내기
+            </button>
+            <button type="button" class="btn btn-secondary" id="todayBtn">오늘로 이동</button>
+            <button type="button" class="btn btn-ghost" id="presetBtn">공휴일 / 반차</button>
+          </div>
+        </header>
+
+        <div class="kpi-strip">
+          <div>업무 M/M (5월)<strong id="kpiWork">—</strong></div>
+          <div>생산향상 M/M<strong id="kpiImprove">—</strong></div>
+          <div>휴일 M/M<strong id="kpiLeave">—</strong></div>
+          <div>KPI2 완료 업무<strong id="kpiTasks">—</strong></div>
+          <div>8h 미만 근무일<strong id="kpiShortDays" style="color:#fca5a5">—</strong></div>
+        </div>
+
+        <div class="mm-progress-panel" id="monthMmProgress">
+          <div class="mm-progress-head">
+            <h2>월 M/M 입력 현황 (KPI1)</h2>
+            <div class="mm-progress-meta" id="monthMmMeta">—</div>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="monthMmFill" style="width:0%"></div>
+          </div>
+          <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem;line-height:1.45">
+            실작업(h)÷8 → 업무·향상 M/M 자동 · 평일 가용 0.8125(점심 제외) · 실작업 목표 6.5h
+          </p>
+        </div>
+        </div>
+
+        <div id="weeksContainer"></div>
+      </div>
+    </main>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+
+  <aside class="edit-panel" id="editPanel">
+    <div class="panel-header">
+      <h3>업무 항목 편집</h3>
+      <button type="button" class="panel-close" id="closePanel" aria-label="닫기">×</button>
+    </div>
+    <div class="panel-body">
+      <div class="field">
+        <label>카테고리</label>
+        <select id="editCategory">
+          <option value="edu">교육</option>
+          <option value="prep">교육 준비</option>
+          <option value="ai">AI</option>
+          <option value="other">기타</option>
+        </select>
+        <p style="font-size:0.72rem;color:var(--text-muted);margin-top:0.35rem;line-height:1.45">
+          Confluence 카테고리. KPI1 M/M은 아래 <strong>M/M 구분</strong> 또는 AI→향상·그 외→업무(자동).
+        </p>
+      </div>
+      <div class="field">
+        <label>KPI1 M/M 구분</label>
+        <select id="editMmAxis">
+          <option value="">자동 (카테고리)</option>
+          <option value="work">업무 M/M</option>
+          <option value="improve">생산향상 M/M</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>업무명</label>
+        <input type="text" id="editTitle" />
+      </div>
+      <div class="field">
+        <label>상세 메모</label>
+        <textarea id="editNote" placeholder="Confluence 스타일 자유 서술"></textarea>
+      </div>
+      <div class="section-label">KPI2 — 생산성</div>
+      <div class="field-row">
+        <div class="field">
+          <label>계획 (h)</label>
+          <input type="number" id="editPlan" step="0.5" min="0" />
+        </div>
+        <div class="field">
+          <label>실작업 (h)</label>
+          <input type="number" id="editActual" step="0.5" min="0" />
+        </div>
+      </div>
+      <div class="checkbox-row">
+        <label><input type="checkbox" id="editDone" /> 완료</label>
+        <label><input type="checkbox" id="editApproved" /> 계획 승인</label>
+      </div>
+      <div class="section-label">KPI1 — 당일 M/M (자동)</div>
+      <p class="mm-auto-preview" id="editMmPreview">업무 — · 향상 — · 휴일 —</p>
+      <p style="font-size:0.72rem;color:var(--text-muted);margin-top:0.35rem;line-height:1.45">
+        항목별 실작업(h)÷8 → <strong>업무</strong>·<strong>향상</strong> M/M (항목에 표시). AI=향상, 그 외=업무. 예외는 편집에서 M/M 구분.
+      </p>
+    </div>
+    <div class="panel-footer">
+      <button type="button" class="btn btn-ghost" id="deleteTask">삭제</button>
+      <button type="button" class="btn btn-primary" id="saveTask">저장</button>
+    </div>
+  </aside>
+
+  <div class="modal" id="leaveModal">
+    <div class="modal-header">휴일 M/M 설정 (KPI1)</div>
+    <div class="modal-body">
+      <p class="day-mm-target" id="leaveModalDate">—</p>
+      <div class="preset-grid">
+        <button type="button" class="preset-btn accent" data-preset="holiday">
+          공휴일
+          <small>휴일 M/M 1.0 · 업무/향상 0</small>
+        </button>
+        <button type="button" class="preset-btn" data-preset="half-am">
+          오전 반차
+          <small>휴일 M/M 0.5</small>
+        </button>
+        <button type="button" class="preset-btn" data-preset="half-pm">
+          오후 반차
+          <small>휴일 M/M 0.5</small>
+        </button>
+        <button type="button" class="preset-btn" data-preset="clear">
+          휴일 해제
+          <small>휴일 M/M 0 · 일반 근무일</small>
+        </button>
+      </div>
+      <p class="mm-auto-preview" id="leaveMmAutoPreview" style="margin-bottom:0.75rem">업무 — · 향상 — (실작업 h에서 자동)</p>
+      <div class="section-label" style="margin-top:0;border-top:none;padding-top:0">휴일 M/M (직접)</div>
+      <div class="field">
+        <label>휴일 M/M</label>
+        <input type="number" id="leaveMmLeave" step="0.25" min="0" max="1" />
+      </div>
+      <p style="font-size:0.72rem;color:var(--text-muted);margin-top:0.5rem;line-height:1.45">
+        업무·향상은 항목 실작업(h)÷8로 자동. 평일 점심은 <strong>가용 M/M</strong>에서만 0.1875 제외.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="cancelLeave">취소</button>
+      <button type="button" class="btn btn-primary" id="saveLeave">적용</button>
+    </div>
+  </div>
+
+  <div class="modal" id="addModal">
+    <div class="modal-header">업무 추가</div>
+    <div class="modal-body">
+      <div class="field">
+        <label>카테고리</label>
+        <div class="cat-pills" id="addCatPills">
+          <button type="button" class="cat-pill selected" data-cat="edu" style="color:var(--cat-edu)">교육</button>
+          <button type="button" class="cat-pill" data-cat="prep" style="color:var(--cat-prep)">교육 준비</button>
+          <button type="button" class="cat-pill" data-cat="ai" style="color:var(--cat-ai)">AI</button>
+          <button type="button" class="cat-pill" data-cat="other" style="color:var(--cat-other)">기타</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>업무명</label>
+        <input type="text" id="addTitle" placeholder="예: 5월 신규입사자 온보딩" />
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>계획 (h)</label>
+          <input type="number" id="addPlan" step="0.5" value="4" />
+        </div>
+        <div class="field">
+          <label>실작업 (h)</label>
+          <input type="number" id="addActual" step="0.5" value="3.5" />
+        </div>
+      </div>
+      <div class="checkbox-row">
+        <label><input type="checkbox" id="addDone" checked /> 오늘 완료로 표시</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="cancelAdd">취소</button>
+      <button type="button" class="btn btn-primary" id="confirmAdd">추가</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const CATS = {
+      edu: { label: '교육', color: 'var(--cat-edu)' },
+      prep: { label: '교육 준비', color: 'var(--cat-prep)' },
+      ai: { label: 'AI', color: 'var(--cat-ai)' },
+      other: { label: '기타', color: 'var(--cat-other)' },
+    };
+
+    let currentMonth = { year: 2026, month: 4 };
+    let selectedTaskId = null;
+    let selectedDayKey = null;
+    let leaveTargetDay = null;
+    let addTargetDay = null;
+    let addSelectedCat = 'edu';
+
+    function formatDayLabel(key) {
+      const [y, m, d] = key.split('-').map(Number);
+      const names = ['일','월','화','수','목','금','토'];
+      const dt = new Date(y, m - 1, d);
+      return `${y}년 ${m}월 ${d}일 (${names[dt.getDay()]})`;
+    }
+
+    function renderMmRow(key, data) {
+      const leaveClass = data.mm.leave > 0 ? ' leave-active' : '';
+      return `<div class="mm-row">
+        <button type="button" class="mm-chip" data-day-mm="${key}">업무 ${data.mm.work}</button>
+        <button type="button" class="mm-chip" data-day-mm="${key}">향상 ${data.mm.improve}</button>
+        <button type="button" class="mm-chip${leaveClass}" data-day-mm="${key}">휴일 ${data.mm.leave}</button>
+      </div>`;
+    }
+
+    function renderDayActions(key) {
+      return `<div class="day-actions">
+        <button type="button" class="add-btn" data-add="${key}">+ 항목</button>
+        <button type="button" class="leave-btn" data-leave="${key}">휴일</button>
+      </div>`;
+    }
+
+    /** 점심 11:30~13:00 (1.5h) — 가용 M/M·실작업(h) 목표에서만 제외 (휴일 M/M 입력값은 그대로) */
+    const LUNCH_HOURS = 1.5;
+    const WORK_DAY_HOURS = 8;
+    const LUNCH_LEAVE_MM = Math.round((LUNCH_HOURS / WORK_DAY_HOURS) * 10000) / 10000;
+
+    function roundMm(v) {
+      return Math.round(v * 10000) / 10000;
+    }
+
+    /** 실작업(h) → M/M (8h = 1.0 M/M) */
+    function hoursToMm(hours) {
+      return roundMm((Number(hours) || 0) / WORK_DAY_HOURS);
+    }
+
+    /** 항목별 KPI1 M/M 축: mmAxis 수동 > AI→향상 · 그 외→업무 */
+    function getTaskMmAxis(task) {
+      if (task.mmAxis === 'work' || task.mmAxis === 'improve') return task.mmAxis;
+      return task.cat === 'ai' ? 'improve' : 'work';
+    }
+
+    function formatTaskMmPill(task) {
+      if (/반차|공휴일/.test(task.title)) return '';
+      const h = Number(task.actual) || 0;
+      if (h <= 0) return '';
+      const mm = hoursToMm(h);
+      const axis = getTaskMmAxis(task);
+      const label = axis === 'improve' ? '향상' : '업무';
+      return `<span class="task-mm-pill ${axis}" title="실작업 ${h}h ÷ 8">${label} ${mm}</span>`;
+    }
+
+    /** 휴일 M/M은 유지·공휴는 1.0 고정 */
+    function recalcDayMmFromHours(data) {
+      if (data.holiday && (Number(data.mm.leave) || 0) >= 1) {
+        data.mm = { work: 0, improve: 0, leave: 1 };
+        return;
+      }
+      const leave = roundMm(Number(data.mm.leave) || 0);
+      data.mm.leave = leave;
+      let workH = 0;
+      let improveH = 0;
+      data.tasks.forEach((t) => {
+        if (/반차|공휴일/.test(t.title)) return;
+        const h = Number(t.actual) || 0;
+        if (getTaskMmAxis(t) === 'improve') improveH += h;
+        else workH += h;
+      });
+      let work = hoursToMm(workH);
+      let improve = hoursToMm(improveH);
+      const cap = Math.max(0, roundMm(1 - leave));
+      const sum = work + improve;
+      if (sum > cap && sum > 0) {
+        const scale = cap / sum;
+        work = roundMm(work * scale);
+        improve = roundMm(improve * scale);
+      }
+      data.mm.work = work;
+      data.mm.improve = improve;
+    }
+
+    function formatMmPreview(data) {
+      const m = data.mm;
+      return `업무 ${m.work} · 향상 ${m.improve} · 휴일 ${m.leave}`;
+    }
+
+    function refreshLeaveModalMmPreview(day) {
+      recalcDayMmFromHours(day);
+      const el = document.getElementById('leaveMmAutoPreview');
+      if (el) {
+        el.textContent = `업무 ${day.mm.work} · 향상 ${day.mm.improve} (실작업 h÷8 자동)`;
+      }
+    }
+
+    function recalcAllSampleDays() {
+      Object.values(sampleData).forEach(recalcDayMmFromHours);
+    }
+
+    /** 일별 가용 M/M (공휴 1.0은 전일 휴일, 그 외 평일은 점심 0.1875 제외) */
+    function getDayAvailableMm(data) {
+      if (data.holiday && (Number(data.mm.leave) || 0) >= 1) return 1;
+      return roundMm(1 - LUNCH_LEAVE_MM);
+    }
+
+    /** 당일 실작업(h) 합 — 반차·공휴 표기 항목 제외 */
+    function sumDayWorkHours(data) {
+      return data.tasks.reduce((sum, t) => {
+        if (/반차|공휴일/.test(t.title)) return sum;
+        return sum + (Number(t.actual) || 0);
+      }, 0);
+    }
+
+    /** 기대 실작업(h): 8h − 점심 1.5h = 6.5h (반차일은 4h − 1.5h) */
+    function getExpectedWorkHours(data) {
+      if (data.holiday && data.mm.leave >= 1) return 0;
+      const lunchH = LUNCH_HOURS;
+      if ((Number(data.mm.leave) || 0) >= 0.5 - 0.001) {
+        return Math.max(0, WORK_DAY_HOURS * 0.5 - lunchH);
+      }
+      return WORK_DAY_HOURS - lunchH;
+    }
+
+    function getDayHoursInfo(data) {
+      const expected = getExpectedWorkHours(data);
+      if (expected === 0) return { show: false };
+      const total = sumDayWorkHours(data);
+      return {
+        show: true,
+        total,
+        expected,
+        isShort: total + 0.001 < expected,
+      };
+    }
+
+    function renderHoursBadge(info) {
+      if (!info.show) return '';
+      if (info.isShort) {
+        return `<span class="hours-badge short" title="실작업 ${info.total}h / 목표 ${info.expected}h">⚠ ${info.total}h</span>`;
+      }
+      return `<span class="hours-badge ok" title="실작업 ${info.total}h">✓ ${info.total}h</span>`;
+    }
+
+    function getTodayKey() {
+      const now = new Date();
+      return dateKey(now.getFullYear(), now.getMonth(), now.getDate());
+    }
+
+    function renderDayHeader(label, info, isToday) {
+      return `<div class="day-header-row">
+        <span class="day-header">${label}${isToday ? '<span class="today-pill">오늘</span>' : ''}</span>
+        ${renderHoursBadge(info)}
+      </div>`;
+    }
+
+    function goToToday() {
+      const now = new Date();
+      currentMonth = { year: now.getFullYear(), month: now.getMonth() };
+      selectedDayKey = getTodayKey();
+      renderWeeks();
+      requestAnimationFrame(() => {
+        const el = document.querySelector(`.day-cell[data-day="${selectedDayKey}"]`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        }
+        showToast(`${formatDayLabel(selectedDayKey)} — 오늘 입력 셀로 이동`);
+      });
+    }
+
+    const sampleData = {
+      '2026-05-04': { holiday: false, mm: { work: 0, improve: 0, leave: 0 }, tasks: [] },
+      '2026-05-05': { holiday: false, mm: { work: 0, improve: 0, leave: 0 }, tasks: [] },
+      '2026-05-06': { holiday: false, mm: { work: 0.25, improve: 0, leave: 0 }, tasks: [
+        { id: 't1', cat: 'other', title: '주간회의록 작성', plan: 1, actual: 0.5, done: true, note: '' }
+      ]},
+      '2026-05-07': { holiday: false, mm: { work: 0, improve: 0, leave: 0 }, tasks: [] },
+      '2026-05-08': { holiday: false, mm: { work: 0, improve: 0, leave: 0 }, tasks: [] },
+      '2026-05-11': { holiday: false, mm: { work: 0.5, improve: 0.25, leave: 0 }, tasks: [
+        { id: 't2', cat: 'ai', title: '팀 KPI 구상', plan: 2, actual: 2, done: true, note: '' }
+      ]},
+      '2026-05-12': { holiday: false, mm: { work: 0.75, improve: 0, leave: 0 }, tasks: [
+        { id: 't3', cat: 'other', title: '팀 KPI 관련 팀 내부 회의', plan: 1, actual: 1, done: true, note: '' },
+        { id: 't4', cat: 'prep', title: '5월 신규입사자 온보딩 교육 준비', plan: 3, actual: 2.5, done: true, note: '' }
+      ]},
+      '2026-05-13': { holiday: false, mm: { work: 0.75, improve: 0, leave: 0 }, tasks: [
+        { id: 't5', cat: 'edu', title: '5월 신규입사자 온보딩', plan: 6, actual: 5.5, done: true, note: '' },
+        { id: 't6', cat: 'other', title: '주간회의록 작성', plan: 1, actual: 0.5, done: true, note: '' }
+      ]},
+      '2026-05-14': { holiday: false, mm: { work: 0.5, improve: 0, leave: 0 }, tasks: [
+        { id: 't7', cat: 'other', title: '창립기념일 행사', plan: 2, actual: 2, done: true, note: '' },
+        { id: 't8', cat: 'edu', title: '5월 신규입사자 온보딩', plan: 4, actual: 4, done: true, note: '' }
+      ]},
+      '2026-05-15': { holiday: false, mm: { work: 0, improve: 0, leave: 0.5 }, tasks: [
+        { id: 't9', cat: 'other', title: '오후 반차', plan: 0, actual: 0, done: true, note: '휴일 M/M 0.5' }
+      ]},
+      '2026-05-18': { holiday: false, mm: { work: 0.75, improve: 0.25, leave: 0 }, tasks: [
+        { id: 't10', cat: 'prep', title: '기술파트너사 교육', plan: 4, actual: 3, done: false, note: '' },
+        { id: 't11', cat: 'ai', title: 'PPT-아카데마이저', plan: 2, actual: 1.5, done: false, note: '' }
+      ]},
+      '2026-05-19': { holiday: false, mm: { work: 0.75, improve: 0.25, leave: 0 }, tasks: [
+        { id: 't12', cat: 'prep', title: '기술파트너사 교육', plan: 4, actual: 4, done: true, note: '' },
+        { id: 't13', cat: 'ai', title: 'PPT-아카데마이저', plan: 2, actual: 2, done: true, note: '' },
+        { id: 't14', cat: 'other', title: '팀 KPI 승인 요청', plan: 0.5, actual: 0.5, done: true, note: '' }
+      ]},
+      '2026-05-20': { holiday: false, mm: { work: 1, improve: 0, leave: 0 }, tasks: [
+        { id: 't15', cat: 'edu', title: '골드/플래티넘 파트너사 교육', plan: 8, actual: 6, done: true, note: 'OpenStack, Ceph (실작업·점심 제외)' },
+        { id: 't16', cat: 'other', title: '주간회의록 작성', plan: 1, actual: 0.5, done: true, note: '' }
+      ]},
+      '2026-05-21': { holiday: false, mm: { work: 1, improve: 0, leave: 0 }, tasks: [
+        { id: 't17', cat: 'edu', title: '골드/플래티넘 파트너사 교육', plan: 8, actual: 6.5, done: true, note: 'K8s, CONTRABASS' }
+      ]},
+      '2026-05-22': { holiday: false, mm: { work: 1, improve: 0, leave: 0 }, tasks: [
+        { id: 't18', cat: 'edu', title: '골드/플래티넘 파트너사 교육', plan: 8, actual: 6.5, done: true, note: 'CONTRABASS 실습' }
+      ]},
+      '2026-05-25': { holiday: true, mm: { work: 0, improve: 0, leave: 1 }, tasks: [] },
+      '2026-05-26': { holiday: false, mm: { work: 1, improve: 0, leave: 0 }, tasks: [
+        { id: 't19', cat: 'edu', title: 'OKESTRO Solution 딥다이브 교육', plan: 8, actual: 6.5, done: true, note: '' }
+      ]},
+      '2026-05-27': { holiday: false, mm: { work: 0, improve: 0, leave: 0 }, tasks: [
+        { id: 't20', cat: 'edu', title: '파트너사 정기 교육', plan: 6.5, actual: 6.5, done: true, note: 'CONTRABASS, VIOLA' },
+        { id: 't21', cat: 'other', title: '주간회의록 작성', plan: 1, actual: 0, done: true, note: '교육 진행 중·간헐 작성 (실작업 0h)' }
+      ]},
+      '2026-05-28': { holiday: false, mm: { work: 1, improve: 0, leave: 0 }, tasks: [
+        { id: 't22', cat: 'edu', title: '파트너사 정기 교육', plan: 6, actual: 5.5, done: true, note: 'CONTRABASS, VIOLA' }
+      ]},
+      '2026-05-29': { holiday: false, mm: { work: 0.5, improve: 0.25, leave: 0 }, tasks: [
+        { id: 't23', cat: 'other', title: '강의일지 작성', plan: 1, actual: 1, done: true, note: '' },
+        { id: 't24', cat: 'other', title: 'CMP Hands-on 산정', plan: 0.5, actual: 0.5, done: true, note: '' },
+        { id: 't25', cat: 'ai', title: 'TMS 수정 및 보완', plan: 3, actual: 2, done: false, note: '' }
+      ]},
+    };
+
+    const WEEK_CAT_BULLET = '• ';
+
+    /** 금주(요약)·차주(예정) 공통 카테고리 템플릿 */
+    const WEEK_COLUMN_TEMPLATE = `• 교육
+└ 
+• 교육 준비
+└ 
+• AI
+└ 
+• 기타
+└ `;
+
+    const weekSummaries = {};
+    const nextWeekPlans = {};
+
+    const WEEK_COLUMN_CATS = [
+      ['edu', '교육'],
+      ['prep', '교육 준비'],
+      ['ai', 'AI'],
+      ['other', '기타'],
+    ];
+
+    function formatWeekColumnText(grouped) {
+      const parts = [];
+      WEEK_COLUMN_CATS.forEach(([key, label]) => {
+        parts.push(`${WEEK_CAT_BULLET}${label}`);
+        const items = grouped[key] ? [...grouped[key]] : [];
+        if (items.length === 0) parts.push('└ ');
+        else items.forEach((title) => parts.push(`└ ${title}`));
+      });
+      return parts.join('\n');
+    }
+
+    function buildWeekSummaryText(weekDays) {
+      const grouped = {
+        edu: new Set(),
+        prep: new Set(),
+        ai: new Set(),
+        other: new Set(),
+      };
+      weekDays.forEach((d) => {
+        const key = dateKey(d.getFullYear(), d.getMonth(), d.getDate());
+        getDayData(key).tasks.forEach((t) => {
+          if (/반차|공휴일/.test(t.title)) return;
+          if (grouped[t.cat]) grouped[t.cat].add(t.title);
+        });
+      });
+      return formatWeekColumnText(grouped);
+    }
+
+    function getWeekSummaryContent(planKey, weekDays) {
+      if (weekSummaries[planKey]) return weekSummaries[planKey];
+      return buildWeekSummaryText(weekDays);
+    }
+
+    function getWeekNextContent(planKey) {
+      return nextWeekPlans[planKey] || WEEK_COLUMN_TEMPLATE;
+    }
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function dateKey(y, m, d) { return `${y}-${pad(m + 1)}-${pad(d)}`; }
+
+    function getWeeksInMonth(year, month) {
+      const weeks = [];
+      const first = new Date(year, month, 1);
+      const last = new Date(year, month + 1, 0);
+      let d = new Date(first);
+      const dow = d.getDay();
+      const diff = dow === 0 ? -6 : 1 - dow;
+      d.setDate(d.getDate() + diff);
+      let w = 0;
+      while (d <= last || weeks.length === 0) {
+        const days = [];
+        for (let i = 0; i < 5; i++) {
+          const copy = new Date(d);
+          copy.setDate(d.getDate() + i);
+          days.push(copy);
+        }
+        const inMonth = days.some(x => x.getMonth() === month);
+        if (inMonth) weeks.push({ index: ++w, days, key: `w${w}` });
+        d.setDate(d.getDate() + 7);
+        if (weeks.length >= 6) break;
+        if (d > last && weeks.length > 0) break;
+      }
+      return weeks;
+    }
+
+    function getDayData(key) {
+      if (!sampleData[key]) {
+        sampleData[key] = { holiday: false, mm: { work: 0, improve: 0, leave: 0 }, tasks: [] };
+      }
+      return sampleData[key];
+    }
+
+    function sumDayMm(data) {
+      const m = data.mm;
+      return Math.min(1, (Number(m.work) || 0) + (Number(m.improve) || 0) + (Number(m.leave) || 0));
+    }
+
+    /** 주간 M/M: 가용 = 일별 가용(평일−점심) 합/5, 입력 = 일별 M/M 합/5 */
+    function getWeekMmStats(weekDays, month) {
+      const inMonthDays = weekDays.filter((d) => d.getMonth() === month);
+      const count = inMonthDays.length;
+      if (count === 0) return { available: 0, logged: 0, shortage: 0, pct: 100 };
+      let availableSum = 0;
+      let loggedSum = 0;
+      inMonthDays.forEach((d) => {
+        const key = dateKey(d.getFullYear(), d.getMonth(), d.getDate());
+        const data = getDayData(key);
+        availableSum += getDayAvailableMm(data);
+        loggedSum += sumDayMm(data);
+      });
+      const available = availableSum / 5;
+      const logged = loggedSum / 5;
+      const shortage = Math.max(0, available - logged);
+      const pct = available > 0 ? Math.min(100, (logged / available) * 100) : 100;
+      return { available, logged, shortage, pct, count };
+    }
+
+    function renderWeekMmBar(title, stats) {
+      const warn = stats.shortage > 0.001;
+      const shortageLabel = warn
+        ? `<span class="shortage">부족 ${stats.shortage.toFixed(2)}</span>`
+        : '<span style="color:#6ee7b7;font-weight:700">완료</span>';
+      return `
+        <div class="week-head">
+          <div class="week-title-row">
+            <h2 class="week-title">${title}</h2>
+            <div class="week-mm-meta">
+              입력 <strong>${stats.logged.toFixed(2)}</strong> / 가용 <strong>${stats.available.toFixed(2)}</strong> M/M · ${shortageLabel}
+            </div>
+          </div>
+          <div class="week-progress-track">
+            <div class="week-progress-fill${warn ? ' warn' : ''}" style="width:${stats.pct.toFixed(1)}%"></div>
+          </div>
+        </div>`;
+    }
+
+    function updateMonthMmProgress(weeks, month) {
+      let totalAvail = 0;
+      let totalLogged = 0;
+      weeks.forEach((week) => {
+        const s = getWeekMmStats(week.days, month);
+        totalAvail += s.available;
+        totalLogged += s.logged;
+      });
+      const shortage = Math.max(0, totalAvail - totalLogged);
+      const pct = totalAvail > 0 ? Math.min(100, (totalLogged / totalAvail) * 100) : 100;
+      const warn = shortage > 0.001;
+
+      document.querySelector('#monthMmProgress h2').textContent =
+        `${currentMonth.year}년 ${currentMonth.month + 1}월 M/M 입력 현황 (KPI1)`;
+
+      document.getElementById('monthMmMeta').innerHTML = warn
+        ? `입력 <strong>${totalLogged.toFixed(2)}</strong> / 가용 <strong>${totalAvail.toFixed(2)}</strong> M/M · <span class="shortage">부족 ${shortage.toFixed(2)} M/M</span>`
+        : `입력 <strong>${totalLogged.toFixed(2)}</strong> / 가용 <strong>${totalAvail.toFixed(2)}</strong> M/M · <span style="color:#6ee7b7;font-weight:700">월간 입력 완료</span>`;
+
+      const fill = document.getElementById('monthMmFill');
+      fill.style.width = `${pct.toFixed(1)}%`;
+      fill.classList.toggle('warn', warn);
+    }
+
+    function renderDayCell(date) {
+      const y = date.getFullYear();
+      const m = date.getMonth();
+      const d = date.getDate();
+      const key = dateKey(y, m, d);
+      const inMonth = m === currentMonth.month;
+      const data = getDayData(key);
+      const dayNames = ['일','월','화','수','목','금','토'];
+      const label = `${dayNames[date.getDay()]} ${m + 1}/${d}`;
+      const hoursInfo = getDayHoursInfo(data);
+      const isToday = key === getTodayKey();
+      const selectedClass = selectedDayKey === key ? ' is-selected' : '';
+      const holidayClass = data.holiday || data.mm.leave > 0 ? ' is-holiday' : '';
+      const shortClass = hoursInfo.show && hoursInfo.isShort ? ' is-hours-short' : '';
+      const todayClass = isToday ? ' is-today' : '';
+
+      if (!inMonth) {
+        return `<td class="day-cell" style="opacity:0.35"><div class="day-header">${label}</div><span style="color:var(--text-muted);font-size:0.875rem">—</span></td>`;
+      }
+
+      const tasksHtml = data.tasks.map(t => `
+        <li class="task-item" data-task="${t.id}" data-day="${key}">
+          <span class="cat-dot" style="background:${CATS[t.cat].color}"></span>
+          <span class="task-text">${t.title}${t.plan || t.actual ? `<small>${t.plan}h → ${t.actual}h</small>` : ''}</span>
+          ${formatTaskMmPill(t)}
+          ${t.done ? '<span class="done-mark">✓</span>' : ''}
+        </li>
+      `).join('');
+
+      const holidayBlock = data.holiday ? `<div class="holiday-label">공휴일</div>` : '';
+
+      return `<td class="day-cell${holidayClass}${selectedClass}${shortClass}${todayClass}" data-day="${key}">
+        ${renderDayHeader(label, hoursInfo, isToday)}
+        ${holidayBlock}
+        <ul class="task-list">${tasksHtml}</ul>
+        ${renderMmRow(key, data)}
+        ${renderDayActions(key)}
+      </td>`;
+    }
+
+    function renderWeeks() {
+      const { year, month } = currentMonth;
+      document.getElementById('monthLabel').textContent = `${year}년 ${month + 1}월`;
+      const weeks = getWeeksInMonth(year, month);
+      updateMonthMmProgress(weeks, month);
+      const container = document.getElementById('weeksContainer');
+      container.innerHTML = weeks.map((week) => {
+        const start = week.days[0];
+        const end = week.days[4];
+        const fmt = (dt) => `${dt.getMonth() + 1}/${dt.getDate()}`;
+        const planKey = week.key;
+        const weekDaysInMonth = week.days.filter(d => d.getMonth() === month);
+        const mmStats = getWeekMmStats(week.days, month);
+        const weekTitle = `${week.index}째주 (${fmt(start)} ~ ${fmt(end)})`;
+        return `
+          <section class="week-block">
+            ${renderWeekMmBar(weekTitle, mmStats)}
+            <div class="week-table-wrap">
+              <table class="week-table">
+                <thead>
+                  <tr>
+                    <th class="col-name">구분</th>
+                    ${['월','화','수','목','금'].map((name, i) =>
+                      `<th class="col-day">${name}<br><small style="font-weight:400;opacity:0.7">${week.days[i].getMonth()+1}/${week.days[i].getDate()}</small></th>`
+                    ).join('')}
+                    <th class="col-summary">금주(요약)</th>
+                    <th class="col-next">차주(예정)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="name-cell">김윤형</td>
+                    ${week.days.map(d => renderDayCell(d)).join('')}
+                    <td class="summary-cell"><textarea data-summary="${planKey}" rows="10" placeholder="교육 · 교육 준비 · AI · 기타">${getWeekSummaryContent(planKey, weekDaysInMonth.length ? weekDaysInMonth : week.days)}</textarea></td>
+                    <td class="next-cell"><textarea data-plan="${planKey}" rows="10" placeholder="교육 · 교육 준비 · AI · 기타">${getWeekNextContent(planKey)}</textarea></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>`;
+      }).join('');
+
+      bindEvents();
+      bindWeekColumnEditors();
+      updateKpiStrip();
+    }
+
+    function bindWeekColumnEditors() {
+      document.querySelectorAll('[data-summary]').forEach((el) => {
+        el.oninput = () => { weekSummaries[el.dataset.summary] = el.value; };
+      });
+      document.querySelectorAll('[data-plan]').forEach((el) => {
+        el.oninput = () => { nextWeekPlans[el.dataset.plan] = el.value; };
+      });
+    }
+
+    function updateKpiStrip() {
+      const prefix = `${currentMonth.year}-${pad(currentMonth.month + 1)}`;
+      let work = 0, improve = 0, leave = 0, done = 0, shortDays = 0;
+      Object.keys(sampleData).filter(k => k.startsWith(prefix)).forEach(k => {
+        const d = sampleData[k];
+        work += d.mm.work; improve += d.mm.improve; leave += d.mm.leave;
+        done += d.tasks.filter(t => t.done).length;
+        const info = getDayHoursInfo(d);
+        if (info.show && info.isShort) shortDays += 1;
+      });
+      document.getElementById('kpiWork').textContent = work.toFixed(2);
+      document.getElementById('kpiImprove').textContent = improve.toFixed(2);
+      document.getElementById('kpiLeave').textContent = leave.toFixed(2);
+      document.getElementById('kpiTasks').textContent = done + '건';
+      document.getElementById('kpiShortDays').textContent = shortDays + '일';
+    }
+
+    function findTask(id) {
+      for (const key of Object.keys(sampleData)) {
+        const t = sampleData[key].tasks.find(x => x.id === id);
+        if (t) return { task: t, dayKey: key };
+      }
+      return null;
+    }
+
+    function openPanel(taskId) {
+      const found = findTask(taskId);
+      if (!found) return;
+      selectedTaskId = taskId;
+      const { task, dayKey } = found;
+      const day = sampleData[dayKey];
+      document.getElementById('editCategory').value = task.cat;
+      document.getElementById('editMmAxis').value = task.mmAxis || '';
+      document.getElementById('editTitle').value = task.title;
+      document.getElementById('editNote').value = task.note || '';
+      document.getElementById('editPlan').value = task.plan;
+      document.getElementById('editActual').value = task.actual;
+      document.getElementById('editDone').checked = task.done;
+      document.getElementById('editApproved').checked = !!task.approved;
+      recalcDayMmFromHours(day);
+      document.getElementById('editMmPreview').textContent = formatMmPreview(day);
+      document.getElementById('editPanel').classList.add('open');
+      document.getElementById('overlay').classList.add('open');
+      document.querySelectorAll('.task-item').forEach(el => {
+        el.classList.toggle('selected', el.dataset.task === taskId);
+      });
+    }
+
+    function closePanel() {
+      document.getElementById('editPanel').classList.remove('open');
+      document.getElementById('overlay').classList.remove('open');
+      document.getElementById('addModal').classList.remove('open');
+      document.getElementById('leaveModal').classList.remove('open');
+      selectedTaskId = null;
+      document.querySelectorAll('.task-item').forEach(el => el.classList.remove('selected'));
+    }
+
+    function openLeaveModal(dayKey) {
+      leaveTargetDay = dayKey;
+      selectedDayKey = dayKey;
+      const day = getDayData(dayKey);
+      document.getElementById('leaveModalDate').textContent = formatDayLabel(dayKey);
+      document.getElementById('leaveMmLeave').value = day.mm.leave;
+      refreshLeaveModalMmPreview(day);
+      document.getElementById('leaveModal').classList.add('open');
+      document.getElementById('overlay').classList.add('open');
+    }
+
+    function applyLeavePreset(preset) {
+      const day = getDayData(leaveTargetDay);
+      if (preset === 'holiday') {
+        day.holiday = true;
+        day.mm = { work: 0, improve: 0, leave: 1 };
+      } else if (preset === 'half-am' || preset === 'half-pm') {
+        day.holiday = false;
+        day.mm.leave = 0.5;
+        const label = preset === 'half-am' ? '오전 반차' : '오후 반차';
+        if (!day.tasks.some(t => t.title.includes('반차'))) {
+          day.tasks.push({
+            id: 't' + Date.now(),
+            cat: 'other',
+            title: label,
+            plan: 0, actual: 0, done: true,
+            note: '휴일 M/M 0.5',
+          });
+        }
+      } else if (preset === 'clear') {
+        day.holiday = false;
+        day.mm = { work: 0, improve: 0, leave: 0 };
+      }
+      document.getElementById('leaveMmLeave').value = day.mm.leave;
+      refreshLeaveModalMmPreview(day);
+    }
+
+    function openAddModal(dayKey) {
+      addTargetDay = dayKey;
+      document.getElementById('addTitle').value = '';
+      document.getElementById('addModal').classList.add('open');
+      document.getElementById('overlay').classList.add('open');
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    function bindEvents() {
+      document.querySelectorAll('.task-item').forEach(el => {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openPanel(el.dataset.task);
+        });
+      });
+      document.querySelectorAll('[data-add]').forEach(el => {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openAddModal(el.dataset.add);
+        });
+      });
+      document.querySelectorAll('[data-leave]').forEach(el => {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openLeaveModal(el.dataset.leave);
+        });
+      });
+      document.querySelectorAll('[data-day-mm]').forEach(el => {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openLeaveModal(el.dataset.dayMm);
+        });
+      });
+      document.querySelectorAll('.day-cell[data-day]').forEach(el => {
+        el.addEventListener('click', () => {
+          selectedDayKey = el.dataset.day;
+          renderWeeks();
+        });
+      });
+    }
+
+    document.getElementById('closePanel').addEventListener('click', closePanel);
+    document.getElementById('overlay').addEventListener('click', closePanel);
+
+    document.getElementById('saveTask').addEventListener('click', () => {
+      const found = findTask(selectedTaskId);
+      if (!found) return;
+      const { task, dayKey } = found;
+      task.cat = document.getElementById('editCategory').value;
+      const axis = document.getElementById('editMmAxis').value;
+      if (axis) task.mmAxis = axis;
+      else delete task.mmAxis;
+      task.title = document.getElementById('editTitle').value;
+      task.note = document.getElementById('editNote').value;
+      task.plan = parseFloat(document.getElementById('editPlan').value) || 0;
+      task.actual = parseFloat(document.getElementById('editActual').value) || 0;
+      task.done = document.getElementById('editDone').checked;
+      task.approved = document.getElementById('editApproved').checked;
+      const day = sampleData[dayKey];
+      recalcDayMmFromHours(day);
+      closePanel();
+      renderWeeks();
+      showToast('저장됨 — M/M은 실작업(h)에서 자동 반영');
+    });
+
+    document.getElementById('deleteTask').addEventListener('click', () => {
+      const found = findTask(selectedTaskId);
+      if (!found) return;
+      const dayKey = found.dayKey;
+      sampleData[dayKey].tasks = sampleData[dayKey].tasks.filter(t => t.id !== selectedTaskId);
+      recalcDayMmFromHours(sampleData[dayKey]);
+      closePanel();
+      renderWeeks();
+      showToast('항목 삭제됨 — M/M 재계산');
+    });
+
+    document.querySelectorAll('#addCatPills .cat-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#addCatPills .cat-pill').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        addSelectedCat = btn.dataset.cat;
+      });
+    });
+
+    document.getElementById('cancelAdd').addEventListener('click', closePanel);
+    document.getElementById('confirmAdd').addEventListener('click', () => {
+      const title = document.getElementById('addTitle').value.trim();
+      if (!title) { showToast('업무명을 입력하세요'); return; }
+      const day = getDayData(addTargetDay);
+      day.tasks.push({
+        id: 't' + Date.now(),
+        cat: addSelectedCat,
+        title,
+        plan: parseFloat(document.getElementById('addPlan').value) || 0,
+        actual: parseFloat(document.getElementById('addActual').value) || 0,
+        done: document.getElementById('addDone').checked,
+        note: '',
+      });
+      recalcDayMmFromHours(day);
+      closePanel();
+      renderWeeks();
+      showToast('항목 추가됨 — M/M 자동 반영');
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      showToast('KPI 엑셀 내보내기 — React 구현 시 01c·02 시트 생성');
+    });
+
+    document.getElementById('todayBtn').addEventListener('click', goToToday);
+
+    document.getElementById('presetBtn').addEventListener('click', () => {
+      if (selectedDayKey) {
+        openLeaveModal(selectedDayKey);
+      } else {
+        openLeaveModal('2026-05-25');
+        showToast('5/25(공휴일) 셀 — 휴일 M/M 설정 예시');
+      }
+    });
+
+    document.getElementById('cancelLeave').addEventListener('click', closePanel);
+    document.getElementById('leaveMmLeave').addEventListener('input', () => {
+      if (!leaveTargetDay) return;
+      const day = getDayData(leaveTargetDay);
+      day.mm.leave = parseFloat(document.getElementById('leaveMmLeave').value) || 0;
+      day.holiday = false;
+      refreshLeaveModalMmPreview(day);
+    });
+    document.querySelectorAll('[data-preset]').forEach(btn => {
+      btn.addEventListener('click', () => applyLeavePreset(btn.dataset.preset));
+    });
+    document.getElementById('saveLeave').addEventListener('click', () => {
+      if (!leaveTargetDay) return;
+      const day = sampleData[leaveTargetDay] || getDayData(leaveTargetDay);
+      const leave = parseFloat(document.getElementById('leaveMmLeave').value) || 0;
+      if (leave >= 1) {
+        day.holiday = true;
+        day.mm = { work: 0, improve: 0, leave: 1 };
+      } else {
+        day.holiday = false;
+        day.mm.leave = leave;
+        recalcDayMmFromHours(day);
+      }
+      closePanel();
+      renderWeeks();
+      showToast(`${formatDayLabel(leaveTargetDay)} — 휴일·업무 M/M 반영`);
+    });
+
+    document.getElementById('prevMonth').addEventListener('click', () => {
+      currentMonth.month--;
+      if (currentMonth.month < 0) { currentMonth.month = 11; currentMonth.year--; }
+      renderWeeks();
+    });
+
+    document.getElementById('nextMonth').addEventListener('click', () => {
+      currentMonth.month++;
+      if (currentMonth.month > 11) { currentMonth.month = 0; currentMonth.year++; }
+      renderWeeks();
+    });
+
+    recalcAllSampleDays();
+    renderWeeks();
+  </script>
+</body>
+</html>

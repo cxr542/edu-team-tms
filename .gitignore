@@ -1,0 +1,7 @@
+.vercel
+node_modules
+dist
+ledger-snapshot.json
+snapshots
+.env*
+.DS_Store
