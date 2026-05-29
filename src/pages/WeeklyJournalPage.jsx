@@ -29,6 +29,17 @@ function formatDayLabel(key) {
   return `${y}년 ${m}월 ${d}일 (${DAY_NAMES[dt.getDay()]})`;
 }
 
+const DEFAULT_ADD_DRAFT = { cat: 'edu', title: '', plan: 4, actual: 0, done: false };
+
+function formatTaskHoursLine(task) {
+  const plan = Number(task.plan) || 0;
+  const actual = Number(task.actual) || 0;
+  if (plan <= 0 && actual <= 0) return null;
+  if (actual > 0) return `${plan}h → ${actual}h`;
+  if (plan > 0) return `계획 ${plan}h`;
+  return `${actual}h`;
+}
+
 function TaskMmPill({ task }) {
   if (LEAVE_MEMO_TASK_RE.test(task.title)) return null;
   const h = Number(task.actual) || 0;
@@ -239,13 +250,13 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     showToast('삭제됨');
   };
 
-  const [addDraft, setAddDraft] = useState({
-    cat: 'edu',
-    title: '',
-    plan: 4,
-    actual: 3.5,
-    done: true,
-  });
+  const [addDraft, setAddDraft] = useState(DEFAULT_ADD_DRAFT);
+
+  const openAdd = (dayKey) => {
+    setAddDayKey(dayKey);
+    setAddDraft(DEFAULT_ADD_DRAFT);
+    setAddOpen(true);
+  };
 
   const confirmAdd = () => {
     if (!addDayKey || readOnly) return;
@@ -253,27 +264,30 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       showToast('업무명을 입력하세요');
       return;
     }
-    journal.updateDay(addDayKey, (day) => {
+    const plan = Number(addDraft.plan) || 0;
+    const newId = `t-${Date.now()}`;
+    const newTask = {
+      id: newId,
+      cat: addDraft.cat,
+      title: addDraft.title.trim(),
+      plan,
+      actual: 0,
+      done: false,
+      note: '',
+    };
+    const dayKey = addDayKey;
+    journal.updateDay(dayKey, (day) => {
       const next = {
         ...day,
-        tasks: [
-          ...day.tasks,
-          {
-            id: `t-${Date.now()}`,
-            cat: addDraft.cat,
-            title: addDraft.title.trim(),
-            plan: Number(addDraft.plan) || 0,
-            actual: Number(addDraft.actual) || 0,
-            done: addDraft.done,
-            note: '',
-          },
-        ],
+        tasks: [...day.tasks, newTask],
       };
       recalcDayMmFromHours(next);
       return next;
     });
-    closeAll();
-    showToast('항목 추가됨');
+    setAddOpen(false);
+    setEditTask({ ...newTask, dayKey });
+    setPanelOpen(true);
+    showToast('항목 추가됨 — 실작업(h)를 입력하세요');
   };
 
   const [leaveLeave, setLeaveLeave] = useState(0);
@@ -376,10 +390,12 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         </div>
         {data.holiday && <div style={{ color: 'var(--accent)', fontSize: '0.75rem' }}>공휴일</div>}
         <ul className="journal-task-list">
-          {data.tasks.map((t) => (
+          {data.tasks.map((t) => {
+            const hoursLine = formatTaskHoursLine(t);
+            return (
             <li
               key={t.id}
-              className={`journal-task-item${editTask?.id === t.id ? ' selected' : ''}`}
+              className={`journal-task-item${editTask?.id === t.id ? ' selected' : ''}${hoursLine && !(Number(t.actual) > 0) ? ' is-planned' : ''}`}
               onClick={(e) => {
                 e.stopPropagation();
                 if (!readOnly) openEdit(t.id, key);
@@ -388,16 +404,20 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: JOURNAL_CATS[t.cat].color, flexShrink: 0, marginTop: 5 }} />
               <span style={{ flex: 1 }}>
                 {t.title}
-                {(t.plan || t.actual) && (
-                  <small style={{ display: 'block', color: 'var(--text-muted)' }}>
-                    {t.plan}h → {t.actual}h
+                {hoursLine && (
+                  <small
+                    className={Number(t.actual) > 0 ? '' : 'journal-task-hours-plan'}
+                    style={{ display: 'block', color: 'var(--text-muted)' }}
+                  >
+                    {hoursLine}
                   </small>
                 )}
               </span>
               <TaskMmPill task={t} />
               {t.done && <span style={{ color: '#6ee7b7' }}>✓</span>}
             </li>
-          ))}
+            );
+          })}
         </ul>
         <div className="journal-mm-row">
           <button type="button" className={`journal-mm-chip${data.mm.leave > 0 ? ' leave-active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!readOnly) openLeave(key); }}>
@@ -412,7 +432,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         </div>
         {!readOnly && (
           <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
-            <button type="button" className="btn btn-secondary" style={{ fontSize: '0.72rem', padding: '0.25rem 0.4rem' }} onClick={(e) => { e.stopPropagation(); setAddDayKey(key); setAddOpen(true); }}>
+            <button type="button" className="btn btn-secondary" style={{ fontSize: '0.72rem', padding: '0.25rem 0.4rem' }} onClick={(e) => { e.stopPropagation(); openAdd(key); }}>
               + 항목
             </button>
             <button type="button" className="btn btn-secondary" style={{ fontSize: '0.72rem', padding: '0.25rem 0.4rem' }} onClick={(e) => { e.stopPropagation(); openLeave(key); }}>
@@ -816,13 +836,18 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               </label>
             </div>
             {!readOnly && (
-              <div className="modal-actions">
+              <div className="modal-actions journal-edit-actions">
                 <button type="button" className="btn btn-secondary" onClick={deleteTask}>
                   삭제
                 </button>
-                <button type="submit" className="btn btn-primary">
-                  저장
-                </button>
+                <div className="journal-edit-actions-primary">
+                  <button type="button" className="btn btn-secondary" onClick={closeAll}>
+                    취소
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    저장
+                  </button>
+                </div>
               </div>
             )}
           </form>
@@ -847,9 +872,17 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             <input className="form-input" value={addDraft.title} onChange={(e) => setAddDraft({ ...addDraft, title: e.target.value })} />
           </div>
           <div className="form-group">
-            <label>실작업 (h)</label>
-            <input type="number" step="0.5" className="form-input" value={addDraft.actual} onChange={(e) => setAddDraft({ ...addDraft, actual: e.target.value })} />
+            <label>계획 (h)</label>
+            <input
+              type="number"
+              step="0.5"
+              min="0"
+              className="form-input"
+              value={addDraft.plan}
+              onChange={(e) => setAddDraft({ ...addDraft, plan: e.target.value })}
+            />
           </div>
+          <p className="journal-add-hint">추가 후 편집 화면에서 실작업(h)를 입력합니다.</p>
         </div>
         <div className="modal-actions">
           <button type="button" className="btn btn-secondary" onClick={closeAll}>
