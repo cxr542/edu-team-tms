@@ -1,7 +1,20 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Download, RefreshCw, Target, Upload } from 'lucide-react';
+import {
+  ArrowRightLeft,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Copy,
+  Download,
+  RefreshCw,
+  RotateCcw,
+  Target,
+  Upload,
+} from 'lucide-react';
 import { JOURNAL_CATS } from '../constants/journalCategories';
-import { useWeeklyJournal } from '../hooks/useWeeklyJournal';
+import { useJournal } from '../context/JournalProvider';
+import { useJournalPeriod } from '../hooks/useJournalPeriod';
 import {
   dateKey,
   getDayHoursInfo,
@@ -11,14 +24,37 @@ import {
   hoursToMm,
   recalcDayMmFromHours,
 } from '../utils/journalMm';
-import { exportKpiJournalWorkbook } from '../utils/kpiExcelExport';
+import { exportKpiAnalysisWorkbook } from '../utils/kpiExcelExport';
 import { downloadJournalSnapshot } from '../utils/journalSnapshot';
 import { resolveJournalDay } from '../utils/journalHoliday2026';
 import { applyLeavePresetToDay, LEAVE_MEMO_TASK_RE, LEAVE_PRESET_BUTTONS } from '../utils/journalLeavePresets';
 import { scheduleScrollJournalDay } from '../utils/journalScroll';
 import { loadCollapsedWeekKeys, saveCollapsedWeekKeys } from '../utils/journalWeekVisibility';
-import { KPI_JOURNAL_MEMBER } from '../constants/kpiSchema';
+import { KPI1_NAME, KPI2_NAME } from '../constants/kpiDisplayNames';
+import {
+  TEAM_KPI_MEMBERS,
+  TEAM_LEADER_MEMBER_CODE,
+  JOURNAL_LINKED_MEMBER_CODE,
+  findKpiMember,
+  formatKpiMemberLabel,
+  formatKpiMemberRoleLine,
+} from '../constants/kpiMembers';
+import {
+  getTaskSlotLabel,
+  JOURNAL_TASK_SLOTS,
+  normalizeTaskSlot,
+  resolveTaskSlotField,
+  sortTasksBySlot,
+} from '../constants/journalTaskSlot';
+import AppModuleLink from '../components/AppModuleLink';
 import JournalWeekColumnTextarea from '../components/JournalWeekColumnTextarea';
+import { uiTooltip } from '../utils/uiTooltip';
+import { useTeamAccess } from '../hooks/useTeamAccess';
+import { URL_ACCESS_LEADER } from '../constants/teamAccess';
+import { JournalEditKpiPreview, TaskKpiBadge } from '../components/JournalKpiLinkagePanel';
+import JournalCategoryLegend from '../components/JournalCategoryLegend';
+import MemberKpiApprovalPanel from '../components/MemberKpiApprovalPanel';
+import { isEditorMode } from '../utils/appMode';
 import './WeeklyJournalPage.css';
 
 const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
@@ -29,7 +65,40 @@ function formatDayLabel(key) {
   return `${y}년 ${m}월 ${d}일 (${DAY_NAMES[dt.getDay()]})`;
 }
 
-const DEFAULT_ADD_DRAFT = { cat: 'edu', title: '', plan: 4, actual: 0, done: false };
+const DEFAULT_ADD_DRAFT = { cat: 'edu', title: '', plan: 4, actual: 0, done: false, slot: '' };
+
+function taskFieldsFromEdit(editTask) {
+  const fields = {
+    id: editTask.id,
+    cat: editTask.cat,
+    title: editTask.title.trim(),
+    note: editTask.note || '',
+    plan: Number(editTask.plan) || 0,
+    actual: Number(editTask.actual) || 0,
+    done: editTask.done,
+    mmAxis: editTask.mmAxis || undefined,
+    slot: resolveTaskSlotField(editTask.slot),
+  };
+  if (editTask.kpi2Effect?.enabled) {
+    fields.kpi2Effect = {
+      enabled: true,
+      projectId: editTask.kpi2Effect.projectId || '',
+      baselineHours: Number(editTask.kpi2Effect.baselineHours) || Number(editTask.plan) || 0,
+    };
+  }
+  return fields;
+}
+
+function navigateToDayKey(dayKey, { year, month, setYear, setMonth, setSelectedDayKey, scrollToDayRef, setScrollTick }) {
+  const [y, m] = dayKey.split('-').map(Number);
+  if (y !== year || m - 1 !== month) {
+    setYear(y);
+    setMonth(m - 1);
+  }
+  scrollToDayRef.current = dayKey;
+  setScrollTick((t) => t + 1);
+  setSelectedDayKey(dayKey);
+}
 
 function formatTaskHoursLine(task) {
   const plan = Number(task.plan) || 0;
@@ -59,35 +128,63 @@ function getTodayParts() {
 }
 
 export default function WeeklyJournalPage({ readOnly = false }) {
-  const journal = useWeeklyJournal({ readOnly, autoSyncCloud: !readOnly });
+  const journal = useJournal();
+  const { year, month, setYear, setMonth, changeMonth } = useJournalPeriod();
   const importInputRef = useRef(null);
   const journalMainRef = useRef(null);
   const scrollToDayRef = useRef(null);
-  const todayInit = getTodayParts();
-  const [year, setYear] = useState(todayInit.year);
-  const [month, setMonth] = useState(todayInit.month);
+  const teamAccess = useTeamAccess();
+  const [memberCode, setMemberCode] = useState(teamAccess.defaultMemberCode);
+  const selectedMember = useMemo(() => findKpiMember(memberCode) || TEAM_KPI_MEMBERS[0], [memberCode]);
+
+  useEffect(() => {
+    if (teamAccess.memberLocked) setMemberCode(teamAccess.scopedMember);
+  }, [teamAccess.memberLocked, teamAccess.scopedMember]);
   const [selectedDayKey, setSelectedDayKey] = useState(null);
   const [editTask, setEditTask] = useState(null);
   const [addDayKey, setAddDayKey] = useState(null);
   const [leaveDayKey, setLeaveDayKey] = useState(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [copyOpen, setCopyOpen] = useState(false);
+  const [copyTargetDayKey, setCopyTargetDayKey] = useState('');
+  const [moveOpen, setMoveOpen] = useState(false);
+  const [moveTargetDayKey, setMoveTargetDayKey] = useState('');
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [toast, setToast] = useState('');
-  const [collapsedWeeks, setCollapsedWeeks] = useState(() => loadCollapsedWeekKeys(year, month));
+  const [collapsedWeeks, setCollapsedWeeks] = useState(() => loadCollapsedWeekKeys(year, month, memberCode));
 
   useEffect(() => {
-    setCollapsedWeeks(loadCollapsedWeekKeys(year, month));
-  }, [year, month]);
+    setCollapsedWeeks(loadCollapsedWeekKeys(year, month, memberCode));
+  }, [year, month, memberCode]);
+
+  useEffect(() => {
+    setEditTask(null);
+    setPanelOpen(false);
+    setAddDayKey(null);
+    setAddOpen(false);
+    setCopyOpen(false);
+    setMoveOpen(false);
+    setLeaveOpen(false);
+    setLeaveDayKey(null);
+    setSelectedDayKey(null);
+  }, [memberCode]);
 
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(''), 2500);
   };
 
+  const memberDays = journal.getMemberDays(memberCode);
+
+  const patchDay = useCallback(
+    (key, updater) => journal.updateDay(key, updater, memberCode),
+    [journal, memberCode]
+  );
+
   const getDay = useCallback(
-    (key) => resolveJournalDay(key, journal.days[key]),
-    [journal.days]
+    (key) => resolveJournalDay(key, memberDays[key]),
+    [memberDays]
   );
 
   const weeks = useMemo(() => getWeeksInMonth(year, month), [year, month]);
@@ -95,9 +192,9 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const persistCollapsedWeeks = useCallback(
     (next) => {
       setCollapsedWeeks(next);
-      saveCollapsedWeekKeys(year, month, next);
+      saveCollapsedWeekKeys(year, month, next, memberCode);
     },
-    [year, month]
+    [year, month, memberCode]
   );
 
   const toggleWeekTable = useCallback(
@@ -106,11 +203,11 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         const next = new Set(prev);
         if (next.has(weekKey)) next.delete(weekKey);
         else next.add(weekKey);
-        saveCollapsedWeekKeys(year, month, next);
+        saveCollapsedWeekKeys(year, month, next, memberCode);
         return next;
       });
     },
-    [year, month]
+    [year, month, memberCode]
   );
 
   const collapseAllWeekTables = useCallback(() => {
@@ -167,21 +264,6 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     openLeave(key);
   };
 
-  const changeMonth = (delta) => {
-    let m = month + delta;
-    let y = year;
-    if (m < 0) {
-      m = 11;
-      y -= 1;
-    }
-    if (m > 11) {
-      m = 0;
-      y += 1;
-    }
-    setMonth(m);
-    setYear(y);
-  };
-
   const [scrollTick, setScrollTick] = useState(0);
 
   const goToToday = useCallback(() => {
@@ -216,7 +298,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const saveEdit = (e) => {
     e.preventDefault();
     if (!editTask || readOnly) return;
-    journal.updateDay(editTask.dayKey, (day) => {
+    patchDay(editTask.dayKey, (day) => {
       const tasks = day.tasks.map((t) =>
         t.id === editTask.id
           ? {
@@ -228,6 +310,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               actual: Number(editTask.actual) || 0,
               done: editTask.done,
               mmAxis: editTask.mmAxis || undefined,
+              slot: resolveTaskSlotField(editTask.slot),
             }
           : t
       );
@@ -241,13 +324,107 @@ export default function WeeklyJournalPage({ readOnly = false }) {
 
   const deleteTask = () => {
     if (!editTask || readOnly) return;
-    journal.updateDay(editTask.dayKey, (day) => {
+    patchDay(editTask.dayKey, (day) => {
       const next = { ...day, tasks: day.tasks.filter((t) => t.id !== editTask.id) };
       recalcDayMmFromHours(next);
       return next;
     });
     closeAll();
     showToast('삭제됨');
+  };
+
+  const openCopyModal = () => {
+    if (!editTask || readOnly) return;
+    setCopyTargetDayKey(editTask.dayKey);
+    setCopyOpen(true);
+  };
+
+  const openMoveModal = () => {
+    if (!editTask || readOnly) return;
+    setMoveTargetDayKey(editTask.dayKey);
+    setMoveOpen(true);
+  };
+
+  const confirmCopy = () => {
+    if (!editTask || readOnly || !copyTargetDayKey) return;
+    const sourceDayKey = editTask.dayKey;
+    const sourceId = editTask.id;
+    const copy = {
+      id: `t-${Date.now()}`,
+      cat: editTask.cat,
+      title: editTask.title.trim(),
+      note: editTask.note || '',
+      plan: Number(editTask.plan) || 0,
+      actual: 0,
+      done: false,
+      mmAxis: editTask.mmAxis || undefined,
+      slot: resolveTaskSlotField(editTask.slot),
+    };
+
+    patchDay(sourceDayKey, (day) => {
+      const tasks = day.tasks.map((t) =>
+        t.id === sourceId ? { ...t, ...taskFieldsFromEdit(editTask) } : t
+      );
+      const next = { ...day, tasks };
+      recalcDayMmFromHours(next);
+      return next;
+    });
+
+    patchDay(copyTargetDayKey, (day) => {
+      const next = { ...day, tasks: [...day.tasks, copy] };
+      recalcDayMmFromHours(next);
+      return next;
+    });
+
+    navigateToDayKey(copyTargetDayKey, {
+      year,
+      month,
+      setYear,
+      setMonth,
+      setSelectedDayKey,
+      scrollToDayRef,
+      setScrollTick,
+    });
+    setCopyOpen(false);
+    setEditTask({ ...copy, dayKey: copyTargetDayKey });
+    setPanelOpen(true);
+    showToast(`${formatDayLabel(copyTargetDayKey)}에 복사됨 — 실작업(h)를 입력하세요`);
+  };
+
+  const confirmMove = () => {
+    if (!editTask || readOnly || !moveTargetDayKey) return;
+    const sourceDayKey = editTask.dayKey;
+    if (moveTargetDayKey === sourceDayKey) {
+      showToast('이동할 날짜가 현재와 같습니다');
+      return;
+    }
+    const moved = taskFieldsFromEdit(editTask);
+
+    patchDay(sourceDayKey, (day) => {
+      const next = { ...day, tasks: day.tasks.filter((t) => t.id !== editTask.id) };
+      recalcDayMmFromHours(next);
+      return next;
+    });
+
+    patchDay(moveTargetDayKey, (day) => {
+      const next = { ...day, tasks: [...day.tasks, moved] };
+      recalcDayMmFromHours(next);
+      return next;
+    });
+
+    navigateToDayKey(moveTargetDayKey, {
+      year,
+      month,
+      setYear,
+      setMonth,
+      setSelectedDayKey,
+      scrollToDayRef,
+      setScrollTick,
+    });
+    setMoveOpen(false);
+    setEditTask({ ...moved, dayKey: moveTargetDayKey });
+    setPanelOpen(true);
+    showToast(`${formatDayLabel(moveTargetDayKey)}(으)로 이동됨`);
   };
 
   const [addDraft, setAddDraft] = useState(DEFAULT_ADD_DRAFT);
@@ -274,9 +451,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       actual: 0,
       done: false,
       note: '',
+      slot: resolveTaskSlotField(addDraft.slot),
     };
     const dayKey = addDayKey;
-    journal.updateDay(dayKey, (day) => {
+    patchDay(dayKey, (day) => {
       const next = {
         ...day,
         tasks: [...day.tasks, newTask],
@@ -302,7 +480,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
 
   const applyLeavePreset = (preset) => {
     if (!leaveDayKey || readOnly) return;
-    journal.updateDay(leaveDayKey, (day) => {
+    patchDay(leaveDayKey, (day) => {
       const next = applyLeavePresetToDay(day, preset);
       if (!next) return day;
       recalcDayMmFromHours(next);
@@ -317,7 +495,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const saveLeave = () => {
     if (!leaveDayKey || readOnly) return;
     const leave = Number(leaveLeave) || 0;
-    journal.updateDay(leaveDayKey, (day) => {
+    patchDay(leaveDayKey, (day) => {
       if (leave >= 1) {
         return { ...day, holiday: true, mm: { work: 0, improve: 0, leave: 1 }, tasks: day.tasks };
       }
@@ -332,6 +510,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const closeAll = () => {
     setPanelOpen(false);
     setAddOpen(false);
+    setCopyOpen(false);
+    setMoveOpen(false);
     setLeaveOpen(false);
     setEditTask(null);
   };
@@ -390,12 +570,13 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         </div>
         {data.holiday && <div style={{ color: 'var(--accent)', fontSize: '0.75rem' }}>공휴일</div>}
         <ul className="journal-task-list">
-          {data.tasks.map((t) => {
+          {sortTasksBySlot(data.tasks).map((t) => {
             const hoursLine = formatTaskHoursLine(t);
+            const slotLabel = getTaskSlotLabel(t.slot);
             return (
             <li
               key={t.id}
-              className={`journal-task-item${editTask?.id === t.id ? ' selected' : ''}${hoursLine && !(Number(t.actual) > 0) ? ' is-planned' : ''}`}
+              className={`journal-task-item${editTask?.id === t.id ? ' selected' : ''}${hoursLine && !(Number(t.actual) > 0) ? ' is-planned' : ''}${slotLabel ? ` slot-${normalizeTaskSlot(t.slot)}` : ''}`}
               onClick={(e) => {
                 e.stopPropagation();
                 if (!readOnly) openEdit(t.id, key);
@@ -403,7 +584,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             >
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: JOURNAL_CATS[t.cat].color, flexShrink: 0, marginTop: 5 }} />
               <span style={{ flex: 1 }}>
-                {t.title}
+                <span className="journal-task-title-row">
+                  {slotLabel && <span className={`journal-task-slot slot-${normalizeTaskSlot(t.slot)}`}>{slotLabel}</span>}
+                  <span>{t.title}</span>
+                </span>
                 {hoursLine && (
                   <small
                     className={Number(t.actual) > 0 ? '' : 'journal-task-hours-plan'}
@@ -413,8 +597,9 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   </small>
                 )}
               </span>
+              <TaskKpiBadge task={t} dayKey={key} improveProjects={journal.improveProjects} />
               <TaskMmPill task={t} />
-              {t.done && <span style={{ color: '#6ee7b7' }}>✓</span>}
+              {t.done && <span className="journal-task-done">✓</span>}
             </li>
             );
           })}
@@ -452,33 +637,76 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         <div className="journal-sticky-top">
           <header className="journal-page-header">
             <div className="journal-month-nav">
-              <button type="button" className="journal-icon-btn" onClick={() => changeMonth(-1)} aria-label="이전 달">
+              <button
+                type="button"
+                className="journal-icon-btn"
+                onClick={() => changeMonth(-1)}
+                aria-label="이전 달"
+                {...uiTooltip('이전 달로 이동')}
+              >
                 <ChevronLeft size={18} />
               </button>
               <h1>
                 {year}년 {month + 1}월
               </h1>
-              <button type="button" className="journal-icon-btn" onClick={() => changeMonth(1)} aria-label="다음 달">
+              <button
+                type="button"
+                className="journal-icon-btn"
+                onClick={() => changeMonth(1)}
+                aria-label="다음 달"
+                {...uiTooltip('다음 달로 이동')}
+              >
                 <ChevronRight size={18} />
               </button>
             </div>
             <div className="journal-author-chip">
-              작성자 <strong>{KPI_JOURNAL_MEMBER.displayName}</strong>{' '}
+              작성자 <strong>{selectedMember.displayName}</strong>{' '}
               <span>
-                ({KPI_JOURNAL_MEMBER.code} · 강사){readOnly ? ' · 조회' : ''}
+                ({formatKpiMemberRoleLine(selectedMember)}){readOnly ? ' · 조회' : ''}
               </span>
             </div>
             <div className="journal-actions">
+              {(teamAccess.isMemberScope || memberCode === TEAM_LEADER_MEMBER_CODE || teamAccess.isLeader) && (
+                <AppModuleLink
+                  className="btn btn-secondary"
+                  module="competency"
+                  mode="edit"
+                  member={teamAccess.isMemberScope || teamAccess.isLeader ? memberCode : undefined}
+                  access={teamAccess.isLeader && !teamAccess.isMemberScope ? URL_ACCESS_LEADER : undefined}
+                  year={year}
+                  month={month + 1}
+                  style={{ textDecoration: 'none' }}
+                  {...uiTooltip('역량 평가 — 해당 구성원 평가 페이지')}
+                >
+                  역량 평가 →
+                </AppModuleLink>
+              )}
+              {teamAccess.isLeader && (
+                <AppModuleLink
+                  className="btn btn-secondary"
+                  module="kpi"
+                  mode="edit"
+                  access={URL_ACCESS_LEADER}
+                  year={year}
+                  month={month + 1}
+                  style={{ textDecoration: 'none' }}
+                  {...uiTooltip('팀 KPI 관리 (팀장)')}
+                >
+                  팀 KPI 관리 →
+                </AppModuleLink>
+              )}
               <button
                 type="button"
                 className="btn btn-primary"
+                {...uiTooltip('KPI 분석 Excel 저장')}
                 onClick={() => {
                   try {
-                    const result = exportKpiJournalWorkbook({
+                    const result = exportKpiAnalysisWorkbook({
                       year,
                       monthIndex: month,
-                      days: journal.days,
-                      weekSummaries: journal.weekSummaries,
+                      days: journal.getMemberDays(memberCode),
+                      kpiOperational: journal.kpiOperational,
+                      improveProjects: journal.improveProjects,
                     });
                     showToast(`KPI 엑셀 저장 — ${result.rows01c}주 · ${result.rows02}건`);
                   } catch (err) {
@@ -489,7 +717,12 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 <Download size={16} />
                 KPI 엑셀보내기
               </button>
-              <button type="button" className="btn btn-secondary" onClick={goToToday}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={goToToday}
+                {...uiTooltip('오늘 날짜로 스크롤')}
+              >
                 <Target size={16} />
                 오늘로 이동
               </button>
@@ -498,6 +731,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   <button
                     type="button"
                     className="btn btn-secondary"
+                    {...uiTooltip('배포 일지 → 이 기기 반영')}
                     onClick={async () => {
                       try {
                         let r = await journal.pullFromCloud();
@@ -525,6 +759,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   <button
                     type="button"
                     className="btn btn-secondary"
+                    {...uiTooltip('일지 JSON 저장 (배포 전)')}
                     onClick={() => {
                       downloadJournalSnapshot(journal.getStore());
                       showToast('journal-snapshot.json 저장 → npm run publish:journal 후 deploy');
@@ -533,12 +768,37 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                     <Upload size={16} />
                     클라우드에 게시
                   </button>
-                  <button type="button" className="btn btn-ghost" onClick={() => importInputRef.current?.click()}>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={() => importInputRef.current?.click()}
+                    {...uiTooltip('일지 백업 JSON 가져오기')}
+                  >
                     <Upload size={16} />
                     백업 가져오기
                   </button>
-                  <button type="button" className="btn btn-ghost" onClick={openPresetLeave}>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={openPresetLeave}
+                    {...uiTooltip('휴일 프리셋 적용')}
+                  >
                     휴일 프리셋
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-ghost journal-reset-seed"
+                    {...uiTooltip('5·6월 Academizer 샘플 (A·B·C)', undefined, { wrap: true })}
+                    onClick={() => {
+                      if (!journal.resetToSeed(memberCode)) return;
+                      journal.seedAcademizerDemo?.();
+                      setYear(2026);
+                      setMonth(5);
+                      showToast('샘플 로드됨 — 6월 일지·KPI2·KPI3 4요소');
+                    }}
+                  >
+                    <RotateCcw size={16} />
+                    샘플로 되돌리기
                   </button>
                   <input
                     ref={importInputRef}
@@ -562,6 +822,22 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             </div>
           </header>
 
+          {!teamAccess.memberLocked && (
+            <nav className="journal-member-tabs" aria-label="구성원">
+              {TEAM_KPI_MEMBERS.map((m) => (
+                <button
+                  key={m.code}
+                  type="button"
+                  className={`journal-member-tab${memberCode === m.code ? ' is-active' : ''}`}
+                  onClick={() => setMemberCode(m.code)}
+                  {...uiTooltip(`${formatKpiMemberLabel(m)} · ${formatKpiMemberRoleLine(m)}`)}
+                >
+                  {formatKpiMemberLabel(m)}
+                </button>
+              ))}
+            </nav>
+          )}
+
           {!readOnly && journal.meta?.updatedAt && (
             <p className="journal-sync-hint">
               이 기기 저장: {new Date(journal.meta.updatedAt).toLocaleString('ko-KR')}
@@ -570,6 +846,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           )}
 
           <div className="journal-kpi-strip">
+            <p className="journal-kpi-strip-member">
+              {formatKpiMemberLabel(selectedMember)} · {month + 1}월 집계
+            </p>
+            <div className="journal-kpi-strip-grid">
             <div>
               업무 M/M ({month + 1}월)
               <strong>{kpiMonth.work.toFixed(2)}</strong>
@@ -583,18 +863,31 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               <strong>{kpiMonth.leave.toFixed(2)}</strong>
             </div>
             <div>
-              KPI2 완료 업무
+              {KPI2_NAME} 완료 업무
               <strong>{kpiMonth.doneTasks}건</strong>
             </div>
             <div>
               8h 미만 근무일
               <strong className={kpiMonth.shortDays ? 'is-warn' : ''}>{kpiMonth.shortDays}일</strong>
             </div>
+            </div>
           </div>
+
+          {!readOnly && isEditorMode() && (
+            <MemberKpiApprovalPanel
+              year={year}
+              month={month}
+              memberCode={memberCode}
+              memberLabel={formatKpiMemberLabel(selectedMember)}
+              onToast={showToast}
+            />
+          )}
 
           <div className="journal-mm-panel">
             <div className="journal-mm-panel-head">
-              <h2>월 M/M 입력 현황 (KPI1)</h2>
+              <h2>
+                월 M/M 입력 현황 ({KPI1_NAME}) — {selectedMember.displayName}
+              </h2>
               <div className="journal-mm-panel-meta">
                 입력 <strong>{monthMm.totalLogged.toFixed(2)}</strong> / 가용 <strong>{monthMm.totalAvail.toFixed(2)}</strong>{' '}
                 M/M
@@ -613,37 +906,38 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             </div>
             <p className="journal-mm-hint">실작업(h)÷8 자동 · 평일 가용 0.8125(점심 제외) · 실작업 목표 6.5h</p>
           </div>
-
-          {weeks.length > 0 && (
-            <div className="journal-week-visibility-bar">
-              <span className="journal-week-visibility-label">
-                주차별 표
-                {hiddenWeekCount > 0 ? (
-                  <span className="journal-week-visibility-count"> · {hiddenWeekCount}주 숨김</span>
-                ) : null}
-              </span>
-              <div className="journal-week-visibility-actions">
-                <button
-                  type="button"
-                  className="btn btn-secondary journal-week-visibility-btn"
-                  onClick={allWeekTablesHidden ? expandAllWeekTables : collapseAllWeekTables}
-                >
-                  {allWeekTablesHidden ? (
-                    <>
-                      <ChevronDown size={16} />
-                      주차 표 모두 보기
-                    </>
-                  ) : (
-                    <>
-                      <ChevronUp size={16} />
-                      주차 표 모두 숨기기
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
         </div>
+
+        {weeks.length > 0 && (
+          <div className="journal-week-visibility-bar">
+            <span className="journal-week-visibility-label">
+              주차별 표
+              {hiddenWeekCount > 0 ? (
+                <span className="journal-week-visibility-count"> · {hiddenWeekCount}주 숨김</span>
+              ) : null}
+            </span>
+            <JournalCategoryLegend className="journal-category-legend--week" />
+            <div className="journal-week-visibility-actions">
+              <button
+                type="button"
+                className="btn btn-secondary journal-week-visibility-btn"
+                onClick={allWeekTablesHidden ? expandAllWeekTables : collapseAllWeekTables}
+              >
+                {allWeekTablesHidden ? (
+                  <>
+                    <ChevronDown size={16} />
+                    주차 표 모두 보기
+                  </>
+                ) : (
+                  <>
+                    <ChevronUp size={16} />
+                    주차 표 모두 숨기기
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
 
         {weeks.map((week) => {
           const stats = getWeekMmStats(week.days, month, getDay);
@@ -725,7 +1019,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   </thead>
                   <tbody>
                     <tr>
-                      <td style={{ fontWeight: 700, textAlign: 'center' }}>김윤형</td>
+                      <td className="journal-week-member-name">
+                        <strong>{selectedMember.displayName}</strong>
+                        <span className="journal-week-member-role">{formatKpiMemberRoleLine(selectedMember)}</span>
+                      </td>
                       {week.days.map((d) => renderDayCell(d))}
                       <td className="journal-week-notes-cell col-summary">
                         <div className="journal-week-notes-inner">
@@ -736,7 +1033,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                                 type="button"
                                 className="journal-summary-draft-btn"
                                 onClick={() => {
-                                  journal.applyWeekColumnTemplate(week.key, 'summary');
+                                  journal.applyWeekColumnTemplate(week.key, 'summary', memberCode);
                                   showToast(`${week.index}주 금주(요약) 기본 양식 적용`);
                                 }}
                               >
@@ -746,8 +1043,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                           </div>
                           <JournalWeekColumnTextarea
                             readOnly={readOnly}
-                            value={journal.getWeekSummaryContent(week.key)}
-                            onChange={(text) => journal.setWeekSummary(week.key, text)}
+                            value={journal.getWeekSummaryContent(week.key, memberCode)}
+                            onChange={(text) => journal.setWeekSummary(week.key, text, memberCode)}
                             placeholder={readOnly ? '' : '• 카테고리 아래에서 Enter → └ 하위 항목'}
                           />
                         </div>
@@ -761,7 +1058,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                                 type="button"
                                 className="journal-summary-draft-btn"
                                 onClick={() => {
-                                  journal.applyWeekColumnTemplate(week.key, 'next');
+                                  journal.applyWeekColumnTemplate(week.key, 'next', memberCode);
                                   showToast(`${week.index}주 차주(예정) 기본 양식 적용`);
                                 }}
                               >
@@ -771,8 +1068,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                           </div>
                           <JournalWeekColumnTextarea
                             readOnly={readOnly}
-                            value={journal.getNextWeekContent(week.key)}
-                            onChange={(text) => journal.setNextWeekPlan(week.key, text)}
+                            value={journal.getNextWeekContent(week.key, memberCode)}
+                            onChange={(text) => journal.setNextWeekPlan(week.key, text, memberCode)}
                             placeholder={readOnly ? '' : '• 카테고리 아래에서 Enter → └ 하위 항목'}
                           />
                         </div>
@@ -787,7 +1084,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         })}
       </div>
 
-      <div className={`journal-panel-overlay${panelOpen || addOpen || leaveOpen ? ' open' : ''}`} onClick={closeAll} role="presentation" />
+      <div className={`journal-panel-overlay${panelOpen || addOpen || copyOpen || moveOpen || leaveOpen ? ' open' : ''}`} onClick={closeAll} role="presentation" />
 
       <aside className={`journal-side-panel${panelOpen ? ' open' : ''}`}>
         {editTask && (
@@ -807,7 +1104,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 </select>
               </div>
               <div className="form-group">
-                <label>KPI1 M/M 구분</label>
+                <label>{KPI1_NAME} M/M 구분</label>
                 <select
                   className="form-input"
                   value={editTask.mmAxis || ''}
@@ -820,9 +1117,91 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 </select>
               </div>
               <div className="form-group">
+                <label>시간대</label>
+                <div className="journal-slot-options" role="group" aria-label="시간대">
+                  {JOURNAL_TASK_SLOTS.map(({ value, label }) => (
+                    <label key={value || 'any'} className="journal-slot-option">
+                      <input
+                        type="radio"
+                        name="edit-task-slot"
+                        value={value}
+                        checked={normalizeTaskSlot(editTask.slot) === value}
+                        onChange={() => setEditTask({ ...editTask, slot: value || undefined })}
+                        disabled={readOnly}
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="form-group">
                 <label>업무명</label>
                 <input className="form-input" value={editTask.title} onChange={(e) => setEditTask({ ...editTask, title: e.target.value })} readOnly={readOnly} />
               </div>
+              <JournalEditKpiPreview task={editTask} dayKey={editTask.dayKey} improveProjects={journal.improveProjects} />
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(editTask.kpi2Effect?.enabled)}
+                    onChange={(e) =>
+                      setEditTask({
+                        ...editTask,
+                        kpi2Effect: e.target.checked
+                          ? {
+                              enabled: true,
+                              projectId: editTask.kpi2Effect?.projectId || journal.improveProjects[0]?.id || '',
+                              baselineHours: editTask.kpi2Effect?.baselineHours ?? editTask.plan ?? 0,
+                            }
+                          : undefined,
+                      })
+                    }
+                    disabled={readOnly}
+                  />{' '}
+                  {KPI2_NAME} 효과 건 (도구 활용·시간 단축)
+                </label>
+              </div>
+              {editTask.kpi2Effect?.enabled && (
+                <>
+                  <div className="form-group">
+                    <label>향상 과제</label>
+                    <select
+                      className="form-input"
+                      value={editTask.kpi2Effect.projectId || ''}
+                      onChange={(e) =>
+                        setEditTask({
+                          ...editTask,
+                          kpi2Effect: { ...editTask.kpi2Effect, projectId: e.target.value },
+                        })
+                      }
+                      disabled={readOnly}
+                    >
+                      <option value="">선택</option>
+                      {journal.improveProjects.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>기준시간 (h, 도구 없을 때)</label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      className="form-input"
+                      value={editTask.kpi2Effect.baselineHours ?? ''}
+                      onChange={(e) =>
+                        setEditTask({
+                          ...editTask,
+                          kpi2Effect: { ...editTask.kpi2Effect, baselineHours: e.target.value },
+                        })
+                      }
+                      readOnly={readOnly}
+                    />
+                  </div>
+                </>
+              )}
               <div className="form-group">
                 <label>계획 (h)</label>
                 <input type="number" step="0.5" className="form-input" value={editTask.plan} onChange={(e) => setEditTask({ ...editTask, plan: e.target.value })} readOnly={readOnly} />
@@ -837,9 +1216,19 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             </div>
             {!readOnly && (
               <div className="modal-actions journal-edit-actions">
-                <button type="button" className="btn btn-secondary" onClick={deleteTask}>
-                  삭제
-                </button>
+                <div className="journal-edit-actions-danger">
+                  <button type="button" className="btn btn-secondary" onClick={deleteTask}>
+                    삭제
+                  </button>
+                  <button type="button" className="btn btn-secondary journal-copy-btn" onClick={openCopyModal}>
+                    <Copy size={14} aria-hidden />
+                    복사
+                  </button>
+                  <button type="button" className="btn btn-secondary journal-copy-btn" onClick={openMoveModal}>
+                    <ArrowRightLeft size={14} aria-hidden />
+                    이동
+                  </button>
+                </div>
                 <div className="journal-edit-actions-primary">
                   <button type="button" className="btn btn-secondary" onClick={closeAll}>
                     취소
@@ -868,6 +1257,23 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             </select>
           </div>
           <div className="form-group">
+            <label>시간대</label>
+            <div className="journal-slot-options" role="group" aria-label="시간대">
+              {JOURNAL_TASK_SLOTS.map(({ value, label }) => (
+                <label key={value || 'any'} className="journal-slot-option">
+                  <input
+                    type="radio"
+                    name="add-task-slot"
+                    value={value}
+                    checked={normalizeTaskSlot(addDraft.slot) === value}
+                    onChange={() => setAddDraft({ ...addDraft, slot: value })}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="form-group">
             <label>업무명</label>
             <input className="form-input" value={addDraft.title} onChange={(e) => setAddDraft({ ...addDraft, title: e.target.value })} />
           </div>
@@ -890,6 +1296,78 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           </button>
           <button type="button" className="btn btn-primary" onClick={confirmAdd}>
             추가
+          </button>
+        </div>
+      </div>
+
+      <div className={`journal-modal${copyOpen ? ' open' : ''}`}>
+        <h3 style={{ padding: '1rem' }}>업무 복사</h3>
+        <div style={{ padding: '0 1rem 1rem' }}>
+          {editTask && (
+            <p className="journal-copy-source">
+              「{editTask.title}」을 아래 날짜에 복사합니다. 복사본은 실작업 0·미완료로 추가됩니다.
+            </p>
+          )}
+          <div className="form-group">
+            <label htmlFor="journal-copy-date">붙일 날짜</label>
+            <input
+              id="journal-copy-date"
+              type="date"
+              className="form-input journal-copy-date"
+              value={copyTargetDayKey}
+              onChange={(e) => setCopyTargetDayKey(e.target.value)}
+            />
+          </div>
+          {copyTargetDayKey && (
+            <p className="journal-add-hint">{formatDayLabel(copyTargetDayKey)}</p>
+          )}
+        </div>
+        <div className="modal-actions">
+          <button type="button" className="btn btn-secondary" onClick={() => setCopyOpen(false)}>
+            취소
+          </button>
+          <button type="button" className="btn btn-primary" onClick={confirmCopy} disabled={!copyTargetDayKey}>
+            복사
+          </button>
+        </div>
+      </div>
+
+      <div className={`journal-modal${moveOpen ? ' open' : ''}`}>
+        <h3 style={{ padding: '1rem' }}>업무 이동</h3>
+        <div style={{ padding: '0 1rem 1rem' }}>
+          {editTask && (
+            <p className="journal-copy-source">
+              「{editTask.title}」을 아래 날짜로 옮깁니다. 원래 날짜에서는 제거되며, 계획·실작업·완료 상태는 그대로 유지됩니다.
+            </p>
+          )}
+          <div className="form-group">
+            <label htmlFor="journal-move-date">이동할 날짜</label>
+            <input
+              id="journal-move-date"
+              type="date"
+              className="form-input journal-copy-date"
+              value={moveTargetDayKey}
+              onChange={(e) => setMoveTargetDayKey(e.target.value)}
+            />
+          </div>
+          {moveTargetDayKey && (
+            <p className="journal-add-hint">
+              {formatDayLabel(moveTargetDayKey)}
+              {editTask && moveTargetDayKey === editTask.dayKey ? ' · 현재 날짜와 같습니다' : ''}
+            </p>
+          )}
+        </div>
+        <div className="modal-actions">
+          <button type="button" className="btn btn-secondary" onClick={() => setMoveOpen(false)}>
+            취소
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={confirmMove}
+            disabled={!moveTargetDayKey || (editTask && moveTargetDayKey === editTask.dayKey)}
+          >
+            이동
           </button>
         </div>
       </div>
@@ -933,7 +1411,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       </div>
 
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: '#17243c', padding: '0.65rem 1.25rem', borderRadius: 8, zIndex: 200, border: '1px solid var(--border-color)' }}>
+        <div className="journal-toast" role="status">
           {toast}
         </div>
       )}

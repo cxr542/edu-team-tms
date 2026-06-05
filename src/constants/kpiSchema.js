@@ -1,8 +1,12 @@
-/** KPI 운영 엑셀 구성원 코드 (김윤형 = A, 파일럿 1차) */
-export const KPI_JOURNAL_MEMBER = {
-  code: 'A',
-  displayName: '김윤형',
-};
+import { JOURNAL_LINKED_MEMBER_CODE, findKpiMember, TEAM_KPI_MEMBERS } from './kpiMembers';
+
+/** @deprecated use findKpiMember / TEAM_KPI_MEMBERS */
+export const KPI_JOURNAL_MEMBER = findKpiMember(JOURNAL_LINKED_MEMBER_CODE) || TEAM_KPI_MEMBERS[0];
+
+export { TEAM_KPI_MEMBERS, JOURNAL_LINKED_MEMBER_CODE, findKpiMember };
+
+export const KPI_SHEET_01 = '01_KPI1_입력';
+export const KPI_SHEET_03 = '03_KPI3';
 
 export const KPI_SHEET_01C = '01c_KPI1_주간메모';
 export const KPI_SHEET_02 = '02_KPI2_입력';
@@ -17,6 +21,22 @@ export const KPI_01C_HEADERS = [
   '주간메모',
   '해당월',
   '분기',
+];
+
+export const KPI_01_HEADERS = [
+  '연도',
+  '월',
+  '분기',
+  '구성원',
+  '업무MM',
+  '생산향상MM',
+  '휴일MM',
+  '가용MM',
+  '가동률%',
+  '상태',
+  '제출일',
+  '승인일',
+  '승인자',
 ];
 
 export const KPI_02_HEADERS = [

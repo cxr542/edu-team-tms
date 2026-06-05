@@ -1,0 +1,58 @@
+.team-kpi-summary-hint {
+  margin: 0 0 0.65rem;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.85rem;
+}
+
+.team-kpi-summary-tables {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.team-kpi-summary-block h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.9rem;
+}
+
+.team-kpi-summary-table {
+  font-size: 0.82rem;
+}
+
+.team-kpi-th-weight {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 400;
+  color: var(--text-secondary, #64748b);
+}
+
+.team-kpi-summary-row {
+  cursor: pointer;
+}
+
+.team-kpi-summary-row:hover {
+  background: rgba(0, 109, 255, 0.06);
+}
+
+.team-kpi-summary-row.is-selected {
+  background: rgba(0, 109, 255, 0.12);
+  outline: 1px solid rgba(0, 109, 255, 0.35);
+}
+
+.team-kpi-summary-row--team {
+  cursor: default;
+  background: rgba(0, 109, 255, 0.08);
+  font-weight: 500;
+}
+
+.team-kpi-summary-row--team:hover {
+  background: rgba(0, 109, 255, 0.08);
+}
+
+.team-kpi-member-section-title {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+}

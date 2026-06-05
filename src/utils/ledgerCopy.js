@@ -1,5 +1,23 @@
 /** 지출 장부 — 전월·행 단위 복사 */
 
+/** @param {Date} [date] */
+export function getLedgerPeriodFromDate(date = new Date()) {
+  return {
+    year: String(date.getFullYear()),
+    month: String(date.getMonth() + 1).padStart(2, '0'),
+  };
+}
+
+export function getTodayLedgerPeriod() {
+  return getLedgerPeriodFromDate(new Date());
+}
+
+/** 조회 연도 셀렉트 — 올해·전년 */
+export function getLedgerYearOptions(date = new Date()) {
+  const current = date.getFullYear();
+  return [String(current), String(current - 1)];
+}
+
 export function getPreviousMonth(yearStr, monthStr) {
   let y = parseInt(yearStr, 10);
   let m = parseInt(monthStr, 10);

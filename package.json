@@ -7,17 +7,26 @@
     "dev": "vite",
     "import:excel": "node scripts/import-team-building-excel.mjs",
     "publish:team": "node scripts/publish-team-snapshot.mjs",
+    "prune:ledger-blobs": "node scripts/prune-ledger-blobs.mjs",
+    "blob:empty": "node scripts/blob-empty-store.mjs",
     "publish:journal": "node scripts/publish-journal-snapshot.mjs",
-    "build:team": "npm run publish:team && npm run publish:journal && vite build",
+    "publish:kpi": "node scripts/publish-team-kpi-snapshot.mjs",
+    "sync:docs": "node scripts/sync-reference-docs.mjs",
+    "sync:academizer": "node scripts/sync-ppt-academizer.mjs",
+    "sync:academizer:dev": "TMS_ACADEMIZER_CONFIG=dev node scripts/sync-ppt-academizer.mjs",
+    "sync:cloud-chatbot": "node scripts/sync-cloud-chatbot.mjs",
+    "build:team": "npm run sync:docs && npm run sync:academizer && npm run sync:cloud-chatbot && npm run publish:team && npm run publish:journal && npm run publish:kpi && vite build",
     "build": "vite build",
     "deploy:vercel": "npm run build:team && npx vercel deploy --prod",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "test": "vitest run",
     "preview": "vite preview"
   },
   "dependencies": {
     "@vercel/blob": "^2.4.0",
     "canvas-confetti": "^1.6.0",
     "lucide-react": "^0.344.0",
+    "marked": "^18.0.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "xlsx": "^0.18.5"
@@ -26,6 +35,7 @@
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@vitejs/plugin-react": "^4.2.1",
-    "vite": "^5.1.6"
+    "vite": "^5.1.6",
+    "vitest": "^2.1.9"
   }
 }

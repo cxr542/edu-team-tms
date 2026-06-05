@@ -1,0 +1,123 @@
+.team-kpi-integrated {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 2px solid var(--border-color, #e2e8f0);
+}
+
+.team-kpi-integrated--report {
+  border-bottom-width: 1px;
+}
+
+.team-kpi-integrated-head h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.1rem;
+}
+
+.team-kpi-integrated-lead {
+  margin: 0 0 0.85rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary, #64748b);
+}
+
+.team-kpi-integrated-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.team-kpi-integrated-card {
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  background: var(--bg-secondary, #f8fafc);
+}
+
+.team-kpi-integrated-card.kpi3 {
+  background: rgba(0, 109, 255, 0.06);
+  border-color: rgba(0, 109, 255, 0.2);
+}
+
+.team-kpi-integrated-card h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary, #64748b);
+}
+
+.team-kpi-integrated-big {
+  margin: 0;
+  font-size: 1.55rem;
+  font-weight: 700;
+}
+
+.team-kpi-integrated-grade {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+}
+
+.team-kpi-integrated-mm,
+.team-kpi-integrated-kpi3 {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #64748b);
+}
+
+.team-kpi-integrated-meta {
+  margin: 0.3rem 0 0;
+  font-size: 0.75rem;
+}
+
+.team-kpi-integrated-meta.is-met {
+  color: #047857;
+  font-weight: 600;
+}
+
+.team-kpi-integrated-meta.is-gap {
+  color: #b45309;
+  font-weight: 600;
+}
+
+.team-kpi-integrated-formula {
+  margin: 0.45rem 0 0;
+  font-size: 0.7rem;
+  color: var(--text-secondary, #64748b);
+  line-height: 1.35;
+}
+
+.team-kpi-integrated-grades-ref {
+  margin-top: 0.25rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.team-kpi-integrated-grades-ref summary {
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.team-kpi-integrated-grades-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.65rem;
+}
+
+.team-kpi-integrated-grades-grid h4 {
+  margin: 0 0 0.3rem;
+  font-size: 0.78rem;
+}
+
+.team-kpi-integrated-ref-table {
+  font-size: 0.72rem;
+}
+
+.team-kpi-integrated .kpi3-hq-tables {
+  margin-bottom: 0.5rem;
+}
+
+.team-kpi-integrated .kpi3-coaching {
+  margin-top: 0.25rem;
+  margin-bottom: 1rem;
+}

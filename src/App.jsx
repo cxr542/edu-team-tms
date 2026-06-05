@@ -45,15 +45,36 @@ import CardPasteModal from './components/CardPasteModal';
 import { MONTHLY_BUDGET } from './utils/ledgerBalances';
 import {
   cloneLedgerTransaction,
+  getLedgerYearOptions,
   getPreviousMonth,
+  getTodayLedgerPeriod,
   transactionDedupeKey,
 } from './utils/ledgerCopy';
 import { isViewerMode, formatPublishedAt } from './utils/appMode';
-import { buildTeamSnapshot, downloadTeamSnapshot } from './utils/publishSnapshot';
+import { buildTeamSnapshot, downloadTeamSnapshot, publishSnapshotToServer } from './utils/publishSnapshot';
 import AppShell from './components/AppShell';
 import WeeklyJournalPage from './pages/WeeklyJournalPage';
-import { useAppModule } from './hooks/useAppModule';
+import TeamKpiPage from './pages/TeamKpiPage';
+import CompetencyPage from './pages/CompetencyPage';
+import KpiApprovePage from './pages/KpiApprovePage';
+import KpiReportPage from './pages/KpiReportPage';
+import { useTeamAccess } from './hooks/useTeamAccess';
+import ReferenceDocsPage from './pages/ReferenceDocsPage';
+import AcademizerEmbedPage from './pages/AcademizerEmbedPage';
+import CloudChatbotEmbedPage from './pages/CloudChatbotEmbedPage';
+import LunchPickPage from './pages/LunchPickPage';
+import IdeaBankPage from './pages/IdeaBankPage';
+import { JournalProvider } from './context/JournalProvider';
+import { isKpiRelatedModule, useAppModule } from './hooks/useAppModule';
 import { useNavLabels } from './hooks/useNavLabels';
+import { useViewerMenuVisibility } from './hooks/useViewerMenuVisibility';
+import {
+  DEFAULT_VIEWER_MENU_VISIBILITY,
+  normalizeViewerMenuVisibility,
+  resolveViewerModule,
+} from './constants/viewerMenu';
+import ViewerMenuSettingsModal from './components/ViewerMenuSettingsModal';
+import UsageStandardsPanel from './components/UsageStandardsPanel';
 
 function sanitizeExtraData(extraData) {
   const base = { 영수증번호: '', 비고: '' };
@@ -85,7 +106,7 @@ function CategoryBadge({ label, categories }) {
 
 function LoadingScreen({ message = '장부를 불러오는 중…' }) {
   return (
-    <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+    <div className="project-app theme-tms" style={{ alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
       <p style={{ color: 'var(--text-secondary)' }}>{message}</p>
     </div>
   );
@@ -94,30 +115,54 @@ function LoadingScreen({ message = '장부를 불러오는 중…' }) {
 export default function App() {
   const isViewer = isViewerMode();
   const { module, setModule } = useAppModule();
+  const teamAccess = useTeamAccess();
+  /** 조회 URL·구성원 URL에서 장부는 공개 스냅샷만 (편집 불가) */
+  const ledgerReadOnly = isViewer || teamAccess.isMemberScope;
+  const usesPublishedLedgerData = ledgerReadOnly;
+  const {
+    visibility: viewerMenuVisibility,
+    applyVisibility: applyViewerMenuVisibility,
+  } = useViewerMenuVisibility();
+  const [viewerMenuSettingsOpen, setViewerMenuSettingsOpen] = useState(false);
 
-  useEffect(() => {
-    if (isViewer && module === 'journal') {
-      setModule('ledger');
-    }
-  }, [isViewer, module, setModule]);
-
-  const displayModule = isViewer ? 'ledger' : module;
   const { labels: navLabels, updateLabel: onNavLabelSave, resetLabels: onNavLabelsReset, defaults: navDefaults } =
     useNavLabels();
   const { loading, error, data: snapshot, reload } = usePublicSnapshot(true, {
     pollMs: isViewer ? 5000 : 12000,
     silentPoll: true,
   });
+  const sharedViewerMenuVisibility = useMemo(
+    () => normalizeViewerMenuVisibility(snapshot?.viewerMenuVisibility),
+    [snapshot?.publishedAt, snapshot?.viewerMenuVisibility]
+  );
+  const activeViewerMenuVisibility =
+    isViewer && snapshot?.viewerMenuVisibility ? sharedViewerMenuVisibility : viewerMenuVisibility;
+  const displayModule = isViewer ? resolveViewerModule(module, activeViewerMenuVisibility) : module;
+
+  useEffect(() => {
+    if (!isViewer) return;
+    const resolved = resolveViewerModule(module, activeViewerMenuVisibility);
+    if (resolved !== module) setModule('ledger');
+  }, [isViewer, module, activeViewerMenuVisibility, setModule]);
+
+  useEffect(() => {
+    if (isViewer) return;
+    if (teamAccess.canAccessModule(module)) return;
+    const target = teamAccess.redirectUrlForForbidden;
+    window.history.replaceState({}, '', target);
+    const nextModule = new URL(target, window.location.origin).searchParams.get('module') || 'journal';
+    setModule(nextModule);
+  }, [isViewer, module, teamAccess, setModule]);
 
   const seedCategories = useMemo(() => {
-    if (!isViewer || !snapshot?.categories?.length) return null;
+    if (!usesPublishedLedgerData || !snapshot?.categories?.length) return null;
     return snapshot.categories;
-  }, [isViewer, snapshot?.publishedAt, snapshot?.categories]);
+  }, [usesPublishedLedgerData, snapshot?.publishedAt, snapshot?.categories]);
 
   const seedTransactions = useMemo(() => {
-    if (!isViewer || !snapshot?.transactions?.length) return null;
+    if (!usesPublishedLedgerData || !snapshot?.transactions?.length) return null;
     return snapshot.transactions;
-  }, [isViewer, snapshot?.publishedAt, snapshot?.transactions]);
+  }, [usesPublishedLedgerData, snapshot?.publishedAt, snapshot?.transactions]);
 
   const {
     categories,
@@ -126,7 +171,7 @@ export default function App() {
     removeCategory,
     resetToDefault,
     setCategories,
-  } = useUsageCategories({ readOnly: isViewer, seedCategories });
+  } = useUsageCategories({ readOnly: usesPublishedLedgerData, seedCategories });
 
   const {
     transactions,
@@ -136,7 +181,7 @@ export default function App() {
     syncStatus,
     markPublishedLocally,
   } = useTransactionLedger(categories, {
-    readOnly: isViewer,
+    readOnly: usesPublishedLedgerData,
     seedTransactions,
     publishedSnapshot: snapshot,
   });
@@ -150,14 +195,23 @@ export default function App() {
   );
 
   const [livePublishBlocked, setLivePublishBlocked] = useState(false);
+  const [livePublishBlockReason, setLivePublishBlockReason] = useState(null); // 'not-configured' | 'quota-exceeded'
 
   const autoPublish = useAutoPublishLedger({
-    enabled: !isViewer,
+    enabled: !usesPublishedLedgerData,
     transactions,
     categories,
-    onSuccess: onLivePublishSuccess,
+    viewerMenuVisibility: activeViewerMenuVisibility,
+    onSuccess: (payload) => {
+      setLivePublishBlocked(false);
+      setLivePublishBlockReason(null);
+      onLivePublishSuccess(payload);
+    },
     onFail: (result) => {
-      if (result.reason === 'not-configured') setLivePublishBlocked(true);
+      if (result.reason === 'not-configured' || result.reason === 'quota-exceeded') {
+        setLivePublishBlocked(true);
+        setLivePublishBlockReason(result.reason);
+      }
     },
   });
 
@@ -165,9 +219,11 @@ export default function App() {
   const [isCategoryManageOpen, setIsCategoryManageOpen] = useState(false);
   const [isCardPasteOpen, setIsCardPasteOpen] = useState(false);
   
-  // 연도 및 월 필터 상태 (기본값: 2026년 5월)
-  const [selectedYear, setSelectedYear] = useState('2026');
-  const [selectedMonth, setSelectedMonth] = useState('05');
+  const todayPeriod = useMemo(() => getTodayLedgerPeriod(), []);
+  const ledgerYearOptions = useMemo(() => getLedgerYearOptions(), []);
+
+  const [selectedYear, setSelectedYear] = useState(todayPeriod.year);
+  const [selectedMonth, setSelectedMonth] = useState(todayPeriod.month);
 
   /** 조회(공개) 화면: 지출 상세·목록은 잔액 카드 「상세보기」로만 펼침 */
   const [viewerDetailsOpen, setViewerDetailsOpen] = useState(false);
@@ -204,7 +260,7 @@ export default function App() {
   const [ledgerToolbarHeight, setLedgerToolbarHeight] = useState(0);
 
   const updateLedgerToolbarPin = useCallback(() => {
-    if (isViewer) {
+    if (ledgerReadOnly) {
       setLedgerToolbarPinned(false);
       return;
     }
@@ -217,10 +273,10 @@ export default function App() {
     if (height > 0) {
       setLedgerToolbarHeight((prev) => (Math.abs(prev - height) < 0.5 ? prev : height));
     }
-  }, [isViewer]);
+  }, [ledgerReadOnly]);
 
   useEffect(() => {
-    if (isViewer) return undefined;
+    if (ledgerReadOnly) return undefined;
     updateLedgerToolbarPin();
     const main = document.querySelector('.main-content');
     const onScroll = () => requestAnimationFrame(updateLedgerToolbarPin);
@@ -237,7 +293,7 @@ export default function App() {
       ro?.disconnect();
     };
   }, [
-    isViewer,
+    ledgerReadOnly,
     updateLedgerToolbarPin,
     filteredTransactions.length,
     searchTerm,
@@ -268,8 +324,8 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!isViewer) setViewerDetailsOpen(false);
-  }, [isViewer, selectedYear, selectedMonth]);
+    if (!ledgerReadOnly) setViewerDetailsOpen(false);
+  }, [ledgerReadOnly, selectedYear, selectedMonth]);
 
   const notifyLedgerChanged = (baseMessage) => {
     if (isViewer) {
@@ -331,19 +387,58 @@ export default function App() {
     const remote = await autoPublish.publishNow();
     if (remote?.ok) {
       setLivePublishBlocked(false);
+      setLivePublishBlockReason(null);
       showAlert(`조회 페이지에 ${transactions.length}건을 반영했습니다.`, 'success', 5000);
       return;
     }
-    const payload = buildTeamSnapshot(transactions, categories);
+    const payload = buildTeamSnapshot(transactions, categories, activeViewerMenuVisibility);
     downloadTeamSnapshot(payload);
     markPublishedLocally(payload.publishedAt);
+    const isQuota =
+      remote?.reason === 'quota-exceeded' || /quota|exceeded|용량/i.test(remote?.message || '');
+    if (isQuota) {
+      setLivePublishBlocked(true);
+      setLivePublishBlockReason('quota-exceeded');
+    }
     showAlert(
-      remote?.message ||
-        `즉시 반영 실패 — JSON 저장됨. Vercel Blob 연결 후 재배포하거나 publish:team → deploy 하세요.`,
+      isQuota
+        ? `조회 반영 실패: Vercel Blob 저장 용량(1GB)이 가득 찼습니다. Vercel Storage에서 Blob 파일을 삭제하거나, 내려받은 ledger-snapshot.json → npm run publish:team → 배포하세요. (방금 JSON도 저장했습니다.)`
+        : remote?.message ||
+            `즉시 반영 실패 — ledger-snapshot.json 저장됨. publish:team 후 배포하거나 Vercel Blob을 연결하세요.`,
       'warning',
-      9000
+      12000
     );
   };
+
+  const handleApplyViewerMenuVisibility = useCallback(
+    async (next) => {
+      const normalized = normalizeViewerMenuVisibility(next);
+      applyViewerMenuVisibility(normalized);
+      if (isViewer) return;
+
+      const payload = buildTeamSnapshot(transactions, categories, normalized);
+      const remote = await publishSnapshotToServer(payload);
+      if (remote?.ok) {
+        setLivePublishBlocked(false);
+        setLivePublishBlockReason(null);
+        markPublishedLocally(payload.publishedAt);
+        reload({ quiet: true });
+        showAlert('조회 화면 메뉴 변경이 즉시 반영되었습니다.', 'success', 4200);
+        return;
+      }
+
+      showAlert(
+        remote?.message || '조회 메뉴 즉시 반영에 실패했습니다. 「지금 조회에 반영」을 눌러 다시 시도해 주세요.',
+        'warning',
+        6500
+      );
+    },
+    [applyViewerMenuVisibility, isViewer, transactions, categories, markPublishedLocally, reload]
+  );
+
+  const handleResetViewerMenuVisibility = useCallback(() => {
+    handleApplyViewerMenuVisibility({ ...DEFAULT_VIEWER_MENU_VISIBILITY });
+  }, [handleApplyViewerMenuVisibility]);
 
   const handlePullFromPublished = () => {
     if (!snapshot?.transactions?.length) {
@@ -376,7 +471,9 @@ export default function App() {
 
   const totalSpent = currentMonthTxs.reduce((sum, t) => sum + t.amount, 0);
   const remainingBalance = monthlyBudget - totalSpent;
-  const spentPercent = Math.min(Math.round((totalSpent / monthlyBudget) * 100), 100);
+  const usagePercent =
+    monthlyBudget > 0 ? Math.round((totalSpent / monthlyBudget) * 100) : 0;
+  const spentPercent = Math.min(usagePercent, 100);
 
   // 실시간 다중 조건 필터링 적용 (연도/월 필터 + 검색어 + 유형 + 결제수단)
   useEffect(() => {
@@ -418,13 +515,13 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (isViewer) {
+    if (ledgerReadOnly) {
       exitBulkDeleteMode();
       return;
     }
     const visible = new Set(filteredTransactions.map((t) => t.id));
     setSelectedTxIds((prev) => prev.filter((id) => visible.has(id)));
-  }, [isViewer, filteredTransactions, selectedYear, selectedMonth, exitBulkDeleteMode]);
+  }, [ledgerReadOnly, filteredTransactions, selectedYear, selectedMonth, exitBulkDeleteMode]);
 
   useEffect(() => {
     exitBulkDeleteMode();
@@ -725,13 +822,13 @@ export default function App() {
 
   const categoryStats = getCategoryStats();
 
-  if (isViewer && loading) {
+  if ((isViewer || (teamAccess.isMemberScope && module === 'ledger')) && loading) {
     return <LoadingScreen />;
   }
 
-  if (isViewer && error) {
+  if ((isViewer || (teamAccess.isMemberScope && module === 'ledger')) && error) {
     return (
-      <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center', minHeight: '100vh', flexDirection: 'column', gap: '1rem' }}>
+      <div className="project-app theme-tms" style={{ alignItems: 'center', justifyContent: 'center', minHeight: '100vh', flexDirection: 'column', gap: '1rem', display: 'flex' }}>
         <p style={{ color: 'var(--color-danger)' }}>{error}</p>
         <button type="button" className="btn btn-secondary" onClick={reload}>
           <RefreshCw size={16} />
@@ -744,11 +841,7 @@ export default function App() {
   const publishedLabel = formatPublishedAt(snapshot?.publishedAt);
 
   return (
-    <div className="app-container">
-      {/* 장부 전용 백그라운드 빛 효과 */}
-      <div className="bg-glow" style={{ background: 'radial-gradient(circle, rgba(14, 165, 233, 0.08) 0%, rgba(14, 165, 233, 0) 70%)' }}></div>
-      <div className="bg-glow-secondary" style={{ background: 'radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, rgba(16, 185, 129, 0) 70%)' }}></div>
-
+    <>
       <AppShell
         activeModule={displayModule}
         onModuleChange={setModule}
@@ -757,62 +850,41 @@ export default function App() {
         onNavLabelSave={onNavLabelSave}
         onNavLabelsReset={onNavLabelsReset}
         isViewer={isViewer}
-        ledgerSidebar={
-          <div
-            className="usage-standards-panel"
-            style={{
-              margin: '1rem 0',
-              padding: '0.75rem',
-              borderRadius: '8px',
-              border: '1px solid rgba(16, 185, 129, 0.12)',
-              backgroundColor: 'rgba(0,0,0,0.15)',
-            }}
-          >
-            <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: '#10b981', marginBottom: '0.5rem', letterSpacing: '0.02em' }}>
-              사용 유형 기준표
-            </h4>
-            <table style={{ width: '100%', fontSize: '0.68rem', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ color: 'var(--text-muted)', textAlign: 'left' }}>
-                  <th style={{ paddingBottom: '0.35rem' }}>유형</th>
-                  <th style={{ paddingBottom: '0.35rem' }}>기준</th>
-                </tr>
-              </thead>
-              <tbody>
-                {categories.map((c) => (
-                  <tr key={c.id} style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-                    <td style={{ padding: '0.35rem 0.25rem 0.35rem 0', fontWeight: 600, color: c.color, whiteSpace: 'nowrap' }}>
-                      {c.label}
-                    </td>
-                    <td style={{ padding: '0.35rem 0', color: 'var(--text-secondary)', lineHeight: 1.35 }}>{c.description}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <p style={{ marginTop: '0.5rem', fontSize: '0.65rem', color: 'var(--text-muted)' }}>
-              참석자 미입력 시 「{DEFAULT_ATTENDEES}」로 기록됩니다.
-            </p>
-            {!isViewer && (
-              <button
-                type="button"
-                className="btn btn-secondary"
-                style={{ width: '100%', marginTop: '0.65rem', fontSize: '0.72rem', padding: '0.4rem' }}
-                onClick={() => setIsCategoryManageOpen(true)}
-              >
-                <Settings size={14} />
-                사용 유형 관리
-              </button>
-            )}
-          </div>
+        viewerMenuVisibility={activeViewerMenuVisibility}
+        onOpenViewerMenuSettings={() => setViewerMenuSettingsOpen(true)}
+        teamAccess={isViewer ? null : teamAccess}
+        sidebarFooter={
+          ledgerReadOnly && displayModule === 'ledger' ? (
+            <UsageStandardsPanel categories={categories} variant="sidebar" />
+          ) : null
         }
       >
-      {!isViewer && module === 'journal' ? (
-        <WeeklyJournalPage readOnly={false} />
+      {displayModule === 'docs' ? (
+        <ReferenceDocsPage />
+      ) : displayModule === 'academizer' && !isViewer ? (
+        <AcademizerEmbedPage />
+      ) : displayModule === 'cloud-chatbot' && !isViewer ? (
+        <CloudChatbotEmbedPage />
+      ) : displayModule === 'lunch' ? (
+        <LunchPickPage />
+      ) : displayModule === 'idea-bank' ? (
+        <IdeaBankPage readOnly={isViewer} />
+      ) : isKpiRelatedModule(displayModule) &&
+        (!isViewer || displayModule === 'kpi-approve' || displayModule === 'kpi-report') ? (
+        <JournalProvider readOnly={isViewer && displayModule !== 'kpi-approve'} autoSyncCloud={!isViewer}>
+          {displayModule === 'journal' && <WeeklyJournalPage readOnly={false} />}
+          {displayModule === 'competency' && <CompetencyPage />}
+          {displayModule === 'kpi' && <TeamKpiPage />}
+          {displayModule === 'kpi-approve' && (
+            <KpiApprovePage readOnly={isViewer && displayModule !== 'kpi-approve'} />
+          )}
+          {displayModule === 'kpi-report' && <KpiReportPage />}
+        </JournalProvider>
       ) : (
       <>
       <main className="main-content">
         
-        {!isViewer && livePublishBlocked && (
+        {!ledgerReadOnly && livePublishBlocked && (
           <div
             className="custom-alert"
             style={{
@@ -826,25 +898,36 @@ export default function App() {
             <div className="custom-alert-content">
               <h4 style={{ color: '#fca5a5' }}>실시간 조회 반영이 꺼져 있습니다</h4>
               <p style={{ fontSize: '0.85rem' }}>
-                Vercel 대시보드 → 프로젝트 <strong>okestro-edu-team-tms</strong> → Storage →{' '}
-                <strong>Blob 연결</strong> 후 재배포하세요. 연결 전에는 「지금 조회에 반영」으로 JSON
-                백업·수동 배포가 필요합니다.
+                {livePublishBlockReason === 'quota-exceeded' ? (
+                  <>
+                    Vercel Blob 저장 용량(1GB)이 가득 차 조회 URL에 저장되지 않습니다. 대시보드 →{' '}
+                    <strong>okestro-edu-team-tms</strong> → Storage → Blob에서 오래된{' '}
+                    <code>ledger/live-</code> 파일을 삭제한 뒤 「지금 조회에 반영」을 다시 누르세요.
+                    (작성 내용은 이 브라우저에만 있습니다.)
+                  </>
+                ) : (
+                  <>
+                    Vercel 대시보드 → 프로젝트 <strong>okestro-edu-team-tms</strong> → Storage →{' '}
+                    <strong>Blob 연결</strong> 후 재배포하세요. 연결 전에는 「지금 조회에 반영」으로 JSON
+                    백업·수동 배포가 필요합니다.
+                  </>
+                )}
               </p>
             </div>
           </div>
         )}
 
-        {!isViewer && !livePublishBlocked && autoPublish.liveReady && (
+        {!ledgerReadOnly && !livePublishBlocked && autoPublish.liveReady && (
           <div
             className="custom-alert"
             style={{
               marginBottom: '1rem',
-              backgroundColor: 'rgba(16, 185, 129, 0.1)',
-              border: '1px solid rgba(16, 185, 129, 0.35)',
-              borderLeft: '4px solid #10b981',
+              backgroundColor: 'var(--color-success-bg)',
+              border: '1px solid var(--color-success-bg)',
+              borderLeft: '4px solid var(--primary)',
             }}
           >
-            <CheckCircle size={18} style={{ color: '#10b981' }} />
+            <CheckCircle size={18} style={{ color: 'var(--primary)' }} />
             <div className="custom-alert-content">
               <h4 style={{ color: '#6ee7b7' }}>실시간 조회 동기화 켜짐</h4>
               <p style={{ fontSize: '0.85rem' }}>
@@ -857,7 +940,7 @@ export default function App() {
           </div>
         )}
 
-        {!isViewer && !autoPublish.liveReady && unpublishedToView.length > 0 && (
+        {!ledgerReadOnly && !autoPublish.liveReady && unpublishedToView.length > 0 && (
           <div
             className="custom-alert"
             style={{
@@ -871,7 +954,16 @@ export default function App() {
             <div className="custom-alert-content">
               <h4 style={{ color: '#fcd34d' }}>조회 페이지에 아직 없는 지출 {unpublishedToView.length}건</h4>
               <p style={{ fontSize: '0.85rem' }}>
-                <strong>「지금 조회에 반영」</strong>을 누르거나, 한 건 더 저장하면 자동 동기화를 시도합니다.
+                <strong>「지금 조회에 반영」</strong>을 눌러 서버에 올려야 조회 URL에 보입니다.
+                {livePublishBlockReason === 'quota-exceeded' ? (
+                  <>
+                    {' '}
+                    지금은 <strong>Vercel Blob 용량(1GB) 초과</strong>로 반영이 막혀 있습니다. Storage에서
+                    Blob을 비운 뒤 다시 누르세요.
+                  </>
+                ) : (
+                  <> 한 건 더 저장하면 자동 동기화도 시도합니다.</>
+                )}
               </p>
             </div>
           </div>
@@ -881,10 +973,10 @@ export default function App() {
         {alert.show && (
           <div className="custom-alert" style={{ 
             backgroundColor: 'rgba(19, 27, 46, 0.8)',
-            border: '1px solid rgba(16, 185, 129, 0.3)',
+            border: '1px solid var(--color-success-bg)',
             borderLeft: `4px solid var(--color-${alert.type === 'danger' ? 'danger' : alert.type === 'success' ? 'success' : 'info'})` 
           }}>
-            <AlertCircle className="custom-alert-icon" size={18} style={{ color: alert.type === 'success' ? '#10b981' : '#0ea5e9' }} />
+            <AlertCircle className="custom-alert-icon" size={18} style={{ color: alert.type === 'success' ? 'var(--primary)' : 'var(--primary)' }} />
             <div className="custom-alert-content">
               <h4 style={{ color: 'white' }}>장부 알림</h4>
               <p>{alert.message}</p>
@@ -897,24 +989,24 @@ export default function App() {
           <div className="header-title-area">
             <h1>교육팀 팀 빌딩비 장부</h1>
             <p>
-              {isViewer
+              {ledgerReadOnly
                 ? '교육팀 팀 빌딩 지출·잔액을 조회합니다. (작성·수정은 팀장만 가능)'
                 : '매월 150,000원씩 배정되는 교육팀의 팀 빌딩 지출 및 잔액 흐름을 꼼꼼하게 관리합니다.'}
             </p>
             {publishedLabel && (
               <p style={{ marginTop: '0.35rem', fontSize: '0.8rem', color: 'var(--accent)' }}>
                 <Eye size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                {isViewer ? '공개 기준' : '조회 화면 기준'}: {publishedLabel}
+                {ledgerReadOnly ? '공개 기준' : '조회 화면 기준'}: {publishedLabel}
                 {isViewer && (
                   <span style={{ marginLeft: 8, color: 'var(--text-muted)' }}>· 5초마다 자동 새로고침</span>
                 )}
-                {!isViewer && autoPublish.liveReady && (
+                {!ledgerReadOnly && autoPublish.liveReady && (
                   <span style={{ marginLeft: 8, color: '#6ee7b7' }}>· 실시간 동기화</span>
                 )}
-                {!isViewer && syncStatus === 'local-ahead' && !autoPublish.liveReady && (
+                {!ledgerReadOnly && syncStatus === 'local-ahead' && !autoPublish.liveReady && (
                   <span style={{ marginLeft: 8, color: '#f59e0b' }}>· 작성본이 더 최신 → 「지금 조회에 반영」</span>
                 )}
-                {!isViewer && syncStatus === 'remote-ahead' && (
+                {!ledgerReadOnly && syncStatus === 'remote-ahead' && (
                   <span style={{ marginLeft: 8, color: '#f59e0b' }}>· 조회가 더 최신 → 「조회 데이터 맞추기」</span>
                 )}
               </p>
@@ -922,13 +1014,13 @@ export default function App() {
           </div>
           
           <div className="header-action-area">
-            {isViewer ? (
+            {ledgerReadOnly ? (
               <>
                 <button type="button" className="btn btn-secondary" onClick={reload}>
                   <RefreshCw size={16} />
                   새로고침
                 </button>
-                <button className="btn btn-primary" style={{ backgroundColor: '#10b981' }} onClick={handleExcelExport}>
+                <button className="btn btn-primary" onClick={handleExcelExport}>
                   <Download size={16} />
                   엑셀로 내보내기
                 </button>
@@ -948,7 +1040,7 @@ export default function App() {
             <button
               type="button"
               className="btn btn-primary"
-              style={{ backgroundColor: '#0ea5e9', boxShadow: '0 4px 14px rgba(14, 165, 233, 0.25)' }}
+              style={{ backgroundColor: 'var(--primary)', boxShadow: '0 4px 14px rgba(14, 165, 233, 0.25)' }}
               onClick={handlePublishForTeam}
               disabled={autoPublish.publishing}
               title="조회 URL에 즉시 반영 (실시간 동기화)"
@@ -959,7 +1051,7 @@ export default function App() {
 
             {/* 엑셀 가져오기 */}
             <div className="file-upload-wrapper">
-              <button className="btn btn-secondary" style={{ borderColor: 'rgba(16, 185, 129, 0.2)' }}>
+              <button className="btn btn-secondary" style={{ borderColor: 'var(--color-success-bg)' }}>
                 <Upload size={16} />
                 엑셀 불러오기
               </button>
@@ -973,7 +1065,7 @@ export default function App() {
             </div>
 
             {/* 엑셀 파일 내보내기 */}
-            <button className="btn btn-primary" style={{ backgroundColor: '#10b981', boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)' }} onClick={handleExcelExport}>
+            <button className="btn btn-primary" style={{ backgroundColor: 'var(--primary)', boxShadow: '0 4px 14px var(--color-success-bg)' }} onClick={handleExcelExport}>
               <Download size={16} />
               엑셀로 내보내기
             </button>
@@ -993,8 +1085,11 @@ export default function App() {
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
             >
-              <option value="2026">2026년</option>
-              <option value="2025">2025년</option>
+              {ledgerYearOptions.map((y) => (
+                <option key={y} value={y}>
+                  {y}년
+                </option>
+              ))}
             </select>
 
             <select 
@@ -1010,7 +1105,7 @@ export default function App() {
           </div>
 
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            <Sparkles size={14} style={{ color: '#10b981' }} />
+            <Sparkles size={14} style={{ color: 'var(--primary)' }} />
             <span>해당 월의 데이터로 통계 및 테이블이 즉각 조정됩니다.</span>
           </div>
         </section>
@@ -1021,7 +1116,7 @@ export default function App() {
           <div className="stat-card" style={{ borderColor: 'rgba(14, 165, 233, 0.15)' }}>
             <div className="stat-card-header">
               <span>월 할당 예산</span>
-              <div className="stat-icon-box" style={{ color: '#0ea5e9', backgroundColor: 'rgba(14, 165, 233, 0.08)' }}>
+              <div className="stat-icon-box" style={{ color: 'var(--primary)', backgroundColor: 'rgba(14, 165, 233, 0.08)' }}>
                 <DollarSign size={16} />
               </div>
             </div>
@@ -1040,24 +1135,24 @@ export default function App() {
             </div>
             <div className="stat-card-value" style={{ color: '#ef4444' }}>{totalSpent.toLocaleString()}원</div>
             <div className="stat-card-footer">
-              예산 소진 비율: <span className="trend-down" style={{ color: '#ef4444' }}>{spentPercent}%</span>
+              예산 소진 비율: <span className="trend-down" style={{ color: '#ef4444' }}>{usagePercent}%</span>
             </div>
           </div>
 
-          <div className="stat-card" style={{ borderColor: remainingBalance >= 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.3)' }}>
+          <div className="stat-card" style={{ borderColor: remainingBalance >= 0 ? 'var(--color-success-bg)' : 'rgba(239, 68, 68, 0.3)' }}>
             <div className="stat-card-header">
               <span>남은 예산 잔액</span>
-              <div className="stat-icon-box" style={{ color: remainingBalance >= 0 ? '#10b981' : '#ef4444', backgroundColor: remainingBalance >= 0 ? 'rgba(16, 185, 129, 0.08)' : 'rgba(239, 68, 68, 0.08)' }}>
+              <div className="stat-icon-box" style={{ color: remainingBalance >= 0 ? 'var(--color-success)' : 'var(--color-danger)', backgroundColor: remainingBalance >= 0 ? 'var(--color-success-bg)' : 'var(--color-danger-bg)' }}>
                 <CheckCircle size={16} />
               </div>
             </div>
-            <div className="stat-card-value" style={{ color: remainingBalance >= 0 ? '#10b981' : '#ef4444' }}>
+            <div className="stat-card-value" style={{ color: remainingBalance >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }}>
               {remainingBalance.toLocaleString()}원
             </div>
             <div className="stat-card-footer">
               {remainingBalance >= 0 ? (
                 <span>
-                  {isViewer && !viewerDetailsOpen
+                  {ledgerReadOnly && !viewerDetailsOpen
                     ? '상세보기에서 지출 내역·분석 확인'
                     : '사용 가능 한도 여유 있음'}
                 </span>
@@ -1065,7 +1160,7 @@ export default function App() {
                 <span style={{ color: '#ef4444', fontWeight: 600 }}>⚠️ 예산 초과 상태!</span>
               )}
             </div>
-            {isViewer && (
+            {ledgerReadOnly && (
               <button
                 type="button"
                 className="stat-card-detail-btn"
@@ -1087,33 +1182,41 @@ export default function App() {
             )}
           </div>
 
-          {/* 지출 소진율 프로그레스 서클/바 */}
-          <div className="stat-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div style={{ display: 'flex', justifyContent: 'between', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+          {/* 지출 소진율 프로그레스 바 */}
+          <div className="stat-card stat-card--budget-progress">
+            <div className="stat-card-header" style={{ marginBottom: '0.75rem' }}>
               <span>예산 집행 진행도</span>
-              <span style={{ marginLeft: 'auto', fontWeight: 700, color: 'white' }}>{spentPercent}%</span>
             </div>
-            <div style={{ height: '8px', width: '100%', backgroundColor: 'var(--bg-tertiary)', borderRadius: '99px', overflow: 'hidden' }}>
-              <div style={{ 
-                height: '100%', 
-                width: `${spentPercent}%`, 
-                background: spentPercent > 100 
-                  ? '#ef4444' 
-                  : 'linear-gradient(to right, #0ea5e9, #10b981)',
-                borderRadius: '99px',
-                transition: 'width 0.5s ease'
-              }}></div>
+            <div className="budget-progress-row">
+              <div className="budget-progress-track" aria-hidden>
+                <div
+                  className="budget-progress-fill"
+                  style={{
+                    width: `${spentPercent}%`,
+                    background:
+                      usagePercent > 100
+                        ? '#ef4444'
+                        : 'linear-gradient(to right, var(--primary), var(--primary))',
+                  }}
+                />
+              </div>
+              <span
+                className={`budget-progress-pct${usagePercent > 100 ? ' is-over' : ''}`}
+                aria-label={`사용률 ${usagePercent}%`}
+              >
+                {usagePercent}%
+              </span>
             </div>
-            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+            <div className="stat-card-footer" style={{ marginTop: '0.5rem' }}>
               적정 집행 권장 비율: 월말 기준 90~100%
             </div>
           </div>
         </section>
 
-        {(!isViewer || viewerDetailsOpen) && (
+        {(!ledgerReadOnly || viewerDetailsOpen) && (
         <div
-          ref={isViewer ? viewerDetailsRef : null}
-          className={isViewer ? 'viewer-ledger-details' : undefined}
+          ref={ledgerReadOnly ? viewerDetailsRef : null}
+          className={ledgerReadOnly ? 'viewer-ledger-details' : undefined}
         >
         {/* 4. 지출 차트 및 지출 내역 상세 분석 */}
         <section className="dashboard-middle-section" style={{ marginBottom: '2rem' }}>
@@ -1125,7 +1228,7 @@ export default function App() {
                 사용 유형별 정산비 분석
                 <p className="card-subtitle">선택된 달({selectedMonth}월)의 항목별 지출 규모와 점유율을 시각화합니다.</p>
               </div>
-              <PieChart size={16} style={{ color: '#10b981' }} />
+              <PieChart size={16} style={{ color: 'var(--primary)' }} />
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
@@ -1163,14 +1266,14 @@ export default function App() {
             </div>
             <div className="activity-list" style={{ gap: '0.75rem' }}>
               <div className="activity-item">
-                <div className="activity-avatar" style={{ color: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.08)' }}>법</div>
+                <div className="activity-avatar" style={{ color: 'var(--primary)', backgroundColor: 'var(--color-success-bg)' }}>법</div>
                 <div className="activity-info">
                   <h5>기본 결제 방식</h5>
                   <p>원칙적으로 법인카드로 결제하고 영수증 번호를 입력해 정산합니다.</p>
                 </div>
               </div>
               <div className="activity-item">
-                <div className="activity-avatar" style={{ color: '#0ea5e9', backgroundColor: 'rgba(14, 165, 233, 0.08)' }}>참</div>
+                <div className="activity-avatar" style={{ color: 'var(--primary)', backgroundColor: 'rgba(14, 165, 233, 0.08)' }}>참</div>
                 <div className="activity-info">
                   <h5>참석자 조건 및 정산 한도</h5>
                   <p>팀 빌딩비 정산 시 최소 2인 이상 참석 및 명부 기입이 필수적입니다.</p>
@@ -1187,17 +1290,28 @@ export default function App() {
           </div>
         </section>
 
+        {!ledgerReadOnly && (
+          <section className="ledger-usage-standards-wrap" aria-label="사용 유형 기준">
+            <UsageStandardsPanel
+              categories={categories}
+              variant="main"
+              showManage
+              onManage={() => setIsCategoryManageOpen(true)}
+            />
+          </section>
+        )}
+
         {/* 5. 지출 장부 목록 테이블 영역 */}
         <section className="table-container-card">
-          {!isViewer && (
+          {!ledgerReadOnly && (
             <div ref={ledgerToolbarSentinelRef} className="ledger-toolbar-sentinel" aria-hidden="true" />
           )}
-          {!isViewer && ledgerToolbarPinned && ledgerToolbarHeight > 0 && (
+          {!ledgerReadOnly && ledgerToolbarPinned && ledgerToolbarHeight > 0 && (
             <div style={{ height: ledgerToolbarHeight, flexShrink: 0 }} aria-hidden="true" />
           )}
           <div
-            ref={!isViewer ? ledgerToolbarRef : null}
-            className={`table-controls${!isViewer ? ' ledger-table-toolbar' : ''}${ledgerToolbarPinned ? ' is-pinned' : ''}`}
+            ref={!ledgerReadOnly ? ledgerToolbarRef : null}
+            className={`table-controls${!ledgerReadOnly ? ' ledger-table-toolbar' : ''}${ledgerToolbarPinned ? ' is-pinned' : ''}`}
           >
             
             {/* 검색 필드 */}
@@ -1236,7 +1350,7 @@ export default function App() {
                 <option value="현금">현금</option>
               </select>
 
-              {!isViewer && (
+              {!ledgerReadOnly && (
                 <>
                   <button
                     type="button"
@@ -1247,7 +1361,7 @@ export default function App() {
                     <Copy size={16} />
                     전월 내역 복사
                   </button>
-                  <button className="btn btn-primary" style={{ backgroundColor: '#10b981' }} onClick={() => openModal('add')}>
+                  <button className="btn btn-primary" onClick={() => openModal('add')}>
                     <Plus size={16} />
                     지출 내역 기록
                   </button>
@@ -1256,7 +1370,7 @@ export default function App() {
             </div>
           </div>
 
-          {!isViewer && filteredTransactions.length > 0 && (
+          {!ledgerReadOnly && filteredTransactions.length > 0 && (
             <div className={`ledger-bulk-actions${bulkDeleteMode ? ' ledger-bulk-actions--active' : ''}`}>
               <span className="ledger-bulk-actions__hint">
                 {bulkDeleteMode
@@ -1312,7 +1426,7 @@ export default function App() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    {!isViewer && bulkDeleteMode && (
+                    {!ledgerReadOnly && bulkDeleteMode && (
                       <th className="ledger-select-col">
                         <input
                           type="checkbox"
@@ -1340,7 +1454,7 @@ export default function App() {
                       <th key={idx}>{key}</th>
                     ))}
 
-                    {!isViewer && (
+                    {!ledgerReadOnly && (
                       <th style={{ textAlign: 'center' }}>{bulkDeleteMode ? '삭제' : '수정'}</th>
                     )}
                   </tr>
@@ -1353,7 +1467,7 @@ export default function App() {
                         bulkDeleteMode && selectedTxIds.includes(tx.id) ? 'ledger-row-selected' : undefined
                       }
                     >
-                      {!isViewer && bulkDeleteMode && (
+                      {!ledgerReadOnly && bulkDeleteMode && (
                         <td className="ledger-select-col">
                           <input
                             type="checkbox"
@@ -1380,7 +1494,7 @@ export default function App() {
                       {/* 결제 수단 */}
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                          <CreditCard size={12} style={{ color: '#10b981' }} />
+                          <CreditCard size={12} style={{ color: 'var(--primary)' }} />
                           {tx.paymentMethod}
                         </div>
                       </td>
@@ -1388,7 +1502,7 @@ export default function App() {
                       {/* 참석자 명단 */}
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', color: 'var(--text-secondary)', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={tx.attendees}>
-                          <UserCheck size={12} style={{ color: '#0ea5e9' }} />
+                          <UserCheck size={12} style={{ color: 'var(--primary)' }} />
                           {normalizeAttendees(tx.attendees)}
                         </div>
                       </td>
@@ -1402,7 +1516,7 @@ export default function App() {
                       <td style={{ 
                         textAlign: 'right', 
                         fontWeight: 700, 
-                        color: tx.balance >= 0 ? '#10b981' : '#ef4444' 
+                        color: tx.balance >= 0 ? 'var(--color-success)' : 'var(--color-danger)' 
                       }}>
                         {tx.balance.toLocaleString()}원
                       </td>
@@ -1418,7 +1532,7 @@ export default function App() {
                         );
                       })}
 
-                      {!isViewer && (
+                      {!ledgerReadOnly && (
                       <td>
                         {bulkDeleteMode ? (
                           <button
@@ -1458,15 +1572,15 @@ export default function App() {
             </div>
           ) : (
             <div className="empty-state">
-              <div className="empty-state-icon" style={{ backgroundColor: 'rgba(16, 185, 129, 0.05)', color: '#10b981' }}>
+              <div className="empty-state-icon" style={{ backgroundColor: 'var(--color-success-bg)', color: 'var(--primary)' }}>
                 <Calendar size={32} />
               </div>
               <h3>해당 월에 등록된 지출 내역이 없습니다</h3>
-              <p>{isViewer ? '다른 월을 선택해 보세요.' : '오른쪽 상단의 엑셀 불러오기를 하거나 신규 지출 내역을 직접 추가해 보세요.'}</p>
-              {!isViewer && (
+              <p>{ledgerReadOnly ? '다른 월을 선택해 보세요.' : '오른쪽 상단의 엑셀 불러오기를 하거나 신규 지출 내역을 직접 추가해 보세요.'}</p>
+              {!ledgerReadOnly && (
               <button
                 className="btn btn-secondary"
-                style={{ borderColor: 'rgba(16, 185, 129, 0.2)' }}
+                style={{ borderColor: 'var(--color-success-bg)' }}
                 onClick={() => {
                   if (window.confirm('저장된 장부를 지우고 엑셀 기본 데이터(54건)로 되돌릴까요?')) {
                     resetToBundledData();
@@ -1483,7 +1597,7 @@ export default function App() {
         </div>
         )}
 
-        {!isViewer && (
+        {!ledgerReadOnly && (
           <div className="ledger-fab-stack" role="group" aria-label="빠른 지출 입력">
             <button
               type="button"
@@ -1509,9 +1623,9 @@ export default function App() {
       </main>
 
       {/* 6. 지출 내역 기록/수정 폼 모달 다이얼로그 */}
-      {!isViewer && (
+      {!ledgerReadOnly && (
       <div className={`modal-overlay ${isModalOpen ? 'active' : ''}`}>
-        <div className="modal-content" style={{ borderColor: 'rgba(16, 185, 129, 0.3)' }}>
+        <div className="modal-content" style={{ borderColor: 'var(--color-success-bg)' }}>
           <div className="modal-header">
             <h3>{modalMode === 'add' ? '새 지출 내역 등록' : '지출 상세 정보 수정'}</h3>
             <button className="modal-close" onClick={closeModal}>
@@ -1619,11 +1733,11 @@ export default function App() {
 
             </div>
 
-            <div className="modal-actions" style={{ borderTop: '1px solid rgba(16, 185, 129, 0.1)' }}>
+            <div className="modal-actions" style={{ borderTop: '1px solid var(--color-success-bg)' }}>
               <button type="button" className="btn btn-secondary" onClick={closeModal}>
                 기록 취소
               </button>
-              <button type="submit" className="btn btn-primary" style={{ backgroundColor: '#10b981' }}>
+              <button type="submit" className="btn btn-primary">
                 장부에 쓰기
               </button>
             </div>
@@ -1632,7 +1746,7 @@ export default function App() {
       </div>
       )}
 
-      {!isViewer && (
+      {!ledgerReadOnly && (
       <>
       <CategoryManageModal
         isOpen={isCategoryManageOpen}
@@ -1655,11 +1769,22 @@ export default function App() {
         defaultCategory={categories.find((c) => c.label === '기타')?.label || categories[0]?.label}
         onApply={handleCardPasteApply}
       />
+
       </>
       )}
       </>
       )}
       </AppShell>
-    </div>
+      {!ledgerReadOnly && (
+        <ViewerMenuSettingsModal
+          isOpen={viewerMenuSettingsOpen}
+          onClose={() => setViewerMenuSettingsOpen(false)}
+          visibility={activeViewerMenuVisibility}
+          navLabels={navLabels}
+          onApply={handleApplyViewerMenuVisibility}
+          onReset={handleResetViewerMenuVisibility}
+        />
+      )}
+    </>
   );
 }

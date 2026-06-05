@@ -43,6 +43,7 @@ const payload = {
   days: raw.days,
   weekSummaries: raw.weekSummaries || {},
   nextWeekPlans: raw.nextWeekPlans || {},
+  kpiWeekMemos: raw.kpiWeekMemos || {},
 };
 
 fs.mkdirSync(path.dirname(outPath), { recursive: true });

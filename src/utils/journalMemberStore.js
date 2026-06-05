@@ -1,0 +1,81 @@
+import { stripLegacyWeekColumnEntries } from '../constants/journalCategories';
+import { TEAM_KPI_MEMBERS } from '../constants/kpiMembers';
+
+export function emptyMemberJournal() {
+  return {
+    days: {},
+    weekSummaries: {},
+    nextWeekPlans: {},
+    kpiWeekMemos: {},
+  };
+}
+
+export function createEmptyMemberJournals() {
+  return Object.fromEntries(TEAM_KPI_MEMBERS.map((m) => [m.code, emptyMemberJournal()]));
+}
+
+function normalizeMemberSlice(raw) {
+  if (!raw || typeof raw !== 'object') return emptyMemberJournal();
+  return {
+    days: raw.days && typeof raw.days === 'object' ? { ...raw.days } : {},
+    weekSummaries: stripLegacyWeekColumnEntries(raw.weekSummaries),
+    nextWeekPlans: stripLegacyWeekColumnEntries(raw.nextWeekPlans),
+    kpiWeekMemos: raw.kpiWeekMemos && typeof raw.kpiWeekMemos === 'object' ? { ...raw.kpiWeekMemos } : {},
+  };
+}
+
+/** legacy flat store → memberJournals */
+export function migrateJournalStore(parsed, { seedDaysForA = {}, seedKpiWeekMemosForA = {} } = {}) {
+  const memberJournals = createEmptyMemberJournals();
+
+  if (parsed?.memberJournals && typeof parsed.memberJournals === 'object') {
+    TEAM_KPI_MEMBERS.forEach(({ code }) => {
+      memberJournals[code] = normalizeMemberSlice(parsed.memberJournals[code]);
+    });
+  } else {
+    memberJournals.A = normalizeMemberSlice({
+      days: parsed?.days || seedDaysForA,
+      weekSummaries: parsed?.weekSummaries,
+      nextWeekPlans: parsed?.nextWeekPlans,
+      kpiWeekMemos: parsed?.kpiWeekMemos || seedKpiWeekMemosForA,
+    });
+  }
+
+  if (!Object.keys(memberJournals.A.days).length && seedDaysForA && Object.keys(seedDaysForA).length) {
+    memberJournals.A.days = { ...seedDaysForA };
+  }
+  if (!Object.keys(memberJournals.A.kpiWeekMemos).length && seedKpiWeekMemosForA) {
+    memberJournals.A.kpiWeekMemos = { ...seedKpiWeekMemosForA };
+  }
+
+  return {
+    memberJournals: fillMemberJournalsFromA(memberJournals),
+    meta: parsed?.meta || { updatedAt: parsed?.publishedAt || null },
+  };
+}
+
+export function cloneMemberJournalSlice(slice) {
+  return JSON.parse(JSON.stringify(slice || emptyMemberJournal()));
+}
+
+/** B·C 일지가 비어 있으면 A 샘플을 복사 (팀 KPI·리포트 데모용) */
+export function fillMemberJournalsFromA(memberJournals, { force = false } = {}) {
+  const source = memberJournals?.A;
+  if (!source || !Object.keys(source.days || {}).length) return memberJournals;
+  const next = { ...memberJournals };
+  ['B', 'C'].forEach((code) => {
+    const target = next[code] || emptyMemberJournal();
+    if (force || !Object.keys(target.days || {}).length) {
+      next[code] = cloneMemberJournalSlice(source);
+    }
+  });
+  return next;
+}
+
+export function getMemberJournal(store, memberCode) {
+  return store?.memberJournals?.[memberCode] || emptyMemberJournal();
+}
+
+export function memberJournalCodes(store) {
+  return TEAM_KPI_MEMBERS.map((m) => m.code);
+}

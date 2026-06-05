@@ -1,10 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  JOURNAL_SEED_ACADEMIZER_SCENARIO,
+  KPI_WEEK_MEMOS_ACADEMIZER_SCENARIO,
+} from '../data/journalSeedAcademizerScenario';
 import { JOURNAL_SEED_MAY_2026 } from '../data/journalSeedMay2026';
 import {
   resolveWeekColumnText,
-  stripLegacyWeekColumnEntries,
   WEEK_COLUMN_TEMPLATE,
 } from '../constants/journalCategories';
+import {
+  TEAM_LEADER_MEMBER_CODE,
+  JOURNAL_LINKED_MEMBER_CODE,
+  findKpiMember,
+  formatKpiMemberLabel,
+} from '../constants/kpiMembers';
 import {
   fetchJournalSnapshot,
   getLocalJournalMeta,
@@ -17,46 +26,93 @@ import {
   defaultDayForKey,
   resolveJournalDay,
 } from '../utils/journalHoliday2026';
+import {
+  cloneMemberJournalSlice,
+  createEmptyMemberJournals,
+  fillMemberJournalsFromA,
+  getMemberJournal,
+  migrateJournalStore,
+} from '../utils/journalMemberStore';
 import { recalcDayMmFromHours } from '../utils/journalMm';
 
 function cloneSeed() {
-  return JSON.parse(JSON.stringify(JOURNAL_SEED_MAY_2026));
+  return JSON.parse(
+    JSON.stringify({
+      ...JOURNAL_SEED_MAY_2026,
+      ...JOURNAL_SEED_ACADEMIZER_SCENARIO,
+    })
+  );
 }
 
-function recalcAll(days) {
-  const withHolidays = apply2026PublicHolidaysToDays(days);
+function cloneSeedKpiWeekMemos() {
+  return { ...KPI_WEEK_MEMOS_ACADEMIZER_SCENARIO };
+}
+
+function recalcMemberDays(days) {
+  const withHolidays = apply2026PublicHolidaysToDays(days || {});
   Object.values(withHolidays).forEach((day) => recalcDayMmFromHours(day));
   return withHolidays;
 }
 
+function recalcAllMemberJournals(memberJournals) {
+  const next = { ...memberJournals };
+  Object.keys(next).forEach((code) => {
+    next[code] = {
+      ...next[code],
+      days: recalcMemberDays(next[code].days),
+    };
+  });
+  return next;
+}
+
 function toStore(snapshot) {
+  const migrated = migrateJournalStore(snapshot, {
+    seedDaysForA: cloneSeed(),
+    seedKpiWeekMemosForA: cloneSeedKpiWeekMemos(),
+  });
   return {
-    days: recalcAll(snapshot.days || {}),
-    weekSummaries: stripLegacyWeekColumnEntries(snapshot.weekSummaries),
-    nextWeekPlans: stripLegacyWeekColumnEntries(snapshot.nextWeekPlans),
+    memberJournals: recalcAllMemberJournals(fillMemberJournalsFromA(migrated.memberJournals)),
     meta: { updatedAt: snapshot.publishedAt || new Date().toISOString() },
   };
 }
 
 function loadStore() {
+  const fallback = toStore({
+    memberJournals: createEmptyMemberJournals(),
+    publishedAt: null,
+  });
   try {
     const raw = localStorage.getItem(JOURNAL_STORAGE_KEY);
-    if (!raw) return toStore({ days: cloneSeed(), weekSummaries: {}, nextWeekPlans: {}, publishedAt: null });
+    if (!raw) return fallback;
     const parsed = JSON.parse(raw);
+    const migrated = migrateJournalStore(parsed, {
+      seedDaysForA: cloneSeed(),
+      seedKpiWeekMemosForA: cloneSeedKpiWeekMemos(),
+    });
     return {
-      days: recalcAll(parsed.days || cloneSeed()),
-      weekSummaries: stripLegacyWeekColumnEntries(parsed.weekSummaries),
-      nextWeekPlans: stripLegacyWeekColumnEntries(parsed.nextWeekPlans),
+      memberJournals: recalcAllMemberJournals(fillMemberJournalsFromA(migrated.memberJournals)),
       meta: parsed.meta || { updatedAt: parsed.publishedAt || null },
     };
   } catch {
-    return toStore({ days: cloneSeed(), weekSummaries: {}, nextWeekPlans: {}, publishedAt: null });
+    return fallback;
   }
+}
+
+function updateMemberJournal(prev, memberCode, updater) {
+  const current = getMemberJournal(prev, memberCode);
+  const nextSlice = typeof updater === 'function' ? updater(current) : updater;
+  return {
+    ...prev,
+    memberJournals: {
+      ...prev.memberJournals,
+      [memberCode]: nextSlice,
+    },
+  };
 }
 
 export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}) {
   const [store, setStore] = useState(loadStore);
-  const [syncStatus, setSyncStatus] = useState('idle'); // idle | checking | synced | local-newer | error
+  const [syncStatus, setSyncStatus] = useState('idle');
 
   const persist = useCallback(
     (next) => {
@@ -77,19 +133,18 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
     localStorage.setItem(JOURNAL_STORAGE_KEY, JSON.stringify(store));
   }, [store, readOnly]);
 
-  /** 예전 localStorage·클라우드에 공휴일 미반영 시 한 번 보정 */
   useEffect(() => {
     if (readOnly) return;
     setStore((prev) => {
-      const days = recalcAll(prev.days || {});
-      if (JSON.stringify(days) === JSON.stringify(prev.days)) return prev;
-      return persist({ ...prev, days });
+      const memberJournals = recalcAllMemberJournals(prev.memberJournals || {});
+      if (JSON.stringify(memberJournals) === JSON.stringify(prev.memberJournals)) return prev;
+      return persist({ ...prev, memberJournals });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readOnly]);
 
   const applyRemoteSnapshot = useCallback(
-    (snapshot, { silent = false } = {}) => {
+    (snapshot) => {
       const next = persist(toStore(snapshot));
       setStore(next);
       setSyncStatus('synced');
@@ -123,7 +178,7 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
           setSyncStatus('idle');
           return { ok: false, reason: 'cancelled' };
         }
-        applyRemoteSnapshot(remote, { silent: true });
+        applyRemoteSnapshot(remote);
         return { ok: true, remote };
       } catch (e) {
         setSyncStatus('error');
@@ -142,7 +197,7 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
         if (cancelled || !remote) return;
         const localAt = store.meta?.updatedAt || getLocalJournalMeta().updatedAt;
         if (isRemoteNewer(remote.publishedAt, localAt)) {
-          applyRemoteSnapshot(remote, { silent: true });
+          applyRemoteSnapshot(remote);
         }
       } catch {
         /* public/journal-snapshot.json 없음 */
@@ -151,7 +206,6 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
     return () => {
       cancelled = true;
     };
-    // 최초 1회만
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readOnly, autoSyncCloud]);
 
@@ -159,81 +213,162 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
     async (file) => {
       const text = await file.text();
       const snapshot = normalizeJournalSnapshot(JSON.parse(text));
-      applyRemoteSnapshot(snapshot, { silent: true });
+      applyRemoteSnapshot(snapshot);
       return snapshot;
     },
     [applyRemoteSnapshot]
   );
 
+  const getMemberDays = useCallback(
+    (memberCode = JOURNAL_LINKED_MEMBER_CODE) => getMemberJournal(store, memberCode).days || {},
+    [store.memberJournals]
+  );
+
   const getDayData = useCallback(
-    (key) => resolveJournalDay(key, store.days[key]),
-    [store.days]
+    (key, memberCode = JOURNAL_LINKED_MEMBER_CODE) =>
+      resolveJournalDay(key, getMemberJournal(store, memberCode).days[key]),
+    [store.memberJournals]
   );
 
   const updateDay = useCallback(
-    (key, updater) => {
+    (key, updater, memberCode = JOURNAL_LINKED_MEMBER_CODE) => {
       if (readOnly) return;
       setStore((prev) => {
-        const day = prev.days[key] || defaultDayForKey(key);
-        const nextDay = typeof updater === 'function' ? updater({ ...day, tasks: [...day.tasks] }) : updater;
-        recalcDayMmFromHours(nextDay);
-        return persist({ ...prev, days: { ...prev.days, [key]: nextDay } });
+        const next = updateMemberJournal(prev, memberCode, (slice) => {
+          const day = slice.days[key] || defaultDayForKey(key);
+          const nextDay = typeof updater === 'function' ? updater({ ...day, tasks: [...day.tasks] }) : updater;
+          recalcDayMmFromHours(nextDay);
+          return { ...slice, days: { ...slice.days, [key]: nextDay } };
+        });
+        return persist(next);
       });
     },
     [readOnly, persist]
   );
 
   const setWeekSummary = useCallback(
-    (weekKey, text) => {
+    (weekKey, text, memberCode = JOURNAL_LINKED_MEMBER_CODE) => {
       if (readOnly) return;
-      setStore((prev) => persist({ ...prev, weekSummaries: { ...prev.weekSummaries, [weekKey]: text } }));
-    },
-    [readOnly, persist]
-  );
-
-  const setNextWeekPlan = useCallback(
-    (weekKey, text) => {
-      if (readOnly) return;
-      setStore((prev) => persist({ ...prev, nextWeekPlans: { ...prev.nextWeekPlans, [weekKey]: text } }));
-    },
-    [readOnly, persist]
-  );
-
-  const getWeekSummaryContent = useCallback(
-    (weekKey) => resolveWeekColumnText(store.weekSummaries[weekKey]),
-    [store.weekSummaries]
-  );
-
-  const getNextWeekContent = useCallback(
-    (weekKey) => resolveWeekColumnText(store.nextWeekPlans[weekKey]),
-    [store.nextWeekPlans]
-  );
-
-  const applyWeekColumnTemplate = useCallback(
-    (weekKey, field) => {
-      if (readOnly) return;
-      const key = field === 'summary' ? 'weekSummaries' : 'nextWeekPlans';
       setStore((prev) =>
-        persist({
-          ...prev,
-          [key]: { ...prev[key], [weekKey]: WEEK_COLUMN_TEMPLATE },
-        })
+        persist(
+          updateMemberJournal(prev, memberCode, (slice) => ({
+            ...slice,
+            weekSummaries: { ...slice.weekSummaries, [weekKey]: text },
+          }))
+        )
       );
     },
     [readOnly, persist]
   );
 
-  const resetToSeed = useCallback(() => {
-    if (readOnly) return;
-    if (window.confirm('5월 샘플 데이터로 되돌릴까요? (저장된 일지가 사라집니다)')) {
-      setStore(persist({ days: recalcAll(cloneSeed()), weekSummaries: {}, nextWeekPlans: {} }));
-    }
-  }, [readOnly, persist]);
+  const setNextWeekPlan = useCallback(
+    (weekKey, text, memberCode = JOURNAL_LINKED_MEMBER_CODE) => {
+      if (readOnly) return;
+      setStore((prev) =>
+        persist(
+          updateMemberJournal(prev, memberCode, (slice) => ({
+            ...slice,
+            nextWeekPlans: { ...slice.nextWeekPlans, [weekKey]: text },
+          }))
+        )
+      );
+    },
+    [readOnly, persist]
+  );
+
+  const getWeekSummaryContent = useCallback(
+    (weekKey, memberCode = JOURNAL_LINKED_MEMBER_CODE) =>
+      resolveWeekColumnText(getMemberJournal(store, memberCode).weekSummaries[weekKey]),
+    [store.memberJournals]
+  );
+
+  const getNextWeekContent = useCallback(
+    (weekKey, memberCode = JOURNAL_LINKED_MEMBER_CODE) =>
+      resolveWeekColumnText(getMemberJournal(store, memberCode).nextWeekPlans[weekKey]),
+    [store.memberJournals]
+  );
+
+  const applyWeekColumnTemplate = useCallback(
+    (weekKey, field, memberCode = JOURNAL_LINKED_MEMBER_CODE) => {
+      if (readOnly) return;
+      const key = field === 'summary' ? 'weekSummaries' : 'nextWeekPlans';
+      setStore((prev) =>
+        persist(
+          updateMemberJournal(prev, memberCode, (slice) => ({
+            ...slice,
+            [key]: { ...slice[key], [weekKey]: WEEK_COLUMN_TEMPLATE },
+          }))
+        )
+      );
+    },
+    [readOnly, persist]
+  );
+
+  const setKpiWeekMemo = useCallback(
+    (weekKey, text, memberCode = JOURNAL_LINKED_MEMBER_CODE) => {
+      if (readOnly) return;
+      setStore((prev) =>
+        persist(
+          updateMemberJournal(prev, memberCode, (slice) => ({
+            ...slice,
+            kpiWeekMemos: { ...(slice.kpiWeekMemos || {}), [weekKey]: text },
+          }))
+        )
+      );
+    },
+    [readOnly, persist]
+  );
+
+  const getKpiWeekMemo = useCallback(
+    (weekKey, memberCode = JOURNAL_LINKED_MEMBER_CODE) =>
+      String(getMemberJournal(store, memberCode).kpiWeekMemos?.[weekKey] ?? ''),
+    [store.memberJournals]
+  );
+
+  const resetToSeed = useCallback(
+    (memberCode = JOURNAL_LINKED_MEMBER_CODE) => {
+      if (readOnly) return false;
+      const member = findKpiMember(memberCode);
+      const memberLabel = member ? formatKpiMemberLabel(member) : memberCode;
+      if (
+        !window.confirm(
+          `${memberLabel} 일지를 초기화할까요? (해당 구성원의 저장된 일지·주간 메모가 사라집니다)`
+        )
+      ) {
+        return false;
+      }
+      const seedSlice = {
+        days: recalcMemberDays(cloneSeed()),
+        weekSummaries: {},
+        nextWeekPlans: {},
+        kpiWeekMemos: cloneSeedKpiWeekMemos(),
+      };
+      setStore((prev) => {
+        let next = updateMemberJournal(prev, memberCode, () => cloneMemberJournalSlice(seedSlice));
+        if (memberCode === TEAM_LEADER_MEMBER_CODE) {
+          ['B', 'C'].forEach((code) => {
+            next = updateMemberJournal(next, code, () => cloneMemberJournalSlice(seedSlice));
+          });
+        }
+        return persist(next);
+      });
+      return true;
+    },
+    [readOnly, persist]
+  );
+
+  const linkedDays = useMemo(
+    () => getMemberDays(JOURNAL_LINKED_MEMBER_CODE),
+    [getMemberDays]
+  );
 
   return {
-    days: store.days,
-    weekSummaries: store.weekSummaries,
-    nextWeekPlans: store.nextWeekPlans,
+    memberJournals: store.memberJournals,
+    days: linkedDays,
+    getMemberDays,
+    weekSummaries: getMemberJournal(store, JOURNAL_LINKED_MEMBER_CODE).weekSummaries,
+    nextWeekPlans: getMemberJournal(store, JOURNAL_LINKED_MEMBER_CODE).nextWeekPlans,
+    kpiWeekMemos: getMemberJournal(store, JOURNAL_LINKED_MEMBER_CODE).kpiWeekMemos || {},
     meta: store.meta,
     syncStatus,
     getDayData,
@@ -243,6 +378,8 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
     getWeekSummaryContent,
     getNextWeekContent,
     applyWeekColumnTemplate,
+    setKpiWeekMemo,
+    getKpiWeekMemo,
     resetToSeed,
     pullFromCloud,
     importFromFile,

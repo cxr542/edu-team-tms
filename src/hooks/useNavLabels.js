@@ -1,12 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
 import { DEFAULT_NAV_LABELS, NAV_LABELS_STORAGE_KEY } from '../constants/navLabels';
 
+const LEGACY_LEDGER_LABEL = '월별 지출 장부';
+
 function loadNavLabels() {
   try {
     const raw = localStorage.getItem(NAV_LABELS_STORAGE_KEY);
     if (!raw) return { ...DEFAULT_NAV_LABELS };
     const parsed = JSON.parse(raw);
-    return { ...DEFAULT_NAV_LABELS, ...parsed };
+    const merged = { ...DEFAULT_NAV_LABELS, ...parsed };
+    if (merged.ledger === LEGACY_LEDGER_LABEL) {
+      merged.ledger = DEFAULT_NAV_LABELS.ledger;
+    }
+    return merged;
   } catch {
     return { ...DEFAULT_NAV_LABELS };
   }

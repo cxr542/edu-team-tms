@@ -1,0 +1,139 @@
+.kpi-report-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.kpi-report-month-nav {
+  margin-bottom: 0;
+  flex: 1;
+  min-width: 12rem;
+}
+
+.kpi-report-month-nav h1 {
+  font-size: 1.35rem;
+  margin: 0;
+}
+
+.kpi-report-print-btn {
+  flex-shrink: 0;
+}
+
+.kpi-report-month-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.5rem;
+  margin-bottom: 0.65rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius-md, 8px);
+  background: var(--bg-secondary, #f8fafc);
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.kpi-report-year-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-right: 0.35rem;
+}
+
+.kpi-report-month-picker__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary, #64748b);
+  min-width: 3.5rem;
+  text-align: center;
+}
+
+.kpi-report-month-picker .btn.is-active {
+  background: var(--primary, #006dff);
+  border-color: var(--primary, #006dff);
+  color: #fff;
+}
+
+.kpi-report-period-hint {
+  margin: 0 0 0.5rem;
+}
+
+.kpi-report-period-hint code {
+  font-size: 0.8em;
+}
+
+.kpi-report-page .kpi-report-block {
+  margin-bottom: 2rem;
+}
+
+.kpi-report-member-title {
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+}
+
+.kpi-report-page .kpi-report-block:first-of-type .kpi-report-member-title {
+  border-top: none;
+  padding-top: 0;
+}
+
+.kpi-report-team-row {
+  background: rgba(0, 109, 255, 0.08);
+  font-weight: 500;
+}
+
+.kpi-report-page .team-kpi-th-weight {
+  font-size: 0.68rem;
+  font-weight: 400;
+  color: var(--text-secondary, #64748b);
+}
+
+.kpi-grade {
+  display: inline-block;
+  min-width: 1.5rem;
+  text-align: center;
+  font-weight: 700;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background: #eef2ff;
+}
+
+.kpi-grade--S {
+  background: #006dff22;
+  color: #006dff;
+}
+
+.kpi-grade--A {
+  background: #22c55e22;
+  color: #15803d;
+}
+
+.kpi-grade--B {
+  background: #eab30822;
+  color: #a16207;
+}
+
+.kpi-grade--C {
+  background: #f9731622;
+  color: #c2410c;
+}
+
+.kpi-grade--D {
+  background: #ef444422;
+  color: #b91c1c;
+}
+
+@media print {
+  .kpi-report-no-print,
+  .project-toolbar,
+  .sidebar,
+  .app-banner {
+    display: none !important;
+  }
+
+  .team-kpi-main {
+    padding: 0;
+  }
+}

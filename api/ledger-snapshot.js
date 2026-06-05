@@ -1,11 +1,13 @@
 /**
- * 조회용 장부 — GET: Blob 최신 스냅샷 / POST: 관리자 작성 시 새 Blob 파일 생성
- * (public Blob overwrite는 CDN 60초 지연 → 파일명을 매번 새로 써서 실시간 반영)
+ * 조회용 장부 — GET: Blob 최신 스냅샷 / POST: 관리자 작성 시 덮어쓰기
+ * 단일 파일(ledger/live-latest.json)로 Hobby Blob 1GB 한도·목록 1000건 제한 회피
  */
 import { readFile } from 'fs/promises';
 import path from 'path';
 
-const LIVE_PREFIX = 'ledger/live-';
+const LIVE_LATEST_PATH = 'ledger/live-latest.json';
+/** @deprecated 타임스탬프 파일 — npm run prune:ledger-blobs 로 정리 */
+const LEGACY_PREFIX = 'ledger/live-';
 
 const ALLOWED_HOST_RE =
   /^(https?:\/\/)?([^/]*\.)?(edu-team-tms|okestro-edu-team-tms)\.vercel\.app|localhost(:\d+)?/i;
@@ -20,8 +22,7 @@ function canPublish(req) {
   if (secret && key && key === secret) return true;
 
   const referer = req.headers.referer || req.headers.origin || '';
-  if (!ALLOWED_HOST_RE.test(referer)) return false;
-  return referer.includes('mode=edit');
+  return ALLOWED_HOST_RE.test(referer);
 }
 
 async function readStaticFromDisk() {
@@ -39,28 +40,51 @@ async function readStaticFromDisk() {
   return null;
 }
 
-async function readLatestLiveBlob() {
+async function fetchBlobJson(url) {
+  if (!url) return null;
+  const res = await fetch(`${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+async function readLiveLatestBlob() {
   const token = getBlobToken();
   if (!token) return null;
 
   try {
+    const { head } = await import('@vercel/blob');
+    const meta = await head(LIVE_LATEST_PATH, { token });
+    return fetchBlobJson(meta.downloadUrl || meta.url);
+  } catch {
+    return readLegacyLatestBlob(token);
+  }
+}
+
+/** 레거시 타임스탬프 파일 — 전체 목록 순회 후 최신 1건 (정리 전 호환) */
+async function readLegacyLatestBlob(token) {
+  try {
     const { list } = await import('@vercel/blob');
-    const { blobs } = await list({ prefix: LIVE_PREFIX, token });
-    if (!blobs?.length) return null;
+    let latest = null;
+    let cursor;
+    do {
+      const res = await list({ prefix: LEGACY_PREFIX, token, limit: 1000, cursor });
+      for (const b of res.blobs) {
+        if (
+          !latest ||
+          new Date(b.uploadedAt).getTime() > new Date(latest.uploadedAt).getTime()
+        ) {
+          latest = b;
+        }
+      }
+      cursor = res.cursor;
+    } while (cursor);
 
-    const latest = [...blobs].sort(
-      (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
-    )[0];
-    const url = latest.downloadUrl || latest.url;
-    if (!url) return null;
-
-    const res = await fetch(`${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`, {
-      cache: 'no-store',
-    });
-    if (!res.ok) return null;
-    return res.json();
+    if (!latest) return null;
+    return fetchBlobJson(latest.downloadUrl || latest.url);
   } catch (e) {
-    console.warn('ledger blob list', e.message);
+    console.warn('ledger legacy blob list', e.message);
     return null;
   }
 }
@@ -72,22 +96,23 @@ async function writeLiveBlob(payload) {
     err.code = 'NOT_CONFIGURED';
     throw err;
   }
+
   const { put } = await import('@vercel/blob');
-  const pathname = `${LIVE_PREFIX}${Date.now()}.json`;
-  await put(pathname, JSON.stringify(payload), {
+  await put(LIVE_LATEST_PATH, JSON.stringify(payload), {
     access: 'public',
     token,
     addRandomSuffix: false,
+    allowOverwrite: true,
     contentType: 'application/json',
     cacheControlMaxAge: 60,
   });
-  return pathname;
+  return LIVE_LATEST_PATH;
 }
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
     try {
-      const live = await readLatestLiveBlob();
+      const live = await readLiveLatestBlob();
       if (live?.transactions) {
         res.setHeader('Cache-Control', 'no-store');
         res.setHeader('X-Ledger-Source', 'blob-live');
@@ -122,6 +147,10 @@ export default async function handler(req, res) {
       publishedAt: body.publishedAt || new Date().toISOString(),
       categories: body.categories ?? null,
       transactions: body.transactions,
+      viewerMenuVisibility:
+        body.viewerMenuVisibility && typeof body.viewerMenuVisibility === 'object'
+          ? body.viewerMenuVisibility
+          : undefined,
     };
 
     try {
@@ -134,7 +163,15 @@ export default async function handler(req, res) {
           message: 'Vercel Blob 연결 후 재배포가 필요합니다.',
         });
       }
-      return res.status(500).json({ error: e.message });
+      const msg = String(e.message || e);
+      if (/quota|exceeded/i.test(msg)) {
+        return res.status(507).json({
+          error: 'blob-quota-exceeded',
+          message:
+            'Vercel Blob 저장 용량(1GB)이 가득 찼습니다. npm run prune:ledger-blobs 실행 또는 Storage에서 삭제 후 다시 시도하세요.',
+        });
+      }
+      return res.status(500).json({ error: msg });
     }
   }
 

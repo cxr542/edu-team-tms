@@ -1,0 +1,897 @@
+/* cxr542 project shell — idea-bank 구조, TMS 라이트 본문 + 다크 사이드바 */
+
+.project-app {
+  --shell-bg: var(--bg-primary);
+  --shell-sidebar: #0c0c12;
+  --shell-border: rgba(255, 255, 255, 0.1);
+  --shell-text: #f0f0f5;
+  --shell-muted: #9a9aa8;
+  --shell-green: #10b981;
+  --shell-sidebar-w: 13.75rem;
+  --shell-sidebar-w-mini: 3.5rem;
+  --shell-sidebar-current: var(--shell-sidebar-w);
+  --shell-banner-h: 2.25rem;
+  --shell-drawer-bp: 1024px;
+}
+
+.project-app.theme-tms {
+  --app-accent: #2997ff;
+  --app-accent-rgb: 41, 151, 255;
+  --shell-sidebar-current: var(--shell-sidebar-w);
+}
+
+html.project-sidebar-collapsed-boot .project-app.theme-tms {
+  --shell-sidebar-current: var(--shell-sidebar-w-mini);
+}
+
+.project-app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.project-app .app-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem 0.65rem;
+  flex-shrink: 0;
+  min-height: var(--shell-banner-h);
+  padding: 0.55rem 1rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--shell-muted);
+  background: linear-gradient(
+    90deg,
+    rgba(var(--app-accent-rgb), 0.08) 0%,
+    rgba(0, 102, 204, 0.1) 50%,
+    rgba(var(--app-accent-rgb), 0.08) 100%
+  );
+  border-bottom: 1px solid rgba(var(--app-accent-rgb), 0.2);
+}
+
+.project-app .app-banner__brand {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--primary);
+  letter-spacing: -0.02em;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: center;
+}
+
+.app-version-badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--border-color);
+  letter-spacing: 0;
+}
+
+.app-env-badge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.app-env-badge--prod {
+  color: #059669;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.app-env-badge--dev {
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+}
+
+.project-app.is-dev-env .app-banner {
+  background: linear-gradient(
+    90deg,
+    rgba(245, 158, 11, 0.12) 0%,
+    rgba(251, 191, 36, 0.08) 50%,
+    rgba(245, 158, 11, 0.12) 100%
+  );
+  border-bottom-color: rgba(245, 158, 11, 0.35);
+}
+
+.project-app.is-prod-env .app-banner {
+  background: linear-gradient(
+    90deg,
+    rgba(var(--app-accent-rgb), 0.08) 0%,
+    rgba(0, 102, 204, 0.1) 50%,
+    rgba(var(--app-accent-rgb), 0.08) 100%
+  );
+}
+
+.sidebar-note__dev {
+  display: inline-block;
+  margin-top: 0.35rem;
+  color: #fbbf24;
+}
+
+.project-toolbar__scope {
+  margin-left: 0.5rem;
+  padding: 0.12rem 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border-radius: 4px;
+  background: rgba(0, 109, 255, 0.12);
+  color: var(--primary, #006dff);
+  vertical-align: middle;
+}
+
+.project-toolbar__scope--leader {
+  background: rgba(241, 89, 40, 0.12);
+  color: #c2410c;
+}
+
+.project-toolbar__env {
+  margin-left: 0.45rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+.project-app.is-dev-env .project-toolbar__env {
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.project-app.is-prod-env .project-toolbar__env {
+  color: #059669;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.project-toolbar .btn--prod-link {
+  flex-shrink: 0;
+  color: #059669;
+  border-color: rgba(16, 185, 129, 0.35);
+  text-decoration: none;
+  font-size: 0.8125rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  background: transparent;
+}
+
+.project-toolbar .btn--prod-link:hover {
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.project-app .app-banner__tagline {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.project-app .app-banner__meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.project-nav-backdrop {
+  display: none;
+}
+
+.project-shell {
+  display: grid;
+  grid-template-columns: var(--shell-sidebar-current) 1fr;
+  flex: 1;
+  min-height: 0;
+  transition: grid-template-columns 0.22s ease;
+}
+
+.project-shell.is-sidebar-collapsed {
+  --shell-sidebar-current: var(--shell-sidebar-w-mini);
+}
+
+html.project-sidebar-collapsed-boot .project-shell {
+  --shell-sidebar-current: var(--shell-sidebar-w-mini);
+}
+
+.project-sidebar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 0.5rem;
+  padding-right: 0.65rem;
+  background: var(--shell-sidebar);
+  border-right: 1px solid rgba(var(--app-accent-rgb), 0.15);
+  overflow: visible;
+  color: var(--shell-text);
+  flex-shrink: 0;
+}
+
+.project-sidebar__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+  padding: 0 0.25rem;
+}
+
+.project-logo h1 {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  white-space: nowrap;
+  color: var(--shell-text);
+}
+
+.project-logo__mark {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.project-logo__mark img {
+  display: block;
+  width: 1.35rem;
+  height: auto;
+  object-fit: contain;
+}
+
+.project-logo__sub {
+  margin: 0.3rem 0 0;
+  font-size: 0.75rem;
+  color: var(--shell-muted);
+  line-height: 1.4;
+}
+
+.project-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.project-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.project-nav-group + .project-nav-group {
+  margin-top: 0.15rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.project-nav-group__title {
+  margin: 0 0 0.2rem 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.42);
+  line-height: 1.3;
+}
+
+.project-nav-group--leader .project-nav-group__title {
+  color: rgba(241, 159, 40, 0.75);
+}
+
+.project-nav-group--experimental .project-nav-group__title {
+  color: rgba(167, 139, 250, 0.72);
+}
+
+.project-nav-group__items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.project-shell.is-sidebar-collapsed .project-nav-group__title,
+html.project-sidebar-collapsed-boot .project-nav-group__title {
+  opacity: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.project-shell.is-sidebar-collapsed .project-nav-group + .project-nav-group,
+html.project-sidebar-collapsed-boot .project-nav-group + .project-nav-group {
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+}
+
+.project-sidebar-nav-footer {
+  margin-top: 0.35rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.project-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  margin: 0;
+  padding: 0.55rem 0.6rem;
+  font: inherit;
+  font-size: 0.875rem;
+  text-align: left;
+  color: var(--shell-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.project-nav-item__icon {
+  flex-shrink: 0;
+  width: 1.35rem;
+  height: 1.35rem;
+  opacity: 0.9;
+}
+
+.project-nav-item__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-nav-item:hover {
+  color: var(--shell-text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.project-nav-item.is-active {
+  color: var(--shell-text);
+  background: rgba(var(--app-accent-rgb), 0.12);
+  border-color: rgba(var(--app-accent-rgb), 0.35);
+}
+
+.project-nav-item.is-active .project-nav-item__icon {
+  color: var(--app-accent);
+}
+
+a.project-nav-item.project-nav-item--hub {
+  margin-top: 0.35rem;
+  color: var(--shell-green);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+a.project-nav-item.project-nav-item--hub:hover {
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.45);
+}
+
+.project-nav-item--utility {
+  font-size: 0.8125rem;
+  padding: 0.45rem 0.6rem;
+}
+
+.project-sidebar-extra {
+  margin-top: 0.75rem;
+  padding: 0 0.15rem;
+  overflow: hidden;
+}
+
+.project-sidebar-bottom {
+  margin-top: auto;
+  padding-top: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.project-settings-menu {
+  position: relative;
+  margin-bottom: 0.35rem;
+}
+
+.project-settings-trigger {
+  justify-content: flex-start;
+}
+
+.project-settings-trigger.is-open {
+  color: var(--shell-text);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(var(--app-accent-rgb), 0.35);
+}
+
+.project-settings-trigger__caret {
+  flex-shrink: 0;
+  margin-left: auto;
+  transition: transform 0.15s ease;
+}
+
+.project-settings-trigger.is-open .project-settings-trigger__caret {
+  transform: rotate(180deg);
+}
+
+.project-settings-popover {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-top: 0.3rem;
+  padding: 0.35rem;
+  border-radius: 9px;
+  border: 1px solid rgba(var(--app-accent-rgb), 0.3);
+  background: rgba(10, 12, 20, 0.95);
+}
+
+.project-settings-popover__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--shell-muted);
+  font: inherit;
+  font-size: 0.78rem;
+  text-align: left;
+  padding: 0.4rem 0.5rem;
+  cursor: pointer;
+}
+
+.project-settings-popover__item:hover {
+  color: var(--shell-text);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.project-settings-popover__section {
+  margin-top: 0.25rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.project-settings-popover__section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 0 0.35rem;
+  padding: 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--shell-muted);
+}
+
+.project-font-size-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.3rem;
+}
+
+.project-font-size-option {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--shell-muted);
+  font: inherit;
+  font-size: 0.76rem;
+  padding: 0.38rem 0.35rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.project-font-size-option:hover {
+  color: var(--shell-text);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.project-font-size-option.is-active {
+  color: #fff;
+  border-color: rgba(var(--app-accent-rgb), 0.65);
+  background: rgba(var(--app-accent-rgb), 0.28);
+  font-weight: 600;
+}
+
+.project-sidebar-bottom .usage-standards-panel {
+  margin-top: 0.75rem;
+}
+
+/* 사이드바(다크) — 사용 유형 기준표 */
+.usage-standards-panel--sidebar {
+  padding: 0.85rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.usage-standards-panel__title {
+  margin: 0 0 0.55rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #7ec8ff;
+}
+
+.usage-standards-panel__table {
+  width: 100%;
+  font-size: 0.75rem;
+  border-collapse: collapse;
+}
+
+.usage-standards-panel__table th {
+  padding-bottom: 0.4rem;
+  text-align: left;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #b8bcc8;
+}
+
+.usage-standards-panel__table tbody tr {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.usage-standards-panel__type {
+  padding: 0.45rem 0.4rem 0.45rem 0;
+  font-weight: 600;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+.usage-standards-panel__desc {
+  padding: 0.45rem 0;
+  color: #ececf1;
+  line-height: 1.5;
+  vertical-align: top;
+}
+
+.usage-standards-panel__foot {
+  margin: 0.6rem 0 0;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: #b0b4c0;
+}
+
+.usage-standards-panel__manage {
+  width: 100%;
+  margin-top: 0.65rem;
+  font-size: 0.72rem;
+  padding: 0.4rem;
+}
+
+/* 장부 본문(라이트) — 사용 유형 기준표 */
+.usage-standards-panel--main {
+  padding: 1rem 1.1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.usage-standards-panel--main .usage-standards-panel__title {
+  color: var(--primary);
+}
+
+.usage-standards-panel--main .usage-standards-panel__table th {
+  color: var(--text-muted);
+}
+
+.usage-standards-panel--main .usage-standards-panel__table tbody tr {
+  border-top-color: var(--border-soft);
+}
+
+.usage-standards-panel--main .usage-standards-panel__desc {
+  color: var(--text-secondary);
+}
+
+.usage-standards-panel--main .usage-standards-panel__foot {
+  color: var(--text-muted);
+}
+
+.ledger-usage-standards-wrap {
+  margin-bottom: 2rem;
+}
+
+.project-sidebar-note {
+  margin-top: 0;
+  padding: 0.75rem 0.35rem 0;
+  border-top: 1px solid var(--shell-border);
+  font-size: 0.75rem;
+  color: var(--shell-muted);
+  line-height: 1.5;
+}
+
+.project-sidebar-rail {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  width: 1.35rem;
+  padding: 0.5rem 0.15rem;
+  margin: 0;
+  font: inherit;
+  font-size: 0.625rem;
+  line-height: 1.1;
+  color: var(--shell-text);
+  background: var(--shell-sidebar);
+  border: 1px solid rgba(var(--app-accent-rgb), 0.45);
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  transform: translate(100%, -50%);
+}
+
+.project-sidebar-rail:hover {
+  background: rgba(var(--app-accent-rgb), 0.15);
+  border-color: var(--app-accent);
+}
+
+.project-sidebar-rail__label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--app-accent);
+}
+
+.project-sidebar-rail__icon {
+  font-size: 1rem;
+  line-height: 1;
+  transition: transform 0.22s ease;
+}
+
+.project-shell.is-sidebar-collapsed .project-sidebar-rail__icon,
+html.project-sidebar-collapsed-boot .project-sidebar-rail__icon {
+  transform: rotate(180deg);
+}
+
+.project-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--shell-bg);
+}
+
+.project-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.project-toolbar__title {
+  flex: 1;
+  min-width: 6rem;
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.project-nav-toggle {
+  display: none;
+  flex-shrink: 0;
+  min-width: 2.5rem;
+  padding: 0.45rem 0.6rem !important;
+  font-size: 1rem !important;
+  line-height: 1;
+  border-radius: 8px !important;
+}
+
+.project-toolbar .btn--hub {
+  flex-shrink: 0;
+  color: #059669;
+  border-color: rgba(16, 185, 129, 0.35);
+  text-decoration: none;
+  font-size: 0.8125rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
+}
+
+.project-toolbar .btn--hub:hover {
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.project-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.project-content > .main-content,
+.project-content > .journal-main,
+.project-content > .team-kpi-main,
+.project-content > .competency-page,
+.project-content > .ref-docs-shell,
+.project-content > .ref-docs-main,
+.project-content > .academizer-embed-main,
+.project-content > .cloud-chatbot-embed-main,
+.project-content > .lunch-pick-main,
+.project-content > .idea-bank-page {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Desktop: icon-only sidebar */
+.project-shell.is-sidebar-collapsed .project-logo__text,
+.project-shell.is-sidebar-collapsed .project-logo__sub,
+.project-shell.is-sidebar-collapsed .project-nav-item__label,
+.project-shell.is-sidebar-collapsed .project-sidebar-note,
+.project-shell.is-sidebar-collapsed .project-sidebar-extra,
+.project-shell.is-sidebar-collapsed .project-sidebar-bottom .usage-standards-panel,
+.project-shell.is-sidebar-collapsed .project-settings-trigger__caret,
+html.project-sidebar-collapsed-boot .project-logo__text,
+html.project-sidebar-collapsed-boot .project-logo__sub,
+html.project-sidebar-collapsed-boot .project-nav-item__label,
+html.project-sidebar-collapsed-boot .project-sidebar-note,
+html.project-sidebar-collapsed-boot .project-sidebar-extra,
+html.project-sidebar-collapsed-boot .project-sidebar-bottom .usage-standards-panel,
+html.project-sidebar-collapsed-boot .project-settings-trigger__caret {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  pointer-events: none;
+  position: absolute;
+}
+
+.project-shell.is-sidebar-collapsed .project-sidebar-rail__label,
+html.project-sidebar-collapsed-boot .project-sidebar-rail__label {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  position: absolute;
+}
+
+.project-shell.is-sidebar-collapsed .project-nav-item,
+html.project-sidebar-collapsed-boot .project-nav-item {
+  justify-content: center;
+  padding: 0.55rem 0.35rem;
+}
+
+.project-shell.is-sidebar-collapsed .project-settings-popover,
+html.project-sidebar-collapsed-boot .project-settings-popover {
+  position: absolute;
+  left: calc(100% + 0.4rem);
+  bottom: 0;
+  min-width: 10rem;
+  margin-top: 0;
+  z-index: 240;
+}
+
+.project-shell.is-sidebar-collapsed .project-sidebar__head,
+html.project-sidebar-collapsed-boot .project-sidebar__head {
+  flex-direction: column;
+  align-items: center;
+}
+
+.project-shell.is-sidebar-collapsed .project-logo h1,
+html.project-sidebar-collapsed-boot .project-logo h1 {
+  justify-content: center;
+}
+
+/* 접힌 사이드바: 메뉴 호버 풍선 */
+@media (min-width: 1025px) {
+  .project-shell.is-sidebar-collapsed .project-nav-item[data-nav-tooltip],
+  html.project-sidebar-collapsed-boot .project-nav-item[data-nav-tooltip] {
+    position: relative;
+  }
+
+  .project-shell.is-sidebar-collapsed .project-nav-item[data-nav-tooltip]::after,
+  html.project-sidebar-collapsed-boot .project-nav-item[data-nav-tooltip]::after {
+    content: attr(data-nav-tooltip);
+    position: absolute;
+    left: calc(100% + 0.45rem);
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0.35rem 0.6rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.25;
+    white-space: nowrap;
+    color: #f4f4f8;
+    background: #1a1a24;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    z-index: 200;
+    transition: opacity 0.12s ease, visibility 0.12s ease;
+  }
+
+  .project-shell.is-sidebar-collapsed .project-nav-item[data-nav-tooltip]:hover::after,
+  .project-shell.is-sidebar-collapsed .project-nav-item[data-nav-tooltip]:focus-visible::after,
+  html.project-sidebar-collapsed-boot .project-nav-item[data-nav-tooltip]:hover::after,
+  html.project-sidebar-collapsed-boot .project-nav-item[data-nav-tooltip]:focus-visible::after {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+/* Tablet/phone: drawer */
+@media (max-width: 1024px) {
+  .project-nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .project-nav-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    top: var(--shell-banner-h);
+    z-index: 110;
+    background: rgba(0, 0, 0, 0.45);
+  }
+
+  .project-nav-backdrop[hidden] {
+    display: none !important;
+  }
+
+  .project-sidebar {
+    position: fixed;
+    z-index: 120;
+    top: var(--shell-banner-h);
+    left: 0;
+    bottom: 0;
+    width: min(88vw, 17.5rem);
+    transform: translateX(-105%);
+    transition: transform 0.22s ease;
+    pointer-events: none;
+  }
+
+  body.project-nav-open .project-sidebar {
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .project-shell,
+  .project-shell.is-sidebar-collapsed {
+    grid-template-columns: 1fr;
+    --shell-sidebar-current: 0px;
+  }
+
+  .project-sidebar-rail {
+    display: none;
+  }
+}

@@ -3,7 +3,7 @@ import { X, Plus, Trash2, RotateCcw } from 'lucide-react';
 
 const EMPTY_FORM = {
   label: '',
-  color: '#10b981',
+  color: 'var(--primary)',
   description: '',
   matchKeywords: '',
 };
@@ -196,7 +196,7 @@ export default function CategoryManageModal({
                 수정 취소
               </button>
             )}
-            <button type="submit" className="btn btn-primary" style={{ backgroundColor: '#0ea5e9' }}>
+            <button type="submit" className="btn btn-primary">
               <Plus size={14} />
               {editingId ? '저장' : '유형 추가'}
             </button>

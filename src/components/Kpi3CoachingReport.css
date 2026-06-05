@@ -1,0 +1,117 @@
+.kpi3-coaching {
+  margin: 0 0 1.5rem;
+  padding: 1rem 1.1rem;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(0, 109, 255, 0.06) 0%, rgba(241, 245, 249, 0.9) 100%);
+  border: 1px solid rgba(0, 109, 255, 0.15);
+}
+
+.kpi3-coaching-placeholder {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--color-text-muted, #64748b);
+}
+
+.kpi3-coaching-title {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.kpi3-coaching-summary {
+  margin: 0 0 0.85rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--color-text, #1e293b);
+}
+
+.kpi3-coaching-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+@media (max-width: 720px) {
+  .kpi3-coaching-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kpi3-coaching-block h4 {
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.kpi3-coaching-block--good h4 {
+  color: #047857;
+}
+
+.kpi3-coaching-block--gap h4 {
+  color: #b45309;
+}
+
+.kpi3-coaching-block--next h4 {
+  color: #006dff;
+}
+
+/* 기준표는 컨설팅 아래 */
+.kpi3-coaching + .kpi3-hq-tables {
+  margin-top: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.kpi3-coaching-block--good {
+  background: rgba(16, 185, 129, 0.08);
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+}
+
+.kpi3-coaching-block--gap {
+  background: rgba(245, 158, 11, 0.08);
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+}
+
+.kpi3-coaching-block--next {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+}
+
+.kpi3-coaching-list,
+.kpi3-coaching-recs {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.kpi3-coaching-list li,
+.kpi3-coaching-recs li {
+  margin-bottom: 0.35rem;
+}
+
+.kpi3-coaching-score {
+  display: inline-block;
+  min-width: 2rem;
+  margin-right: 0.35rem;
+  font-weight: 700;
+  color: #006dff;
+}
+
+.kpi3-coaching-empty {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted, #64748b);
+}
+
+.kpi3-coaching-rec--action {
+  list-style: decimal;
+}
+
+.kpi3-coaching-rec--note {
+  list-style: disc;
+  color: var(--color-text-muted, #64748b);
+}

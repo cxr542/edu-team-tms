@@ -1,10 +1,15 @@
 import { PUBLIC_SNAPSHOT_PATH } from './appMode';
+import { normalizeViewerMenuVisibility } from '../constants/viewerMenu';
 
-export function buildTeamSnapshot(transactions, categories) {
+export function buildTeamSnapshot(transactions, categories, viewerMenuVisibility = null) {
   return {
     publishedAt: new Date().toISOString(),
     categories,
     transactions,
+    viewerMenuVisibility:
+      viewerMenuVisibility && typeof viewerMenuVisibility === 'object'
+        ? normalizeViewerMenuVisibility(viewerMenuVisibility)
+        : undefined,
   };
 }
 
@@ -54,14 +59,18 @@ export async function publishSnapshotToServer(payload) {
     body: JSON.stringify(payload),
   });
   const body = await res.json().catch(() => ({}));
+  const failMsg = body.message || body.error || String(res.status);
   if (res.status === 501) {
     return { ok: false, reason: 'not-configured', message: body.message };
+  }
+  if (res.status === 507 || /quota|exceeded/i.test(failMsg)) {
+    return { ok: false, reason: 'quota-exceeded', message: body.message || failMsg };
   }
   if (res.status === 403) {
     return { ok: false, reason: 'not-allowed', message: body.message };
   }
   if (!res.ok) {
-    return { ok: false, reason: body.error || String(res.status), message: body.message };
+    return { ok: false, reason: body.error || String(res.status), message: body.message || failMsg };
   }
   return { ok: true, publishedAt: body.publishedAt || payload.publishedAt };
 }

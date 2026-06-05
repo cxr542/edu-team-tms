@@ -1,31 +1,51 @@
 import { apply2026PublicHolidaysToDays } from './journalHoliday2026';
 import { recalcDayMmFromHours } from './journalMm';
+import { createEmptyMemberJournals, migrateJournalStore } from './journalMemberStore';
 
 export const JOURNAL_SNAPSHOT_PATH = '/journal-snapshot.json';
 export const JOURNAL_STORAGE_KEY = 'tms-weekly-journal-v1';
 
+function recalcMemberDays(days) {
+  const next = apply2026PublicHolidaysToDays({ ...days });
+  Object.values(next).forEach((day) => recalcDayMmFromHours(day));
+  return next;
+}
+
 export function buildJournalSnapshot(store) {
+  const memberJournals = store.memberJournals || createEmptyMemberJournals();
+  const normalized = {};
+  Object.entries(memberJournals).forEach(([code, slice]) => {
+    normalized[code] = {
+      days: slice.days || {},
+      weekSummaries: slice.weekSummaries || {},
+      nextWeekPlans: slice.nextWeekPlans || {},
+      kpiWeekMemos: slice.kpiWeekMemos || {},
+    };
+  });
+
   return {
     publishedAt: new Date().toISOString(),
-    member: 'A',
-    days: store.days,
-    weekSummaries: store.weekSummaries || {},
-    nextWeekPlans: store.nextWeekPlans || {},
+    memberJournals: normalized,
   };
 }
 
 export function normalizeJournalSnapshot(raw) {
-  if (!raw || typeof raw.days !== 'object') {
-    throw new Error('days 객체가 필요합니다.');
+  if (!raw || (typeof raw.days !== 'object' && typeof raw.memberJournals !== 'object')) {
+    throw new Error('memberJournals 또는 days 객체가 필요합니다.');
   }
-  const days = apply2026PublicHolidaysToDays({ ...raw.days });
-  Object.values(days).forEach((day) => recalcDayMmFromHours(day));
+
+  const migrated = migrateJournalStore(raw);
+  const memberJournals = {};
+  Object.entries(migrated.memberJournals).forEach(([code, slice]) => {
+    memberJournals[code] = {
+      ...slice,
+      days: recalcMemberDays(slice.days || {}),
+    };
+  });
+
   return {
     publishedAt: raw.publishedAt || new Date().toISOString(),
-    member: raw.member || 'A',
-    days,
-    weekSummaries: raw.weekSummaries || {},
-    nextWeekPlans: raw.nextWeekPlans || {},
+    memberJournals,
   };
 }
 

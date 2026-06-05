@@ -1,0 +1,183 @@
+import React, { useCallback, useMemo, useState } from 'react';
+import { Check, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { useJournal } from '../context/JournalProvider';
+import { useJournalPeriod } from '../hooks/useJournalPeriod';
+import { listPendingApprovals } from '../utils/kpiReportData';
+import { KPI1_NAME, KPI2_NAME, kpiTypeLabel } from '../constants/kpiDisplayNames';
+import { uiTooltip } from '../utils/uiTooltip';
+import './TeamKpiPage.css';
+import './KpiReportPage.css';
+
+function formatRequestedAt(iso) {
+  if (!iso) return null;
+  try {
+    return new Date(iso).toLocaleString('ko-KR', { dateStyle: 'short', timeStyle: 'short' });
+  } catch {
+    return null;
+  }
+}
+
+export default function KpiApprovePage({ readOnly = false }) {
+  const { year, month, changeMonth } = useJournalPeriod();
+  const journal = useJournal();
+  const {
+    getMemberDays,
+    improveProjects,
+    kpiOperational,
+    approveKpi1,
+    rejectKpi1,
+    approveKpi2Row,
+    rejectKpi2Row,
+  } = journal;
+  const [toast, setToast] = useState('');
+  const [rejecting, setRejecting] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
+
+  const showToast = useCallback((msg) => {
+    setToast(msg);
+    window.setTimeout(() => setToast(''), 3200);
+  }, []);
+
+  const pending = useMemo(
+    () =>
+      listPendingApprovals({
+        year,
+        monthIndex: month,
+        getMemberDays,
+        kpiOperational,
+        improveProjects,
+      }),
+    [year, month, getMemberDays, kpiOperational, improveProjects]
+  );
+
+  const handleReject = () => {
+    if (!rejecting) return;
+    const reason = rejectReason.trim() || '반려';
+    if (rejecting.type === 'KPI1') {
+      rejectKpi1(year, month, rejecting.member.code, reason);
+      showToast(`${rejecting.member.displayName} ${KPI1_NAME} 반려`);
+    } else {
+      rejectKpi2Row(rejecting.dayKey, rejecting.taskId, reason);
+      showToast(`${KPI2_NAME} 효과 건 반려`);
+    }
+    setRejecting(null);
+    setRejectReason('');
+  };
+
+  return (
+    <main className="team-kpi-main kpi-approve-page">
+      <header className="team-kpi-header">
+        <div className="kpi-report-header-row">
+          <div className="team-kpi-month-nav kpi-report-month-nav">
+            <button
+              type="button"
+              className="journal-icon-btn"
+              onClick={() => changeMonth(-1)}
+              aria-label="이전 달"
+              {...uiTooltip('이전 달 승인 대기')}
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <h1>
+              KPI 승인 · {year}년 {month + 1}월
+            </h1>
+            <button
+              type="button"
+              className="journal-icon-btn"
+              onClick={() => changeMonth(1)}
+              aria-label="다음 달"
+              {...uiTooltip('다음 달 승인 대기')}
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+        <p className="team-kpi-banner">
+          구성원이 일지에서 보낸 <strong>승인 요청</strong>({KPI1_NAME} 월 확정 · {KPI2_NAME} 효과 건)을 처리합니다.
+          승인 시 집계·리포트에 반영됩니다.
+        </p>
+      </header>
+
+      <section className="team-kpi-section">
+        {pending.length === 0 && (
+          <p className="team-kpi-hint">이 달 승인 대기 건이 없습니다. 구성원이 일지 「팀장 승인 요청」에서 요청하면 여기에 표시됩니다.</p>
+        )}
+        <ul className="team-kpi-approve-list">
+          {pending.map((item) => {
+            const requested = formatRequestedAt(item.submittedAt);
+            return (
+              <li
+                key={
+                  item.type === 'KPI2'
+                    ? `kpi2-${item.dayKey}-${item.taskId}`
+                    : `kpi1-${item.member.code}`
+                }
+                className="team-kpi-approve-item"
+              >
+                <div>
+                  <span className="team-kpi-approve-type">{kpiTypeLabel(item.type)}</span>
+                  <strong>{item.label}</strong>
+                  {requested && (
+                    <p className="team-kpi-hint team-kpi-approve-requested">요청 시각 {requested}</p>
+                  )}
+                </div>
+                {!readOnly && (
+                  <div className="team-kpi-approve-actions">
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      onClick={() => {
+                        if (item.type === 'KPI1') {
+                          approveKpi1(year, month, item.member.code);
+                          showToast(`${item.member.displayName} ${KPI1_NAME} 승인`);
+                        } else {
+                          approveKpi2Row(item.dayKey, item.taskId);
+                          showToast(`${KPI2_NAME} 승인`);
+                        }
+                      }}
+                    >
+                      <Check size={14} /> 승인
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setRejecting(item)}
+                    >
+                      <X size={14} /> 반려
+                    </button>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      {rejecting && (
+        <div className="team-kpi-modal-backdrop" role="dialog" aria-modal="true">
+          <div className="team-kpi-modal">
+            <h3>반려 사유</h3>
+            <p className="muted">{rejecting.label}</p>
+            <textarea
+              className="form-input"
+              rows={3}
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="수정 후 재요청 안내"
+            />
+            <div className="team-kpi-modal-actions">
+              <button type="button" className="btn btn-secondary" onClick={() => setRejecting(null)}>
+                취소
+              </button>
+              <button type="button" className="btn btn-primary" onClick={handleReject}>
+                반려 저장
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toast && <div className="journal-toast">{toast}</div>}
+    </main>
+  );
+}

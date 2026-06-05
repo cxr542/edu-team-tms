@@ -1,0 +1,106 @@
+# TMS 접속 URL · 북마크 (운영)
+
+> **운영 사이트:** https://okestro-edu-team-tms.vercel.app  
+> (동일 콘텐츠: https://edu-team-tms.vercel.app)  
+> 로그인 없음 — **아래 URL을 그대로 북마크**하세요.  
+> 마지막 갱신: 2026-06-05
+
+---
+
+## 1. 공통 · 조회
+
+| 용도 | URL |
+|------|-----|
+| **팀 빌딩비 장부 조회** (누구나) | https://okestro-edu-team-tms.vercel.app/?mode=view |
+| 점심 뭐 먹지 (조회) | https://okestro-edu-team-tms.vercel.app/?mode=view&module=lunch |
+| 이것도? (조회) | https://okestro-edu-team-tms.vercel.app/?mode=view&module=idea-bank |
+| KPI 리포트 (조회) | https://okestro-edu-team-tms.vercel.app/?mode=view&module=kpi-report |
+| KPI 승인 현황 (조회) | https://okestro-edu-team-tms.vercel.app/?mode=view&module=kpi-approve |
+
+조회 화면은 **팀장 설정 → 조회 화면 메뉴**에서 노출 항목을 켜고 끌 수 있습니다.
+
+---
+
+## 2. 팀장 · 총무 (김윤형 A)
+
+팀장 URL: `?mode=edit&access=leader` — **장부 편집**, 팀 KPI·승인·리포트, **실험 버전(클라우드 챗봇)** 포함.
+
+| 용도 | URL |
+|------|-----|
+| **팀장 홈 (장부)** | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader |
+| 본인 일지 (A) | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=journal |
+| 본인 역량 평가 (A) | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=competency&member=A |
+| 팀 KPI 관리 | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=kpi |
+| KPI 승인 | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=kpi-approve |
+| KPI 리포트 | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=kpi-report |
+| 점심 뭐 먹지 | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=lunch |
+| PPT Academizer | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=academizer |
+| 클라우드 챗봇 (실험) | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=cloud-chatbot |
+| 참고문서 | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=docs |
+
+**역량:** 팀장은 **본인(A) 자체평가 폼만 수정**합니다. B·C **팀장 평가·분기 확정**은 **팀 KPI 관리 → KPI3** 탭에서 진행합니다.
+
+**일지:** 팀장 화면에서 A/B/C 탭 전환 가능(확인·대리 입력). **본인 업무는 A 탭**에서 작성합니다.
+
+---
+
+## 3. 팀원 — 최우성 (B · 겸업)
+
+팀원 URL: `?mode=edit&member=B` — **본인 일지·역량만 작성**. 장부·점심·이것도?는 **조회·참여** 가능.
+
+| 용도 | URL |
+|------|-----|
+| **★ 일지 (북마크 권장)** | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=journal |
+| 역량 평가 | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=competency |
+| 팀 빌딩비 장부 (조회) | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=ledger |
+| 점심 뭐 먹지 | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=lunch |
+| 이것도? | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=idea-bank |
+
+`module` 없이 `?mode=edit&member=B` 만 열면 **일지**로 들어갑니다.
+
+**승인 요청:** 일지 상단 **「팀장 승인 요청」** → KPI1 월 확정·KPI2 효과 건을 팀장 승인 큐에 올립니다.
+
+---
+
+## 4. 팀원 — 신혜윤 (C · 기획/운영)
+
+| 용도 | URL |
+|------|-----|
+| **★ 일지 (북마크 권장)** | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=journal |
+| 역량 평가 | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=competency |
+| 팀 빌딩비 장부 (조회) | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=ledger |
+| 점심 뭐 먹지 | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=lunch |
+| 이것도? | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=idea-bank |
+
+---
+
+## 5. 사이드바 메뉴 그룹 (2026-06)
+
+| 그룹 | 팀장 | 팀원 (B/C) |
+|------|:----:|:----------:|
+| 총무·공통 (장부 편집·Academizer·점심) | ✅ | — |
+| **팀 공통** (장부 조회·점심·이것도?) | — | ✅ |
+| 팀 구성원 업무 (일지·역량) | ✅ | ✅ (본인) |
+| **실험 버전** (클라우드 챗봇) | ✅ | ❌ |
+| 팀장 업무 (KPI·승인·리포트) | ✅ | ❌ |
+| 참고문서 | ✅ | — (팀원 URL) |
+
+---
+
+## 6. PDF로 저장하기
+
+1. TMS **참고문서** → **「TMS 접속 URL · 북마크」** 열기  
+2. 브라우저 **인쇄 → PDF로 저장** (Chrome: ⌘P → 대상 PDF)
+
+---
+
+## 7. 데이터 · 주의
+
+- 일지·KPI는 **브라우저 localStorage** + (선택) 클라우드 스냅샷. 기기·브라우저마다 다를 수 있습니다.
+- 장부 **조회**는 팀장이 「조회에 반영」한 공개 스냅샷 기준입니다.
+- 개발 URL(`localhost`)과 운영 URL 데이터는 **분리**됩니다.
+
+## 관련 문서
+
+- [팀 KPI 메뉴·URL](./KPI-TMS-팀KPI메뉴.md)
+- [일지 ↔ TMS 연계 가이드](./KPI-일지-TMS-연계-가이드.md)
