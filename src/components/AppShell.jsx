@@ -44,7 +44,7 @@ import { uiTooltip } from '../utils/uiTooltip';
 import NavLabelsModal from './NavLabelsModal';
 import MobileHomeGuideModal from './MobileHomeGuideModal';
 
-const HUB_URL = 'https://cxr542.github.io/cxr542-ai/';
+import { getWorkspaceUrl } from '../constants/workspaceUrl';
 
 export default function AppShell({
   activeModule,
@@ -142,6 +142,7 @@ export default function AppShell({
 
   const railLabel = collapsed ? '펼침' : '접기';
   const railTitle = collapsed ? '메뉴 펼치기' : '메뉴 접기';
+  const workspaceUrl = getWorkspaceUrl();
 
   return (
     <div
@@ -330,11 +331,11 @@ export default function AppShell({
 
             <a
               className="nav-item nav-item--hub project-nav-item project-nav-item--hub"
-              href={HUB_URL}
-              {...navTooltipProps('허브로 돌아가기')}
+              href={workspaceUrl}
+              {...navTooltipProps('Workspace로 돌아가기')}
             >
               <Home size={18} className="nav-item__icon project-nav-item__icon" aria-hidden />
-              <span className="nav-item__label project-nav-item__label">허브로 돌아가기</span>
+              <span className="nav-item__label project-nav-item__label">← Workspace</span>
             </a>
 
             <p className="sidebar-note project-sidebar-note">
@@ -389,10 +390,10 @@ export default function AppShell({
             </button>
             <a
               className="btn btn--hub"
-              href={HUB_URL}
-              {...uiTooltip('cxr542-hub로 돌아가기', 'below')}
+              href={workspaceUrl}
+              {...uiTooltip('cxr542 Workspace 랜딩', 'below')}
             >
-              ← 허브
+              ← Workspace
             </a>
             {!isProd && (
               <a
