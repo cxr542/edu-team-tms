@@ -12,7 +12,7 @@ import {
   Target,
   Upload,
 } from 'lucide-react';
-import { JOURNAL_CATS } from '../constants/journalCategories';
+import { resolveMemberCategories } from '../utils/journalMemberPrefs';
 import { useJournal } from '../context/JournalProvider';
 import { useJournalPeriod } from '../hooks/useJournalPeriod';
 import {
@@ -53,6 +53,7 @@ import { useTeamAccess } from '../hooks/useTeamAccess';
 import { URL_ACCESS_LEADER } from '../constants/teamAccess';
 import { JournalEditKpiPreview, TaskKpiBadge } from '../components/JournalKpiLinkagePanel';
 import JournalCategoryLegend from '../components/JournalCategoryLegend';
+import JournalMemberPrefsModal from '../components/JournalMemberPrefsModal';
 import MemberKpiApprovalPanel from '../components/MemberKpiApprovalPanel';
 import { isEditorMode } from '../utils/appMode';
 import './WeeklyJournalPage.css';
@@ -100,13 +101,26 @@ function navigateToDayKey(dayKey, { year, month, setYear, setMonth, setSelectedD
   setSelectedDayKey(dayKey);
 }
 
+function formatHoursPair(actual, plan) {
+  const a = Number(actual) || 0;
+  const p = Number(plan) || 0;
+  if (a <= 0 && p <= 0) return null;
+  if (p > 0) return `${a}/${p}h`;
+  return `${a}h`;
+}
+
 function formatTaskHoursLine(task) {
-  const plan = Number(task.plan) || 0;
-  const actual = Number(task.actual) || 0;
-  if (plan <= 0 && actual <= 0) return null;
-  if (actual > 0) return `${plan}h → ${actual}h`;
-  if (plan > 0) return `계획 ${plan}h`;
-  return `${actual}h`;
+  return formatHoursPair(task.actual, task.plan);
+}
+
+function formatDayHoursBadge(info) {
+  const plan = info.planned > 0 ? info.planned : info.expected;
+  const label = `${info.total}/${plan}h`;
+  const title =
+    info.planned > 0
+      ? `실작업 ${info.total}h / 계획 ${info.planned}h (목표 ${info.expected}h)`
+      : `실작업 ${info.total}h / 계획 없음 (일일 목표 ${info.expected}h)`;
+  return { label, title };
 }
 
 function TaskMmPill({ task }) {
@@ -153,6 +167,12 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [toast, setToast] = useState('');
   const [collapsedWeeks, setCollapsedWeeks] = useState(() => loadCollapsedWeekKeys(year, month, memberCode));
+  const [memberPrefsOpen, setMemberPrefsOpen] = useState(false);
+
+  const memberCategoryView = useMemo(
+    () => resolveMemberCategories(journal.memberJournals?.[memberCode]?.prefs),
+    [journal.memberJournals, memberCode]
+  );
 
   useEffect(() => {
     setCollapsedWeeks(loadCollapsedWeekKeys(year, month, memberCode));
@@ -560,13 +580,18 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             )}
           </strong>
           {hoursInfo.show &&
-            (hoursInfo.isShort ? (
-              <span className="hours-badge short" title={`목표 ${hoursInfo.expected}h`}>
-                ⚠ {hoursInfo.total}h
-              </span>
-            ) : (
-              <span className="hours-badge ok">✓ {hoursInfo.total}h</span>
-            ))}
+            (() => {
+              const badge = formatDayHoursBadge(hoursInfo);
+              return hoursInfo.isShort ? (
+                <span className="hours-badge short" title={badge.title}>
+                  ⚠ {badge.label}
+                </span>
+              ) : (
+                <span className="hours-badge ok" title={badge.title}>
+                  ✓ {badge.label}
+                </span>
+              );
+            })()}
         </div>
         {data.holiday && <div style={{ color: 'var(--accent)', fontSize: '0.75rem' }}>공휴일</div>}
         <ul className="journal-task-list">
@@ -582,7 +607,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 if (!readOnly) openEdit(t.id, key);
               }}
             >
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: JOURNAL_CATS[t.cat].color, flexShrink: 0, marginTop: 5 }} />
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: memberCategoryView.cats[t.cat]?.color, flexShrink: 0, marginTop: 5 }} />
               <span style={{ flex: 1 }}>
                 <span className="journal-task-title-row">
                   {slotLabel && <span className={`journal-task-slot slot-${normalizeTaskSlot(t.slot)}`}>{slotLabel}</span>}
@@ -844,7 +869,9 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               {journal.syncStatus === 'synced' && ' · 클라우드와 맞춤'}
             </p>
           )}
+        </div>
 
+        <div className="journal-summary-blocks">
           <div className="journal-kpi-strip">
             <p className="journal-kpi-strip-member">
               {formatKpiMemberLabel(selectedMember)} · {month + 1}월 집계
@@ -916,7 +943,21 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 <span className="journal-week-visibility-count"> · {hiddenWeekCount}주 숨김</span>
               ) : null}
             </span>
-            <JournalCategoryLegend className="journal-category-legend--week" />
+            <JournalCategoryLegend
+              className="journal-category-legend--week"
+              categories={memberCategoryView.cats}
+              order={memberCategoryView.order}
+            />
+            {!readOnly && (
+              <button
+                type="button"
+                className="btn btn-secondary journal-member-prefs-btn"
+                {...uiTooltip(`${formatKpiMemberLabel(selectedMember)} 범례·금주/차주 기본 양식`)}
+                onClick={() => setMemberPrefsOpen(true)}
+              >
+                범례·양식
+              </button>
+            )}
             <div className="journal-week-visibility-actions">
               <button
                 type="button"
@@ -1096,9 +1137,9 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               <div className="form-group">
                 <label>카테고리</label>
                 <select className="form-input" value={editTask.cat} onChange={(e) => setEditTask({ ...editTask, cat: e.target.value })} disabled={readOnly}>
-                  {Object.entries(JOURNAL_CATS).map(([k, v]) => (
+                  {memberCategoryView.order.map((k) => (
                     <option key={k} value={k}>
-                      {v.label}
+                      {memberCategoryView.cats[k]?.label ?? k}
                     </option>
                   ))}
                 </select>
@@ -1249,9 +1290,9 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           <div className="form-group">
             <label>카테고리</label>
             <select className="form-input" value={addDraft.cat} onChange={(e) => setAddDraft({ ...addDraft, cat: e.target.value })}>
-              {Object.entries(JOURNAL_CATS).map(([k, v]) => (
+              {memberCategoryView.order.map((k) => (
                 <option key={k} value={k}>
-                  {v.label}
+                  {memberCategoryView.cats[k]?.label ?? k}
                 </option>
               ))}
             </select>
@@ -1415,6 +1456,17 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           {toast}
         </div>
       )}
+
+      <JournalMemberPrefsModal
+        open={memberPrefsOpen}
+        onClose={() => setMemberPrefsOpen(false)}
+        memberLabel={formatKpiMemberLabel(selectedMember)}
+        prefs={journal.getMemberPrefs(memberCode)}
+        onSave={(next) => {
+          journal.setMemberPrefs(next, memberCode);
+          showToast(`${formatKpiMemberLabel(selectedMember)} 범례·기본 양식 저장`);
+        }}
+      />
     </main>
   );
 }

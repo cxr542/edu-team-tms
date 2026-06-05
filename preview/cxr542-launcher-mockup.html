@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>cxr542 Launcher — UI 목업</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Sora:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #07080d;
+        --panel: #0f1118;
+        --card: #141820;
+        --border: rgba(255, 255, 255, 0.09);
+        --text: #eef0f5;
+        --muted: #9499a8;
+        --tms: #006dff;
+        --portal: #10b981;
+        --accent: #f15928;
+        --font: "IBM Plex Sans", system-ui, sans-serif;
+        --display: "Sora", var(--font);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--font);
+        font-size: 15px;
+        line-height: 1.5;
+        color: var(--text);
+        background: radial-gradient(1200px 600px at 10% -10%, rgba(0, 109, 255, 0.14), transparent),
+          radial-gradient(900px 500px at 90% 0%, rgba(16, 185, 129, 0.1), transparent), var(--bg);
+        min-height: 100dvh;
+      }
+
+      .banner {
+        padding: 0.55rem 1rem;
+        text-align: center;
+        font-size: 0.8125rem;
+        color: var(--muted);
+        background: rgba(241, 89, 40, 0.1);
+        border-bottom: 1px solid rgba(241, 89, 40, 0.25);
+      }
+
+      .banner strong {
+        color: #ffb088;
+      }
+
+      .wrap {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 1.5rem 1rem 3rem;
+      }
+
+      header.page-head {
+        margin-bottom: 1.75rem;
+      }
+
+      .page-head h1 {
+        margin: 0;
+        font-family: var(--display);
+        font-size: clamp(1.5rem, 4vw, 2rem);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .page-head p {
+        margin: 0.5rem 0 0;
+        color: var(--muted);
+        max-width: 42rem;
+      }
+
+      .env-toggle {
+        display: inline-flex;
+        gap: 0.25rem;
+        margin-top: 1rem;
+        padding: 0.2rem;
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+      }
+
+      .env-toggle button {
+        border: none;
+        background: transparent;
+        color: var(--muted);
+        font: inherit;
+        font-size: 0.8125rem;
+        padding: 0.35rem 0.85rem;
+        border-radius: 999px;
+        cursor: pointer;
+      }
+
+      .env-toggle button.is-active {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .search {
+        width: 100%;
+        margin: 1.25rem 0 0.5rem;
+        padding: 0.65rem 1rem;
+        font: inherit;
+        color: var(--text);
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+      }
+
+      .search::placeholder {
+        color: var(--muted);
+      }
+
+      section {
+        margin-top: 2rem;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 0.85rem;
+      }
+
+      .section-head h2 {
+        margin: 0;
+        font-family: var(--display);
+        font-size: 1rem;
+        font-weight: 600;
+      }
+
+      .section-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .section-dot--tms {
+        background: var(--tms);
+        box-shadow: 0 0 10px rgba(0, 109, 255, 0.5);
+      }
+
+      .section-dot--portal {
+        background: var(--portal);
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.45);
+      }
+
+      .section-dot--misc {
+        background: var(--muted);
+      }
+
+      .section-head span {
+        font-size: 0.8125rem;
+        color: var(--muted);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 0.75rem;
+      }
+
+      .card {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 1rem 1.05rem;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        transition: border-color 0.15s, transform 0.15s;
+      }
+
+      .card:hover {
+        border-color: rgba(255, 255, 255, 0.18);
+        transform: translateY(-1px);
+      }
+
+      .card.is-hidden {
+        display: none;
+      }
+
+      .card-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+
+      .card h3 {
+        margin: 0;
+        font-size: 0.9375rem;
+        font-weight: 600;
+      }
+
+      .pill {
+        flex-shrink: 0;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        padding: 0.15rem 0.45rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.07);
+        color: var(--muted);
+      }
+
+      .pill--star {
+        color: #fcd34d;
+        background: rgba(252, 211, 77, 0.12);
+      }
+
+      .card p {
+        margin: 0;
+        font-size: 0.8125rem;
+        color: var(--muted);
+        flex: 1;
+      }
+
+      .card-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-top: 0.25rem;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.4rem 0.75rem;
+        font: inherit;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        text-decoration: none;
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        cursor: pointer;
+      }
+
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .btn--primary {
+        border-color: transparent;
+        color: #fff;
+      }
+
+      .btn--tms {
+        background: var(--tms);
+      }
+
+      .btn--portal {
+        background: #0d9668;
+      }
+
+      .btn--ghost {
+        background: transparent;
+      }
+
+      .footer-note {
+        margin-top: 2.5rem;
+        padding: 1rem;
+        font-size: 0.8125rem;
+        color: var(--muted);
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px dashed var(--border);
+        border-radius: 12px;
+      }
+
+      .footer-note code {
+        font-size: 0.75rem;
+        color: #b8bcc8;
+      }
+
+      @media (max-width: 520px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <p class="banner"><strong>UI 목업</strong> · 정적 HTML · repo/배포 전 미리보기 (링크는 운영 URL)</p>
+
+    <div class="wrap">
+      <header class="page-head">
+        <h1>cxr542 Launcher</h1>
+        <p>TMS(업무)와 cxr542-portal(개인)으로 바로 가는 운영 북마크 허브. 배포 예정: <strong>cxr542-launcher.vercel.app</strong></p>
+        <div class="env-toggle" role="group" aria-label="환경">
+          <button type="button" class="is-active" data-env="prod">운영</button>
+          <button type="button" data-env="local">로컬 dev</button>
+        </div>
+        <input type="search" class="search" id="search" placeholder="메뉴 검색 (일지, 장부, vision-font…)" autocomplete="off" />
+      </header>
+
+      <section aria-labelledby="sec-tms">
+        <div class="section-head">
+          <span class="section-dot section-dot--tms" aria-hidden="true"></span>
+          <h2 id="sec-tms">교육팀 TMS</h2>
+          <span>회사 · 장부 · 일지 · KPI</span>
+        </div>
+        <div class="grid" id="grid-tms"></div>
+      </section>
+
+      <section aria-labelledby="sec-portal">
+        <div class="section-head">
+          <span class="section-dot section-dot--portal" aria-hidden="true"></span>
+          <h2 id="sec-portal">cxr542-portal</h2>
+          <span>개인 · 미니앱</span>
+        </div>
+        <div class="grid" id="grid-portal"></div>
+      </section>
+
+      <section aria-labelledby="sec-misc">
+        <div class="section-head">
+          <span class="section-dot section-dot--misc" aria-hidden="true"></span>
+          <h2 id="sec-misc">기타</h2>
+          <span>실험 허브</span>
+        </div>
+        <div class="grid" id="grid-misc"></div>
+      </section>
+
+      <p class="footer-note">
+        이 파일: <code>apps/TMS/preview/cxr542-launcher-mockup.html</code><br />
+        브라우저에서 파일을 열거나, TMS dev 서버에서 <code>/preview/cxr542-launcher-mockup.html</code> 로 확인하세요.
+        피드백 반영 후 <code>cxr542-launcher</code> repo로 옮깁니다.
+      </p>
+    </div>
+
+    <script>
+      const ORIGINS = {
+        prod: {
+          tms: "https://okestro-edu-team-tms.vercel.app",
+          portal: "https://cxr542-portal.vercel.app",
+        },
+        local: {
+          tms: "http://localhost:3000",
+          portal: "http://localhost:5173",
+        },
+      };
+
+      const ITEMS = {
+        tms: [
+          {
+            id: "tms-view",
+            title: "팀 빌딩비 조회",
+            desc: "누구나 · 공개 장부",
+            href: (o) => `${o.tms}/?mode=view`,
+            primary: true,
+          },
+          {
+            id: "tms-leader-journal",
+            title: "팀장 · 일지 (A)",
+            desc: "김윤형 본인 업무 · 2026년 6월",
+            href: (o) => `${o.tms}/?mode=edit&access=leader&module=journal&year=2026&month=6`,
+            star: true,
+            primary: true,
+          },
+          {
+            id: "tms-leader",
+            title: "팀장 · 장부 편집",
+            desc: "총무 · KPI·승인 메뉴 포함",
+            href: (o) => `${o.tms}/?mode=edit&access=leader`,
+          },
+          {
+            id: "tms-kpi",
+            title: "팀 KPI · 승인",
+            desc: "월마감 · KPI 승인 큐",
+            href: (o) => `${o.tms}/?mode=edit&access=leader&module=kpi`,
+          },
+          {
+            id: "tms-b",
+            title: "최우성 (B) · 일지",
+            desc: "팀원 북마크 권장",
+            href: (o) => `${o.tms}/?mode=edit&member=B&module=journal`,
+            star: true,
+          },
+          {
+            id: "tms-c",
+            title: "신혜윤 (C) · 일지",
+            desc: "팀원 북마크 권장",
+            href: (o) => `${o.tms}/?mode=edit&member=C&module=journal`,
+            star: true,
+          },
+          {
+            id: "tms-docs",
+            title: "TMS 참고문서",
+            desc: "접속 URL · KPI 정의서",
+            href: (o) => `${o.tms}/?mode=edit&access=leader&module=docs&doc=tms-bookmarks`,
+          },
+        ],
+        portal: [
+          {
+            id: "portal-home",
+            title: "포털 홈",
+            desc: "vision-font · idea-bank …",
+            href: (o) => o.portal + "/",
+            primary: true,
+          },
+          {
+            id: "portal-idea",
+            title: "아이디어 뱅크",
+            desc: "개인 아이디어 (TMS 이것도? 와 별도)",
+            href: (o) => `${o.portal}/idea-bank/`,
+          },
+          {
+            id: "portal-marathon",
+            title: "마라톤 기록장",
+            desc: "GitHub Pages 링크",
+            href: () => "https://cxr542.github.io/cxr542-ai/projects/marathon-log/",
+          },
+        ],
+        misc: [
+          {
+            id: "hub",
+            title: "cxr542-ai 실험 허브",
+            desc: "데모·프로젝트 카탈로그 (운영 런처와 분리)",
+            href: () => "https://cxr542.github.io/cxr542-ai/",
+          },
+        ],
+      };
+
+      let env = "prod";
+
+      function renderCard(item, origins) {
+        const url = item.href(origins);
+        const card = document.createElement("article");
+        card.className = "card";
+        card.dataset.search = `${item.title} ${item.desc}`.toLowerCase();
+        card.innerHTML = `
+          <div class="card-top">
+            <h3>${item.title}</h3>
+            ${item.star ? '<span class="pill pill--star">★</span>' : `<span class="pill">${env}</span>`}
+          </div>
+          <p>${item.desc}</p>
+          <div class="card-actions">
+            <a class="btn btn--primary ${item.primary ? "btn--tms" : ""}" href="${url}" target="_blank" rel="noopener">열기 →</a>
+            <button type="button" class="btn btn--ghost" data-copy="${url}">URL 복사</button>
+          </div>
+        `;
+        return card;
+      }
+
+      function renderAll() {
+        const origins = ORIGINS[env];
+        for (const [key, gridId] of [
+          ["tms", "grid-tms"],
+          ["portal", "grid-portal"],
+          ["misc", "grid-misc"],
+        ]) {
+          const grid = document.getElementById(gridId);
+          grid.innerHTML = "";
+          ITEMS[key].forEach((item) => grid.appendChild(renderCard(item, origins)));
+        }
+        filterCards(document.getElementById("search").value);
+      }
+
+      function filterCards(q) {
+        const needle = (q || "").trim().toLowerCase();
+        document.querySelectorAll(".card").forEach((card) => {
+          const hay = card.dataset.search || "";
+          card.classList.toggle("is-hidden", needle && !hay.includes(needle));
+        });
+      }
+
+      document.querySelectorAll(".env-toggle button").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".env-toggle button").forEach((b) => b.classList.remove("is-active"));
+          btn.classList.add("is-active");
+          env = btn.dataset.env;
+          renderAll();
+        });
+      });
+
+      document.getElementById("search").addEventListener("input", (e) => filterCards(e.target.value));
+
+      document.body.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-copy]");
+        if (!btn) return;
+        navigator.clipboard.writeText(btn.dataset.copy).then(() => {
+          const prev = btn.textContent;
+          btn.textContent = "복사됨";
+          setTimeout(() => (btn.textContent = prev), 1200);
+        });
+      });
+
+      renderAll();
+    </script>
+  </body>
+</html>

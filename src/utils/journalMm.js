@@ -24,6 +24,13 @@ export function sumDayWorkHours(data) {
   }, 0);
 }
 
+export function sumDayPlanHours(data) {
+  return data.tasks.reduce((sum, t) => {
+    if (LEAVE_MEMO_TASK_RE.test(t.title)) return sum;
+    return sum + (Number(t.plan) || 0);
+  }, 0);
+}
+
 export function getExpectedWorkHours(data) {
   if (data.holiday && data.mm.leave >= 1) return 0;
   if ((Number(data.mm.leave) || 0) >= 0.5 - 0.001) {
@@ -36,9 +43,11 @@ export function getDayHoursInfo(data) {
   const expected = getExpectedWorkHours(data);
   if (expected === 0) return { show: false };
   const total = sumDayWorkHours(data);
+  const planned = sumDayPlanHours(data);
   return {
     show: true,
     total,
+    planned,
     expected,
     isShort: total + 0.001 < expected,
   };

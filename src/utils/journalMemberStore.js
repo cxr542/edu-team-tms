@@ -1,4 +1,5 @@
 import { stripLegacyWeekColumnEntries } from '../constants/journalCategories';
+import { normalizeMemberPrefs } from './journalMemberPrefs';
 import { TEAM_KPI_MEMBERS } from '../constants/kpiMembers';
 
 export function emptyMemberJournal() {
@@ -7,6 +8,7 @@ export function emptyMemberJournal() {
     weekSummaries: {},
     nextWeekPlans: {},
     kpiWeekMemos: {},
+    prefs: null,
   };
 }
 
@@ -21,6 +23,7 @@ function normalizeMemberSlice(raw) {
     weekSummaries: stripLegacyWeekColumnEntries(raw.weekSummaries),
     nextWeekPlans: stripLegacyWeekColumnEntries(raw.nextWeekPlans),
     kpiWeekMemos: raw.kpiWeekMemos && typeof raw.kpiWeekMemos === 'object' ? { ...raw.kpiWeekMemos } : {},
+    prefs: raw.prefs ? normalizeMemberPrefs(raw.prefs) : null,
   };
 }
 

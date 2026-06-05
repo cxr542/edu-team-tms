@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>cxr542 Workspace — 팀장 허브 (UI 목업)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --oke-blue: #006dff;
+        --oke-navy: #00187a;
+        --oke-orange: #f15928;
+        --portal: #0d9668;
+        --portal-soft: #ecfdf5;
+        --tms-soft: #eff6ff;
+        --lab: #7c3aed;
+        --lab-soft: #f5f3ff;
+        --public: #64748b;
+        --bg: #f8fafc;
+        --surface: #ffffff;
+        --text: #0f172a;
+        --muted: #64748b;
+        --border: rgba(15, 23, 42, 0.08);
+        --shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+        --shadow-lg: 0 24px 64px rgba(15, 23, 42, 0.1);
+        --font: "IBM Plex Sans", system-ui, sans-serif;
+        --display: "Instrument Serif", Georgia, serif;
+        --radius: 16px;
+        --nav-h: 64px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--font);
+        font-size: 15px;
+        line-height: 1.55;
+        color: var(--text);
+        background: var(--bg);
+      }
+
+      /* ── Leader gate (mock auth) ── */
+      .gate {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        background: radial-gradient(900px 500px at 20% 0%, rgba(0, 109, 255, 0.12), transparent),
+          radial-gradient(700px 400px at 80% 100%, rgba(241, 89, 40, 0.08), transparent),
+          #f1f5f9;
+        transition: opacity 0.35s ease, visibility 0.35s ease;
+      }
+
+      .gate.is-hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      .gate-card {
+        width: min(440px, 100%);
+        padding: 2rem 2rem 1.75rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        box-shadow: var(--shadow-lg);
+        text-align: center;
+      }
+
+      .gate-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.3rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--oke-navy);
+        background: var(--tms-soft);
+        border-radius: 999px;
+        margin-bottom: 1rem;
+      }
+
+      .gate-card h1 {
+        margin: 0;
+        font-family: var(--display);
+        font-size: 1.75rem;
+        font-weight: 400;
+        letter-spacing: -0.02em;
+      }
+
+      .gate-card .lead {
+        margin: 0.65rem 0 1.25rem;
+        color: var(--muted);
+        font-size: 0.9375rem;
+      }
+
+      .gate-card .member-note {
+        margin-top: 1.25rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border);
+        font-size: 0.8125rem;
+        color: var(--muted);
+        text-align: left;
+        line-height: 1.5;
+      }
+
+      .gate-card .member-note strong {
+        color: var(--text);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        padding: 0.65rem 1.15rem;
+        font: inherit;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-decoration: none;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow);
+      }
+
+      .btn--primary {
+        width: 100%;
+        color: #fff;
+        background: linear-gradient(135deg, var(--oke-blue), #0052cc);
+        border-color: transparent;
+      }
+
+      .btn--ghost {
+        background: transparent;
+        color: var(--muted);
+        border-color: transparent;
+        font-weight: 500;
+      }
+
+      .btn--sm {
+        padding: 0.45rem 0.85rem;
+        font-size: 0.8125rem;
+      }
+
+      .btn--tms {
+        color: #fff;
+        background: var(--oke-blue);
+        border-color: transparent;
+      }
+
+      .btn--portal {
+        color: #fff;
+        background: var(--portal);
+        border-color: transparent;
+      }
+
+      /* ── Mockup banner ── */
+      .mock-banner {
+        position: sticky;
+        top: 0;
+        z-index: 900;
+        padding: 0.45rem 1rem;
+        text-align: center;
+        font-size: 0.75rem;
+        color: #92400e;
+        background: #fffbeb;
+        border-bottom: 1px solid #fde68a;
+      }
+
+      /* ── Nav ── */
+      .topnav {
+        position: sticky;
+        top: 28px;
+        z-index: 800;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 0.65rem 1.25rem;
+        background: rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(12px) saturate(160%);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        box-shadow: var(--shadow);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        font-weight: 700;
+        font-size: 0.9375rem;
+        letter-spacing: -0.02em;
+      }
+
+      .brand-mark {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, var(--oke-blue), var(--oke-navy));
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+
+      .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      .leader-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.25rem 0.65rem;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--oke-navy);
+        background: var(--tms-soft);
+        border-radius: 999px;
+      }
+
+      .env-pill {
+        display: inline-flex;
+        padding: 0.15rem;
+        background: #f1f5f9;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+      }
+
+      .env-pill button {
+        border: none;
+        background: transparent;
+        font: inherit;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.3rem 0.65rem;
+        border-radius: 999px;
+        color: var(--muted);
+        cursor: pointer;
+      }
+
+      .env-pill button.is-active {
+        background: var(--surface);
+        color: var(--text);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      }
+
+      /* ── Hero ── */
+      .hero-wrap {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 2.5rem 1.25rem 1rem;
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        padding: clamp(2.5rem, 6vw, 4rem) clamp(1.5rem, 4vw, 3rem);
+        border-radius: 24px;
+        background: linear-gradient(145deg, #ffffff 0%, #f8fbff 45%, #fff7f4 100%);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(600px 300px at 85% 15%, rgba(0, 109, 255, 0.08), transparent),
+          radial-gradient(500px 280px at 10% 90%, rgba(13, 150, 105, 0.07), transparent);
+        pointer-events: none;
+      }
+
+      .hero-inner {
+        position: relative;
+        max-width: 720px;
+      }
+
+      .hero-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-bottom: 1rem;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--oke-blue);
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-family: var(--display);
+        font-size: clamp(2.25rem, 5.5vw, 3.5rem);
+        font-weight: 400;
+        line-height: 1.08;
+        letter-spacing: -0.03em;
+      }
+
+      .hero h1 em {
+        font-style: italic;
+        color: var(--oke-blue);
+      }
+
+      .hero-desc {
+        margin: 1rem 0 0;
+        max-width: 36rem;
+        font-size: 1.0625rem;
+        color: var(--muted);
+      }
+
+      .hero-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem 2.5rem;
+        margin-top: 2rem;
+        padding-top: 1.75rem;
+        border-top: 1px solid var(--border);
+      }
+
+      .hero-stat strong {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      .hero-stat span {
+        font-size: 0.8125rem;
+        color: var(--muted);
+      }
+
+      /* ── Ecosystem pillars ── */
+      .main {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 4rem;
+      }
+
+      .section-label {
+        margin: 0 0 0.35rem;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .section-title {
+        margin: 0 0 1.25rem;
+        font-size: 1.35rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      .pillars {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 3rem;
+      }
+
+      @media (max-width: 768px) {
+        .pillars {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .pillar {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        min-height: 280px;
+        padding: 1.75rem;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .pillar:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .pillar--tms {
+        background: linear-gradient(160deg, #ffffff 0%, var(--tms-soft) 100%);
+      }
+
+      .pillar--portal {
+        background: linear-gradient(160deg, #ffffff 0%, var(--portal-soft) 100%);
+      }
+
+      .pillar-tag {
+        display: inline-flex;
+        align-self: flex-start;
+        padding: 0.25rem 0.6rem;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        border-radius: 6px;
+        margin-bottom: 0.85rem;
+      }
+
+      .pillar--tms .pillar-tag {
+        color: var(--oke-blue);
+        background: rgba(0, 109, 255, 0.1);
+      }
+
+      .pillar--portal .pillar-tag {
+        color: var(--portal);
+        background: rgba(13, 150, 105, 0.12);
+      }
+
+      .pillar h3 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      .pillar p {
+        margin: 0.5rem 0 0;
+        color: var(--muted);
+        font-size: 0.9375rem;
+        flex: 1;
+      }
+
+      .pillar-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin: 1rem 0 1.25rem;
+      }
+
+      .chip {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid var(--border);
+        color: var(--muted);
+      }
+
+      .pillar-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .pillar-deco {
+        position: absolute;
+        right: -20px;
+        bottom: -20px;
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        opacity: 0.35;
+        pointer-events: none;
+      }
+
+      .pillar--tms .pillar-deco {
+        background: radial-gradient(circle, var(--oke-blue), transparent 70%);
+      }
+
+      .pillar--portal .pillar-deco {
+        background: radial-gradient(circle, var(--portal), transparent 70%);
+      }
+
+      /* ── Bento zones ── */
+      .zones-intro {
+        margin-bottom: 1.5rem;
+        max-width: 40rem;
+        color: var(--muted);
+        font-size: 0.9375rem;
+      }
+
+      .bento {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 0.85rem;
+      }
+
+      .zone {
+        grid-column: span 6;
+        padding: 1.25rem 1.35rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }
+
+      .zone--wide {
+        grid-column: span 12;
+      }
+
+      .zone--lab {
+        grid-column: span 4;
+      }
+
+      @media (max-width: 960px) {
+        .zone,
+        .zone--lab {
+          grid-column: span 12;
+        }
+      }
+
+      .zone-head {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.85rem;
+      }
+
+      .zone-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .zone-dot--tms {
+        background: var(--oke-blue);
+      }
+      .zone-dot--portal {
+        background: var(--portal);
+      }
+      .zone-dot--lab {
+        background: var(--lab);
+      }
+      .zone-dot--public {
+        background: var(--public);
+      }
+
+      .zone-head h3 {
+        margin: 0;
+        font-size: 0.9375rem;
+        font-weight: 700;
+      }
+
+      .zone-head span {
+        margin-left: auto;
+        font-size: 0.75rem;
+        color: var(--muted);
+      }
+
+      .app-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0.55rem;
+      }
+
+      .app-card {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        padding: 0.75rem 0.85rem;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #fafbfc;
+        transition: border-color 0.15s, background 0.15s;
+      }
+
+      .app-card:hover {
+        border-color: rgba(0, 109, 255, 0.25);
+        background: #fff;
+      }
+
+      .app-card.is-hidden {
+        display: none;
+      }
+
+      .app-card-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.35rem;
+      }
+
+      .app-card h4 {
+        margin: 0;
+        font-size: 0.8125rem;
+        font-weight: 600;
+      }
+
+      .app-card p {
+        margin: 0;
+        font-size: 0.75rem;
+        color: var(--muted);
+        line-height: 1.4;
+      }
+
+      .app-card-actions {
+        display: flex;
+        gap: 0.35rem;
+        margin-top: 0.35rem;
+      }
+
+      .app-card-actions .btn {
+        flex: 1;
+        padding: 0.35rem 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+
+      .star {
+        color: #d97706;
+        font-size: 0.6875rem;
+      }
+
+      .access-tag {
+        font-size: 0.625rem;
+        font-weight: 700;
+        padding: 0.1rem 0.35rem;
+        border-radius: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+
+      .access-tag--leader {
+        color: var(--oke-navy);
+        background: var(--tms-soft);
+      }
+
+      .access-tag--member {
+        color: #065f46;
+        background: #d1fae5;
+      }
+
+      .access-tag--public {
+        color: #475569;
+        background: #f1f5f9;
+      }
+
+      /* ── Search + member panel ── */
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        align-items: center;
+      }
+
+      .search {
+        flex: 1;
+        min-width: 220px;
+        padding: 0.65rem 1rem 0.65rem 2.5rem;
+        font: inherit;
+        font-size: 0.875rem;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242 1.156a5 5 0 1 1 0-10 5 5 0 0 1 0 10z'/%3E%3C/svg%3E")
+          no-repeat 0.85rem center;
+        box-shadow: var(--shadow);
+      }
+
+      .member-panel {
+        margin-top: 2.5rem;
+        padding: 1.35rem 1.5rem;
+        border-radius: var(--radius);
+        border: 1px dashed #cbd5e1;
+        background: #f8fafc;
+      }
+
+      .member-panel h3 {
+        margin: 0 0 0.35rem;
+        font-size: 1rem;
+      }
+
+      .member-panel p {
+        margin: 0 0 1rem;
+        font-size: 0.875rem;
+        color: var(--muted);
+      }
+
+      .footer {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 0 1.25rem 3rem;
+        font-size: 0.8125rem;
+        color: var(--muted);
+      }
+
+      .footer code {
+        font-size: 0.75rem;
+        background: #f1f5f9;
+        padding: 0.1rem 0.35rem;
+        border-radius: 4px;
+      }
+
+      @media (max-width: 640px) {
+        .topnav {
+          border-radius: 16px;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Mock leader gate -->
+    <div class="gate" id="gate" role="dialog" aria-labelledby="gate-title" aria-modal="true">
+      <div class="gate-card">
+        <span class="gate-badge">🔒 팀장 전용</span>
+        <h1 id="gate-title">cxr542 Workspace</h1>
+        <p class="lead">
+          이 런처는 <strong>교육팀 팀장</strong>만 접속할 수 있는 통합 허브입니다.<br />
+          TMS · 개인 포털 · 실험 서비스를 한 화면에서 관리합니다.
+        </p>
+        <button type="button" class="btn btn--primary" id="gate-enter">팀장으로 계속 (목업)</button>
+        <p class="member-note">
+          <strong>팀원이신가요?</strong> 이 페이지 대신 TMS 북마크 URL을 사용하세요.
+          장부 조회 · 본인 일지(B/C) · 점심 · 이것도? 등은
+          <a href="#" id="gate-tms-public">TMS 운영 URL</a>에서 바로 열 수 있습니다.
+          (런처 배포 시 팀원 접근은 403 또는 TMS 안내 페이지로 리다이렉트 예정)
+        </p>
+      </div>
+    </div>
+
+    <p class="mock-banner">
+      <strong>UI 목업 v2</strong> · 랜딩형 · 팀장 게이트 · 정적 HTML · 배포 예정:
+      <strong>cxr542-launcher.vercel.app</strong>
+    </p>
+
+    <div class="hero-wrap">
+      <nav class="topnav" aria-label="워크스페이스">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">C</span>
+          cxr542 Workspace
+        </div>
+        <div class="nav-actions">
+          <span class="leader-pill">팀장 · 김윤형</span>
+          <div class="env-pill" role="group" aria-label="환경">
+            <button type="button" class="is-active" data-env="prod">운영</button>
+            <button type="button" data-env="local">로컬</button>
+          </div>
+          <button type="button" class="btn btn--ghost btn--sm" id="logout-mock">잠금</button>
+        </div>
+      </nav>
+
+      <header class="hero">
+        <div class="hero-inner">
+          <p class="hero-kicker">OKESTRO 교육팀 · 디지털 워크스페이스</p>
+          <h1>업무와 개인 개발을<br /><em>한 허브</em>에서</h1>
+          <p class="hero-desc">
+            회사에서 쓰는 <strong>교육팀 TMS</strong>, 집·개인에서 쓰는 <strong>cxr542-portal</strong>,
+            그 밖의 실험·공개 서비스까지 — 팀장만 모아 보는 랜딩 허브입니다.
+          </p>
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <strong>2</strong>
+              <span>메인 생태계 (TMS · Portal)</span>
+            </div>
+            <div class="hero-stat">
+              <strong>4</strong>
+              <span>접근 영역 (운영·개인·실험·공개)</span>
+            </div>
+            <div class="hero-stat">
+              <strong>15+</strong>
+              <span>바로가기 · 북마크</span>
+            </div>
+          </div>
+        </div>
+      </header>
+    </div>
+
+    <main class="main">
+      <!-- Two pillars -->
+      <p class="section-label">메인 진입</p>
+      <h2 class="section-title">어디로 갈까요?</h2>
+      <div class="pillars">
+        <article class="pillar pillar--tms">
+          <span class="pillar-tag">회사 · 업무</span>
+          <h3>교육팀 TMS</h3>
+          <p>장부 · 일지 · KPI · 점심 · Academizer · 참고문서. Vercel 운영 + 로컬 dev.</p>
+          <div class="pillar-meta">
+            <span class="chip">팀장 전체 메뉴</span>
+            <span class="chip">팀원 스코프 URL</span>
+            <span class="chip">공개 조회</span>
+          </div>
+          <div class="pillar-actions">
+            <a class="btn btn--tms" id="pillar-tms" href="#" target="_blank" rel="noopener">TMS 열기 →</a>
+            <a class="btn btn--ghost btn--sm" href="#zone-tms">모듈 목록 ↓</a>
+          </div>
+          <div class="pillar-deco" aria-hidden="true"></div>
+        </article>
+        <article class="pillar pillar--portal">
+          <span class="pillar-tag">개인 · 집 PC</span>
+          <h3>cxr542-portal</h3>
+          <p>vision-font · today-shoes · 마라톤 · 아이디어 뱅크. TMS와 repo·데이터 분리.</p>
+          <div class="pillar-meta">
+            <span class="chip">별도 GitHub repo</span>
+            <span class="chip">Vercel portal</span>
+            <span class="chip">팀장 개인용</span>
+          </div>
+          <div class="pillar-actions">
+            <a class="btn btn--portal" id="pillar-portal" href="#" target="_blank" rel="noopener">Portal 열기 →</a>
+            <a class="btn btn--ghost btn--sm" href="#zone-portal">앱 목록 ↓</a>
+          </div>
+          <div class="pillar-deco" aria-hidden="true"></div>
+        </article>
+      </div>
+
+      <!-- Search -->
+      <div class="toolbar">
+        <input type="search" class="search" id="search" placeholder="앱·모듈 검색 (일지, vision-font, KPI…)" autocomplete="off" />
+      </div>
+
+      <!-- Bento zones -->
+      <p class="section-label">큰 틀 · 4영역</p>
+      <h2 class="section-title">워크스페이스 맵</h2>
+      <p class="zones-intro">
+        Linear·Vercel 대시보드처럼 <strong>영역별 bento</strong>로 묶었습니다. 팀장은 전체를, 팀원은 아래 「공개·팀원」만
+        TMS 직링크로 사용합니다.
+      </p>
+
+      <div class="bento">
+        <section class="zone" id="zone-tms">
+          <div class="zone-head">
+            <span class="zone-dot zone-dot--tms"></span>
+            <h3>팀 운영 · TMS</h3>
+            <span>회사 맥 · edu-team-tms</span>
+          </div>
+          <div class="app-grid" id="grid-tms"></div>
+        </section>
+
+        <section class="zone" id="zone-portal">
+          <div class="zone-head">
+            <span class="zone-dot zone-dot--portal"></span>
+            <h3>개인 스튜디오 · Portal</h3>
+            <span>집 PC · cxr542-portal</span>
+          </div>
+          <div class="app-grid" id="grid-portal"></div>
+        </section>
+
+        <section class="zone zone--lab" id="zone-lab">
+          <div class="zone-head">
+            <span class="zone-dot zone-dot--lab"></span>
+            <h3>실험실</h3>
+            <span>R&amp;D</span>
+          </div>
+          <div class="app-grid" id="grid-lab"></div>
+        </section>
+
+        <section class="zone zone--lab">
+          <div class="zone-head">
+            <span class="zone-dot zone-dot--public"></span>
+            <h3>공개 · 팀원</h3>
+            <span>직링크</span>
+          </div>
+          <div class="app-grid" id="grid-public"></div>
+        </section>
+
+        <section class="zone zone--wide">
+          <div class="zone-head">
+            <span class="zone-dot zone-dot--public"></span>
+            <h3>배포 · 인프라</h3>
+            <span>참고</span>
+          </div>
+          <div class="app-grid" id="grid-infra"></div>
+        </section>
+      </div>
+
+      <aside class="member-panel" aria-labelledby="member-title">
+        <h3 id="member-title">팀원 접근 정책 (MVP)</h3>
+        <p>
+          런처 메인(<code>cxr542-launcher.vercel.app</code>)은 <strong>팀장만</strong>.
+          B·C 팀원은 TMS 북마크(일지·장부·점심)만 사용 — 런처 URL 공유하지 않음.
+        </p>
+        <div class="app-grid" id="grid-member-links"></div>
+      </aside>
+    </main>
+
+    <footer class="footer">
+      파일:
+      <code>preview/cxr542-launcher-landing-mockup-20260605-131312.html</code><br />
+      TMS dev:
+      <code>/preview/cxr542-launcher-landing-mockup-20260605-131312.html</code> · 피드백 후
+      <code>cxr542-launcher</code> repo 분리
+    </footer>
+
+    <script>
+      const ORIGINS = {
+        prod: {
+          tms: "https://okestro-edu-team-tms.vercel.app",
+          portal: "https://cxr542-portal.vercel.app",
+        },
+        local: {
+          tms: "http://localhost:3003",
+          portal: "http://localhost:5173",
+        },
+      };
+
+      const APPS = {
+        tms: [
+          { title: "팀장 · 일지 (A)", desc: "2026년 6월 · KPI 연동", href: (o) => `${o.tms}/?mode=edit&access=leader&module=journal&year=2026&month=6`, access: "leader", star: true },
+          { title: "팀장 · 장부 편집", desc: "총무 · 전체 메뉴", href: (o) => `${o.tms}/?mode=edit&access=leader`, access: "leader" },
+          { title: "팀 KPI 관리", desc: "KPI1·2·3 · 월마감", href: (o) => `${o.tms}/?mode=edit&access=leader&module=kpi`, access: "leader" },
+          { title: "KPI 승인", desc: "팀원 제출 큐", href: (o) => `${o.tms}/?mode=edit&access=leader&module=kpi-approve`, access: "leader" },
+          { title: "KPI 리포트", desc: "월·분기 리포트", href: (o) => `${o.tms}/?mode=edit&access=leader&module=kpi-report`, access: "leader" },
+          { title: "역량 평가", desc: "KPI3 루브릭", href: (o) => `${o.tms}/?mode=edit&access=leader&module=competency`, access: "leader" },
+          { title: "PPT Academizer", desc: "아카데미화 embed", href: (o) => `${o.tms}/?mode=edit&access=leader&module=academizer`, access: "leader" },
+          { title: "TMS 참고문서", desc: "URL 북마크 · KPI 정의", href: (o) => `${o.tms}/?mode=edit&access=leader&module=docs&doc=tms-bookmarks`, access: "leader" },
+          { title: "클라우드 챗봇", desc: "실험 · 팀장만", href: (o) => `${o.tms}/?mode=edit&access=leader&module=cloud-chatbot`, access: "leader" },
+        ],
+        portal: [
+          { title: "포털 홈", desc: "모듈 허브", href: (o) => o.portal + "/", access: "leader", star: true },
+          { title: "vision-font", desc: "폰트 프리셋 · CSS", href: (o) => `${o.portal}/?module=vision-font`, access: "leader" },
+          { title: "today-shoes", desc: "착화 기록 (Pages)", href: () => "https://cxr542.github.io/today-shoes/", access: "leader" },
+          { title: "마라톤 기록장", desc: "러닝 로그", href: () => "https://cxr542.github.io/cxr542-ai/projects/marathon-log/", access: "leader" },
+          { title: "아이디어 뱅크", desc: "개인 아이디어 (TMS 이것도? 별도)", href: (o) => `${o.portal}/idea-bank/`, access: "leader" },
+        ],
+        lab: [
+          { title: "cxr542-ai 허브", desc: "데모·프로젝트 카탈로그", href: () => "https://cxr542.github.io/cxr542-ai/", access: "leader" },
+          { title: "KPI 시뮬레이터", desc: "kpi-app-new web", href: () => "http://localhost:8000", access: "leader" },
+          { title: "PPT Academizer API", desc: "Netlify 엔진", href: () => "https://ppt-academizer.netlify.app", access: "leader" },
+        ],
+        public: [
+          { title: "팀 빌딩비 조회", desc: "누구나 · 공개 장부", href: (o) => `${o.tms}/?mode=view`, access: "public", star: true },
+          { title: "오늘 뭐 먹지", desc: "팀 점심 (팀원)", href: (o) => `${o.tms}/?mode=edit&member=B&module=lunch`, access: "member" },
+          { title: "이것도?", desc: "팀 아이디어 (팀원)", href: (o) => `${o.tms}/?mode=edit&member=B&module=idea-bank`, access: "member" },
+        ],
+        infra: [
+          { title: "TMS GitHub", desc: "edu-team-tms", href: () => "https://github.com/cxr542/edu-team-tms", access: "leader" },
+          { title: "Portal GitHub", desc: "cxr542-portal", href: () => "https://github.com/cxr542/cxr542-portal", access: "leader" },
+          { title: "Launcher (예정)", desc: "cxr542-launcher repo", href: () => "#", access: "leader" },
+          { title: "workspace 가이드", desc: "monorepo docs", href: () => "https://github.com/cxr542/edu-team-tms/blob/main/docs/workspace-guide.md", access: "leader" },
+        ],
+        member: [
+          { title: "최우성 (B) · 일지", desc: "팀원 북마크", href: (o) => `${o.tms}/?mode=edit&member=B&module=journal`, access: "member", star: true },
+          { title: "신혜윤 (C) · 일지", desc: "팀원 북마크", href: (o) => `${o.tms}/?mode=edit&member=C&module=journal`, access: "member", star: true },
+          { title: "B · 장부 조회", desc: "ledger read-only", href: (o) => `${o.tms}/?mode=edit&member=B&module=ledger`, access: "member" },
+        ],
+      };
+
+      let env = "prod";
+
+      function accessLabel(a) {
+        if (a === "leader") return '<span class="access-tag access-tag--leader">팀장</span>';
+        if (a === "member") return '<span class="access-tag access-tag--member">팀원</span>';
+        return '<span class="access-tag access-tag--public">공개</span>';
+      }
+
+      function renderApp(item, origins) {
+        const url = item.href(origins);
+        const el = document.createElement("article");
+        el.className = "app-card";
+        el.dataset.search = `${item.title} ${item.desc}`.toLowerCase();
+        el.innerHTML = `
+          <div class="app-card-top">
+            <h4>${item.title}${item.star ? ' <span class="star">★</span>' : ""}</h4>
+            ${accessLabel(item.access)}
+          </div>
+          <p>${item.desc}</p>
+          <div class="app-card-actions">
+            <a class="btn btn--tms" href="${url}" target="_blank" rel="noopener">열기</a>
+            <button type="button" class="btn btn--ghost" data-copy="${url}">복사</button>
+          </div>
+        `;
+        return el;
+      }
+
+      function renderGrid(key, gridId) {
+        const grid = document.getElementById(gridId);
+        grid.innerHTML = "";
+        APPS[key].forEach((item) => grid.appendChild(renderApp(item, ORIGINS[env])));
+      }
+
+      function renderAll() {
+        const o = ORIGINS[env];
+        document.getElementById("pillar-tms").href = `${o.tms}/?mode=edit&access=leader`;
+        document.getElementById("pillar-portal").href = o.portal + "/";
+        document.getElementById("gate-tms-public").href = `${o.tms}/?mode=view`;
+        for (const [key, id] of [
+          ["tms", "grid-tms"],
+          ["portal", "grid-portal"],
+          ["lab", "grid-lab"],
+          ["public", "grid-public"],
+          ["infra", "grid-infra"],
+          ["member", "grid-member-links"],
+        ]) {
+          renderGrid(key, id);
+        }
+        filterCards(document.getElementById("search").value);
+      }
+
+      function filterCards(q) {
+        const needle = (q || "").trim().toLowerCase();
+        document.querySelectorAll(".app-card").forEach((card) => {
+          const hay = card.dataset.search || "";
+          card.classList.toggle("is-hidden", needle && !hay.includes(needle));
+        });
+      }
+
+      document.getElementById("gate-enter").addEventListener("click", () => {
+        document.getElementById("gate").classList.add("is-hidden");
+        sessionStorage.setItem("cxr542-launcher-mock-unlocked", "1");
+      });
+
+      document.getElementById("logout-mock").addEventListener("click", () => {
+        sessionStorage.removeItem("cxr542-launcher-mock-unlocked");
+        document.getElementById("gate").classList.remove("is-hidden");
+      });
+
+      if (sessionStorage.getItem("cxr542-launcher-mock-unlocked") === "1") {
+        document.getElementById("gate").classList.add("is-hidden");
+      }
+
+      document.querySelectorAll(".env-pill button").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".env-pill button").forEach((b) => b.classList.remove("is-active"));
+          btn.classList.add("is-active");
+          env = btn.dataset.env;
+          renderAll();
+        });
+      });
+
+      document.getElementById("search").addEventListener("input", (e) => filterCards(e.target.value));
+
+      document.body.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-copy]");
+        if (!btn) return;
+        navigator.clipboard.writeText(btn.dataset.copy).then(() => {
+          const prev = btn.textContent;
+          btn.textContent = "OK";
+          setTimeout(() => (btn.textContent = prev), 1000);
+        });
+      });
+
+      renderAll();
+    </script>
+  </body>
+</html>

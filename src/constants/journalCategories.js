@@ -21,11 +21,12 @@ export const WEEK_COLUMN_TEMPLATE = `• 교육
 /** 예전 자동 초안(삭제된 기능) — 템플릿으로 되돌림 */
 const LEGACY_AUTO_DRAFT_RE = /\[주간 M\/M\]|\[요일별\]|\[카테고리별\]/;
 
-/** 금주(요약)·차주(예정) — 비어 있거나 예전 초안이면 공통 템플릿 */
-export function resolveWeekColumnText(saved) {
+/** 금주(요약)·차주(예정) — 비어 있거나 예전 초안이면 구성원/공통 템플릿 */
+export function resolveWeekColumnText(saved, template = WEEK_COLUMN_TEMPLATE) {
   const text = typeof saved === 'string' ? saved : '';
+  const tpl = typeof template === 'string' && template.trim() ? template : WEEK_COLUMN_TEMPLATE;
   if (!text.trim() || LEGACY_AUTO_DRAFT_RE.test(text)) {
-    return WEEK_COLUMN_TEMPLATE;
+    return tpl;
   }
   return text;
 }

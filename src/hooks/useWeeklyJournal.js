@@ -6,8 +6,11 @@ import {
 import { JOURNAL_SEED_MAY_2026 } from '../data/journalSeedMay2026';
 import {
   resolveWeekColumnText,
-  WEEK_COLUMN_TEMPLATE,
 } from '../constants/journalCategories';
+import {
+  normalizeMemberPrefs,
+  resolveMemberWeekColumnTemplate,
+} from '../utils/journalMemberPrefs';
 import {
   TEAM_LEADER_MEMBER_CODE,
   JOURNAL_LINKED_MEMBER_CODE,
@@ -276,15 +279,42 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
     [readOnly, persist]
   );
 
+  const getMemberPrefs = useCallback(
+    (memberCode = JOURNAL_LINKED_MEMBER_CODE) =>
+      normalizeMemberPrefs(getMemberJournal(store, memberCode).prefs),
+    [store.memberJournals]
+  );
+
+  const setMemberPrefs = useCallback(
+    (prefs, memberCode = JOURNAL_LINKED_MEMBER_CODE) => {
+      if (readOnly) return;
+      setStore((prev) =>
+        persist(
+          updateMemberJournal(prev, memberCode, (slice) => ({
+            ...slice,
+            prefs: normalizeMemberPrefs(prefs),
+          }))
+        )
+      );
+    },
+    [readOnly, persist]
+  );
+
   const getWeekSummaryContent = useCallback(
-    (weekKey, memberCode = JOURNAL_LINKED_MEMBER_CODE) =>
-      resolveWeekColumnText(getMemberJournal(store, memberCode).weekSummaries[weekKey]),
+    (weekKey, memberCode = JOURNAL_LINKED_MEMBER_CODE) => {
+      const slice = getMemberJournal(store, memberCode);
+      const template = resolveMemberWeekColumnTemplate(slice.prefs);
+      return resolveWeekColumnText(slice.weekSummaries[weekKey], template);
+    },
     [store.memberJournals]
   );
 
   const getNextWeekContent = useCallback(
-    (weekKey, memberCode = JOURNAL_LINKED_MEMBER_CODE) =>
-      resolveWeekColumnText(getMemberJournal(store, memberCode).nextWeekPlans[weekKey]),
+    (weekKey, memberCode = JOURNAL_LINKED_MEMBER_CODE) => {
+      const slice = getMemberJournal(store, memberCode);
+      const template = resolveMemberWeekColumnTemplate(slice.prefs);
+      return resolveWeekColumnText(slice.nextWeekPlans[weekKey], template);
+    },
     [store.memberJournals]
   );
 
@@ -292,14 +322,15 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
     (weekKey, field, memberCode = JOURNAL_LINKED_MEMBER_CODE) => {
       if (readOnly) return;
       const key = field === 'summary' ? 'weekSummaries' : 'nextWeekPlans';
-      setStore((prev) =>
-        persist(
+      setStore((prev) => {
+        const template = resolveMemberWeekColumnTemplate(getMemberJournal(prev, memberCode).prefs);
+        return persist(
           updateMemberJournal(prev, memberCode, (slice) => ({
             ...slice,
-            [key]: { ...slice[key], [weekKey]: WEEK_COLUMN_TEMPLATE },
+            [key]: { ...slice[key], [weekKey]: template },
           }))
-        )
-      );
+        );
+      });
     },
     [readOnly, persist]
   );
@@ -378,6 +409,8 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
     getWeekSummaryContent,
     getNextWeekContent,
     applyWeekColumnTemplate,
+    getMemberPrefs,
+    setMemberPrefs,
     setKpiWeekMemo,
     getKpiWeekMemo,
     resetToSeed,
