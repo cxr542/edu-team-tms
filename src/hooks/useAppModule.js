@@ -13,6 +13,26 @@ const APP_MODULES = new Set([
   ...KPI_MODULES,
 ]);
 
+/** 구성원 전용 URL(?member=B) — module 없을 때 journal, ledger는 param 필수 */
+function isMemberOnlyScope(searchParams) {
+  const member = searchParams.get('member');
+  const access = searchParams.get('access');
+  return Boolean(member) && access !== URL_ACCESS_LEADER;
+}
+
+/** ledger: 팀장은 생략(legacy), 팀원은 module=ledger 유지 */
+function applyModuleToUrl(url, module) {
+  if (module === 'ledger') {
+    if (isMemberOnlyScope(url.searchParams)) {
+      url.searchParams.set('module', 'ledger');
+    } else {
+      url.searchParams.delete('module');
+    }
+    return;
+  }
+  url.searchParams.set('module', module);
+}
+
 export function getModuleFromUrl() {
   const params = new URLSearchParams(window.location.search);
   const m = params.get('module');
@@ -30,10 +50,6 @@ export function isKpiRelatedModule(module) {
 /** 현재 앱 경로(pathname)를 유지한 모듈 URL (GitHub Pages base 대응) */
 export function buildAppModuleUrl(module, { mode, year, month, member, access } = {}) {
   const url = new URL(window.location.href);
-  if (module !== undefined) {
-    if (!module || module === 'ledger') url.searchParams.delete('module');
-    else url.searchParams.set('module', module);
-  }
   if (mode === 'view') url.searchParams.set('mode', 'view');
   else if (mode === 'edit') url.searchParams.set('mode', 'edit');
   if (year != null) url.searchParams.set('year', String(year));
@@ -47,6 +63,11 @@ export function buildAppModuleUrl(module, { mode, year, month, member, access } 
     const a = cur.get('access');
     if (m) url.searchParams.set('member', m);
     if (a) url.searchParams.set('access', a);
+  }
+
+  if (module !== undefined) {
+    if (!module) url.searchParams.delete('module');
+    else applyModuleToUrl(url, module);
   }
 
   return `${url.pathname}${url.search}`;
@@ -77,8 +98,7 @@ export function useAppModule() {
 
   const setModule = useCallback((next) => {
     const url = new URL(window.location.href);
-    if (next === 'ledger') url.searchParams.delete('module');
-    else url.searchParams.set('module', next);
+    applyModuleToUrl(url, next);
     if (next === 'competency') {
       const member = url.searchParams.get('member');
       const access = url.searchParams.get('access');
