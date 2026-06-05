@@ -7,14 +7,13 @@ import {
   REF_DOC_CATEGORIES,
   REFERENCE_DOCS_NAV,
   findReferenceDoc,
-  isReferenceDocInNav,
   referenceDocPublicUrl,
 } from '../constants/referenceDocs';
 import './ReferenceDocsPage.css';
 
 function readDocIdFromUrl() {
   const id = new URLSearchParams(window.location.search).get('doc') || DEFAULT_REFERENCE_DOC_ID;
-  return isReferenceDocInNav(id) ? id : DEFAULT_REFERENCE_DOC_ID;
+  return findReferenceDoc(id) ? id : DEFAULT_REFERENCE_DOC_ID;
 }
 
 export default function ReferenceDocsPage() {
@@ -48,7 +47,7 @@ export default function ReferenceDocsPage() {
 
   useEffect(() => {
     const urlId = new URLSearchParams(window.location.search).get('doc');
-    if (urlId && !isReferenceDocInNav(urlId)) {
+    if (urlId && !findReferenceDoc(urlId)) {
       selectDoc(DEFAULT_REFERENCE_DOC_ID);
     }
   }, [selectDoc]);
@@ -117,7 +116,7 @@ export default function ReferenceDocsPage() {
                 {active.summary && <p className="ref-docs-article-summary">{active.summary}</p>}
               </header>
             )}
-            <MarkdownDocViewer key={src} src={src} onHeadingsChange={onHeadingsChange} />
+            <MarkdownDocViewer key={src} src={src} onHeadingsChange={onHeadingsChange} onDocSelect={selectDoc} />
           </div>
         </div>
 

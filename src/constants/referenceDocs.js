@@ -112,6 +112,21 @@ export function findReferenceDoc(id) {
   return REFERENCE_DOCS.find((d) => d.id === id) || null;
 }
 
+/** 마크다운 상대 링크(./foo.md) → 참고문서 id */
+export function resolveReferenceDocIdFromHref(href) {
+  if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('mailto:')) {
+    return null;
+  }
+  const normalized = decodeURIComponent(String(href).replace(/^\.\//, '').split('#')[0].split('?')[0]);
+  if (!normalized.endsWith('.md')) return null;
+  const baseName = normalized.split('/').pop();
+  const doc =
+    REFERENCE_DOCS.find((d) => d.file === normalized) ||
+    REFERENCE_DOCS.find((d) => d.file === baseName) ||
+    REFERENCE_DOCS.find((d) => d.file.split('/').pop() === baseName);
+  return doc?.id || null;
+}
+
 export function referenceDocPublicUrl(file) {
   const base = import.meta.env.BASE_URL || '/';
   return `${base}docs/reference/${encodeURI(file)}`;

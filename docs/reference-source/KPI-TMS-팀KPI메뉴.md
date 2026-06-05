@@ -23,7 +23,7 @@
 
 **팀원** URL: **팀 구성원 업무**(일지·역량) + **팀 공통**(장부 조회·점심·이것도?). **실험 버전·팀장 업무**는 `access=leader` 필요.
 
-**전체 URL 표:** [TMS-접속URL-북마크.md](./TMS-접속URL-북마크.md)
+**전체 URL 표:** [TMS 접속 URL · 북마크](./TMS-접속URL-북마크.md)
 
 조회 모드(`mode=view`): 장부 + (설정에 따라) 점심·KPI 승인·KPI 리포트 등.
 
@@ -47,7 +47,7 @@ npm run publish:journal
 
 ## 관련 문서
 
-- [TMS-접속URL-북마크.md](./TMS-접속URL-북마크.md) — **구성원별 북마크 URL**
+- [TMS 접속 URL · 북마크](./TMS-접속URL-북마크.md) — **구성원별 북마크 URL**
 - [KPI-일지-TMS-연계-가이드.md](./KPI-일지-TMS-연계-가이드.md)
 - [KPI-TMS-운영모델-v2.md](./KPI-TMS-운영모델-v2.md)
 - [pilot-checklist-v2-tms.md](./pilot-checklist-v2-tms.md)
