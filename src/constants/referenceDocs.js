@@ -143,6 +143,15 @@ export function buildDocsModuleUrl(docId, { mode = 'edit', year, month } = {}) {
   return `${url.pathname}${url.search}`;
 }
 
+/** 참고문서 직링크 (현재 origin·mode 유지, module=docs 고정) */
+export function buildReferenceDocHref(docId, { mode = 'edit' } = {}) {
+  const url = new URL(window.location.href);
+  if (mode) url.searchParams.set('mode', mode);
+  url.searchParams.set('module', 'docs');
+  if (docId) url.searchParams.set('doc', docId);
+  return `${url.pathname}${url.search}`;
+}
+
 /** 참고문서로 추가 검토한 항목 (아직 미포함) */
 export const REFERENCE_DOCS_CANDIDATES = [
   { title: '교육팀 KPI 운영 엑셀 설계안', path: 'kpi-app-new/docs/교육팀_KPI_운영_엑셀_설계안.md' },

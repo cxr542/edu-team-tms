@@ -49,7 +49,7 @@ import {
 import AppModuleLink from '../components/AppModuleLink';
 import JournalWeekColumnTextarea from '../components/JournalWeekColumnTextarea';
 import { uiTooltip } from '../utils/uiTooltip';
-import { useTeamAccess } from '../hooks/useTeamAccess';
+import { applyLeaderJournalMemberToUrl, useTeamAccess } from '../hooks/useTeamAccess';
 import { URL_ACCESS_LEADER } from '../constants/teamAccess';
 import { JournalEditKpiPreview, TaskKpiBadge } from '../components/JournalKpiLinkagePanel';
 import JournalCategoryLegend from '../components/JournalCategoryLegend';
@@ -153,7 +153,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
 
   useEffect(() => {
     if (teamAccess.memberLocked) setMemberCode(teamAccess.scopedMember);
-  }, [teamAccess.memberLocked, teamAccess.scopedMember]);
+    else if (teamAccess.isLeader && teamAccess.scopedMember) {
+      setMemberCode(teamAccess.scopedMember);
+    }
+  }, [teamAccess.memberLocked, teamAccess.scopedMember, teamAccess.isLeader]);
   const [selectedDayKey, setSelectedDayKey] = useState(null);
   const [editTask, setEditTask] = useState(null);
   const [addDayKey, setAddDayKey] = useState(null);
@@ -854,7 +857,12 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   key={m.code}
                   type="button"
                   className={`journal-member-tab${memberCode === m.code ? ' is-active' : ''}`}
-                  onClick={() => setMemberCode(m.code)}
+                  onClick={() => {
+                    setMemberCode(m.code);
+                    if (teamAccess.isLeader && !teamAccess.memberLocked) {
+                      applyLeaderJournalMemberToUrl(m.code);
+                    }
+                  }}
                   {...uiTooltip(`${formatKpiMemberLabel(m)} · ${formatKpiMemberRoleLine(m)}`)}
                 >
                   {formatKpiMemberLabel(m)}

@@ -142,7 +142,9 @@ export default function AppShell({
 
   const railLabel = collapsed ? '펼침' : '접기';
   const railTitle = collapsed ? '메뉴 펼치기' : '메뉴 접기';
-  const workspaceUrl = getWorkspaceUrl();
+  /** 팀원 전용 URL(?member=B 등) — Workspace 런처는 팀장만 */
+  const showWorkspaceLink = !teamAccess?.isMemberScope;
+  const workspaceUrl = showWorkspaceLink ? getWorkspaceUrl() : null;
 
   return (
     <div
@@ -329,14 +331,16 @@ export default function AppShell({
               )}
             </div>
 
-            <a
-              className="nav-item nav-item--hub project-nav-item project-nav-item--hub"
-              href={workspaceUrl}
-              {...navTooltipProps('Workspace로 돌아가기')}
-            >
-              <Home size={18} className="nav-item__icon project-nav-item__icon" aria-hidden />
-              <span className="nav-item__label project-nav-item__label">← Workspace</span>
-            </a>
+            {showWorkspaceLink && (
+              <a
+                className="nav-item nav-item--hub project-nav-item project-nav-item--hub"
+                href={workspaceUrl}
+                {...navTooltipProps('Workspace로 돌아가기')}
+              >
+                <Home size={18} className="nav-item__icon project-nav-item__icon" aria-hidden />
+                <span className="nav-item__label project-nav-item__label">← Workspace</span>
+              </a>
+            )}
 
             <p className="sidebar-note project-sidebar-note">
               {isViewer ? (
@@ -388,13 +392,15 @@ export default function AppShell({
             >
               ☰
             </button>
-            <a
-              className="btn btn--hub"
-              href={workspaceUrl}
-              {...uiTooltip('cxr542 Workspace 랜딩', 'below')}
-            >
-              ← Workspace
-            </a>
+            {showWorkspaceLink && (
+              <a
+                className="btn btn--hub"
+                href={workspaceUrl}
+                {...uiTooltip('cxr542 Workspace 랜딩', 'below')}
+              >
+                ← Workspace
+              </a>
+            )}
             {!isProd && (
               <a
                 className="btn btn--prod-link"

@@ -56,6 +56,15 @@ export function applyTeamAccessToUrl(url, { member, access } = {}) {
   }
 }
 
+/** 팀장이 일지에서 A/B/C 탭 전환 시 URL에 member·access=leader 반영 (북마크·새로고침 유지) */
+export function applyLeaderJournalMemberToUrl(memberCode) {
+  if (typeof window === 'undefined' || !memberCode) return;
+  const url = new URL(window.location.href);
+  url.searchParams.set('access', URL_ACCESS_LEADER);
+  url.searchParams.set(URL_PARAM_MEMBER, memberCode);
+  window.history.replaceState({}, '', `${url.pathname}${url.search}`);
+}
+
 export function useTeamAccess() {
   const [access, setAccess] = useState(readTeamAccess);
 

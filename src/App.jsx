@@ -66,6 +66,7 @@ import LunchPickPage from './pages/LunchPickPage';
 import IdeaBankPage from './pages/IdeaBankPage';
 import { JournalProvider } from './context/JournalProvider';
 import { isKpiRelatedModule, useAppModule } from './hooks/useAppModule';
+import { findReferenceDoc } from './constants/referenceDocs';
 import { useNavLabels } from './hooks/useNavLabels';
 import { useViewerMenuVisibility } from './hooks/useViewerMenuVisibility';
 import {
@@ -153,6 +154,18 @@ export default function App() {
     const nextModule = new URL(target, window.location.origin).searchParams.get('module') || 'journal';
     setModule(nextModule);
   }, [isViewer, module, teamAccess, setModule]);
+
+  /** ?doc=tms-bookmarks 등은 참고문서(module=docs)에서만 표시 */
+  useEffect(() => {
+    if (isViewer) return;
+    const params = new URLSearchParams(window.location.search);
+    const docId = params.get('doc');
+    if (!docId || !findReferenceDoc(docId)) return;
+    if (params.get('module') === 'docs') return;
+    params.set('module', 'docs');
+    window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
+    setModule('docs');
+  }, [isViewer, setModule]);
 
   const seedCategories = useMemo(() => {
     if (!usesPublishedLedgerData || !snapshot?.categories?.length) return null;

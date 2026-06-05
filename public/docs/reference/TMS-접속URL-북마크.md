@@ -40,7 +40,15 @@
 
 **역량:** 팀장은 **본인(A) 자체평가 폼만 수정**합니다. B·C **팀장 평가·분기 확정**은 **팀 KPI 관리 → KPI3** 탭에서 진행합니다.
 
-**일지:** 팀장 화면에서 A/B/C 탭 전환 가능(확인·대리 입력). **본인 업무는 A 탭**에서 작성합니다.
+**일지:** 팀장 화면에서 A/B/C 탭 전환 가능(확인·대리 입력). **본인 업무는 A 탭**에서 작성합니다.  
+탭을 바꾸면 주소에 `member=B` 등이 붙습니다 — **북마크·공유는 주소창 URL**을 쓰세요.
+
+| 용도 | URL |
+|------|-----|
+| B 일지 확인·대리 입력 (팀장) | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&member=B&module=journal |
+| C 일지 확인·대리 입력 (팀장) | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&member=C&module=journal |
+
+**이 북마크 표**는 `?module=docs&doc=tms-bookmarks` 로 엽니다. `module=journal&doc=…` 는 일지 화면이라 표가 보이지 않습니다.
 
 ---
 
