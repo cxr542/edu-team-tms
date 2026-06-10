@@ -150,6 +150,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const teamAccess = useTeamAccess();
   const [memberCode, setMemberCode] = useState(teamAccess.defaultMemberCode);
   const selectedMember = useMemo(() => findKpiMember(memberCode) || TEAM_KPI_MEMBERS[0], [memberCode]);
+  const canImportJournalBackup = teamAccess.isLeader || memberCode === TEAM_LEADER_MEMBER_CODE;
 
   useEffect(() => {
     if (teamAccess.memberLocked) setMemberCode(teamAccess.scopedMember);
@@ -804,15 +805,17 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                     <Download size={16} />
                     백업용 JSON 다운로드
                   </button>
-                  <button
-                    type="button"
-                    className="btn btn-ghost"
-                    onClick={() => importInputRef.current?.click()}
-                    {...uiTooltip('일지 백업 JSON 가져오기')}
-                  >
-                    <Upload size={16} />
-                    백업 가져오기
-                  </button>
+                  {canImportJournalBackup && (
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      onClick={() => importInputRef.current?.click()}
+                      {...uiTooltip('일지 백업 JSON 가져오기')}
+                    >
+                      <Upload size={16} />
+                      백업 가져오기
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="btn btn-ghost"
