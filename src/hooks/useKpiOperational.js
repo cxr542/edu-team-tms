@@ -20,7 +20,9 @@ import { mapMemberRoleToCompetency } from '../constants/competencyRubric';
 import { findKpiMember } from '../constants/kpiSchema';
 import {
   computeCompetencyEval,
+  mergeCompetencyEvalSidePatch,
   monthlyFinalScore,
+  normalizeCompetencyEvalSide,
   rollupQuarterLevelFromMonths,
 } from '../utils/competencyScore';
 import {
@@ -46,11 +48,30 @@ async function fetchCompetencyCloudSnapshot() {
   return res.json();
 }
 
+function sanitizeCompetencyMonthsInStore(store) {
+  const competencyMonths = {};
+  Object.entries(store.competencyMonths || {}).forEach(([ym, members]) => {
+    if (!members || typeof members !== 'object') return;
+    competencyMonths[ym] = {};
+    Object.entries(members).forEach(([memberCode, rec]) => {
+      const roleId =
+        rec?.roleId ?? mapMemberRoleToCompetency(findKpiMember(memberCode)?.role);
+      competencyMonths[ym][memberCode] = {
+        ...rec,
+        roleId,
+        self: normalizeCompetencyEvalSide(rec?.self, roleId),
+        manager: normalizeCompetencyEvalSide(rec?.manager, roleId),
+      };
+    });
+  });
+  return { ...store, competencyMonths };
+}
+
 function loadStore() {
   try {
     const raw = localStorage.getItem(KPI_OPERATIONAL_STORAGE_KEY);
     if (!raw) return createEmptyKpiOperationalStore();
-    return normalizeKpiOperationalStore(JSON.parse(raw));
+    return sanitizeCompetencyMonthsInStore(normalizeKpiOperationalStore(JSON.parse(raw)));
   } catch {
     return createEmptyKpiOperationalStore();
   }
@@ -355,20 +376,18 @@ export function useKpiOperational({ readOnly = false } = {}) {
     (year, monthIndex, memberCode) => {
       const ym = monthKey(year, monthIndex);
       const rec = store.competencyMonths?.[ym]?.[memberCode];
-      if (rec) return JSON.parse(JSON.stringify(rec));
-      return defaultCompetencyMonthRecord(memberCode);
+      if (!rec) return defaultCompetencyMonthRecord(memberCode);
+      const roleId =
+        rec.roleId ?? mapMemberRoleToCompetency(findKpiMember(memberCode)?.role);
+      return {
+        ...rec,
+        roleId,
+        self: normalizeCompetencyEvalSide(rec.self, roleId),
+        manager: normalizeCompetencyEvalSide(rec.manager, roleId),
+      };
     },
     [store.competencyMonths]
   );
-
-  const recomputeCompetencySide = (side, roleId) => {
-    const computed = computeCompetencyEval({
-      intLevel: side.intLevel,
-      dims: side.dims,
-      roleId,
-    });
-    return { ...side, computed };
-  };
 
   const updateCompetencySelf = useCallback(
     (year, monthIndex, memberCode, patch) => {
@@ -378,18 +397,12 @@ export function useKpiOperational({ readOnly = false } = {}) {
         let next = ensureCompetencyMonthMember(prev, ym, memberCode);
         const rec = next.competencyMonths[ym][memberCode];
         const roleId = patch.roleId ?? rec.roleId ?? mapMemberRoleToCompetency(findKpiMember(memberCode)?.role);
-        const self = {
-          intLevel: patch.intLevel ?? rec.self.intLevel,
-          dims: { ...rec.self.dims, ...(patch.dims || {}) },
-        };
+        const self = mergeCompetencyEvalSidePatch(rec.self, patch, roleId);
         const updated = {
           ...rec,
           roleId,
-          self: recomputeCompetencySide(self, roleId),
-          manager: recomputeCompetencySide(
-            { intLevel: rec.manager.intLevel, dims: rec.manager.dims },
-            roleId
-          ),
+          self: normalizeCompetencyEvalSide(self, roleId),
+          manager: normalizeCompetencyEvalSide(rec.manager, roleId),
           updatedAt: new Date().toISOString(),
         };
         next = {
@@ -413,13 +426,11 @@ export function useKpiOperational({ readOnly = false } = {}) {
         let next = ensureCompetencyMonthMember(prev, ym, memberCode);
         const rec = next.competencyMonths[ym][memberCode];
         const roleId = patch.roleId ?? rec.roleId ?? mapMemberRoleToCompetency(findKpiMember(memberCode)?.role);
-        const manager = {
-          intLevel: patch.intLevel ?? rec.manager.intLevel,
-          dims: { ...rec.manager.dims, ...(patch.dims || {}) },
-        };
+        const manager = mergeCompetencyEvalSidePatch(rec.manager, patch, roleId);
         const updated = {
           ...rec,
-          manager: recomputeCompetencySide(manager, roleId),
+          roleId,
+          manager: normalizeCompetencyEvalSide(manager, roleId),
           updatedAt: new Date().toISOString(),
         };
         next = {
@@ -449,7 +460,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
         };
         const updated = {
           ...rec,
-          manager: recomputeCompetencySide(manager, roleId),
+          manager: normalizeCompetencyEvalSide(manager, roleId),
           updatedAt: new Date().toISOString(),
         };
         next = {
@@ -467,21 +478,43 @@ export function useKpiOperational({ readOnly = false } = {}) {
 
   const lockCompetencyMonth = useCallback(
     (year, monthIndex, memberCode, { side = 'manager' } = {}) => {
-      if (readOnly) return;
+      if (readOnly) return { ok: false, reason: 'read-only' };
       const ym = monthKey(year, monthIndex);
       setStore((prev) => {
         let next = ensureCompetencyMonthMember(prev, ym, memberCode);
         const rec = next.competencyMonths[ym][memberCode];
-        const patch = side === 'self' ? { selfLocked: true } : { managerLocked: true };
+        const roleId =
+          rec.roleId ?? mapMemberRoleToCompetency(findKpiMember(memberCode)?.role);
+        const selfSide = normalizeCompetencyEvalSide(rec.self, roleId);
+        const updatedAt = new Date().toISOString();
+        const updated =
+          side === 'self'
+            ? {
+                ...rec,
+                roleId,
+                self: selfSide,
+                selfLocked: true,
+                selfUpdatedAt: rec.selfUpdatedAt || rec.updatedAt || updatedAt,
+                updatedAt,
+              }
+            : {
+                ...rec,
+                roleId,
+                manager: normalizeCompetencyEvalSide(rec.manager, roleId),
+                managerLocked: true,
+                managerUpdatedAt: rec.managerUpdatedAt || rec.updatedAt || updatedAt,
+                updatedAt,
+              };
         next = {
           ...next,
           competencyMonths: {
             ...next.competencyMonths,
-            [ym]: { ...next.competencyMonths[ym], [memberCode]: { ...rec, ...patch, updatedAt: new Date().toISOString() } },
+            [ym]: { ...next.competencyMonths[ym], [memberCode]: updated },
           },
         };
         return persist(next);
       });
+      return { ok: true };
     },
     [readOnly, persist]
   );

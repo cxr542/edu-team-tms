@@ -37,14 +37,14 @@ export function accumulationOrderForRole(roleId) {
 }
 
 export function defaultCompetencyDims() {
-  return Object.fromEntries(COMPETENCY_DIM_IDS.map((id) => [id, '']));
+  return Object.fromEntries(COMPETENCY_DIM_IDS.map((id) => [id, DIM_UNMET]));
 }
 
 export function defaultCompetencyEval() {
   return { intLevel: 0, dims: defaultCompetencyDims() };
 }
 
-/** @typedef {'met' | 'unmet' | ''} DimStatus */
+/** @typedef {'met' | 'unmet'} DimStatus */
 
 export const DIM_MET = 'met';
 export const DIM_UNMET = 'unmet';

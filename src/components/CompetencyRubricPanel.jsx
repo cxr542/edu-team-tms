@@ -1,22 +1,31 @@
 import React, { useMemo, useState } from 'react';
-import { COMPETENCY_DIMS, COMPETENCY_ROLES, DIM_MET, DIM_UNMET } from '../constants/competencyRubric';
+import {
+  COMPETENCY_DIMS,
+  COMPETENCY_DIM_IDS,
+  COMPETENCY_ROLES,
+  DIM_MET,
+  DIM_UNMET,
+  defaultCompetencyDims,
+} from '../constants/competencyRubric';
 import { RUBRIC_ROWS, ROLE_RUBRIC_HINTS, INTEGER_LEVELS, integerLevelOptionLabel } from '../constants/competencyRubricText';
 import { COMPETENCY_USE_4060 } from '../constants/competencyConfig';
-import { monthlyFinalScore } from '../utils/competencyScore';
+import {
+  applyDimChange,
+  countConsecutiveMetFromStart,
+  monthlyFinalScore,
+  normalizeCompetencyEvalSide,
+} from '../utils/competencyScore';
 import './CompetencyRubricPanel.css';
 
 function DimSelect({ value, onChange, disabled }) {
+  const resolved = value === DIM_MET ? DIM_MET : DIM_UNMET;
   return (
     <select
       className="form-input competency-dim-select"
-      value={value || ''}
+      value={resolved}
       disabled={disabled}
-      onChange={(e) => {
-        const v = e.target.value;
-        onChange(v === '' ? '' : v);
-      }}
+      onChange={(e) => onChange(e.target.value)}
     >
-      <option value="">—</option>
       <option value={DIM_MET}>충족</option>
       <option value={DIM_UNMET}>미충족</option>
     </select>
@@ -37,9 +46,14 @@ export default function CompetencyRubricPanel({
   const [showIntLevelRef, setShowIntLevelRef] = useState(false);
   const [showDimRef, setShowDimRef] = useState(false);
   const evalSide = side === 'self' ? record?.self : record?.manager;
-  const computed = evalSide?.computed;
   const locked = side === 'self' ? record?.selfLocked : record?.managerLocked;
   const roleId = record?.roleId || 'default';
+  const liveEvalSide = useMemo(
+    () => (evalSide ? normalizeCompetencyEvalSide(evalSide, roleId) : null),
+    [evalSide, roleId]
+  );
+  const computed = liveEvalSide?.computed;
+  const consecutiveMet = countConsecutiveMetFromStart(liveEvalSide?.dims, roleId);
   const roleLabel = COMPETENCY_ROLES.find((r) => r.id === roleId)?.label || roleId;
 
   const monthlyFinal = useMemo(() => {
@@ -56,7 +70,9 @@ export default function CompetencyRubricPanel({
   };
 
   const handleDim = (dimId, v) => {
-    onUpdate({ dims: { [dimId]: v } });
+    const current = liveEvalSide?.dims || defaultCompetencyDims();
+    const nextDims = applyDimChange(current, dimId, v, roleId);
+    onUpdate({ dims: nextDims });
   };
 
   const handleRole = (v) => {
@@ -160,20 +176,23 @@ export default function CompetencyRubricPanel({
         </div>
       )}
 
-      <table className="team-kpi-table competency-dim-table">
+      <table className="team-kpi-table competency-dim-table" aria-label="5차원 충족 여부">
         <thead>
           <tr>
-            <th>차원</th>
+            <th>차원 ({COMPETENCY_DIM_IDS.length}개)</th>
             <th>충족 여부</th>
           </tr>
         </thead>
         <tbody>
           {COMPETENCY_DIMS.map((dim) => (
             <tr key={dim.id}>
-              <td>{dim.label}</td>
+              <td>
+                {dim.label}
+                <span className="visually-hidden"> ({dim.id})</span>
+              </td>
               <td>
                 <DimSelect
-                  value={evalSide?.dims?.[dim.id]}
+                  value={liveEvalSide?.dims?.[dim.id]}
                   disabled={readOnly || locked}
                   onChange={(v) => handleDim(dim.id, v)}
                 />
@@ -182,6 +201,14 @@ export default function CompetencyRubricPanel({
           ))}
         </tbody>
       </table>
+
+      {memberView && !locked && (
+        <p className="team-kpi-hint competency-dim-hint">
+          연속 충족 {consecutiveMet}/{COMPETENCY_DIM_IDS.length}단계
+          {' — '}
+          충족한 단계까지만 선택하면 되며, 미충족 이후 차원은 자동으로 미충족 처리됩니다.
+        </p>
+      )}
 
       <div className="competency-dim-ref-actions">
         <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowDimRef((s) => !s)}>
@@ -244,6 +271,11 @@ export default function CompetencyRubricPanel({
         {memberView ? (
           <>
             <strong>자체평가 제안 레벨 {computed?.proposed ?? '—'}</strong>
+            {computed?.fractional != null && computed.fractional > 0 && (
+              <span className="competency-monthly-final">
+                정수 {liveEvalSide?.intLevel || 0} + 차원 가산 {computed.fractional}
+              </span>
+            )}
             {managerLocked && monthlyFinal != null && (
               <span className="competency-monthly-final">
                 팀장 확정 월간 레벨 <strong>{monthlyFinal}</strong>

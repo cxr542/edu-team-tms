@@ -2,7 +2,9 @@ import {
   ACCUMULATION_ORDER_BY_ROLE,
   COMPETENCY_DIM_IDS,
   DIM_MET,
+  DIM_UNMET,
   accumulationOrderForRole,
+  defaultCompetencyDims,
 } from '../constants/competencyRubric';
 import {
   COMPETENCY_CAP_DEFAULT,
@@ -10,9 +12,71 @@ import {
   COMPETENCY_USE_4060,
 } from '../constants/competencyConfig';
 
+/** 빈 값·null·undefined → 미충족 */
+export function coerceDimStatus(value) {
+  return value === DIM_MET ? DIM_MET : DIM_UNMET;
+}
+
+/**
+ * dims 정규화: 빈 값 보정 + 연속 충족 체인 (직군 누적 순서 기준)
+ * 상위(선행) 차원이 unmet이면 이후 차원은 모두 unmet
+ */
+export function normalizeDimsChain(dims, roleId = 'default') {
+  const order = accumulationOrderForRole(roleId);
+  const merged = { ...defaultCompetencyDims(), ...(dims || {}) };
+  const result = {};
+  for (const id of COMPETENCY_DIM_IDS) {
+    result[id] = coerceDimStatus(merged[id]);
+  }
+  let chainBroken = false;
+  for (const id of order) {
+    if (chainBroken) {
+      result[id] = DIM_UNMET;
+    } else if (result[id] !== DIM_MET) {
+      result[id] = DIM_UNMET;
+      chainBroken = true;
+    }
+  }
+  return result;
+}
+
+/**
+ * UI 차원 변경 — met: 해당 단계까지 상위 연속 met + 이후 unmet
+ * unmet: 해당 차원 및 하위(누적 순서) unmet
+ */
+export function applyDimChange(currentDims, dimId, value, roleId = 'default') {
+  const order = accumulationOrderForRole(roleId);
+  const idx = order.indexOf(dimId);
+  const next = { ...defaultCompetencyDims(), ...(currentDims || {}) };
+  if (idx < 0) return normalizeDimsChain(next, roleId);
+
+  if (value === DIM_MET) {
+    for (let i = 0; i <= idx; i += 1) next[order[i]] = DIM_MET;
+    for (let i = idx + 1; i < order.length; i += 1) next[order[i]] = DIM_UNMET;
+  } else {
+    for (let i = idx; i < order.length; i += 1) next[order[i]] = DIM_UNMET;
+  }
+  return normalizeDimsChain(next, roleId);
+}
+
 /** @param {Record<string, string>} dims */
 export function isDimsComplete(dims) {
-  return COMPETENCY_DIM_IDS.every((id) => dims[id] === DIM_MET || dims[id] === 'unmet');
+  return COMPETENCY_DIM_IDS.every((id) => {
+    const v = dims?.[id];
+    return v === DIM_MET || v === DIM_UNMET;
+  });
+}
+
+/** 연속 충족 단계 수 (누적 순서 기준, 0~5) */
+export function countConsecutiveMetFromStart(dims, roleId = 'default') {
+  const order = accumulationOrderForRole(roleId);
+  const normalized = normalizeDimsChain(dims, roleId);
+  let count = 0;
+  for (const id of order) {
+    if (normalized[id] === DIM_MET) count += 1;
+    else break;
+  }
+  return count;
 }
 
 /**
@@ -56,20 +120,45 @@ export function mround02(value) {
   return Math.round(value / 0.2) * 0.2;
 }
 
-/** 제안 종합 = 정수레벨 + MROUND(캡적용) */
+/** 제안 종합 = 정수레벨 + fractional (fractional이 null이면 정수만) */
 export function proposedComposite(intLevel, fractionalMround) {
   const base = Number(intLevel) || 0;
-  const frac = fractionalMround == null ? 0 : Number(fractionalMround);
-  return Math.round((base + frac) * 10) / 10;
+  if (fractionalMround == null) return base;
+  return Math.round((base + Number(fractionalMround)) * 10) / 10;
 }
 
-/** 평가 한 건 전체 계산 */
+export function mergeCompetencyEvalSidePatch(existingSide, patch = {}, roleId = 'default') {
+  const mergedDims = {
+    ...defaultCompetencyDims(),
+    ...(existingSide?.dims || {}),
+    ...(patch.dims || {}),
+  };
+  return {
+    intLevel: patch.intLevel ?? existingSide?.intLevel ?? 0,
+    dims: normalizeDimsChain(mergedDims, roleId),
+  };
+}
+
+/** intLevel + dims 정규화 후 computed 재계산 */
+export function normalizeCompetencyEvalSide(side, roleId = 'default') {
+  const merged = mergeCompetencyEvalSidePatch(side, {}, roleId);
+  const computed = computeCompetencyEval({
+    intLevel: merged.intLevel,
+    dims: merged.dims,
+    roleId,
+  });
+  return { ...merged, computed };
+}
+
+/** 평가 한 건 전체 계산 (dims는 normalize 후 항상 complete, fractional은 숫자) */
 export function computeCompetencyEval({ intLevel, dims, roleId = 'default' }) {
+  const base = Number(intLevel) || 0;
+  const normalizedDims = normalizeDimsChain(dims, roleId);
   const order = accumulationOrderForRole(roleId);
-  const accumulated = accumulateFractional(dims, order);
-  const capped = applyCap(accumulated, dims, roleId);
+  const accumulated = accumulateFractional(normalizedDims, order);
+  const capped = applyCap(accumulated, normalizedDims, roleId);
   const fractional = mround02(capped);
-  const proposed = proposedComposite(intLevel, fractional);
+  const proposed = proposedComposite(base, fractional);
   return { accumulated, capped, fractional, proposed };
 }
 

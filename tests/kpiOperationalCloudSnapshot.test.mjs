@@ -273,8 +273,9 @@ describe('kpiOperationalCloudSnapshot', () => {
     expect(merged.manager.intLevel).toBe(4);
   });
 
-  it('isCompetencyMonthRecordSaveable rejects empty default record', () => {
-    expect(isCompetencyMonthRecordSaveable({}, 'B')).toBe(false);
+  it('isCompetencyMonthRecordSaveable — intLevel 또는 dims가 있으면 저장 가능', () => {
+    // 기본 dims가 unmet으로 채워지므로 빈 객체도 normalize 후 dims 존재
+    expect(isCompetencyMonthRecordSaveable({}, 'B')).toBe(true);
     expect(isCompetencyMonthRecordSaveable(competencyRecord({ selfLevel: 2 }), 'B')).toBe(true);
   });
 
