@@ -25,7 +25,8 @@ import {
   MessageSquare,
   Share2,
   Eye,
-  RefreshCw
+  RefreshCw,
+  Import,
 } from 'lucide-react';
 import { parseExcelFile, exportToExcel } from './utils/excelParser';
 import confetti from 'canvas-confetti';
@@ -70,6 +71,7 @@ import CloudChatbotEmbedPage from './pages/CloudChatbotEmbedPage';
 import LunchPickPage from './pages/LunchPickPage';
 import IdeaBankPage from './pages/IdeaBankPage';
 import { isProductionEnvironment } from './constants/appEnv';
+import { uiTooltip } from './utils/uiTooltip';
 import { JournalProvider } from './context/JournalProvider';
 import { isKpiRelatedModule, useAppModule } from './hooks/useAppModule';
 import { findReferenceDoc } from './constants/referenceDocs';
@@ -1090,13 +1092,19 @@ export default function App() {
             {showDevProdLedgerImport && (
               <button
                 type="button"
-                className="btn btn-secondary"
+                className="btn btn-import-shared"
                 onClick={handleImportProdLedger}
                 disabled={importingProdLedger}
-                title="운영 GET /api/ledger-snapshot 을 개발 localStorage 편집본에만 반영 (POST 없음)"
+                aria-label="운영 장부 가져오기 (개발 전용)"
+                {...uiTooltip(
+                  '운영 장부 데이터를 이 개발환경 편집본으로 가져옵니다. 운영 저장소에는 쓰지 않습니다. (개발 전용)',
+                  undefined,
+                  { wrap: true }
+                )}
               >
-                <Download size={16} />
+                <Import size={16} />
                 {importingProdLedger ? '가져오는 중…' : '운영 장부 가져오기'}
+                <span className="btn-dev-chip">개발</span>
               </button>
             )}
             <button

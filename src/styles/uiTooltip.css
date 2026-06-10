@@ -41,6 +41,7 @@
 }
 
 /* 상단 sticky·스크롤 컨테이너: 위쪽 툴팁이 overflow에 잘림 → 기본 아래 표시 */
+.header-action-area [data-ui-tooltip]:not([data-ui-tooltip-pos])::after,
 .journal-sticky-top [data-ui-tooltip]:not([data-ui-tooltip-pos])::after,
 .team-kpi-header [data-ui-tooltip]:not([data-ui-tooltip-pos])::after,
 .team-kpi-tabs [data-ui-tooltip]:not([data-ui-tooltip-pos])::after,

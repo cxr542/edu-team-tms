@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
+  Import,
   Copy,
   Download,
   RefreshCw,
@@ -765,8 +766,13 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 <>
                   <button
                     type="button"
-                    className="btn btn-secondary"
-                    {...uiTooltip('운영 공유 일지를 이 기기 캐시에 병합')}
+                    className="btn btn-import-shared"
+                    aria-label="공유 일지 가져오기"
+                    {...uiTooltip(
+                      '공유 저장소의 최신 일지를 가져와 현재 화면에 반영합니다.',
+                      undefined,
+                      { wrap: true }
+                    )}
                     onClick={async () => {
                       try {
                         const r = await journal.pullFromCloud();
@@ -777,7 +783,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                       }
                     }}
                   >
-                    <RefreshCw size={16} />
+                    <Import size={16} />
                     공유 일지 가져오기
                   </button>
                   <button

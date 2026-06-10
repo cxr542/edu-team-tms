@@ -189,6 +189,17 @@
   border: 1px solid var(--border-color);
 }
 
+.journal-actions .btn-import-shared {
+  background: rgba(0, 102, 204, 0.06);
+  color: var(--primary);
+  border: 1px solid rgba(0, 102, 204, 0.42);
+}
+
+.journal-actions .btn-import-shared:hover:not(:disabled) {
+  background: rgba(0, 102, 204, 0.12);
+  border-color: var(--primary);
+}
+
 .journal-actions .btn-ghost {
   background: transparent;
   color: var(--text-secondary);
