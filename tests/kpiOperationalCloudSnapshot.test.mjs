@@ -2,9 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { DIM_MET } from '../src/constants/competencyRubric.js';
 import { createEmptyKpiOperationalStore } from '../src/constants/kpiOperationalStore.js';
 import {
+  formatCompetencyCloudApiPayload,
+  isCompetencyMonthRecordSaveable,
   mergeCompetencyMonthRecord,
   mergeCompetencyMonths,
   mergeCompetencyMonthsIntoKpiStore,
+  mergeCompetencySelfPush,
+  mergeMemberIntoCompetencyCloudSnapshot,
   normalizeCompetencyCloudSnapshot,
   normalizeCompetencyMonthRecord,
 } from '../src/utils/kpiOperationalCloudSnapshot.js';
@@ -250,6 +254,57 @@ describe('kpiOperationalCloudSnapshot', () => {
     const merged = mergeCompetencyMonthRecord(local, remote, 'B');
     expect(merged.self.computed?.proposed).toBeGreaterThan(0);
     expect(merged.manager.computed?.proposed).toBeDefined();
+  });
+
+  it('mergeCompetencySelfPush keeps remote manager while updating self', () => {
+    const existing = competencyRecord({
+      selfLevel: 1,
+      managerLevel: 4,
+      managerUpdatedAt: '2026-06-08T00:00:00.000Z',
+    });
+    const incoming = competencyRecord({
+      selfLevel: 5,
+      managerLevel: 9,
+      selfUpdatedAt: '2026-06-09T00:00:00.000Z',
+      managerUpdatedAt: '2026-06-09T00:00:00.000Z',
+    });
+    const merged = mergeCompetencySelfPush(existing, incoming, 'B');
+    expect(merged.self.intLevel).toBe(5);
+    expect(merged.manager.intLevel).toBe(4);
+  });
+
+  it('isCompetencyMonthRecordSaveable rejects empty default record', () => {
+    expect(isCompetencyMonthRecordSaveable({}, 'B')).toBe(false);
+    expect(isCompetencyMonthRecordSaveable(competencyRecord({ selfLevel: 2 }), 'B')).toBe(true);
+  });
+
+  it('mergeMemberIntoCompetencyCloudSnapshot upserts one member/month only', () => {
+    const base = normalizeCompetencyCloudSnapshot({
+      competencyMonths: {
+        [YM]: {
+          A: competencyRecord({ memberCode: 'A', selfLevel: 1, selfUpdatedAt: '2026-06-01T00:00:00.000Z' }),
+        },
+      },
+    });
+    const next = mergeMemberIntoCompetencyCloudSnapshot(
+      base,
+      'B',
+      YM,
+      competencyRecord({ memberCode: 'B', selfLevel: 3, selfUpdatedAt: '2026-06-02T00:00:00.000Z' }),
+      { updatedAt: '2026-06-02T00:00:00.000Z' }
+    );
+    expect(next.competencyMonths[YM].A.self.intLevel).toBe(1);
+    expect(next.competencyMonths[YM].B.self.intLevel).toBe(3);
+  });
+
+  it('formatCompetencyCloudApiPayload wraps competencyMonths under kpiOperational', () => {
+    const payload = formatCompetencyCloudApiPayload(
+      normalizeCompetencyCloudSnapshot({
+        competencyMonths: { [YM]: { B: competencyRecord({ selfLevel: 2 }) } },
+      })
+    );
+    expect(payload.version).toBe(1);
+    expect(payload.kpiOperational.competencyMonths[YM].B.self.intLevel).toBe(2);
   });
 
   it('mergeCompetencyMonthsIntoKpiStore preserves non-competency store fields', () => {

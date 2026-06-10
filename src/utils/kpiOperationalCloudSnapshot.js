@@ -3,7 +3,7 @@ import {
   defaultCompetencyMonthRecord,
   normalizeKpiOperationalStore,
 } from '../constants/kpiOperationalStore';
-import { mapMemberRoleToCompetency } from '../constants/competencyRubric';
+import { DIM_MET, DIM_UNMET, mapMemberRoleToCompetency } from '../constants/competencyRubric';
 import { computeCompetencyEval } from './competencyScore';
 
 export const KPI_COMPETENCY_CLOUD_SNAPSHOT_VERSION = 1;
@@ -273,4 +273,99 @@ export function createEmptyCompetencyCloudSnapshot() {
 /** 테스트·디버그용 — store에서 competencyMonths만 추출 */
 export function extractCompetencyMonthsFromStore(store) {
   return normalizeCompetencyMonths(normalizeKpiOperationalStore(store).competencyMonths);
+}
+
+const YEAR_MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+export function isValidCompetencyMemberCode(code) {
+  return KPI_COMPETENCY_MEMBER_CODES.includes(code);
+}
+
+export function isValidCompetencyYearMonth(yearMonth) {
+  return YEAR_MONTH_RE.test(String(yearMonth || ''));
+}
+
+/** 공유 저장 가능 여부 — 빈 기본 레코드는 원격을 지우지 않도록 차단 */
+export function isCompetencyMonthRecordSaveable(raw, memberCode) {
+  const rec = normalizeCompetencyMonthRecord(raw, memberCode);
+  if (rec.selfLocked || rec.managerLocked) return true;
+  if ((rec.self?.intLevel ?? 0) > 0 || (rec.manager?.intLevel ?? 0) > 0) return true;
+  const hasDim = (side) =>
+    Object.values(side?.dims || {}).some((v) => v === DIM_MET || v === DIM_UNMET);
+  return hasDim(rec.self) || hasDim(rec.manager);
+}
+
+/**
+ * CompetencyPage self 저장용 — blob manager는 유지하고 self만 merge
+ */
+export function mergeCompetencySelfPush(existingRaw, incomingRaw, memberCode) {
+  const existing = existingRaw ? normalizeCompetencyMonthRecord(existingRaw, memberCode) : null;
+  const incoming = normalizeCompetencyMonthRecord(incomingRaw, memberCode);
+  const combined = {
+    roleId: incoming.roleId ?? existing?.roleId,
+    self: incoming.self,
+    selfLocked: incoming.selfLocked,
+    selfUpdatedAt: incoming.selfUpdatedAt ?? incoming.updatedAt,
+    manager: existing?.manager ?? incoming.manager,
+    managerLocked: existing?.managerLocked ?? incoming.managerLocked,
+    managerUpdatedAt: existing?.managerUpdatedAt ?? incoming.managerUpdatedAt,
+  };
+  return mergeCompetencyMonthRecord(existing, combined, memberCode);
+}
+
+/** cloud snapshot에 단일 member·month competency upsert */
+export function mergeMemberIntoCompetencyCloudSnapshot(
+  snapshot,
+  memberCode,
+  yearMonth,
+  competencyMonth,
+  { updatedAt = nowIso() } = {}
+) {
+  if (!isValidCompetencyMemberCode(memberCode)) {
+    throw new Error('memberCode는 A/B/C 중 하나여야 합니다.');
+  }
+  if (!isValidCompetencyYearMonth(yearMonth)) {
+    throw new Error('yearMonth는 YYYY-MM 형식이어야 합니다.');
+  }
+
+  const current = normalizeCompetencyCloudSnapshot(snapshot);
+  const existing = current.competencyMonths[yearMonth]?.[memberCode];
+  const merged = mergeCompetencySelfPush(
+    existing,
+    { ...competencyMonth, updatedAt },
+    memberCode
+  );
+
+  if (!existing && !isCompetencyMonthRecordSaveable(merged, memberCode)) {
+    const err = new Error('저장할 역량 평가 내용이 없습니다.');
+    err.code = 'EMPTY_RECORD';
+    throw err;
+  }
+
+  const competencyMonths = {
+    ...current.competencyMonths,
+    [yearMonth]: {
+      ...(current.competencyMonths[yearMonth] || {}),
+      [memberCode]: merged,
+    },
+  };
+
+  return normalizeCompetencyCloudSnapshot({
+    publishedAt: updatedAt,
+    meta: { ...current.meta, updatedAt },
+    competencyMonths,
+  });
+}
+
+/** API GET/POST 응답 형식 */
+export function formatCompetencyCloudApiPayload(snapshot) {
+  const normalized = normalizeCompetencyCloudSnapshot(snapshot);
+  return {
+    version: normalized.version,
+    publishedAt: normalized.publishedAt,
+    meta: normalized.meta,
+    kpiOperational: {
+      competencyMonths: normalized.competencyMonths,
+    },
+  };
 }

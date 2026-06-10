@@ -17,7 +17,11 @@ try {
 }
 
 const PROD_TMS_ORIGIN = 'https://okestro-edu-team-tms.vercel.app';
-const PROD_SNAPSHOT_API_PATHS = new Set(['/api/journal-snapshot', '/api/ledger-snapshot']);
+const PROD_SNAPSHOT_API_PATHS = new Set([
+  '/api/journal-snapshot',
+  '/api/ledger-snapshot',
+  '/api/kpi-operational-snapshot',
+]);
 
 function sendJson(res, status, body) {
   res.statusCode = status;
@@ -26,7 +30,7 @@ function sendJson(res, status, body) {
 }
 
 /**
- * Vite dev only — GET /api/journal-snapshot · /api/ledger-snapshot → 운영 Blob (read-only).
+ * Vite dev only — GET snapshot APIs → 운영 Blob (read-only).
  * POST/PUT/PATCH/DELETE 등 쓰기 method는 운영으로 전달하지 않음.
  */
 export function prodSnapshotReadProxyPlugin() {

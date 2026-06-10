@@ -29,6 +29,22 @@ import {
 } from '../data/journalSeedAcademizerScenario';
 import { kpi3AcademizerSeedPatch } from '../data/kpi3SeedAcademizerScenario';
 import { computeKpi3Composite, gradeKpi3 } from '../utils/kpiGrades';
+import { isProductionEnvironment } from '../constants/appEnv';
+import {
+  isCompetencyMonthRecordSaveable,
+  isValidCompetencyMemberCode,
+  mergeCompetencyMonthsIntoKpiStore,
+} from '../utils/kpiOperationalCloudSnapshot';
+
+const KPI_OPERATIONAL_SNAPSHOT_API = '/api/kpi-operational-snapshot';
+
+async function fetchCompetencyCloudSnapshot() {
+  const res = await fetch(`${KPI_OPERATIONAL_SNAPSHOT_API}?t=${Date.now()}`, { cache: 'no-store' });
+  if (!res.ok) {
+    throw new Error(`공유 역량을 불러오지 못했습니다 (${res.status})`);
+  }
+  return res.json();
+}
 
 function loadStore() {
   try {
@@ -549,6 +565,64 @@ export function useKpiOperational({ readOnly = false } = {}) {
 
   const getStore = useCallback(() => store, [store]);
 
+  const pullCompetencyCloudSnapshot = useCallback(async () => {
+    if (readOnly) return { ok: false, reason: 'read-only' };
+    try {
+      const remote = await fetchCompetencyCloudSnapshot();
+      let mergedStore = null;
+      setStore((prev) => {
+        mergedStore = mergeCompetencyMonthsIntoKpiStore(prev, remote);
+        return persist(mergedStore);
+      });
+      return { ok: true, remote, store: mergedStore };
+    } catch (e) {
+      return { ok: false, reason: 'error', error: e };
+    }
+  }, [readOnly, persist]);
+
+  const saveCompetencyMemberCloudSnapshot = useCallback(
+    async (memberCode, yearMonth) => {
+      if (readOnly) return { ok: false, reason: 'read-only' };
+      if (!isProductionEnvironment()) {
+        return { ok: false, reason: 'dev-blocked', error: new Error('개발 환경에서는 공유 저장이 차단됩니다.') };
+      }
+      if (!isValidCompetencyMemberCode(memberCode)) {
+        return { ok: false, reason: 'invalid-member' };
+      }
+
+      const [yearStr, monthStr] = String(yearMonth).split('-');
+      const year = Number(yearStr);
+      const monthIndex = Number(monthStr) - 1;
+      const competencyMonth = getCompetencyMonth(year, monthIndex, memberCode);
+
+      if (!isCompetencyMonthRecordSaveable(competencyMonth, memberCode)) {
+        return { ok: false, reason: 'empty' };
+      }
+
+      const updatedAt = competencyMonth.updatedAt || new Date().toISOString();
+      try {
+        const res = await fetch(KPI_OPERATIONAL_SNAPSHOT_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ memberCode, yearMonth, competencyMonth, updatedAt }),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(body.message || body.error || `공유 역량 저장 실패 (${res.status})`);
+        }
+        let mergedStore = null;
+        setStore((prev) => {
+          mergedStore = mergeCompetencyMonthsIntoKpiStore(prev, body.snapshot || body);
+          return persist(mergedStore);
+        });
+        return { ok: true, remote: body.snapshot, store: mergedStore };
+      } catch (e) {
+        return { ok: false, reason: 'error', error: e };
+      }
+    },
+    [readOnly, persist, getCompetencyMonth]
+  );
+
   return {
     kpiOperational: store,
     kpiWeekMemos: store.kpiWeekMemos,
@@ -582,5 +656,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
     seedAcademizerDemo,
     seedKpi3AcademizerDemo,
     getStore,
+    pullCompetencyCloudSnapshot,
+    saveCompetencyMemberCloudSnapshot,
   };
 }

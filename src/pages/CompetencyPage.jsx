@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, Import, Upload } from 'lucide-react';
 import AppModuleLink from '../components/AppModuleLink';
 import CompetencyMemberHub from '../components/CompetencyMemberHub';
 import CompetencyMemberSection from '../components/CompetencyMemberSection';
@@ -43,6 +43,7 @@ export default function CompetencyPage() {
   const journal = useJournal();
   const teamAccess = useTeamAccess();
   const [toast, setToast] = useState('');
+  const [cloudBusy, setCloudBusy] = useState(false);
 
   const pageMemberCode = resolvePageMember(teamAccess);
   const showHub = !pageMemberCode && teamAccess.isLeader;
@@ -69,6 +70,10 @@ export default function CompetencyPage() {
     (code) => canEditMemberForm(teamAccess, code, canEdit),
     [teamAccess, canEdit]
   );
+
+  const canSaveSelectedMember =
+    Boolean(selectedMember) && canEditByCode(selectedMember?.code) && !journal.kpiOperationalReadOnly;
+  const showCloudActions = canEdit && Boolean(selectedMember);
 
   return (
     <main className="team-kpi-main competency-page">
@@ -146,6 +151,72 @@ export default function CompetencyPage() {
           </p>
         )}
       </header>
+
+      {showCloudActions && (
+        <div className="competency-page-actions">
+          <button
+            type="button"
+            className="btn btn-import-shared"
+            disabled={cloudBusy}
+            aria-label="공유 역량 가져오기"
+            {...uiTooltip(
+              '공유 저장소의 최신 역량 평가를 가져와 현재 화면에 반영합니다.',
+              undefined,
+              { wrap: true }
+            )}
+            onClick={async () => {
+              setCloudBusy(true);
+              try {
+                const r = await journal.pullCompetencyCloudSnapshot();
+                if (r.ok) showToast('공유 역량 평가를 이 기기에 병합했습니다');
+                else if (r.reason === 'read-only') showToast('조회 모드에서는 가져올 수 없습니다');
+                else showToast(r.error?.message || '공유 역량 가져오기에 실패했습니다');
+              } finally {
+                setCloudBusy(false);
+              }
+            }}
+          >
+            <Import size={16} />
+            {cloudBusy ? '가져오는 중…' : '공유 역량 가져오기'}
+          </button>
+          {canSaveSelectedMember && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={cloudBusy}
+              aria-label="현재 구성원 역량 공유 저장"
+              {...uiTooltip(
+                '현재 구성원의 이번 달 역량 평가를 공유 저장소에 저장합니다.',
+                undefined,
+                { wrap: true }
+              )}
+              onClick={async () => {
+                setCloudBusy(true);
+                try {
+                  const r = await journal.saveCompetencyMemberCloudSnapshot(
+                    selectedMember.code,
+                    ym
+                  );
+                  if (r.ok) {
+                    showToast(`${formatKpiMemberLabel(selectedMember)} · ${ym} 역량을 공유 저장했습니다`);
+                  } else if (r.reason === 'dev-blocked') {
+                    showToast('개발 환경에서는 공유 저장이 차단됩니다');
+                  } else if (r.reason === 'empty') {
+                    showToast('저장할 역량 평가 내용이 없습니다');
+                  } else {
+                    showToast(r.error?.message || '공유 역량 저장에 실패했습니다');
+                  }
+                } finally {
+                  setCloudBusy(false);
+                }
+              }}
+            >
+              <Upload size={16} />
+              {cloudBusy ? '저장 중…' : '현재 구성원 역량 공유 저장'}
+            </button>
+          )}
+        </div>
+      )}
 
       <nav className="competency-quarter-months" aria-label="분기 월 선택">
         <span className="competency-quarter-months__label">분기 월간 평가</span>

@@ -7,6 +7,21 @@
   margin-bottom: 1rem;
 }
 
+.competency-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.competency-page-actions .btn {
+  padding: 0.55rem 1rem;
+  font-size: 0.8125rem;
+  border-radius: var(--radius-sm);
+  gap: 0.4rem;
+}
+
 .competency-page-month-nav {
   display: flex;
   align-items: center;
