@@ -197,6 +197,12 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     setToast(msg);
     setTimeout(() => setToast(''), 2500);
   };
+  const sharedSaveText = {
+    queued: ' · 공유 저장 대기',
+    saving: ' · 공유 저장 중',
+    saved: ' · 공유 저장 완료',
+    error: ' · 공유 저장 실패 — 이 브라우저에는 임시 저장됨',
+  }[journal.cloudSaveStatus] || '';
 
   const memberDays = journal.getMemberDays(memberCode);
 
@@ -759,42 +765,44 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   <button
                     type="button"
                     className="btn btn-secondary"
-                    {...uiTooltip('배포 일지 → 이 기기 반영')}
+                    {...uiTooltip('운영 공유 일지를 이 기기 캐시에 병합')}
                     onClick={async () => {
                       try {
-                        let r = await journal.pullFromCloud();
-                        if (r.reason === 'local-newer') {
-                          if (
-                            window.confirm(
-                              '이 기기 일지가 더 최신입니다. 클라우드 백업으로 덮어쓸까요?'
-                            )
-                          ) {
-                            r = await journal.pullFromCloud({ force: true });
-                          }
-                        }
-                        if (r.ok) showToast('클라우드 일지를 이 기기에 반영했습니다');
-                        else if (r.reason === 'local-newer') showToast('동기화를 취소했습니다');
-                        else if (r.reason === 'cancelled') showToast('동기화를 취소했습니다');
-                        else if (r.reason === 'no-remote') showToast('클라우드 백업이 없습니다 — 먼저 게시·배포 필요');
+                        const r = await journal.pullFromCloud();
+                        if (r.ok) showToast('공유 일지를 이 기기에 병합했습니다');
+                        else if (r.reason === 'no-remote') showToast('공유 일지가 아직 없습니다');
                       } catch (e) {
                         showToast(e.message);
                       }
                     }}
                   >
                     <RefreshCw size={16} />
-                    클라우드 맞추기
+                    공유 일지 가져오기
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    {...uiTooltip('현재 선택한 구성원 일지만 운영 공유 저장소에 저장')}
+                    onClick={async () => {
+                      const r = await journal.saveMemberToCloud(memberCode);
+                      if (r.ok) showToast(`${memberCode} 일지를 공유 저장소에 저장했습니다`);
+                      else showToast(r.error?.message || '공유 저장 실패 — 이 브라우저에는 임시 저장됨');
+                    }}
+                  >
+                    <Upload size={16} />
+                    현재 구성원 공유 저장
                   </button>
                   <button
                     type="button"
                     className="btn btn-secondary"
-                    {...uiTooltip('일지 JSON 저장 (배포 전)')}
+                    {...uiTooltip('수동 복구·배포를 위한 백업 JSON 파일 생성')}
                     onClick={() => {
                       downloadJournalSnapshot(journal.getStore());
-                      showToast('journal-snapshot.json 저장 → npm run publish:journal 후 deploy');
+                      showToast('백업용 JSON 파일을 다운로드했습니다.');
                     }}
                   >
-                    <Upload size={16} />
-                    클라우드에 게시
+                    <Download size={16} />
+                    백업용 JSON 다운로드
                   </button>
                   <button
                     type="button"
@@ -874,7 +882,13 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           {!readOnly && journal.meta?.updatedAt && (
             <p className="journal-sync-hint">
               이 기기 저장: {new Date(journal.meta.updatedAt).toLocaleString('ko-KR')}
-              {journal.syncStatus === 'synced' && ' · 클라우드와 맞춤'}
+              {journal.syncStatus === 'synced' && ' · 공유 일지 병합됨'}
+              {sharedSaveText}
+            </p>
+          )}
+          {!readOnly && (
+            <p className="journal-sync-hint">
+              입력 내용은 이 브라우저에 즉시 백업되고, 가능한 경우 현재 구성원 일지만 운영 공유 저장소에도 저장됩니다.
             </p>
           )}
         </div>

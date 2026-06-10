@@ -1,8 +1,10 @@
 import { apply2026PublicHolidaysToDays } from './journalHoliday2026';
+import { normalizeJournalCloudSnapshot } from './journalCloudSnapshot';
 import { recalcDayMmFromHours } from './journalMm';
-import { createEmptyMemberJournals, migrateJournalStore } from './journalMemberStore';
+import { createEmptyMemberJournals } from './journalMemberStore';
 
 export const JOURNAL_SNAPSHOT_PATH = '/journal-snapshot.json';
+export const JOURNAL_API_PATH = '/api/journal-snapshot';
 export const JOURNAL_STORAGE_KEY = 'tms-weekly-journal-v1';
 
 function recalcMemberDays(days) {
@@ -20,23 +22,22 @@ export function buildJournalSnapshot(store) {
       weekSummaries: slice.weekSummaries || {},
       nextWeekPlans: slice.nextWeekPlans || {},
       kpiWeekMemos: slice.kpiWeekMemos || {},
+      prefs: slice.prefs || null,
     };
   });
 
-  return {
+  return normalizeJournalCloudSnapshot({
+    version: 1,
     publishedAt: new Date().toISOString(),
+    meta: store.meta || {},
     memberJournals: normalized,
-  };
+  });
 }
 
 export function normalizeJournalSnapshot(raw) {
-  if (!raw || (typeof raw.days !== 'object' && typeof raw.memberJournals !== 'object')) {
-    throw new Error('memberJournals 또는 days 객체가 필요합니다.');
-  }
-
-  const migrated = migrateJournalStore(raw);
+  const normalized = normalizeJournalCloudSnapshot(raw);
   const memberJournals = {};
-  Object.entries(migrated.memberJournals).forEach(([code, slice]) => {
+  Object.entries(normalized.memberJournals).forEach(([code, slice]) => {
     memberJournals[code] = {
       ...slice,
       days: recalcMemberDays(slice.days || {}),
@@ -44,7 +45,7 @@ export function normalizeJournalSnapshot(raw) {
   });
 
   return {
-    publishedAt: raw.publishedAt || new Date().toISOString(),
+    ...normalized,
     memberJournals,
   };
 }
@@ -62,13 +63,36 @@ export function downloadJournalSnapshot(store) {
   return payload;
 }
 
-export async function fetchJournalSnapshot() {
-  const res = await fetch(`${JOURNAL_SNAPSHOT_PATH}?t=${Date.now()}`);
+async function fetchSnapshotFrom(path) {
+  const res = await fetch(`${path}?t=${Date.now()}`, { cache: 'no-store' });
   if (res.status === 404) return null;
   if (!res.ok) {
-    throw new Error(`클라우드 일지를 불러오지 못했습니다 (${res.status})`);
+    throw new Error(`공유 일지를 불러오지 못했습니다 (${res.status})`);
   }
   return normalizeJournalSnapshot(await res.json());
+}
+
+export async function fetchJournalSnapshot() {
+  try {
+    const api = await fetchSnapshotFrom(JOURNAL_API_PATH);
+    if (api) return api;
+  } catch {
+    return fetchSnapshotFrom(JOURNAL_SNAPSHOT_PATH);
+  }
+  return fetchSnapshotFrom(JOURNAL_SNAPSHOT_PATH);
+}
+
+export async function saveJournalMemberSnapshot(memberCode, journal, updatedAt) {
+  const res = await fetch(JOURNAL_API_PATH, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ memberCode, journal, updatedAt }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(body.message || body.error || `공유 일지 저장 실패 (${res.status})`);
+  }
+  return normalizeJournalSnapshot(body.snapshot);
 }
 
 export function getLocalJournalMeta() {

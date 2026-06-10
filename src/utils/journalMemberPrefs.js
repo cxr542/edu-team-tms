@@ -2,7 +2,7 @@ import {
   JOURNAL_CATS,
   JOURNAL_CAT_ORDER,
   WEEK_COLUMN_TEMPLATE,
-} from '../constants/journalCategories';
+} from '../constants/journalCategories.js';
 
 /** @typedef {{ label?: string, color?: string }} JournalCategoryOverride */
 /** @typedef {{ categoryOrder?: string[], categories?: Record<string, JournalCategoryOverride>, weekColumnTemplate?: string }} JournalMemberPrefs */

@@ -1,6 +1,6 @@
-import { stripLegacyWeekColumnEntries } from '../constants/journalCategories';
-import { normalizeMemberPrefs } from './journalMemberPrefs';
-import { TEAM_KPI_MEMBERS } from '../constants/kpiMembers';
+import { stripLegacyWeekColumnEntries } from '../constants/journalCategories.js';
+import { normalizeMemberPrefs } from './journalMemberPrefs.js';
+import { TEAM_KPI_MEMBERS } from '../constants/kpiMembers.js';
 
 export function emptyMemberJournal() {
   return {
@@ -16,7 +16,7 @@ export function createEmptyMemberJournals() {
   return Object.fromEntries(TEAM_KPI_MEMBERS.map((m) => [m.code, emptyMemberJournal()]));
 }
 
-function normalizeMemberSlice(raw) {
+export function normalizeMemberJournalSlice(raw) {
   if (!raw || typeof raw !== 'object') return emptyMemberJournal();
   return {
     days: raw.days && typeof raw.days === 'object' ? { ...raw.days } : {},
@@ -33,10 +33,10 @@ export function migrateJournalStore(parsed, { seedDaysForA = {}, seedKpiWeekMemo
 
   if (parsed?.memberJournals && typeof parsed.memberJournals === 'object') {
     TEAM_KPI_MEMBERS.forEach(({ code }) => {
-      memberJournals[code] = normalizeMemberSlice(parsed.memberJournals[code]);
+      memberJournals[code] = normalizeMemberJournalSlice(parsed.memberJournals[code]);
     });
   } else {
-    memberJournals.A = normalizeMemberSlice({
+    memberJournals.A = normalizeMemberJournalSlice({
       days: parsed?.days || seedDaysForA,
       weekSummaries: parsed?.weekSummaries,
       nextWeekPlans: parsed?.nextWeekPlans,

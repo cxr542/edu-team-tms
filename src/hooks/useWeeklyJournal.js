@@ -19,11 +19,14 @@ import {
 } from '../constants/kpiMembers';
 import {
   fetchJournalSnapshot,
-  getLocalJournalMeta,
-  isRemoteNewer,
   JOURNAL_STORAGE_KEY,
   normalizeJournalSnapshot,
+  saveJournalMemberSnapshot,
 } from '../utils/journalSnapshot';
+import {
+  mergeJournalSnapshotsByMember,
+  normalizeJournalCloudSnapshot,
+} from '../utils/journalCloudSnapshot';
 import {
   apply2026PublicHolidaysToDays,
   defaultDayForKey,
@@ -32,9 +35,7 @@ import {
 import {
   cloneMemberJournalSlice,
   createEmptyMemberJournals,
-  fillMemberJournalsFromA,
   getMemberJournal,
-  migrateJournalStore,
 } from '../utils/journalMemberStore';
 import { recalcDayMmFromHours } from '../utils/journalMm';
 
@@ -68,34 +69,52 @@ function recalcAllMemberJournals(memberJournals) {
   return next;
 }
 
-function toStore(snapshot) {
-  const migrated = migrateJournalStore(snapshot, {
-    seedDaysForA: cloneSeed(),
-    seedKpiWeekMemosForA: cloneSeedKpiWeekMemos(),
-  });
+const OLD_AT = '1970-01-01T00:00:00.000Z';
+
+function seedStore() {
+  const memberJournals = createEmptyMemberJournals();
+  memberJournals.A = {
+    ...memberJournals.A,
+    days: cloneSeed(),
+    kpiWeekMemos: cloneSeedKpiWeekMemos(),
+  };
   return {
-    memberJournals: recalcAllMemberJournals(fillMemberJournalsFromA(migrated.memberJournals)),
-    meta: { updatedAt: snapshot.publishedAt || new Date().toISOString() },
+    memberJournals: recalcAllMemberJournals(memberJournals),
+    meta: { updatedAt: null, memberUpdatedAt: {} },
   };
 }
 
-function loadStore() {
-  const fallback = toStore({
-    memberJournals: createEmptyMemberJournals(),
-    publishedAt: null,
+function toStore(snapshot) {
+  const normalized = normalizeJournalSnapshot(snapshot);
+  return {
+    memberJournals: recalcAllMemberJournals(normalized.memberJournals),
+    meta: normalized.meta || { updatedAt: normalized.publishedAt || null, memberUpdatedAt: {} },
+  };
+}
+
+function storeToSnapshot(store) {
+  return normalizeJournalCloudSnapshot({
+    publishedAt: store.meta?.updatedAt || OLD_AT,
+    meta: store.meta || {},
+    memberJournals: store.memberJournals || createEmptyMemberJournals(),
   });
+}
+
+function mergeRemoteIntoStore(store, remote, options) {
+  return toStore(mergeJournalSnapshotsByMember(storeToSnapshot(store), remote, options));
+}
+
+function uniqueMembers(memberCodes) {
+  return [...new Set([memberCodes].flat().filter(Boolean))];
+}
+
+function loadStore() {
+  const fallback = seedStore();
   try {
     const raw = localStorage.getItem(JOURNAL_STORAGE_KEY);
     if (!raw) return fallback;
     const parsed = JSON.parse(raw);
-    const migrated = migrateJournalStore(parsed, {
-      seedDaysForA: cloneSeed(),
-      seedKpiWeekMemosForA: cloneSeedKpiWeekMemos(),
-    });
-    return {
-      memberJournals: recalcAllMemberJournals(fillMemberJournalsFromA(migrated.memberJournals)),
-      meta: parsed.meta || { updatedAt: parsed.publishedAt || null },
-    };
+    return toStore(parsed);
   } catch {
     return fallback;
   }
@@ -116,19 +135,41 @@ function updateMemberJournal(prev, memberCode, updater) {
 export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}) {
   const [store, setStore] = useState(loadStore);
   const [syncStatus, setSyncStatus] = useState('idle');
+  const [cloudSaveStatus, setCloudSaveStatus] = useState('idle');
+  const [pendingCloudMembers, setPendingCloudMembers] = useState([]);
+
+  const cacheStore = useCallback(
+    (next) => {
+      if (!readOnly) {
+        localStorage.setItem(JOURNAL_STORAGE_KEY, JSON.stringify(next));
+      }
+      return next;
+    },
+    [readOnly]
+  );
 
   const persist = useCallback(
-    (next) => {
+    (next, memberCodes) => {
+      const touched = uniqueMembers(memberCodes);
+      const updatedAt = new Date().toISOString();
+      const memberUpdatedAt = { ...(next.meta?.memberUpdatedAt || {}) };
+      touched.forEach((code) => {
+        memberUpdatedAt[code] = updatedAt;
+      });
       const withMeta = {
         ...next,
-        meta: { updatedAt: new Date().toISOString() },
+        meta: { ...(next.meta || {}), updatedAt, memberUpdatedAt },
       };
       if (!readOnly) {
         localStorage.setItem(JOURNAL_STORAGE_KEY, JSON.stringify(withMeta));
       }
+      if (!readOnly && autoSyncCloud && touched.length > 0) {
+        setCloudSaveStatus('queued');
+        setPendingCloudMembers((prev) => uniqueMembers([...prev, ...touched]));
+      }
       return withMeta;
     },
-    [readOnly]
+    [autoSyncCloud, readOnly]
   );
 
   useEffect(() => {
@@ -141,23 +182,26 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
     setStore((prev) => {
       const memberJournals = recalcAllMemberJournals(prev.memberJournals || {});
       if (JSON.stringify(memberJournals) === JSON.stringify(prev.memberJournals)) return prev;
-      return persist({ ...prev, memberJournals });
+      return cacheStore({ ...prev, memberJournals });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readOnly]);
 
   const applyRemoteSnapshot = useCallback(
-    (snapshot) => {
-      const next = persist(toStore(snapshot));
-      setStore(next);
+    (snapshot, options = {}) => {
+      let merged;
+      setStore((prev) => {
+        merged = cacheStore(mergeRemoteIntoStore(prev, snapshot, options));
+        return merged;
+      });
       setSyncStatus('synced');
-      return next;
+      return merged;
     },
-    [persist]
+    [cacheStore]
   );
 
   const pullFromCloud = useCallback(
-    async ({ force = false, silent = false } = {}) => {
+    async ({ force = false } = {}) => {
       setSyncStatus('checking');
       try {
         const remote = await fetchJournalSnapshot();
@@ -165,23 +209,7 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
           setSyncStatus('idle');
           return { ok: false, reason: 'no-remote' };
         }
-        const localAt = store.meta?.updatedAt || getLocalJournalMeta().updatedAt;
-        if (!force && !isRemoteNewer(remote.publishedAt, localAt)) {
-          setSyncStatus('local-newer');
-          return { ok: false, reason: 'local-newer', remote };
-        }
-        if (
-          !force &&
-          !silent &&
-          localAt &&
-          !window.confirm(
-            `클라우드 백업(${new Date(remote.publishedAt).toLocaleString('ko-KR')})으로 이 기기 일지를 덮어쓸까요?`
-          )
-        ) {
-          setSyncStatus('idle');
-          return { ok: false, reason: 'cancelled' };
-        }
-        applyRemoteSnapshot(remote);
+        applyRemoteSnapshot(remote, { preferRemote: force });
         return { ok: true, remote };
       } catch (e) {
         setSyncStatus('error');
@@ -198,12 +226,9 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
       try {
         const remote = await fetchJournalSnapshot();
         if (cancelled || !remote) return;
-        const localAt = store.meta?.updatedAt || getLocalJournalMeta().updatedAt;
-        if (isRemoteNewer(remote.publishedAt, localAt)) {
-          applyRemoteSnapshot(remote);
-        }
+        applyRemoteSnapshot(remote);
       } catch {
-        /* public/journal-snapshot.json 없음 */
+        setSyncStatus('idle');
       }
     })();
     return () => {
@@ -216,7 +241,7 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
     async (file) => {
       const text = await file.text();
       const snapshot = normalizeJournalSnapshot(JSON.parse(text));
-      applyRemoteSnapshot(snapshot);
+      applyRemoteSnapshot(snapshot, { preferRemote: true });
       return snapshot;
     },
     [applyRemoteSnapshot]
@@ -243,7 +268,7 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
           recalcDayMmFromHours(nextDay);
           return { ...slice, days: { ...slice.days, [key]: nextDay } };
         });
-        return persist(next);
+        return persist(next, memberCode);
       });
     },
     [readOnly, persist]
@@ -257,7 +282,8 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
           updateMemberJournal(prev, memberCode, (slice) => ({
             ...slice,
             weekSummaries: { ...slice.weekSummaries, [weekKey]: text },
-          }))
+          })),
+          memberCode
         )
       );
     },
@@ -272,7 +298,8 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
           updateMemberJournal(prev, memberCode, (slice) => ({
             ...slice,
             nextWeekPlans: { ...slice.nextWeekPlans, [weekKey]: text },
-          }))
+          })),
+          memberCode
         )
       );
     },
@@ -293,7 +320,8 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
           updateMemberJournal(prev, memberCode, (slice) => ({
             ...slice,
             prefs: normalizeMemberPrefs(prefs),
-          }))
+          })),
+          memberCode
         )
       );
     },
@@ -328,7 +356,8 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
           updateMemberJournal(prev, memberCode, (slice) => ({
             ...slice,
             [key]: { ...slice[key], [weekKey]: template },
-          }))
+          })),
+          memberCode
         );
       });
     },
@@ -343,7 +372,8 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
           updateMemberJournal(prev, memberCode, (slice) => ({
             ...slice,
             kpiWeekMemos: { ...(slice.kpiWeekMemos || {}), [weekKey]: text },
-          }))
+          })),
+          memberCode
         )
       );
     },
@@ -381,12 +411,58 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
             next = updateMemberJournal(next, code, () => cloneMemberJournalSlice(seedSlice));
           });
         }
-        return persist(next);
+        return persist(next, memberCode === TEAM_LEADER_MEMBER_CODE ? ['A', 'B', 'C'] : memberCode);
       });
       return true;
     },
     [readOnly, persist]
   );
+
+  const saveMemberToCloud = useCallback(
+    async (memberCode = JOURNAL_LINKED_MEMBER_CODE) => {
+      if (readOnly) return { ok: false, reason: 'read-only' };
+      setCloudSaveStatus('saving');
+      try {
+        const latest = await saveJournalMemberSnapshot(
+          memberCode,
+          getMemberJournal(store, memberCode),
+          store.meta?.memberUpdatedAt?.[memberCode] || store.meta?.updatedAt
+        );
+        applyRemoteSnapshot(latest);
+        setCloudSaveStatus('saved');
+        setPendingCloudMembers((prev) => prev.filter((code) => code !== memberCode));
+        return { ok: true, remote: latest };
+      } catch (e) {
+        setCloudSaveStatus('error');
+        return { ok: false, reason: 'error', error: e };
+      }
+    },
+    [applyRemoteSnapshot, readOnly, store]
+  );
+
+  useEffect(() => {
+    if (readOnly || !autoSyncCloud || pendingCloudMembers.length === 0) return undefined;
+    const timer = window.setTimeout(async () => {
+      const members = pendingCloudMembers;
+      setPendingCloudMembers((prev) => prev.filter((code) => !members.includes(code)));
+      setCloudSaveStatus('saving');
+      try {
+        let latest = null;
+        for (const memberCode of members) {
+          latest = await saveJournalMemberSnapshot(
+            memberCode,
+            getMemberJournal(store, memberCode),
+            store.meta?.memberUpdatedAt?.[memberCode] || store.meta?.updatedAt
+          );
+        }
+        if (latest) applyRemoteSnapshot(latest);
+        setCloudSaveStatus('saved');
+      } catch {
+        setCloudSaveStatus('error');
+      }
+    }, 1200);
+    return () => window.clearTimeout(timer);
+  }, [applyRemoteSnapshot, autoSyncCloud, pendingCloudMembers, readOnly, store]);
 
   const linkedDays = useMemo(
     () => getMemberDays(JOURNAL_LINKED_MEMBER_CODE),
@@ -402,6 +478,7 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
     kpiWeekMemos: getMemberJournal(store, JOURNAL_LINKED_MEMBER_CODE).kpiWeekMemos || {},
     meta: store.meta,
     syncStatus,
+    cloudSaveStatus,
     getDayData,
     updateDay,
     setWeekSummary,
@@ -415,6 +492,7 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
     getKpiWeekMemo,
     resetToSeed,
     pullFromCloud,
+    saveMemberToCloud,
     importFromFile,
     getStore: () => store,
   };
