@@ -180,7 +180,7 @@ export default function AppShell({
                 <span className="logo-block__icon project-logo__mark" aria-hidden="true">
                   <img src="/okestro-logo-white.png" alt="" />
                 </span>
-                <span className="logo-block__text project-logo__text">TMS</span>
+                <span className="logo-block__text project-logo__text">EDU-TMS</span>
               </h1>
               <p className="logo-block__sub project-logo__sub">
                 교육팀 관리 · {versionLabel}
