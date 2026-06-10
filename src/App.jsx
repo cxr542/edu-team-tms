@@ -64,6 +64,7 @@ import AcademizerEmbedPage from './pages/AcademizerEmbedPage';
 import CloudChatbotEmbedPage from './pages/CloudChatbotEmbedPage';
 import LunchPickPage from './pages/LunchPickPage';
 import IdeaBankPage from './pages/IdeaBankPage';
+import { isProductionEnvironment } from './constants/appEnv';
 import { JournalProvider } from './context/JournalProvider';
 import { isKpiRelatedModule, useAppModule } from './hooks/useAppModule';
 import { findReferenceDoc } from './constants/referenceDocs';
@@ -884,7 +885,10 @@ export default function App() {
         <IdeaBankPage readOnly={isViewer} />
       ) : isKpiRelatedModule(displayModule) &&
         (!isViewer || displayModule === 'kpi-approve' || displayModule === 'kpi-report') ? (
-        <JournalProvider readOnly={isViewer && displayModule !== 'kpi-approve'} autoSyncCloud={!isViewer}>
+        <JournalProvider
+          readOnly={isViewer && displayModule !== 'kpi-approve'}
+          autoSyncCloud={isProductionEnvironment() && !isViewer}
+        >
           {displayModule === 'journal' && <WeeklyJournalPage readOnly={false} />}
           {displayModule === 'competency' && <CompetencyPage />}
           {displayModule === 'kpi' && <TeamKpiPage />}

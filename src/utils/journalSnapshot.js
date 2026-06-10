@@ -1,3 +1,4 @@
+import { isProductionEnvironment } from '../constants/appEnv';
 import { apply2026PublicHolidaysToDays } from './journalHoliday2026';
 import { normalizeJournalCloudSnapshot } from './journalCloudSnapshot';
 import { recalcDayMmFromHours } from './journalMm';
@@ -83,6 +84,9 @@ export async function fetchJournalSnapshot() {
 }
 
 export async function saveJournalMemberSnapshot(memberCode, journal, updatedAt) {
+  if (!isProductionEnvironment()) {
+    throw new Error('개발 환경에서는 공유 저장이 차단됩니다.');
+  }
   const res = await fetch(JOURNAL_API_PATH, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
