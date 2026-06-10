@@ -16,6 +16,63 @@ try {
   cachedApiKey = process.env.KAKAO_REST_API_KEY?.trim() || '';
 }
 
+const PROD_TMS_ORIGIN = 'https://okestro-edu-team-tms.vercel.app';
+const PROD_SNAPSHOT_API_PATHS = new Set(['/api/journal-snapshot', '/api/ledger-snapshot']);
+
+function sendJson(res, status, body) {
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.end(JSON.stringify(body));
+}
+
+/**
+ * Vite dev only — GET /api/journal-snapshot · /api/ledger-snapshot → 운영 Blob (read-only).
+ * POST/PUT/PATCH/DELETE 등 쓰기 method는 운영으로 전달하지 않음.
+ */
+export function prodSnapshotReadProxyPlugin() {
+  return {
+    name: 'tms-prod-snapshot-read-proxy',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        const pathname = (req.url || '').split('?')[0];
+        if (!PROD_SNAPSHOT_API_PATHS.has(pathname)) {
+          next();
+          return;
+        }
+
+        const method = (req.method || 'GET').toUpperCase();
+        if (method !== 'GET' && method !== 'HEAD') {
+          sendJson(res, 403, { error: 'dev-write-blocked' });
+          return;
+        }
+
+        try {
+          const prodRes = await fetch(`${PROD_TMS_ORIGIN}${req.url}`, {
+            method,
+            headers: {
+              referer: `${PROD_TMS_ORIGIN}/`,
+              origin: PROD_TMS_ORIGIN,
+            },
+            cache: 'no-store',
+          });
+
+          res.statusCode = prodRes.status;
+          res.setHeader('Cache-Control', 'no-store');
+          const contentType = prodRes.headers.get('content-type');
+          if (contentType) {
+            res.setHeader('Content-Type', contentType);
+          }
+
+          const body = Buffer.from(await prodRes.arrayBuffer());
+          res.end(body);
+        } catch (err) {
+          sendJson(res, 502, { error: err.message || String(err) });
+        }
+      });
+    },
+  };
+}
+
 /** Vite dev: /api/kakao-local → api/kakao-local.js ( .env.local 의 KAKAO_REST_API_KEY 사용 ) */
 export function kakaoApiDevPlugin() {
   return {
