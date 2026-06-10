@@ -51,7 +51,12 @@ import {
   transactionDedupeKey,
 } from './utils/ledgerCopy';
 import { isViewerMode, formatPublishedAt } from './utils/appMode';
-import { buildTeamSnapshot, downloadTeamSnapshot, publishSnapshotToServer } from './utils/publishSnapshot';
+import {
+  buildTeamSnapshot,
+  downloadTeamSnapshot,
+  fetchPublicSnapshot,
+  publishSnapshotToServer,
+} from './utils/publishSnapshot';
 import AppShell from './components/AppShell';
 import WeeklyJournalPage from './pages/WeeklyJournalPage';
 import TeamKpiPage from './pages/TeamKpiPage';
@@ -267,6 +272,7 @@ export default function App() {
 
   // 시스템 실시간 알림 상태
   const [alert, setAlert] = useState({ show: false, message: '', type: 'info' });
+  const [importingProdLedger, setImportingProdLedger] = useState(false);
   const fileInputRef = useRef(null);
   const ledgerToolbarSentinelRef = useRef(null);
   const ledgerToolbarRef = useRef(null);
@@ -473,6 +479,43 @@ export default function App() {
       showAlert(`조회 화면 데이터 ${r.count}건을 작성 장부에 반영했습니다.`, 'success');
     }
   };
+
+  const handleImportProdLedger = async () => {
+    if (
+      !window.confirm(
+        '운영 장부 데이터를 현재 개발환경 편집본으로 가져옵니다. 현재 localhost 장부 편집 내용은 덮어써질 수 있습니다. 계속할까요?'
+      )
+    ) {
+      return;
+    }
+    setImportingProdLedger(true);
+    try {
+      autoPublish.suppressNextPublish();
+      const remote = await fetchPublicSnapshot();
+      const r = pullFromPublished(remote);
+      if (remote.categories?.length) {
+        setCategories(remote.categories);
+      }
+      if (r.ok) {
+        await reload({ quiet: true });
+        showAlert(`운영 장부 ${r.count}건을 개발 편집본에 반영했습니다.`, 'success');
+      } else {
+        showAlert('운영 장부 데이터가 비어 있어 반영하지 못했습니다.', 'warning');
+      }
+    } catch (err) {
+      const detail = err?.message ? ` (${err.message})` : '';
+      showAlert(`운영 장부 가져오기에 실패했습니다.${detail}`, 'danger');
+    } finally {
+      setImportingProdLedger(false);
+    }
+  };
+
+  const showDevProdLedgerImport =
+    !isProductionEnvironment() &&
+    displayModule === 'ledger' &&
+    !ledgerReadOnly &&
+    !isViewer &&
+    teamAccess.isLeader;
 
   // 필터링된 현재 월의 지출 데이터 집계
   const monthlyBudget = MONTHLY_BUDGET;
@@ -1044,6 +1087,18 @@ export default function App() {
               </>
             ) : (
             <>
+            {showDevProdLedgerImport && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleImportProdLedger}
+                disabled={importingProdLedger}
+                title="운영 GET /api/ledger-snapshot 을 개발 localStorage 편집본에만 반영 (POST 없음)"
+              >
+                <Download size={16} />
+                {importingProdLedger ? '가져오는 중…' : '운영 장부 가져오기'}
+              </button>
+            )}
             <button
               type="button"
               className="btn btn-secondary"

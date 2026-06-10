@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { buildTeamSnapshot, publishSnapshotToServer } from '../utils/publishSnapshot';
 
 /**
@@ -21,6 +21,7 @@ export function useAutoPublishLedger({
   const onSuccessRef = useRef(onSuccess);
   const onFailRef = useRef(onFail);
   const lastAutoPublishKeyRef = useRef('');
+  const suppressNextPublishRef = useRef(false);
 
   useEffect(() => {
     onSuccessRef.current = onSuccess;
@@ -43,6 +44,11 @@ export function useAutoPublishLedger({
       if (inFlightRef.current) return;
       const nextKey = JSON.stringify({ categories, transactions, viewerMenuVisibility });
       if (nextKey === lastAutoPublishKeyRef.current) return;
+      if (suppressNextPublishRef.current) {
+        suppressNextPublishRef.current = false;
+        lastAutoPublishKeyRef.current = nextKey;
+        return;
+      }
       inFlightRef.current = true;
       setPublishing(true);
       try {
@@ -84,5 +90,9 @@ export function useAutoPublishLedger({
     }
   };
 
-  return { publishing, lastPublishedAt, liveReady, publishNow };
+  const suppressNextPublish = useCallback(() => {
+    suppressNextPublishRef.current = true;
+  }, []);
+
+  return { publishing, lastPublishedAt, liveReady, publishNow, suppressNextPublish };
 }
