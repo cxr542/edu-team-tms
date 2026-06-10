@@ -26,6 +26,23 @@ export function quarterKey(year, monthIndex) {
   return `${year}-${q}Q`;
 }
 
+const QUARTER_KEY_RE = /^(\d{4})-([1-4])Q$/;
+
+/** YYYY-nQ 형식 검증 */
+export function isValidQuarterKey(yq) {
+  return QUARTER_KEY_RE.test(String(yq || ''));
+}
+
+/** 분기 키 → 해당 분기 3개월 YYYY-MM */
+export function quarterMonthKeysFromYq(yq) {
+  const match = QUARTER_KEY_RE.exec(String(yq || ''));
+  if (!match) return [];
+  const year = Number(match[1]);
+  const q = Number(match[2]);
+  const startMonth = (q - 1) * 3 + 1;
+  return [0, 1, 2].map((i) => `${year}-${String(startMonth + i).padStart(2, '0')}`);
+}
+
 /** 같은 연도·월 기준 직전 분기 키 (예: 6월 → 2026-1Q) */
 export function previousQuarterKey(year, monthIndex) {
   const q = Math.floor(monthIndex / 3) + 1;
@@ -76,7 +93,8 @@ export function defaultQuarterRecord(memberCode) {
   };
 }
 
-export function defaultCompetencyMonthRecord(memberCode) {
+/** 월간·분기 역량 루브릭 레코드 공통 생성 */
+export function defaultCompetencyEvalRecord(memberCode) {
   const member = TEAM_KPI_MEMBERS.find((m) => m.code === memberCode);
   const roleId = mapMemberRoleToCompetency(member?.role);
   const selfEval = defaultCompetencyEval();
@@ -87,8 +105,18 @@ export function defaultCompetencyMonthRecord(memberCode) {
     manager: { ...mgrEval, computed: computeCompetencyEval({ ...mgrEval, roleId }) },
     selfLocked: false,
     managerLocked: false,
+    selfUpdatedAt: null,
+    managerUpdatedAt: null,
     updatedAt: null,
   };
+}
+
+export function defaultCompetencyMonthRecord(memberCode) {
+  return defaultCompetencyEvalRecord(memberCode);
+}
+
+export function defaultCompetencyQuarterRecord(memberCode) {
+  return defaultCompetencyEvalRecord(memberCode);
 }
 
 export function createEmptyKpiOperationalStore() {
@@ -98,6 +126,7 @@ export function createEmptyKpiOperationalStore() {
     months: {},
     quarters: {},
     competencyMonths: {},
+    competencyQuarters: {},
     kpi2RowStatus: {},
   };
 }
@@ -132,6 +161,16 @@ export function ensureCompetencyMonthMember(store, ym, memberCode) {
   return { ...store, competencyMonths };
 }
 
+export function ensureCompetencyQuarterMember(store, yq, memberCode) {
+  const competencyQuarters = { ...store.competencyQuarters };
+  const quarter = { ...(competencyQuarters[yq] || {}) };
+  if (!quarter[memberCode]) {
+    quarter[memberCode] = defaultCompetencyQuarterRecord(memberCode);
+  }
+  competencyQuarters[yq] = quarter;
+  return { ...store, competencyQuarters };
+}
+
 export function normalizeKpiOperationalStore(raw) {
   const base = createEmptyKpiOperationalStore();
   if (!raw || typeof raw !== 'object') return base;
@@ -153,6 +192,10 @@ export function normalizeKpiOperationalStore(raw) {
     competencyMonths:
       raw.competencyMonths && typeof raw.competencyMonths === 'object'
         ? JSON.parse(JSON.stringify(raw.competencyMonths))
+        : {},
+    competencyQuarters:
+      raw.competencyQuarters && typeof raw.competencyQuarters === 'object'
+        ? JSON.parse(JSON.stringify(raw.competencyQuarters))
         : {},
     kpi2RowStatus:
       raw.kpi2RowStatus && typeof raw.kpi2RowStatus === 'object' ? { ...raw.kpi2RowStatus } : {},

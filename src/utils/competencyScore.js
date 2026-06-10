@@ -1,4 +1,8 @@
 import {
+  quarterKey,
+  quarterMonthKeysFromYq,
+} from '../constants/kpiOperationalStore';
+import {
   ACCUMULATION_ORDER_BY_ROLE,
   COMPETENCY_DIM_IDS,
   DIM_MET,
@@ -11,6 +15,31 @@ import {
   COMPETENCY_CAP_RELEASE,
   COMPETENCY_USE_4060,
 } from '../constants/competencyConfig';
+
+export const COMPETENCY_INT_LEVEL_MIN = 1;
+export const COMPETENCY_INT_LEVEL_MAX = 5;
+
+/** 정수 레벨 1~5만 유효 (0·null·undefined·""·NaN·범위 밖은 미입력) */
+export function isValidCompetencyIntLevel(value) {
+  const n = Number(value);
+  return (
+    Number.isInteger(n) &&
+    n >= COMPETENCY_INT_LEVEL_MIN &&
+    n <= COMPETENCY_INT_LEVEL_MAX
+  );
+}
+
+/** 유효하지 않으면 0(미입력) */
+export function normalizeCompetencyIntLevel(value) {
+  return isValidCompetencyIntLevel(value) ? Number(value) : 0;
+}
+
+const EMPTY_COMPUTED = {
+  accumulated: null,
+  capped: null,
+  fractional: null,
+  proposed: null,
+};
 
 /** 빈 값·null·undefined → 미충족 */
 export function coerceDimStatus(value) {
@@ -97,6 +126,8 @@ export function accumulateFractional(dims, order = ACCUMULATION_ORDER_BY_ROLE.de
 
 /**
  * 캡 적용 (설계노트 §6)
+ * default: 연속 충족 누적만 반영 — 5차원(협업/영향 포함) 각 +0.2, 품질 이전 단계도 누적
+ * instructor/planner: 직군별 해제 조건 미충족 시 최대 +0.4
  * @param {number|null} accumulated
  * @param {Record<string, string>} dims
  * @param {string} roleId
@@ -105,24 +136,26 @@ export function applyCap(accumulated, dims, roleId = 'default') {
   if (accumulated == null) return null;
   let cap = COMPETENCY_CAP_RELEASE;
   if (roleId === 'instructor') {
-    cap = dims.quality === DIM_MET && dims.expertise === DIM_MET ? COMPETENCY_CAP_RELEASE : COMPETENCY_CAP_DEFAULT;
+    cap =
+      dims.quality === DIM_MET && dims.expertise === DIM_MET
+        ? COMPETENCY_CAP_RELEASE
+        : COMPETENCY_CAP_DEFAULT;
   } else if (roleId === 'planner') {
     cap = dims.collaboration === DIM_MET ? COMPETENCY_CAP_RELEASE : COMPETENCY_CAP_DEFAULT;
-  } else {
-    cap = dims.quality === DIM_MET ? COMPETENCY_CAP_RELEASE : COMPETENCY_CAP_DEFAULT;
   }
   return Math.min(accumulated, cap);
 }
 
-/** Excel MROUND(value, 0.2) */
+/** Excel MROUND(value, 0.2) — 0.2 단위, 부동소수 오차 보정 */
 export function mround02(value) {
   if (value == null || Number.isNaN(value)) return null;
-  return Math.round(value / 0.2) * 0.2;
+  return Math.round(Math.round(value / 0.2) * 2) / 10;
 }
 
 /** 제안 종합 = 정수레벨 + fractional (fractional이 null이면 정수만) */
 export function proposedComposite(intLevel, fractionalMround) {
-  const base = Number(intLevel) || 0;
+  if (!isValidCompetencyIntLevel(intLevel)) return null;
+  const base = Number(intLevel);
   if (fractionalMround == null) return base;
   return Math.round((base + Number(fractionalMround)) * 10) / 10;
 }
@@ -133,8 +166,9 @@ export function mergeCompetencyEvalSidePatch(existingSide, patch = {}, roleId = 
     ...(existingSide?.dims || {}),
     ...(patch.dims || {}),
   };
+  const rawIntLevel = patch.intLevel ?? existingSide?.intLevel ?? 0;
   return {
-    intLevel: patch.intLevel ?? existingSide?.intLevel ?? 0,
+    intLevel: normalizeCompetencyIntLevel(rawIntLevel),
     dims: normalizeDimsChain(mergedDims, roleId),
   };
 }
@@ -150,9 +184,12 @@ export function normalizeCompetencyEvalSide(side, roleId = 'default') {
   return { ...merged, computed };
 }
 
-/** 평가 한 건 전체 계산 (dims는 normalize 후 항상 complete, fractional은 숫자) */
+/** 평가 한 건 전체 계산 (intLevel 1~5 필수, 미입력 시 proposed null) */
 export function computeCompetencyEval({ intLevel, dims, roleId = 'default' }) {
-  const base = Number(intLevel) || 0;
+  const base = normalizeCompetencyIntLevel(intLevel);
+  if (!isValidCompetencyIntLevel(base)) {
+    return { ...EMPTY_COMPUTED };
+  }
   const normalizedDims = normalizeDimsChain(dims, roleId);
   const order = accumulationOrderForRole(roleId);
   const accumulated = accumulateFractional(normalizedDims, order);
@@ -183,6 +220,57 @@ export function quarterMonthKeys(year, monthIndex) {
   const q = Math.floor(monthIndex / 3);
   const startMonth = q * 3;
   return [0, 1, 2].map((i) => `${year}-${String(startMonth + i + 1).padStart(2, '0')}`);
+}
+
+function recordTimestamp(rec) {
+  const candidates = [rec?.managerUpdatedAt, rec?.selfUpdatedAt, rec?.updatedAt].filter(Boolean);
+  if (!candidates.length) return 0;
+  return Math.max(...candidates.map((t) => new Date(t).getTime()));
+}
+
+/**
+ * competencyMonths → 분기 1레코드 선택 (managerLocked 우선, 이후 최신 updatedAt)
+ * 자동 migration 실행용 helper — Phase 1에서는 호출만 준비, load 시 연결하지 않음
+ */
+export function pickCompetencyMonthRecordForQuarter(competencyMonths, yq, memberCode) {
+  const yms = quarterMonthKeysFromYq(yq);
+  const entries = yms
+    .map((ym) => ({ ym, rec: competencyMonths?.[ym]?.[memberCode] }))
+    .filter((x) => x.rec && typeof x.rec === 'object');
+  if (!entries.length) return null;
+
+  const locked = entries.filter((x) => x.rec.managerLocked);
+  const pool = locked.length ? locked : entries;
+  pool.sort((a, b) => recordTimestamp(b.rec) - recordTimestamp(a.rec));
+  return JSON.parse(JSON.stringify(pool[0].rec));
+}
+
+/**
+ * competencyMonths 전체에서 competencyQuarters 초안 생성 (자동 실행하지 않음)
+ */
+export function buildCompetencyQuartersFromMonths(competencyMonths) {
+  const competencyQuarters = {};
+  const pairs = new Set();
+
+  Object.entries(competencyMonths || {}).forEach(([ym, members]) => {
+    const parts = String(ym).split('-');
+    if (parts.length !== 2) return;
+    const year = Number(parts[0]);
+    const month = Number(parts[1]);
+    if (!year || month < 1 || month > 12) return;
+    const yq = quarterKey(year, month - 1);
+    Object.keys(members || {}).forEach((memberCode) => pairs.add(`${yq}\0${memberCode}`));
+  });
+
+  pairs.forEach((pair) => {
+    const [yq, memberCode] = pair.split('\0');
+    const picked = pickCompetencyMonthRecordForQuarter(competencyMonths, yq, memberCode);
+    if (!picked) return;
+    if (!competencyQuarters[yq]) competencyQuarters[yq] = {};
+    competencyQuarters[yq][memberCode] = picked;
+  });
+
+  return competencyQuarters;
 }
 
 /** competencyMonths에서 분기 level 롤업 */

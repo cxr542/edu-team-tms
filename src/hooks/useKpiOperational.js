@@ -6,7 +6,9 @@ import {
   defaultMonthly01,
   defaultQuarterRecord,
   defaultCompetencyMonthRecord,
+  defaultCompetencyQuarterRecord,
   ensureCompetencyMonthMember,
+  ensureCompetencyQuarterMember,
   ensureMonthMember,
   ensureQuarterMember,
   kpi2RowId,
@@ -20,6 +22,7 @@ import { mapMemberRoleToCompetency } from '../constants/competencyRubric';
 import { findKpiMember } from '../constants/kpiSchema';
 import {
   computeCompetencyEval,
+  isValidCompetencyIntLevel,
   mergeCompetencyEvalSidePatch,
   monthlyFinalScore,
   normalizeCompetencyEvalSide,
@@ -67,11 +70,129 @@ function sanitizeCompetencyMonthsInStore(store) {
   return { ...store, competencyMonths };
 }
 
+function sanitizeCompetencyQuartersInStore(store) {
+  const competencyQuarters = {};
+  Object.entries(store.competencyQuarters || {}).forEach(([yq, members]) => {
+    if (!members || typeof members !== 'object') return;
+    competencyQuarters[yq] = {};
+    Object.entries(members).forEach(([memberCode, rec]) => {
+      const roleId =
+        rec?.roleId ?? mapMemberRoleToCompetency(findKpiMember(memberCode)?.role);
+      competencyQuarters[yq][memberCode] = {
+        ...rec,
+        roleId,
+        self: normalizeCompetencyEvalSide(rec?.self, roleId),
+        manager: normalizeCompetencyEvalSide(rec?.manager, roleId),
+      };
+    });
+  });
+  return { ...store, competencyQuarters };
+}
+
+function sanitizeCompetencyInStore(store) {
+  return sanitizeCompetencyQuartersInStore(sanitizeCompetencyMonthsInStore(store));
+}
+
+export function readCompetencyQuarter(store, yq, memberCode) {
+  const rec = store.competencyQuarters?.[yq]?.[memberCode];
+  if (!rec) return defaultCompetencyQuarterRecord(memberCode);
+  const roleId =
+    rec.roleId ?? mapMemberRoleToCompetency(findKpiMember(memberCode)?.role);
+  return {
+    ...rec,
+    roleId,
+    self: normalizeCompetencyEvalSide(rec.self, roleId),
+    manager: normalizeCompetencyEvalSide(rec.manager, roleId),
+  };
+}
+
+export function patchCompetencyQuarterSelf(store, yq, memberCode, patch) {
+  let next = ensureCompetencyQuarterMember(store, yq, memberCode);
+  const rec = next.competencyQuarters[yq][memberCode];
+  const roleId =
+    patch.roleId ?? rec.roleId ?? mapMemberRoleToCompetency(findKpiMember(memberCode)?.role);
+  const self = mergeCompetencyEvalSidePatch(rec.self, patch, roleId);
+  const updated = {
+    ...rec,
+    roleId,
+    self: normalizeCompetencyEvalSide(self, roleId),
+    manager: normalizeCompetencyEvalSide(rec.manager, roleId),
+    updatedAt: new Date().toISOString(),
+  };
+  return {
+    ...next,
+    competencyQuarters: {
+      ...next.competencyQuarters,
+      [yq]: { ...next.competencyQuarters[yq], [memberCode]: updated },
+    },
+  };
+}
+
+export function patchCompetencyQuarterManager(store, yq, memberCode, patch) {
+  let next = ensureCompetencyQuarterMember(store, yq, memberCode);
+  const rec = next.competencyQuarters[yq][memberCode];
+  const roleId =
+    patch.roleId ?? rec.roleId ?? mapMemberRoleToCompetency(findKpiMember(memberCode)?.role);
+  const manager = mergeCompetencyEvalSidePatch(rec.manager, patch, roleId);
+  const updated = {
+    ...rec,
+    roleId,
+    self: normalizeCompetencyEvalSide(rec.self, roleId),
+    manager: normalizeCompetencyEvalSide(manager, roleId),
+    updatedAt: new Date().toISOString(),
+  };
+  return {
+    ...next,
+    competencyQuarters: {
+      ...next.competencyQuarters,
+      [yq]: { ...next.competencyQuarters[yq], [memberCode]: updated },
+    },
+  };
+}
+
+export function patchLockCompetencyQuarter(store, yq, memberCode, { side = 'manager' } = {}) {
+  let next = ensureCompetencyQuarterMember(store, yq, memberCode);
+  const rec = next.competencyQuarters[yq][memberCode];
+  const roleId =
+    rec.roleId ?? mapMemberRoleToCompetency(findKpiMember(memberCode)?.role);
+  const selfSide = normalizeCompetencyEvalSide(rec.self, roleId);
+  if (side === 'self' && !isValidCompetencyIntLevel(selfSide.intLevel)) {
+    return { store, ok: false, reason: 'invalid-int-level' };
+  }
+  const updatedAt = new Date().toISOString();
+  const updated =
+    side === 'self'
+      ? {
+          ...rec,
+          roleId,
+          self: selfSide,
+          selfLocked: true,
+          selfUpdatedAt: rec.selfUpdatedAt || rec.updatedAt || updatedAt,
+          updatedAt,
+        }
+      : {
+          ...rec,
+          roleId,
+          manager: normalizeCompetencyEvalSide(rec.manager, roleId),
+          managerLocked: true,
+          managerUpdatedAt: rec.managerUpdatedAt || rec.updatedAt || updatedAt,
+          updatedAt,
+        };
+  next = {
+    ...next,
+    competencyQuarters: {
+      ...next.competencyQuarters,
+      [yq]: { ...next.competencyQuarters[yq], [memberCode]: updated },
+    },
+  };
+  return { store: next, ok: true };
+}
+
 function loadStore() {
   try {
     const raw = localStorage.getItem(KPI_OPERATIONAL_STORAGE_KEY);
     if (!raw) return createEmptyKpiOperationalStore();
-    return sanitizeCompetencyMonthsInStore(normalizeKpiOperationalStore(JSON.parse(raw)));
+    return sanitizeCompetencyInStore(normalizeKpiOperationalStore(JSON.parse(raw)));
   } catch {
     return createEmptyKpiOperationalStore();
   }
@@ -476,16 +597,57 @@ export function useKpiOperational({ readOnly = false } = {}) {
     [readOnly, persist]
   );
 
+  const getCompetencyQuarter = useCallback(
+    (yq, memberCode) => readCompetencyQuarter(store, yq, memberCode),
+    [store]
+  );
+
+  const updateCompetencyQuarterSelf = useCallback(
+    (yq, memberCode, patch) => {
+      if (readOnly) return;
+      setStore((prev) => persist(patchCompetencyQuarterSelf(prev, yq, memberCode, patch)));
+    },
+    [readOnly, persist]
+  );
+
+  const updateCompetencyQuarterManager = useCallback(
+    (yq, memberCode, patch) => {
+      if (readOnly) return;
+      setStore((prev) => persist(patchCompetencyQuarterManager(prev, yq, memberCode, patch)));
+    },
+    [readOnly, persist]
+  );
+
+  const lockCompetencyQuarter = useCallback(
+    (yq, memberCode, { side = 'manager' } = {}) => {
+      if (readOnly) return { ok: false, reason: 'read-only' };
+      let result = { ok: true };
+      setStore((prev) => {
+        const patched = patchLockCompetencyQuarter(prev, yq, memberCode, { side });
+        result = { ok: patched.ok, reason: patched.reason };
+        if (!patched.ok) return prev;
+        return persist(patched.store);
+      });
+      return result;
+    },
+    [readOnly, persist]
+  );
+
   const lockCompetencyMonth = useCallback(
     (year, monthIndex, memberCode, { side = 'manager' } = {}) => {
       if (readOnly) return { ok: false, reason: 'read-only' };
       const ym = monthKey(year, monthIndex);
+      let blockReason = null;
       setStore((prev) => {
         let next = ensureCompetencyMonthMember(prev, ym, memberCode);
         const rec = next.competencyMonths[ym][memberCode];
         const roleId =
           rec.roleId ?? mapMemberRoleToCompetency(findKpiMember(memberCode)?.role);
         const selfSide = normalizeCompetencyEvalSide(rec.self, roleId);
+        if (side === 'self' && !isValidCompetencyIntLevel(selfSide.intLevel)) {
+          blockReason = 'invalid-int-level';
+          return prev;
+        }
         const updatedAt = new Date().toISOString();
         const updated =
           side === 'self'
@@ -514,6 +676,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
         };
         return persist(next);
       });
+      if (blockReason) return { ok: false, reason: blockReason };
       return { ok: true };
     },
     [readOnly, persist]
@@ -540,7 +703,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
 
   const importStore = useCallback(
     (snapshot) => {
-      const next = persist(normalizeKpiOperationalStore(snapshot));
+      const next = persist(sanitizeCompetencyInStore(normalizeKpiOperationalStore(snapshot)));
       setStore(next);
       return next;
     },
@@ -556,9 +719,14 @@ export function useKpiOperational({ readOnly = false } = {}) {
     Object.entries(patch.quarters || {}).forEach(([yq, members]) => {
       quarters[yq] = { ...(quarters[yq] || {}), ...members };
     });
+    const competencyQuarters = { ...(prev.competencyQuarters || {}) };
+    Object.entries(patch.competencyQuarters || {}).forEach(([yq, members]) => {
+      competencyQuarters[yq] = { ...(competencyQuarters[yq] || {}), ...members };
+    });
     return {
       ...prev,
       competencyMonths,
+      competencyQuarters,
       quarters,
       meta: { ...prev.meta, ...patch.meta, updatedAt: new Date().toISOString() },
     };
@@ -679,10 +847,14 @@ export function useKpiOperational({ readOnly = false } = {}) {
     updateKpi3QuarterExtras,
     lockKpi3Quarter,
     getCompetencyMonth,
+    getCompetencyQuarter,
     updateCompetencySelf,
+    updateCompetencyQuarterSelf,
     updateCompetencyManager,
+    updateCompetencyQuarterManager,
     pullCompetencyManagerFromSelf,
     lockCompetencyMonth,
+    lockCompetencyQuarter,
     rollupCompetencyToKpi3Quarter,
     getCompetencyMonthlyFinal,
     importStore,
