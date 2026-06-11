@@ -40,6 +40,7 @@ export default function CompetencyRubricPanel({
   onUpdate,
   onPullFromSelf,
   onLock,
+  onUnlockSelf,
   showPullButton = false,
   /** 구성원 자체평가 — 직군 고정·산식 숨김 */
   memberView = false,
@@ -47,7 +48,16 @@ export default function CompetencyRubricPanel({
   const [showIntLevelRef, setShowIntLevelRef] = useState(false);
   const [showDimRef, setShowDimRef] = useState(false);
   const evalSide = side === 'self' ? record?.self : record?.manager;
-  const locked = side === 'self' ? record?.selfLocked : record?.managerLocked;
+  const selfLocked = record?.selfLocked;
+  const managerLocked = Boolean(record?.managerLocked);
+  const locked = side === 'self' ? selfLocked : record?.managerLocked;
+  const canUnlockSelf =
+    memberView &&
+    side === 'self' &&
+    locked &&
+    !managerLocked &&
+    !readOnly &&
+    typeof onUnlockSelf === 'function';
   const roleId = record?.roleId || 'default';
   const liveEvalSide = useMemo(
     () => (evalSide ? normalizeCompetencyEvalSide(evalSide, roleId) : null),
@@ -80,9 +90,6 @@ export default function CompetencyRubricPanel({
   const handleRole = (v) => {
     onUpdate({ roleId: v });
   };
-
-  const selfLocked = record?.selfLocked;
-  const managerLocked = record?.managerLocked;
 
   return (
     <div className={`competency-rubric-panel${memberView ? ' competency-rubric-panel--member' : ''}`}>
@@ -280,7 +287,8 @@ export default function CompetencyRubricPanel({
             )}
             {managerLocked && monthlyFinal != null && (
               <span className="competency-monthly-final">
-                팀장 확정 월간 레벨 <strong>{monthlyFinal}</strong>
+                팀장 확정 레벨 <strong>{monthlyFinal}</strong>
+                <span className="visually-hidden"> (월별 KPI 연계)</span>
               </span>
             )}
             {!managerLocked && selfLocked && (
@@ -311,30 +319,70 @@ export default function CompetencyRubricPanel({
         </p>
       )}
 
-      {!readOnly && !locked && (
-        <button
-          type="button"
-          className="btn btn-primary btn-sm"
-          disabled={side === 'self' && !hasValidIntLevel}
-          title={
-            side === 'self' && !hasValidIntLevel
-              ? '정수 레벨을 1~5 중에서 선택해야 확정할 수 있습니다.'
-              : undefined
-          }
-          onClick={() => {
-            if (side === 'self' && !hasValidIntLevel) return;
-            onLock();
-          }}
-        >
-          {side === 'self' ? '자체평가 확정' : '팀장 평가 확정'}
-        </button>
-      )}
-      {locked && side === 'self' && (
-        <p className="team-kpi-hint">
-          {memberView
-            ? '자체평가가 확정되었습니다. 수정이 필요하면 팀장에게 문의하세요.'
-            : '확정됨 — 수정하려면 팀장에게 문의하세요.'}
-        </p>
+      {side === 'self' ? (
+        <div className="competency-self-actions">
+          {!readOnly && !locked && (
+            <button
+              type="button"
+              className="btn btn-primary btn-sm competency-self-lock-btn"
+              disabled={!hasValidIntLevel}
+              title={
+                !hasValidIntLevel
+                  ? '정수 레벨을 1~5 중에서 선택해야 확정할 수 있습니다.'
+                  : undefined
+              }
+              onClick={() => {
+                if (!hasValidIntLevel) return;
+                onLock();
+              }}
+            >
+              자체평가 확정
+            </button>
+          )}
+          {locked && (
+            <>
+              <p className="team-kpi-hint competency-self-actions__hint">
+                {memberView
+                  ? canUnlockSelf
+                    ? '자체평가가 확정되었습니다. 팀장 평가 전까지 아래 버튼으로 다시 수정할 수 있습니다.'
+                    : managerLocked
+                      ? '팀장 평가가 확정되어 자체평가를 수정할 수 없습니다.'
+                      : '자체평가가 확정되었습니다. 수정이 필요하면 팀장에게 문의하세요.'
+                  : '확정됨 — 수정하려면 팀장에게 문의하세요.'}
+              </p>
+              {canUnlockSelf && (
+                <button
+                  type="button"
+                  className="btn btn-sm competency-self-unlock-btn"
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        '자체평가 확정을 해제하고 다시 수정하시겠습니까?'
+                      )
+                    ) {
+                      onUnlockSelf();
+                    }
+                  }}
+                >
+                  자체평가 수정
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      ) : (
+        !readOnly &&
+        !locked && (
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={() => {
+              onLock();
+            }}
+          >
+            팀장 평가 확정
+          </button>
+        )
       )}
       {locked && side === 'manager' && (
         <p className="team-kpi-hint">팀장 평가 확정됨</p>

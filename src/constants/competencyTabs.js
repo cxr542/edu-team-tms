@@ -4,7 +4,7 @@ export const COMPETENCY_MEMBER_TABS = [
   {
     id: 'level',
     label: '레벨·자체평가',
-    hint: '선택한 월의 정수 레벨·5차원을 작성하고 자체평가를 확정하세요. 분기 레벨(35%)은 팀장이 월간 확정 후 반영합니다.',
+    hint: '선택한 분기의 정수 레벨·5차원을 작성하고 자체평가를 확정하세요. KPI3 분기 레벨(35%)은 팀장이 월별 역량 확정 후 반영됩니다.',
   },
   {
     id: 'dm',
@@ -24,7 +24,7 @@ export const COMPETENCY_MEMBER_TABS = [
 ];
 
 export const COMPETENCY_PAGE_HINT =
-  '구성원을 선택하면 전용 페이지에서 레벨·자체평가, 다면, 리더, 실전 4가지 평가를 탭으로 작성합니다.';
+  '구성원을 선택하면 전용 페이지에서 분기 기준 레벨·자체평가와 다면·리더·실전 평가를 탭으로 작성합니다.';
 
 /** @deprecated use COMPETENCY_MEMBER_TABS */
 export const COMPETENCY_MONTHLY_HINT = COMPETENCY_MEMBER_TABS[0].hint;

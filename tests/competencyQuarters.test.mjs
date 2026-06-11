@@ -11,6 +11,7 @@ import {
   patchCompetencyQuarterManager,
   patchCompetencyQuarterSelf,
   patchLockCompetencyQuarter,
+  patchUnlockCompetencyQuarterSelf,
   readCompetencyQuarter,
 } from '../src/hooks/useKpiOperational.js';
 import {
@@ -160,6 +161,56 @@ describe('competencyQuarters Phase 1', () => {
     const picked = pickCompetencyMonthRecordForQuarter(competencyMonths, YQ, 'B');
     expect(picked.manager.intLevel).toBe(5);
     expect(picked.managerLocked).toBe(true);
+  });
+
+  it('patchUnlockCompetencyQuarterSelf — selfLocked 해제, self 값 유지', () => {
+    let store = patchCompetencyQuarterSelf(
+      ensureCompetencyQuarterMember(createEmptyKpiOperationalStore(), YQ, 'B'),
+      YQ,
+      'B',
+      { intLevel: 3 }
+    );
+    store = patchLockCompetencyQuarter(store, YQ, 'B', { side: 'self' }).store;
+    const before = readCompetencyQuarter(store, YQ, 'B');
+    expect(before.selfLocked).toBe(true);
+    expect(before.self.intLevel).toBe(3);
+
+    const unlocked = patchUnlockCompetencyQuarterSelf(store, YQ, 'B');
+    expect(unlocked.ok).toBe(true);
+    const after = readCompetencyQuarter(unlocked.store, YQ, 'B');
+    expect(after.selfLocked).toBe(false);
+    expect(after.self.intLevel).toBe(3);
+    expect(after.self.computed.proposed).toBe(before.self.computed.proposed);
+    expect(after.updatedAt).toBeTruthy();
+  });
+
+  it('patchUnlockCompetencyQuarterSelf — managerLocked면 거부', () => {
+    let store = patchCompetencyQuarterSelf(
+      ensureCompetencyQuarterMember(createEmptyKpiOperationalStore(), YQ, 'B'),
+      YQ,
+      'B',
+      { intLevel: 2 }
+    );
+    store = patchLockCompetencyQuarter(store, YQ, 'B', { side: 'self' }).store;
+    store = patchLockCompetencyQuarter(store, YQ, 'B', { side: 'manager' }).store;
+    const r = patchUnlockCompetencyQuarterSelf(store, YQ, 'B');
+    expect(r.ok).toBe(false);
+    expect(r.reason).toBe('manager-locked');
+    expect(readCompetencyQuarter(r.store, YQ, 'B').selfLocked).toBe(true);
+  });
+
+  it('patchUnlockCompetencyQuarterSelf — unlock 후 다시 self lock 가능', () => {
+    let store = patchCompetencyQuarterSelf(
+      ensureCompetencyQuarterMember(createEmptyKpiOperationalStore(), YQ, 'B'),
+      YQ,
+      'B',
+      { intLevel: 4 }
+    );
+    store = patchLockCompetencyQuarter(store, YQ, 'B', { side: 'self' }).store;
+    store = patchUnlockCompetencyQuarterSelf(store, YQ, 'B').store;
+    const relock = patchLockCompetencyQuarter(store, YQ, 'B', { side: 'self' });
+    expect(relock.ok).toBe(true);
+    expect(readCompetencyQuarter(relock.store, YQ, 'B').selfLocked).toBe(true);
   });
 
   it('buildCompetencyQuartersFromMonths — 분기별 초안 생성', () => {

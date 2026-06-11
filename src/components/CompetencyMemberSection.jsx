@@ -1,13 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import CompetencyRubricPanel from './CompetencyRubricPanel';
 import Kpi3ElementsPanel from './Kpi3ElementsPanel';
 import { COMPETENCY_MEMBER_TABS } from '../constants/competencyTabs';
-import { COMPETENCY_USE_4060 } from '../constants/competencyConfig';
 import { KPI3_ELEMENTS } from '../constants/kpi3Elements';
-import { quarterMonthKeysFromYq } from '../constants/kpiOperationalStore';
 import { formatKpiMemberLabel } from '../constants/kpiMembers';
 import { useTeamKpiMetrics } from '../context/JournalProvider';
-import { monthlyFinalScore, quarterMonthKeys } from '../utils/competencyScore';
 
 const KPI3_BY_KEY = Object.fromEntries(KPI3_ELEMENTS.map((el) => [el.key, el]));
 
@@ -33,20 +30,6 @@ export default function CompetencyMemberSection({
   const kpiMetrics = useTeamKpiMetrics(year, monthIndex, memberCode);
   const readOnly = journal.kpiOperationalReadOnly || !canEditSelf;
   const q = quarterRec.quarter;
-
-  const monthlyFinalRef = useMemo(() => {
-    const yms = quarterMonthKeys(year, monthIndex);
-    return yms.map((key) => {
-      const mIdx = parseInt(key.split('-')[1], 10) - 1;
-      const rec = journal.getCompetencyMonth(year, mIdx, memberCode);
-      const final = monthlyFinalScore(
-        rec?.self?.computed?.proposed,
-        rec?.manager?.computed?.proposed,
-        COMPETENCY_USE_4060
-      );
-      return { ym: key, final, managerLocked: rec?.managerLocked };
-    });
-  }, [journal, year, monthIndex, memberCode]);
 
   const activeMeta = COMPETENCY_MEMBER_TABS.find((t) => t.id === activeTab) ?? COMPETENCY_MEMBER_TABS[0];
 
@@ -132,29 +115,19 @@ export default function CompetencyMemberSection({
                   onToast?.('정수 레벨을 1~5 중에서 선택해 주세요');
                 }
               }}
+              onUnlockSelf={
+                canEditSelf
+                  ? () => {
+                      const r = journal.unlockCompetencyQuarterSelf(yq, memberCode);
+                      if (r.ok) {
+                        onToast?.('자체평가 수정 모드로 전환했습니다');
+                      } else if (r.reason === 'manager-locked') {
+                        onToast?.('팀장 평가가 확정되어 수정할 수 없습니다');
+                      }
+                    }
+                  : undefined
+              }
             />
-            <div className="competency-quarter-level-ref">
-              <h4 className="competency-quarter-level-ref__title">이전 월별 평가(참고) · 분기 {yq}</h4>
-              <ul className="team-kpi-memo-list">
-                {quarterMonthKeysFromYq(yq).map((key) => {
-                  const mIdx = parseInt(key.split('-')[1], 10) - 1;
-                  const ref = monthlyFinalRef.find((x) => x.ym === key);
-                  return (
-                    <li key={key}>
-                      {key}: 월간 {ref?.final ?? '—'}
-                      {ref?.managerLocked ? ' (팀장 확정)' : ''}
-                      {' · '}
-                      자체{' '}
-                      {journal.getCompetencyMonth(year, mIdx, memberCode)?.selfLocked ? '확정' : '작성중'}
-                    </li>
-                  );
-                })}
-              </ul>
-              <p className="team-kpi-hint">
-                KPI3 분기 레벨: <strong>{q.level > 0 ? q.level : '—'}</strong>
-                {q.levelAuto ? ' (월간 평균 자동 반영)' : ''}
-              </p>
-            </div>
           </div>
         )}
 

@@ -48,11 +48,10 @@ export default function CompetencyPage() {
   const showHub = !pageMemberCode && teamAccess.isLeader;
   const selectedMember = pageMemberCode ? findKpiMember(pageMemberCode) : null;
 
-  const quarterMonthLabels = useMemo(() => {
-    return quarterMonthKeysFromYq(yq).map((key) => {
-      const m = parseInt(key.split('-')[1], 10);
-      return { ym: key, monthIndex: m - 1, label: `${m}월` };
-    });
+  const quarterPeriodRange = useMemo(() => {
+    const keys = quarterMonthKeysFromYq(yq);
+    if (!keys.length) return null;
+    return { start: keys[0], end: keys[keys.length - 1] };
   }, [yq]);
 
   const showToast = useCallback((msg) => {
@@ -98,6 +97,11 @@ export default function CompetencyPage() {
         </div>
         {selectedMember && (
           <p className="competency-page-member-role">{formatKpiMemberRoleLine(selectedMember)}</p>
+        )}
+        {selectedMember && quarterPeriodRange && (
+          <p className="team-kpi-hint competency-page-period-hint">
+            평가 기간: {year}년 {quarter}분기 · {quarterPeriodRange.start} ~ {quarterPeriodRange.end}
+          </p>
         )}
         <p className="team-kpi-hint" style={{ marginTop: 0 }}>
           교육팀 구성원 <strong>{TEAM_KPI_MEMBERS.length}명</strong> · 분기 키 {yq}
@@ -153,9 +157,9 @@ export default function CompetencyPage() {
             type="button"
             className="btn btn-import-shared"
             disabled={cloudBusy}
-            aria-label="공유 역량 가져오기"
+            aria-label="월별 역량 공유 가져오기"
             {...uiTooltip(
-              '공유 저장소의 월별 역량 평가를 가져와 competencyMonths에 병합합니다. 분기 자체평가는 이 기기에만 저장됩니다.',
+              '공유 저장소의 월별 역량 평가를 competencyMonths에 병합합니다. 분기 자체평가는 로컬 competencyQuarters에만 저장됩니다.',
               undefined,
               { wrap: true }
             )}
@@ -163,35 +167,22 @@ export default function CompetencyPage() {
               setCloudBusy(true);
               try {
                 const r = await journal.pullCompetencyCloudSnapshot();
-                if (r.ok) showToast('공유 역량 평가(월별)를 이 기기에 병합했습니다');
+                if (r.ok) showToast('월별 역량 공유 데이터를 competencyMonths에 병합했습니다');
                 else if (r.reason === 'read-only') showToast('조회 모드에서는 가져올 수 없습니다');
-                else showToast(r.error?.message || '공유 역량 가져오기에 실패했습니다');
+                else showToast(r.error?.message || '월별 역량 공유 가져오기에 실패했습니다');
               } finally {
                 setCloudBusy(false);
               }
             }}
           >
             <Import size={16} />
-            {cloudBusy ? '가져오는 중…' : '공유 역량 가져오기 (월별)'}
+            {cloudBusy ? '가져오는 중…' : '월별 역량 공유 가져오기'}
           </button>
           <p className="team-kpi-hint competency-page-cloud-hint">
-            분기 자체평가는 로컬 <code>competencyQuarters</code>에 저장됩니다. 월별 공유 저장은 이
-            화면에서 비활성화되어 있습니다.
+            분기 자체평가는 이 기기의 <code>competencyQuarters</code>에 저장됩니다. 위 버튼은
+            월별 공유(competencyMonths) 병합 전용이며, 분기 데이터는 업로드하지 않습니다.
           </p>
         </div>
-      )}
-
-      {selectedMember && quarterMonthLabels.length > 0 && (
-        <aside className="competency-quarter-months competency-quarter-months--readonly" aria-label="분기 내 월별 참고">
-          <span className="competency-quarter-months__label">이전 월별 평가(참고)</span>
-          <ul className="competency-quarter-months__ref-list">
-            {quarterMonthLabels.map(({ ym, label }) => (
-              <li key={ym}>
-                {label} ({ym})
-              </li>
-            ))}
-          </ul>
-        </aside>
       )}
 
       {showHub && (

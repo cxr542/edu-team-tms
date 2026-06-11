@@ -162,3 +162,47 @@
   font-size: 0.85rem;
   color: var(--muted, #5c6578);
 }
+
+.competency-self-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  max-width: 100%;
+}
+
+.competency-self-actions__hint {
+  margin: 0;
+  max-width: 36rem;
+}
+
+.competency-self-lock-btn,
+.competency-self-actions .btn.competency-self-unlock-btn {
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+  flex: 0 0 auto;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.8125rem;
+  line-height: 1.25;
+}
+
+.competency-self-actions .btn.competency-self-unlock-btn {
+  border: 1.5px solid #d97706;
+  color: #92400e;
+  font-weight: 600;
+  background-color: #fffbeb;
+  box-shadow: 0 1px 2px rgba(146, 64, 14, 0.08);
+}
+
+.competency-self-actions .btn.competency-self-unlock-btn:hover {
+  background-color: #fef3c7;
+  border-color: #b45309;
+  color: #78350f;
+}
+
+.competency-self-actions .btn.competency-self-unlock-btn:focus-visible {
+  outline: 2px solid #f59e0b;
+  outline-offset: 2px;
+  background-color: #fef3c7;
+}

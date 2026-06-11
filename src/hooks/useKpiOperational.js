@@ -188,6 +188,33 @@ export function patchLockCompetencyQuarter(store, yq, memberCode, { side = 'mana
   return { store: next, ok: true };
 }
 
+/** 구성원 self 확정 해제 — managerLocked 시 거부, self 데이터 유지 */
+export function patchUnlockCompetencyQuarterSelf(store, yq, memberCode) {
+  let next = ensureCompetencyQuarterMember(store, yq, memberCode);
+  const rec = next.competencyQuarters[yq][memberCode];
+  if (rec.managerLocked) {
+    return { store, ok: false, reason: 'manager-locked' };
+  }
+  const roleId =
+    rec.roleId ?? mapMemberRoleToCompetency(findKpiMember(memberCode)?.role);
+  const updatedAt = new Date().toISOString();
+  const updated = {
+    ...rec,
+    roleId,
+    self: normalizeCompetencyEvalSide(rec.self, roleId),
+    selfLocked: false,
+    updatedAt,
+  };
+  next = {
+    ...next,
+    competencyQuarters: {
+      ...next.competencyQuarters,
+      [yq]: { ...next.competencyQuarters[yq], [memberCode]: updated },
+    },
+  };
+  return { store: next, ok: true };
+}
+
 function loadStore() {
   try {
     const raw = localStorage.getItem(KPI_OPERATIONAL_STORAGE_KEY);
@@ -633,6 +660,21 @@ export function useKpiOperational({ readOnly = false } = {}) {
     [readOnly, persist]
   );
 
+  const unlockCompetencyQuarterSelf = useCallback(
+    (yq, memberCode) => {
+      if (readOnly) return { ok: false, reason: 'read-only' };
+      let result = { ok: true };
+      setStore((prev) => {
+        const patched = patchUnlockCompetencyQuarterSelf(prev, yq, memberCode);
+        result = { ok: patched.ok, reason: patched.reason };
+        if (!patched.ok) return prev;
+        return persist(patched.store);
+      });
+      return result;
+    },
+    [readOnly, persist]
+  );
+
   const lockCompetencyMonth = useCallback(
     (year, monthIndex, memberCode, { side = 'manager' } = {}) => {
       if (readOnly) return { ok: false, reason: 'read-only' };
@@ -855,6 +897,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
     pullCompetencyManagerFromSelf,
     lockCompetencyMonth,
     lockCompetencyQuarter,
+    unlockCompetencyQuarterSelf,
     rollupCompetencyToKpi3Quarter,
     getCompetencyMonthlyFinal,
     importStore,
