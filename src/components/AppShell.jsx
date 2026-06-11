@@ -9,7 +9,6 @@ import {
   CheckCircle,
   Eye,
   FileSpreadsheet,
-  Home,
   Pencil,
   PieChart,
   Settings,
@@ -43,8 +42,6 @@ import { useProjectSidebar } from '../hooks/useProjectSidebar';
 import { uiTooltip } from '../utils/uiTooltip';
 import NavLabelsModal from './NavLabelsModal';
 import MobileHomeGuideModal from './MobileHomeGuideModal';
-
-import { getWorkspaceUrl } from '../constants/workspaceUrl';
 
 export default function AppShell({
   activeModule,
@@ -142,10 +139,6 @@ export default function AppShell({
 
   const railLabel = collapsed ? '펼침' : '접기';
   const railTitle = collapsed ? '메뉴 펼치기' : '메뉴 접기';
-  /** 팀원 전용 URL(?member=B 등) — Workspace 런처는 팀장만 */
-  const showWorkspaceLink = !teamAccess?.isMemberScope;
-  const workspaceUrl = showWorkspaceLink ? getWorkspaceUrl() : null;
-
   return (
     <div
       className={`project-app theme-tms${isProd ? ' is-prod-env' : ' is-dev-env'}${viewerLedgerOnly ? ' is-viewer-ledger-only' : ''}`}
@@ -331,17 +324,6 @@ export default function AppShell({
               )}
             </div>
 
-            {showWorkspaceLink && (
-              <a
-                className="nav-item nav-item--hub project-nav-item project-nav-item--hub"
-                href={workspaceUrl}
-                {...navTooltipProps('Workspace로 돌아가기')}
-              >
-                <Home size={18} className="nav-item__icon project-nav-item__icon" aria-hidden />
-                <span className="nav-item__label project-nav-item__label">← Workspace</span>
-              </a>
-            )}
-
             <p className="sidebar-note project-sidebar-note">
               {isViewer ? (
                 <>👀 교육팀 조회 · 팀 빌딩비 장부</>
@@ -392,15 +374,6 @@ export default function AppShell({
             >
               ☰
             </button>
-            {showWorkspaceLink && (
-              <a
-                className="btn btn--hub"
-                href={workspaceUrl}
-                {...uiTooltip('cxr542 Workspace 랜딩', 'below')}
-              >
-                ← Workspace
-              </a>
-            )}
             {!isProd && (
               <a
                 className="btn btn--prod-link"
