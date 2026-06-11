@@ -435,6 +435,62 @@
   font-weight: 400;
 }
 
+.team-kpi-improve-candidates {
+  margin-bottom: 1.25rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border-soft, #e2e6ed);
+  border-radius: 10px;
+  background: var(--bg-secondary, #f8f9fb);
+}
+
+.team-kpi-improve-candidates__title {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+}
+
+.team-kpi-improve-candidates__hint {
+  margin: 0 0 0.75rem;
+}
+
+.team-kpi-improve-candidates__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.team-kpi-improve-candidates__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  background: var(--surface, #fff);
+  border: 1px solid var(--border-soft, #e8ebf0);
+}
+
+.team-kpi-improve-candidates__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  flex: 1 1 12rem;
+}
+
+.team-kpi-improve-candidates__stats,
+.team-kpi-improve-candidates__sources {
+  font-size: 0.82rem;
+  color: var(--text-secondary, #5c6578);
+}
+
+.team-kpi-improve-candidates__register {
+  flex: 0 0 auto;
+}
+
 .team-kpi-projects ul {
   list-style: none;
   padding: 0;

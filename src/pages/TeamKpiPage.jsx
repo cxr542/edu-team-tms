@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { BookOpen, ChevronLeft, ChevronRight, ClipboardCopy, Download } from 'lucide-react';
 import AppModuleLink from '../components/AppModuleLink';
 import { buildDocsModuleUrl } from '../constants/referenceDocs';
@@ -27,6 +27,10 @@ import { KPI_UI, KPI_WEEKLY_MM_SUM_LABEL } from '../constants/kpiUiLabels';
 import { exportKpiAnalysisWorkbook } from '../utils/kpiExcelExport';
 import { findImproveProject } from '../constants/improveProjects';
 import { isImproveInvestmentTask } from '../utils/computeTeamKpi';
+import {
+  collectImproveMmCandidates,
+  formatImproveCandidateSources,
+} from '../utils/improveProjectCandidates';
 import {
   apply01cToMonthly01,
   computeUtilization,
@@ -72,6 +76,17 @@ export default function TeamKpiPage() {
   const { improveProjects, improveProjectsApi, kpiOperational, getMemberDays } = journal;
   const days = getMemberDays(memberCode);
   const metrics = useTeamKpiMetrics(year, month, memberCode);
+  const improveMmCandidates = useMemo(
+    () =>
+      collectImproveMmCandidates({
+        year,
+        monthIndex: month,
+        getMemberDays,
+        memberCodes: TEAM_KPI_MEMBERS.map((m) => m.code),
+        improveProjects,
+      }),
+    [year, month, getMemberDays, improveProjects]
+  );
   const monthly01Stored = journal.getMonthly01(year, month, memberCode);
   const monthly01Form = monthly01Stored ?? defaultMonthly01();
   const [tab, setTab] = useState('overview');
@@ -490,6 +505,51 @@ export default function TeamKpiPage() {
       {tab === 'kpi2' && (
         <section className="team-kpi-section">
           <h2>향상 과제 · {KPI2_NAME} 효과 건</h2>
+          <div className="team-kpi-improve-candidates">
+            <h3 className="team-kpi-improve-candidates__title">생산성향상 M/M 후보</h3>
+            <p className="team-kpi-hint team-kpi-improve-candidates__hint">
+              {year}년 {month + 1}월 일지에서 생산향상 M/M으로 기록된 업무입니다. 등록해야만 향상 과제
+              목록·KPI2 효과 건 선택에 나타납니다 (효과 건은 자동으로 켜지지 않습니다).
+            </p>
+            {improveMmCandidates.length === 0 ? (
+              <p className="team-kpi-hint">이 달 등록 가능한 후보가 없습니다.</p>
+            ) : (
+              <ul className="team-kpi-improve-candidates__list">
+                {improveMmCandidates.map((candidate) => (
+                  <li key={candidate.normalizedKey} className="team-kpi-improve-candidates__item">
+                    <div className="team-kpi-improve-candidates__meta">
+                      <strong>{candidate.title}</strong>
+                      <span className="team-kpi-improve-candidates__stats">
+                        {candidate.occurrenceCount}건
+                        {candidate.totalActual > 0 ? ` · 실작업 ${candidate.totalActual}h` : ''}
+                      </span>
+                      <span className="team-kpi-improve-candidates__sources">
+                        {formatImproveCandidateSources(candidate.sources, (code) => {
+                          const m = findKpiMember(code);
+                          return m ? `${m.code}(${m.displayName})` : code;
+                        })}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm team-kpi-improve-candidates__register"
+                      disabled={journal.kpiOperationalReadOnly}
+                      onClick={() => {
+                        const added = improveProjectsApi.addProject({ name: candidate.title });
+                        if (added) {
+                          showToast(`「${candidate.title}」 향상 과제로 등록했습니다`);
+                        } else {
+                          showToast('이미 등록된 과제이거나 추가할 수 없습니다');
+                        }
+                      }}
+                    >
+                      향상 과제로 등록
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <div className="team-kpi-projects">
             <ul>
               {improveProjects.map((p) => (
@@ -512,9 +572,13 @@ export default function TeamKpiPage() {
                 type="button"
                 className="btn btn-secondary"
                 onClick={() => {
-                  improveProjectsApi.addProject({ name: newProjectName });
-                  setNewProjectName('');
-                  showToast('과제 추가');
+                  const added = improveProjectsApi.addProject({ name: newProjectName });
+                  if (added) {
+                    setNewProjectName('');
+                    showToast('과제 추가');
+                  } else {
+                    showToast('과제명을 확인하거나 중복 여부를 확인하세요');
+                  }
                 }}
               >
                 추가

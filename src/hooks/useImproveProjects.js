@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   DEFAULT_IMPROVE_PROJECTS,
+  isImproveProjectTitleRegistered,
   loadImproveProjects,
   saveImproveProjects,
 } from '../constants/improveProjects';
@@ -23,14 +24,18 @@ export function useImproveProjects({ readOnly = false } = {}) {
 
   const addProject = useCallback(
     ({ name, code }) => {
-      if (readOnly) return;
+      if (readOnly) return null;
       const trimmed = String(name).trim();
-      if (!trimmed) return;
+      if (!trimmed) return null;
       const id = slugId(trimmed);
+      let added = null;
       setProjects((prev) => {
+        if (isImproveProjectTitleRegistered(trimmed, prev)) return prev;
         if (prev.some((p) => p.id === id)) return prev;
-        return [...prev, { id, name: trimmed, code: String(code || id).trim() }];
+        added = { id, name: trimmed, code: String(code || id).trim() };
+        return [...prev, added];
       });
+      return added;
     },
     [readOnly]
   );
