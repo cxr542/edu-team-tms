@@ -5,7 +5,7 @@
 ## 1. 환경 구조
 - 개발: `localhost` (`npm run dev`)
 - 검증: PR Preview (GitHub Actions `Deploy Preview`)
-- 운영: `https://edu-team-tms.vercel.app/` (GitHub Environment 승인 후 배포)
+- 운영: `https://okestro-edu-team-tms.vercel.app/` (GitHub Environment 승인 후 배포; alias `edu-team-tms.vercel.app`)
 
 ## 2. 사전 준비
 

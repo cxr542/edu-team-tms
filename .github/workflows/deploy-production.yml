@@ -41,14 +41,15 @@ jobs:
           npx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
 
       - name: Smoke check root page
-        run: curl -fsS "https://edu-team-tms.vercel.app/" > /dev/null
+        run: curl -fsS "https://okestro-edu-team-tms.vercel.app/" > /dev/null
 
       - name: Smoke check ledger snapshot API
-        run: curl -fsS "https://edu-team-tms.vercel.app/api/ledger-snapshot" > /dev/null
+        run: curl -fsS "https://okestro-edu-team-tms.vercel.app/api/ledger-snapshot" > /dev/null
 
       - name: Publish deployment summary
         run: |
           echo "## Production Deployment" >> "$GITHUB_STEP_SUMMARY"
           echo "- Branch: ${{ github.ref_name }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Commit: ${{ github.sha }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- URL: https://edu-team-tms.vercel.app/" >> "$GITHUB_STEP_SUMMARY"
+          echo "- URL: https://okestro-edu-team-tms.vercel.app/" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Alias: https://edu-team-tms.vercel.app/ (동일 콘텐츠)" >> "$GITHUB_STEP_SUMMARY"

@@ -5,6 +5,45 @@
 
 ---
 
+## 2026-06-11 — Blob 트래픽 절감·구성원 운영·배포 복구
+
+**대표 운영 URL:** https://okestro-edu-team-tms.vercel.app
+(보조 alias: https://edu-team-tms.vercel.app — 동일 콘텐츠)
+
+### 구성원 기능·운영 반영
+
+- 구성원(B/C) 일지·역량·클라우드 동기화 등 **CBT 운영 반영** (2026-06-10 전후 배포)
+- 공유 일지 **import** 시 원격 스냅샷 병합 개선
+- 분기 역량 자체평가 문구 정리
+
+### API·배포
+
+- **KPI operational snapshot** API ESM import 500 → **200** 핫픽스 (`0fc5445`)
+- GitHub Actions **VERCEL_TOKEN** 갱신 후 자동 production 배포 **복구**
+
+### Blob P0 핫픽스 (`af0dfeb`)
+
+Vercel Blob 무료 한도(Simple/Advanced 100%) 대응:
+
+- **장부 조회 snapshot 자동 폴링 제거** — 장부 화면 진입 시 1회 + 「새로고침」 수동만
+- **일지 cloud 자동 pull/save 제거** — 「공유 일지 가져오기」·「공유 저장」 버튼만
+- **Cloud Health / Quota Guard** — quota·pause 의심 시 5분 쓰기 cooldown + 안내
+- **ledger legacy `list` fallback 제거** — `live-latest.json` + 정적 폴백만
+- **dev production snapshot proxy** — `VITE_PROD_SNAPSHOT_PROXY=true` 일 때만 opt-in
+
+### 사용자 영향
+
+- **브라우저 localStorage** 일지·KPI·장부 작성은 **계속 가능**
+- 팀 **공유·조회 URL 반영**은 **수동 버튼** 중심 (자동 동기화 없음)
+- 조회(장부) 화면은 **자동 갱신되지 않음** — 필요 시 「새로고침」
+- Blob **제한·pause** 상태에서는 cloud 공유·조회 반영 **실패 가능** (로컬 저장은 유지)
+
+### 후속 (별도 승인)
+
+- Blob Storage 75% · 레거시 `ledger/live-*` **cleanup**
+- KPI2 탭 발견성·향상 과제 안내·M/M 완료 체크 UX
+- Jira 1~5월 일지 이관
+
 ## 2026-06-05 — 역량·메뉴·접속 URL
 
 - **역량 평가**: 구성원별 전용 페이지 (`?member=`), 4탭(레벨·다면·리더·실전)
