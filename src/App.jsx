@@ -55,6 +55,8 @@ import { isViewerMode, formatPublishedAt } from './utils/appMode';
 import {
   buildTeamSnapshot,
   downloadTeamSnapshot,
+  EMPTY_LEDGER_SNAPSHOT_DETAIL,
+  EMPTY_LEDGER_SNAPSHOT_TITLE,
   fetchPublicSnapshot,
   publishSnapshotToServer,
 } from './utils/publishSnapshot';
@@ -113,9 +115,18 @@ function CategoryBadge({ label, categories }) {
 }
 
 
-function LoadingScreen({ message = '장부를 불러오는 중…' }) {
+function LoadingScreen({ message = '장부를 불러오는 중…', inline = false }) {
   return (
-    <div className="project-app theme-tms" style={{ alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+    <div
+      className="project-app theme-tms"
+      style={{
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: inline ? '12rem' : '100vh',
+        display: 'flex',
+        padding: inline ? '2rem 1rem' : undefined,
+      }}
+    >
       <p style={{ color: 'var(--text-secondary)' }}>{message}</p>
     </div>
   );
@@ -141,6 +152,8 @@ export default function App() {
   const {
     loading,
     error,
+    warning: snapshotWarning,
+    snapshotEmpty,
     data: snapshot,
     reload,
     refreshing,
@@ -894,27 +907,6 @@ export default function App() {
 
   const categoryStats = getCategoryStats();
 
-  if ((isViewer || (teamAccess.isMemberScope && module === 'ledger')) && loading) {
-    return <LoadingScreen />;
-  }
-
-  if ((isViewer || (teamAccess.isMemberScope && module === 'ledger')) && error) {
-    return (
-      <div className="project-app theme-tms" style={{ alignItems: 'center', justifyContent: 'center', minHeight: '100vh', flexDirection: 'column', gap: '1rem', display: 'flex' }}>
-        <p style={{ color: 'var(--color-danger)' }}>{error}</p>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={() => reload({ force: true })}
-          disabled={refreshing || reloadBlockedByCooldown}
-        >
-          <RefreshCw size={16} />
-          {refreshing ? '불러오는 중…' : '다시 불러오기'}
-        </button>
-      </div>
-    );
-  }
-
   const publishedLabel = formatPublishedAt(snapshot?.publishedAt);
 
   return (
@@ -960,7 +952,73 @@ export default function App() {
       ) : (
       <>
       <main className="main-content">
-        
+
+        {ledgerReadOnly && loading && <LoadingScreen inline />}
+
+        {ledgerReadOnly && snapshotEmpty && !loading && (
+          <div
+            className="custom-alert"
+            style={{
+              marginBottom: '1rem',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              border: '1px solid rgba(59, 130, 246, 0.35)',
+              borderLeft: '4px solid #3b82f6',
+            }}
+          >
+            <AlertCircle size={18} style={{ color: '#60a5fa' }} />
+            <div className="custom-alert-content">
+              <h4 style={{ color: '#93c5fd' }}>{EMPTY_LEDGER_SNAPSHOT_TITLE}</h4>
+              <p style={{ fontSize: '0.85rem' }}>{EMPTY_LEDGER_SNAPSHOT_DETAIL}</p>
+            </div>
+          </div>
+        )}
+
+        {ledgerReadOnly && snapshotWarning && !loading && (
+          <div
+            className="custom-alert"
+            style={{
+              marginBottom: '1rem',
+              backgroundColor: 'rgba(245, 158, 11, 0.12)',
+              border: '1px solid rgba(245, 158, 11, 0.45)',
+              borderLeft: '4px solid #f59e0b',
+            }}
+          >
+            <AlertCircle size={18} style={{ color: '#f59e0b' }} />
+            <div className="custom-alert-content">
+              <h4 style={{ color: '#fcd34d' }}>장부 cloud 조회 제한</h4>
+              <p style={{ fontSize: '0.85rem' }}>{snapshotWarning}</p>
+            </div>
+          </div>
+        )}
+
+        {ledgerReadOnly && error && !loading && (
+          <div
+            className="custom-alert"
+            style={{
+              marginBottom: '1rem',
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.4)',
+              borderLeft: '4px solid #ef4444',
+            }}
+          >
+            <AlertCircle size={18} style={{ color: '#ef4444' }} />
+            <div className="custom-alert-content">
+              <h4 style={{ color: '#fca5a5' }}>장부 snapshot을 불러오지 못했습니다</h4>
+              <p style={{ fontSize: '0.85rem' }}>{error}</p>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ marginTop: '0.75rem' }}
+                onClick={() => reload({ force: true })}
+                disabled={refreshing || reloadBlockedByCooldown}
+              >
+                <RefreshCw size={16} />
+                {refreshing ? '불러오는 중…' : '다시 불러오기'}
+              </button>
+            </div>
+          </div>
+        )}
+
         {!ledgerReadOnly && livePublishBlocked && (
           <div
             className="custom-alert"

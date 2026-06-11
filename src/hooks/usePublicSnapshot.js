@@ -9,6 +9,8 @@ export function usePublicSnapshot(
   const [loading, setLoading] = useState(enabled);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [warning, setWarning] = useState(null);
+  const [snapshotEmpty, setSnapshotEmpty] = useState(false);
   const [data, setData] = useState(null);
   const inFlightRef = useRef(false);
   const [cooldownUntil, setCooldownUntil] = useState(0);
@@ -28,11 +30,16 @@ export function usePublicSnapshot(
         setRefreshing(true);
         setLoading(true);
         setError(null);
+        setWarning(null);
+        setSnapshotEmpty(false);
       }
 
       return fetchPublicSnapshot()
         .then((next) => {
           setData(next);
+          setSnapshotEmpty(next === null);
+          setError(null);
+          setWarning(null);
           if (reloadCooldownMs > 0) {
             setCooldownUntil(Date.now() + reloadCooldownMs);
           }
@@ -40,7 +47,15 @@ export function usePublicSnapshot(
         .catch((err) => {
           const status = err?.status;
           const body = err?.body || {};
+          setSnapshotEmpty(false);
+          if (err?.isWarning || status === 401 || status === 403) {
+            if (!quiet) setWarning(err.message || '클라우드 장부 조회 접근이 제한되었습니다.');
+            setError(null);
+            setData(null);
+            return;
+          }
           if (status) recordCloudFailure(status, body);
+          setWarning(null);
           if (!quiet) setError(err.message || '불러오기 실패');
         })
         .finally(() => {
@@ -71,6 +86,8 @@ export function usePublicSnapshot(
     loading,
     refreshing,
     error,
+    warning,
+    snapshotEmpty,
     data,
     reload,
     reloadCooldownMs,

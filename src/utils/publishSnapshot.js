@@ -24,12 +24,26 @@ export function downloadTeamSnapshot(payload) {
   URL.revokeObjectURL(url);
 }
 
-function snapshotFetchError(res, body = {}) {
+export const EMPTY_LEDGER_SNAPSHOT_TITLE = '아직 게시된 장부 조회 snapshot이 없습니다.';
+export const EMPTY_LEDGER_SNAPSHOT_DETAIL =
+  '장부 데이터를 조회 화면에 반영하려면 팀장/편집 화면에서 수동으로 게시하거나 새로고침해 주세요. 브라우저 로컬 저장 데이터는 계속 사용할 수 있습니다.';
+
+export function isLedgerSnapshotNotFound(status, body = {}) {
+  const err = String(body?.error || body?.message || '');
+  return status === 404 && err.includes('snapshot not found');
+}
+
+export function isLedgerSnapshotAccessDenied(status) {
+  return status === 401 || status === 403;
+}
+
+function snapshotFetchError(res, body = {}, { warning = false } = {}) {
   const err = new Error(
     body.message || body.error || `공개 장부를 불러오지 못했습니다 (${res.status})`
   );
   err.status = res.status;
   err.body = body;
+  err.isWarning = warning;
   return err;
 }
 
@@ -46,26 +60,53 @@ async function parseSnapshotResponse(res) {
   return data;
 }
 
+async function fetchStaticPublicSnapshot(cacheBust) {
+  try {
+    const res = await fetch(`${PUBLIC_SNAPSHOT_PATH}?${cacheBust}`);
+    if (res.ok) return { kind: 'data', value: await parseSnapshotResponse(res) };
+    const body = await res.json().catch(() => ({}));
+    if (res.status === 404 || isLedgerSnapshotNotFound(res.status, body)) {
+      return { kind: 'empty' };
+    }
+    return { kind: 'error', error: snapshotFetchError(res, body) };
+  } catch {
+    return { kind: 'unavailable' };
+  }
+}
+
 /** 조회용 장부 — API(Blob) 우선, 없으면 정적 ledger-snapshot.json */
 export async function fetchPublicSnapshot() {
   const cacheBust = `t=${Date.now()}`;
-  let apiFailed = null;
   try {
     const apiRes = await fetch(`/api/ledger-snapshot?${cacheBust}`);
     if (apiRes.ok) return parseSnapshotResponse(apiRes);
     const body = await apiRes.json().catch(() => ({}));
-    apiFailed = snapshotFetchError(apiRes, body);
+
+    if (isLedgerSnapshotNotFound(apiRes.status, body)) {
+      const staticResult = await fetchStaticPublicSnapshot(cacheBust);
+      if (staticResult.kind === 'data') return staticResult.value;
+      return null;
+    }
+
+    if (isLedgerSnapshotAccessDenied(apiRes.status)) {
+      const staticResult = await fetchStaticPublicSnapshot(cacheBust);
+      if (staticResult.kind === 'data') return staticResult.value;
+      throw snapshotFetchError(apiRes, body, { warning: true });
+    }
+
     recordCloudFailure(apiRes.status, body);
+    const staticResult = await fetchStaticPublicSnapshot(cacheBust);
+    if (staticResult.kind === 'data') return staticResult.value;
+    if (staticResult.kind === 'error') throw staticResult.error;
+    throw snapshotFetchError(apiRes, body);
   } catch (e) {
     if (e?.status) throw e;
-    /* API 미구성·네트워크 — 정적 파일 시도 */
+    const staticResult = await fetchStaticPublicSnapshot(cacheBust);
+    if (staticResult.kind === 'data') return staticResult.value;
+    if (staticResult.kind === 'empty') return null;
+    if (staticResult.kind === 'error') throw staticResult.error;
+    throw new Error('공개 장부를 불러오지 못했습니다. 네트워크를 확인한 뒤 다시 시도하세요.');
   }
-  const res = await fetch(`${PUBLIC_SNAPSHOT_PATH}?${cacheBust}`);
-  if (!res.ok) {
-    if (apiFailed) throw apiFailed;
-    return parseSnapshotResponse(res);
-  }
-  return parseSnapshotResponse(res);
 }
 
 /** 작성(관리자) 장부 → 조회용 서버(Blob) 즉시 반영 */
