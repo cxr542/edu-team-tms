@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { DIM_MET } from '../src/constants/competencyRubric.js';
+import { DIM_MET, DIM_UNMET } from '../src/constants/competencyRubric.js';
 import { createEmptyKpiOperationalStore } from '../src/constants/kpiOperationalStore.js';
 import {
   formatCompetencyCloudApiPayload,
   isCompetencyMonthRecordSaveable,
+  isDefaultSelfEval,
   mergeCompetencyMonthRecord,
   mergeCompetencyMonths,
   mergeCompetencyMonthsIntoKpiStore,
@@ -25,6 +26,16 @@ function fullDims() {
   };
 }
 
+function defaultUnmetDims() {
+  return {
+    autonomy: DIM_UNMET,
+    scope: DIM_UNMET,
+    collaboration: DIM_UNMET,
+    quality: DIM_UNMET,
+    expertise: DIM_UNMET,
+  };
+}
+
 function side(level, dims = fullDims()) {
   return { intLevel: level, dims };
 }
@@ -33,6 +44,8 @@ function competencyRecord({
   memberCode = 'B',
   selfLevel = 0,
   managerLevel = 0,
+  selfDims = fullDims(),
+  managerDims = fullDims(),
   selfUpdatedAt = null,
   managerUpdatedAt = null,
   updatedAt = null,
@@ -40,8 +53,8 @@ function competencyRecord({
   managerLocked = false,
 } = {}) {
   const record = {
-    self: side(selfLevel),
-    manager: side(managerLevel),
+    self: side(selfLevel, selfDims),
+    manager: side(managerLevel, managerDims),
     selfLocked,
     managerLocked,
   };
@@ -96,15 +109,15 @@ describe('kpiOperationalCloudSnapshot', () => {
       updatedAt: '2026-06-01T10:00:00.000Z',
     });
     const remote = competencyRecord({
-      selfLevel: 9,
-      managerLevel: 9,
+      selfLevel: 5,
+      managerLevel: 5,
       selfUpdatedAt: '2026-06-02T10:00:00.000Z',
       managerUpdatedAt: '2026-06-01T09:00:00.000Z',
     });
 
     const merged = mergeCompetencyMonthRecord(local, remote, 'B');
 
-    expect(merged.self.intLevel).toBe(9);
+    expect(merged.self.intLevel).toBe(5);
     expect(merged.manager.intLevel).toBe(3);
   });
 
@@ -157,7 +170,7 @@ describe('kpiOperationalCloudSnapshot', () => {
       selfLocked: true,
     });
     const remote = competencyRecord({
-      selfLevel: 9,
+      selfLevel: 5,
       selfUpdatedAt: '2026-06-09T00:00:00.000Z',
     });
     const merged = mergeCompetencyMonthRecord(local, remote, 'B');
@@ -198,7 +211,7 @@ describe('kpiOperationalCloudSnapshot', () => {
       managerLocked: true,
     });
     const remote = competencyRecord({
-      managerLevel: 9,
+      managerLevel: 5,
       managerUpdatedAt: '2026-06-09T00:00:00.000Z',
     });
     const merged = mergeCompetencyMonthRecord(local, remote, 'B');
@@ -209,37 +222,37 @@ describe('kpiOperationalCloudSnapshot', () => {
   it('merges self from remote and keeps local manager independently', () => {
     const local = competencyRecord({
       selfLevel: 1,
-      managerLevel: 7,
+      managerLevel: 4,
       selfUpdatedAt: '2026-06-01T00:00:00.000Z',
       managerUpdatedAt: '2026-06-08T00:00:00.000Z',
     });
     const remote = competencyRecord({
-      selfLevel: 6,
+      selfLevel: 5,
       managerLevel: 2,
       selfUpdatedAt: '2026-06-07T00:00:00.000Z',
       managerUpdatedAt: '2026-06-02T00:00:00.000Z',
     });
     const merged = mergeCompetencyMonthRecord(local, remote, 'B');
-    expect(merged.self.intLevel).toBe(6);
-    expect(merged.manager.intLevel).toBe(7);
+    expect(merged.self.intLevel).toBe(5);
+    expect(merged.manager.intLevel).toBe(4);
   });
 
   it('merges manager from remote and keeps local self independently', () => {
     const local = competencyRecord({
-      selfLevel: 8,
+      selfLevel: 4,
       managerLevel: 1,
       selfUpdatedAt: '2026-06-08T00:00:00.000Z',
       managerUpdatedAt: '2026-06-01T00:00:00.000Z',
     });
     const remote = competencyRecord({
       selfLevel: 2,
-      managerLevel: 6,
+      managerLevel: 5,
       selfUpdatedAt: '2026-06-02T00:00:00.000Z',
       managerUpdatedAt: '2026-06-07T00:00:00.000Z',
     });
     const merged = mergeCompetencyMonthRecord(local, remote, 'B');
-    expect(merged.self.intLevel).toBe(8);
-    expect(merged.manager.intLevel).toBe(6);
+    expect(merged.self.intLevel).toBe(4);
+    expect(merged.manager.intLevel).toBe(5);
   });
 
   it('recomputes computed fields after merge', () => {
@@ -273,10 +286,58 @@ describe('kpiOperationalCloudSnapshot', () => {
     expect(merged.manager.intLevel).toBe(4);
   });
 
-  it('isCompetencyMonthRecordSaveable — intLevel 또는 dims가 있으면 저장 가능', () => {
-    // 기본 dims가 unmet으로 채워지므로 빈 객체도 normalize 후 dims 존재
-    expect(isCompetencyMonthRecordSaveable({}, 'B')).toBe(true);
-    expect(isCompetencyMonthRecordSaveable(competencyRecord({ selfLevel: 2 }), 'B')).toBe(true);
+  it('isCompetencyMonthRecordSaveable — 기본 unmet×5 + intLevel 0 + unlocked는 false', () => {
+    const rec = competencyRecord({
+      selfLevel: 0,
+      selfLocked: false,
+      selfDims: defaultUnmetDims(),
+      managerDims: defaultUnmetDims(),
+    });
+    expect(isDefaultSelfEval(rec.self)).toBe(true);
+    expect(isCompetencyMonthRecordSaveable({}, 'B')).toBe(false);
+    expect(isCompetencyMonthRecordSaveable(rec, 'B')).toBe(false);
+  });
+
+  it('isCompetencyMonthRecordSaveable — intLevel 1~5이면 unmet×5여도 true', () => {
+    expect(
+      isCompetencyMonthRecordSaveable(
+        competencyRecord({ selfLevel: 1, selfDims: defaultUnmetDims() }),
+        'B'
+      )
+    ).toBe(true);
+    expect(
+      isCompetencyMonthRecordSaveable(
+        competencyRecord({ selfLevel: 5, selfDims: defaultUnmetDims() }),
+        'B'
+      )
+    ).toBe(true);
+    expect(
+      isCompetencyMonthRecordSaveable(competencyRecord({ selfLevel: 2, selfDims: defaultUnmetDims() }), 'B')
+    ).toBe(true);
+  });
+
+  it('isCompetencyMonthRecordSaveable — dims met만 있고 intLevel 0이면 false', () => {
+    const rec = competencyRecord({ selfLevel: 0 });
+    expect(rec.self.dims.autonomy).toBe(DIM_MET);
+    expect(isCompetencyMonthRecordSaveable(rec, 'B')).toBe(false);
+  });
+
+  it('isCompetencyMonthRecordSaveable — intLevel=0 + selfLocked=true는 false', () => {
+    expect(isCompetencyMonthRecordSaveable(competencyRecord({ selfLevel: 0, selfLocked: true }), 'B')).toBe(
+      false
+    );
+  });
+
+  it('isCompetencyMonthRecordSaveable — intLevel=6은 false', () => {
+    const rec = competencyRecord({ selfLevel: 6, selfDims: defaultUnmetDims() });
+    expect(rec.self.intLevel).toBe(0);
+    expect(isCompetencyMonthRecordSaveable(rec, 'B')).toBe(false);
+  });
+
+  it('isCompetencyMonthRecordSaveable — selfLocked + 유효 intLevel이면 true', () => {
+    expect(isCompetencyMonthRecordSaveable(competencyRecord({ selfLevel: 2, selfLocked: true }), 'B')).toBe(
+      true
+    );
   });
 
   it('mergeMemberIntoCompetencyCloudSnapshot upserts one member/month only', () => {

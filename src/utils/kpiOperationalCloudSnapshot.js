@@ -4,7 +4,11 @@ import {
   normalizeKpiOperationalStore,
 } from '../constants/kpiOperationalStore';
 import { DIM_MET, DIM_UNMET, mapMemberRoleToCompetency } from '../constants/competencyRubric';
-import { computeCompetencyEval } from './competencyScore';
+import {
+  computeCompetencyEval,
+  isValidCompetencyIntLevel,
+  normalizeCompetencyIntLevel,
+} from './competencyScore';
 
 export const KPI_COMPETENCY_CLOUD_SNAPSHOT_VERSION = 1;
 
@@ -28,7 +32,7 @@ function resolveRoleId(record, memberCode) {
 
 function normalizeEvalSide(side, roleId) {
   const base = defaultCompetencyMonthRecord('A').self;
-  const intLevel = side?.intLevel ?? base.intLevel;
+  const intLevel = normalizeCompetencyIntLevel(side?.intLevel ?? base.intLevel);
   const dims = { ...base.dims, ...(side?.dims || {}) };
   const evalInput = { intLevel, dims, roleId };
   return {
@@ -285,14 +289,22 @@ export function isValidCompetencyYearMonth(yearMonth) {
   return YEAR_MONTH_RE.test(String(yearMonth || ''));
 }
 
-/** 공유 저장 가능 여부 — 빈 기본 레코드는 원격을 지우지 않도록 차단 */
+function isAllUnmetDims(dims) {
+  const values = Object.values(dims || {});
+  return values.length > 0 && values.every((v) => v === DIM_UNMET);
+}
+
+/** self 평가가 기본 상태(미입력 intLevel, unmet×5)인지 */
+export function isDefaultSelfEval(self) {
+  return !isValidCompetencyIntLevel(self?.intLevel) && isAllUnmetDims(self?.dims);
+}
+
+/**
+ * 공유 저장 가능 여부 — self.intLevel 1~5일 때만 (manager·dims·selfLocked 단독 불가)
+ */
 export function isCompetencyMonthRecordSaveable(raw, memberCode) {
   const rec = normalizeCompetencyMonthRecord(raw, memberCode);
-  if (rec.selfLocked || rec.managerLocked) return true;
-  if ((rec.self?.intLevel ?? 0) > 0 || (rec.manager?.intLevel ?? 0) > 0) return true;
-  const hasDim = (side) =>
-    Object.values(side?.dims || {}).some((v) => v === DIM_MET || v === DIM_UNMET);
-  return hasDim(rec.self) || hasDim(rec.manager);
+  return isValidCompetencyIntLevel(rec.self?.intLevel);
 }
 
 /**
