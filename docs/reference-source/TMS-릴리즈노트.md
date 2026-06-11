@@ -21,6 +21,7 @@
 - **KPI operational snapshot** API ESM import 500 → **200** 핫픽스 (`0fc5445`)
 - GitHub Actions **VERCEL_TOKEN** 갱신 후 자동 production 배포 **복구**
 - Blob snapshot이 비어 있는 동안에도 팀 빌딩비 조회가 가능하도록 백업 기반 정적 `ledger-snapshot.json` fallback을 복구했습니다. 이 데이터는 배포 시점의 백업 기준(2026-06-09)이며, 실시간 cloud snapshot은 아닙니다.
+- 팀 빌딩비 관리 정적 조회 snapshot을 팀장 브라우저의 최신 백업 기준으로 갱신했습니다. 기존 2026-06-09 백업(60건)에서 **2026-06-11** 데이터 포함 snapshot(62건, `publishedAt` 2026-06-11)으로 교체했습니다.
 
 ### Blob P0 핫픽스 (`af0dfeb`)
 
