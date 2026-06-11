@@ -30,6 +30,7 @@ import { downloadJournalSnapshot } from '../utils/journalSnapshot';
 import { resolveJournalDay } from '../utils/journalHoliday2026';
 import { applyLeavePresetToDay, LEAVE_MEMO_TASK_RE, LEAVE_PRESET_BUTTONS } from '../utils/journalLeavePresets';
 import { scheduleScrollJournalDay } from '../utils/journalScroll';
+import { mergeTaskFromEdit, taskFieldsFromEdit } from '../utils/journalTaskFields';
 import { loadCollapsedWeekKeys, saveCollapsedWeekKeys } from '../utils/journalWeekVisibility';
 import { KPI1_NAME, KPI2_NAME } from '../constants/kpiDisplayNames';
 import {
@@ -68,28 +69,6 @@ function formatDayLabel(key) {
 }
 
 const DEFAULT_ADD_DRAFT = { cat: 'edu', title: '', plan: 4, actual: 0, done: false, slot: '' };
-
-function taskFieldsFromEdit(editTask) {
-  const fields = {
-    id: editTask.id,
-    cat: editTask.cat,
-    title: editTask.title.trim(),
-    note: editTask.note || '',
-    plan: Number(editTask.plan) || 0,
-    actual: Number(editTask.actual) || 0,
-    done: editTask.done,
-    mmAxis: editTask.mmAxis || undefined,
-    slot: resolveTaskSlotField(editTask.slot),
-  };
-  if (editTask.kpi2Effect?.enabled) {
-    fields.kpi2Effect = {
-      enabled: true,
-      projectId: editTask.kpi2Effect.projectId || '',
-      baselineHours: Number(editTask.kpi2Effect.baselineHours) || Number(editTask.plan) || 0,
-    };
-  }
-  return fields;
-}
 
 function navigateToDayKey(dayKey, { year, month, setYear, setMonth, setSelectedDayKey, scrollToDayRef, setScrollTick }) {
   const [y, m] = dayKey.split('-').map(Number);
@@ -331,19 +310,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     if (!editTask || readOnly) return;
     patchDay(editTask.dayKey, (day) => {
       const tasks = day.tasks.map((t) =>
-        t.id === editTask.id
-          ? {
-              ...t,
-              cat: editTask.cat,
-              title: editTask.title,
-              note: editTask.note,
-              plan: Number(editTask.plan) || 0,
-              actual: Number(editTask.actual) || 0,
-              done: editTask.done,
-              mmAxis: editTask.mmAxis || undefined,
-              slot: resolveTaskSlotField(editTask.slot),
-            }
-          : t
+        t.id === editTask.id ? mergeTaskFromEdit(t, editTask) : t
       );
       const next = { ...day, tasks };
       recalcDayMmFromHours(next);
@@ -394,7 +361,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
 
     patchDay(sourceDayKey, (day) => {
       const tasks = day.tasks.map((t) =>
-        t.id === sourceId ? { ...t, ...taskFieldsFromEdit(editTask) } : t
+        t.id === sourceId ? mergeTaskFromEdit(t, editTask) : t
       );
       const next = { ...day, tasks };
       recalcDayMmFromHours(next);
