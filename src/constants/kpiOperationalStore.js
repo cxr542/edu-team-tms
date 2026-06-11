@@ -1,17 +1,17 @@
-import { KPI_STATUS } from './kpiStatuses';
-import { TEAM_KPI_MEMBERS } from './kpiMembers';
+import { KPI_STATUS } from './kpiStatuses.js';
+import { TEAM_KPI_MEMBERS } from './kpiMembers.js';
 import {
   defaultCompetencyDims,
   defaultCompetencyEval,
   mapMemberRoleToCompetency,
-} from './competencyRubric';
-import { computeCompetencyEval } from '../utils/competencyScore';
+} from './competencyRubric.js';
+import { computeCompetencyEval } from '../utils/competencyScore.js';
 import {
   defaultDmDetail,
   defaultDmDetailForRole,
   defaultLeaderDetail,
   defaultPracticeDetail,
-} from './kpi3Elements';
+} from './kpi3Elements.js';
 
 export const KPI_OPERATIONAL_STORAGE_KEY = 'tms-kpi-operational-v1';
 export const KPI_OPERATIONAL_VERSION = 3;

@@ -1,14 +1,14 @@
-import { TEAM_KPI_MEMBERS } from '../constants/kpiMembers';
+import { TEAM_KPI_MEMBERS } from '../constants/kpiMembers.js';
 import {
   defaultCompetencyMonthRecord,
   normalizeKpiOperationalStore,
-} from '../constants/kpiOperationalStore';
-import { DIM_MET, DIM_UNMET, mapMemberRoleToCompetency } from '../constants/competencyRubric';
+} from '../constants/kpiOperationalStore.js';
+import { DIM_MET, DIM_UNMET, mapMemberRoleToCompetency } from '../constants/competencyRubric.js';
 import {
   computeCompetencyEval,
   isValidCompetencyIntLevel,
   normalizeCompetencyIntLevel,
-} from './competencyScore';
+} from './competencyScore.js';
 
 export const KPI_COMPETENCY_CLOUD_SNAPSHOT_VERSION = 1;
 

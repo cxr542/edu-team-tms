@@ -1,7 +1,7 @@
 import {
   quarterKey,
   quarterMonthKeysFromYq,
-} from '../constants/kpiOperationalStore';
+} from '../constants/kpiOperationalStore.js';
 import {
   ACCUMULATION_ORDER_BY_ROLE,
   COMPETENCY_DIM_IDS,
@@ -9,12 +9,12 @@ import {
   DIM_UNMET,
   accumulationOrderForRole,
   defaultCompetencyDims,
-} from '../constants/competencyRubric';
+} from '../constants/competencyRubric.js';
 import {
   COMPETENCY_CAP_DEFAULT,
   COMPETENCY_CAP_RELEASE,
   COMPETENCY_USE_4060,
-} from '../constants/competencyConfig';
+} from '../constants/competencyConfig.js';
 
 export const COMPETENCY_INT_LEVEL_MIN = 1;
 export const COMPETENCY_INT_LEVEL_MAX = 5;

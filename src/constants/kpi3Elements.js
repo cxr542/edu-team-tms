@@ -1,10 +1,10 @@
-import { KPI3_WEIGHTS } from './kpiRules';
+import { KPI3_WEIGHTS } from './kpiRules.js';
 import {
   DM_DUAL_DEFAULT_LECTURE_PCT,
   DM_PROFILE,
   DM_WEIGHT_MODE_MANUAL,
   resolveDmProfile,
-} from './kpi3DmProfile';
+} from './kpi3DmProfile.js';
 
 /** KPI 정의서 §지표3 · 4가지 측정 요소 */
 export const KPI3_ELEMENTS = [
