@@ -94,7 +94,33 @@ function isNewer(left, right) {
   return new Date(left).getTime() > new Date(right).getTime();
 }
 
-export function mergeJournalSnapshotsByMember(localSnapshot, remoteSnapshot, { preferRemote = false } = {}) {
+function maxIso(left, right) {
+  if (!left) return right || null;
+  if (!right) return left || null;
+  return isNewer(left, right) ? left : right;
+}
+
+/** 공유 일지 가져오기 — remote의 day/week 필드를 local에 병합(remote 우선), local-only 키 유지 */
+export function mergeMemberJournalSlicesImport(localSlice, remoteSlice) {
+  const local = normalizeMemberJournalSlice(localSlice);
+  const remote = normalizeMemberJournalSlice(remoteSlice);
+  if (isMemberJournalEmpty(remote)) {
+    return clone(local);
+  }
+  return clone({
+    days: { ...local.days, ...remote.days },
+    weekSummaries: { ...local.weekSummaries, ...remote.weekSummaries },
+    nextWeekPlans: { ...local.nextWeekPlans, ...remote.nextWeekPlans },
+    kpiWeekMemos: { ...local.kpiWeekMemos, ...remote.kpiWeekMemos },
+    prefs: remote.prefs ?? local.prefs,
+  });
+}
+
+export function mergeJournalSnapshotsByMember(
+  localSnapshot,
+  remoteSnapshot,
+  { preferRemote = false, importRemote = false } = {}
+) {
   const local = normalizeJournalCloudSnapshot(localSnapshot);
   const remote = normalizeJournalCloudSnapshot(remoteSnapshot);
   const memberJournals = createEmptyMemberJournals();
@@ -103,6 +129,16 @@ export function mergeJournalSnapshotsByMember(localSnapshot, remoteSnapshot, { p
   JOURNAL_MEMBER_CODES.forEach((code) => {
     const localSlice = local.memberJournals[code] || emptyMemberJournal();
     const remoteSlice = remote.memberJournals[code] || emptyMemberJournal();
+
+    if (importRemote) {
+      const merged = mergeMemberJournalSlicesImport(localSlice, remoteSlice);
+      memberJournals[code] = merged;
+      if (!isMemberJournalEmpty(merged)) {
+        memberUpdatedAt[code] = maxIso(memberTime(local, code), memberTime(remote, code)) || remote.publishedAt;
+      }
+      return;
+    }
+
     const localEmpty = isMemberJournalEmpty(localSlice);
     const remoteEmpty = isMemberJournalEmpty(remoteSlice);
     const useRemote =

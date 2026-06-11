@@ -21,6 +21,7 @@ import {
   fetchJournalSnapshot,
   JOURNAL_STORAGE_KEY,
   normalizeJournalSnapshot,
+  parseJournalSnapshotForImport,
   saveJournalMemberSnapshot,
 } from '../utils/journalSnapshot';
 import {
@@ -201,7 +202,7 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
   );
 
   const pullFromCloud = useCallback(
-    async ({ force = false } = {}) => {
+    async () => {
       setSyncStatus('checking');
       try {
         const remote = await fetchJournalSnapshot();
@@ -209,14 +210,15 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
           setSyncStatus('idle');
           return { ok: false, reason: 'no-remote' };
         }
-        applyRemoteSnapshot(remote, { preferRemote: force });
-        return { ok: true, remote };
+        const snapshot = parseJournalSnapshotForImport(remote);
+        applyRemoteSnapshot(snapshot, { importRemote: true });
+        return { ok: true, remote: snapshot };
       } catch (e) {
         setSyncStatus('error');
         throw e;
       }
     },
-    [applyRemoteSnapshot, store.meta?.updatedAt]
+    [applyRemoteSnapshot]
   );
 
   useEffect(() => {
@@ -240,8 +242,8 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}
   const importFromFile = useCallback(
     async (file) => {
       const text = await file.text();
-      const snapshot = normalizeJournalSnapshot(JSON.parse(text));
-      applyRemoteSnapshot(snapshot, { preferRemote: true });
+      const snapshot = parseJournalSnapshotForImport(JSON.parse(text));
+      applyRemoteSnapshot(snapshot, { importRemote: true });
       return snapshot;
     },
     [applyRemoteSnapshot]

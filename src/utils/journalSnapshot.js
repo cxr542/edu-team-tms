@@ -1,6 +1,6 @@
 import { isProductionEnvironment } from '../constants/appEnv';
 import { apply2026PublicHolidaysToDays } from './journalHoliday2026';
-import { normalizeJournalCloudSnapshot } from './journalCloudSnapshot';
+import { mergeJournalSnapshotsByMember, normalizeJournalCloudSnapshot } from './journalCloudSnapshot';
 import { recalcDayMmFromHours } from './journalMm';
 import { createEmptyMemberJournals } from './journalMemberStore';
 
@@ -114,4 +114,36 @@ export function isRemoteNewer(remotePublishedAt, localUpdatedAt) {
   if (!remotePublishedAt) return false;
   if (!localUpdatedAt) return true;
   return new Date(remotePublishedAt).getTime() > new Date(localUpdatedAt).getTime();
+}
+
+export function isJournalSnapshotImportable(raw) {
+  if (!raw || typeof raw !== 'object') return false;
+  if (raw.memberJournals && typeof raw.memberJournals === 'object') return true;
+  if (raw.days && typeof raw.days === 'object') return true;
+  return false;
+}
+
+export function parseJournalSnapshotForImport(raw) {
+  if (!isJournalSnapshotImportable(raw)) {
+    throw new Error('공유 일지 형식이 올바르지 않습니다.');
+  }
+  return normalizeJournalSnapshot(raw);
+}
+
+/** local store({ memberJournals, meta }) + remote snapshot → import 병합 결과 store */
+export function applyJournalSnapshotImport(localStore, remoteSnapshot) {
+  const localSnapshot = normalizeJournalCloudSnapshot({
+    publishedAt: localStore?.meta?.updatedAt || null,
+    meta: localStore?.meta || {},
+    memberJournals: localStore?.memberJournals || createEmptyMemberJournals(),
+  });
+  const merged = mergeJournalSnapshotsByMember(localSnapshot, remoteSnapshot, { importRemote: true });
+  return {
+    memberJournals: merged.memberJournals,
+    meta: merged.meta,
+  };
+}
+
+export function persistJournalStoreToLocalStorage(store, storageKey = JOURNAL_STORAGE_KEY) {
+  localStorage.setItem(storageKey, JSON.stringify(store));
 }
