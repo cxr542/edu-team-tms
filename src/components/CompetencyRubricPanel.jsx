@@ -12,6 +12,7 @@ import { COMPETENCY_USE_4060 } from '../constants/competencyConfig';
 import {
   applyDimChange,
   countConsecutiveMetFromStart,
+  isValidCompetencyIntLevel,
   monthlyFinalScore,
   normalizeCompetencyEvalSide,
 } from '../utils/competencyScore';
@@ -54,6 +55,7 @@ export default function CompetencyRubricPanel({
   );
   const computed = liveEvalSide?.computed;
   const consecutiveMet = countConsecutiveMetFromStart(liveEvalSide?.dims, roleId);
+  const hasValidIntLevel = isValidCompetencyIntLevel(liveEvalSide?.intLevel);
   const roleLabel = COMPETENCY_ROLES.find((r) => r.id === roleId)?.label || roleId;
 
   const monthlyFinal = useMemo(() => {
@@ -66,7 +68,7 @@ export default function CompetencyRubricPanel({
   }, [record]);
 
   const handleIntLevel = (v) => {
-    onUpdate({ intLevel: Number(v) || 0 });
+    onUpdate({ intLevel: v === '' ? 0 : Number(v) });
   };
 
   const handleDim = (dimId, v) => {
@@ -110,11 +112,11 @@ export default function CompetencyRubricPanel({
           정수레벨
           <select
             className="form-input"
-            value={evalSide?.intLevel || ''}
+            value={hasValidIntLevel ? liveEvalSide.intLevel : ''}
             disabled={readOnly || locked}
             onChange={(e) => handleIntLevel(e.target.value)}
           >
-            <option value="">—</option>
+            <option value="">정수 레벨 선택</option>
             {[1, 2, 3, 4, 5].map((n) => (
               <option key={n} value={n}>
                 {integerLevelOptionLabel(n)}
@@ -145,10 +147,10 @@ export default function CompetencyRubricPanel({
           <h4 className="competency-rubric-ref-title">정수레벨 정의 (본부 5단계)</h4>
           <p className="team-kpi-hint competency-rubric-ref-hint">
             위에서 선택한 정수레벨은 아래 정의를 기준으로 판단합니다.
-            {evalSide?.intLevel ? (
+            {hasValidIntLevel ? (
               <>
                 {' '}
-                현재 선택: <strong>{integerLevelOptionLabel(evalSide.intLevel)}</strong>
+                현재 선택: <strong>{integerLevelOptionLabel(liveEvalSide.intLevel)}</strong>
               </>
             ) : null}
           </p>
@@ -271,9 +273,9 @@ export default function CompetencyRubricPanel({
         {memberView ? (
           <>
             <strong>자체평가 제안 레벨 {computed?.proposed ?? '—'}</strong>
-            {computed?.fractional != null && computed.fractional > 0 && (
+            {hasValidIntLevel && computed?.fractional != null && computed.fractional > 0 && (
               <span className="competency-monthly-final">
-                정수 {liveEvalSide?.intLevel || 0} + 차원 가산 {computed.fractional}
+                정수 {liveEvalSide.intLevel} + 차원 가산 {computed.fractional}
               </span>
             )}
             {managerLocked && monthlyFinal != null && (
@@ -303,8 +305,27 @@ export default function CompetencyRubricPanel({
         )}
       </div>
 
+      {memberView && !locked && !hasValidIntLevel && (
+        <p className="team-kpi-hint competency-int-level-hint">
+          정수 레벨을 1~5 중에서 선택해 주세요.
+        </p>
+      )}
+
       {!readOnly && !locked && (
-        <button type="button" className="btn btn-primary btn-sm" onClick={onLock}>
+        <button
+          type="button"
+          className="btn btn-primary btn-sm"
+          disabled={side === 'self' && !hasValidIntLevel}
+          title={
+            side === 'self' && !hasValidIntLevel
+              ? '정수 레벨을 1~5 중에서 선택해야 확정할 수 있습니다.'
+              : undefined
+          }
+          onClick={() => {
+            if (side === 'self' && !hasValidIntLevel) return;
+            onLock();
+          }}
+        >
           {side === 'self' ? '자체평가 확정' : '팀장 평가 확정'}
         </button>
       )}
