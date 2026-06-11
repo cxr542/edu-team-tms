@@ -44,12 +44,42 @@ jobs:
         run: curl -fsS "https://okestro-edu-team-tms.vercel.app/" > /dev/null
 
       - name: Smoke check ledger snapshot API
-        run: curl -fsS "https://okestro-edu-team-tms.vercel.app/api/ledger-snapshot" > /dev/null
+        id: ledger_smoke
+        run: |
+          PRODUCTION_URL="https://okestro-edu-team-tms.vercel.app"
+          LEDGER_URL="${PRODUCTION_URL}/api/ledger-snapshot"
+          tmp_body="$(mktemp)"
+          status="$(curl -sS -o "$tmp_body" -w "%{http_code}" --max-time 30 "$LEDGER_URL" || echo "000")"
+          echo "ledger snapshot status=${status}"
+          if [ "$status" = "200" ]; then
+            echo "result=passed" >> "$GITHUB_OUTPUT"
+            echo "detail=snapshot available: 200" >> "$GITHUB_OUTPUT"
+            echo "ledger snapshot smoke passed: snapshot available"
+          elif [ "$status" = "404" ] && grep -q "snapshot not found" "$tmp_body"; then
+            echo "result=passed" >> "$GITHUB_OUTPUT"
+            echo "detail=route available, snapshot not found: 404" >> "$GITHUB_OUTPUT"
+            echo "ledger snapshot smoke passed: route available, snapshot not found"
+          else
+            echo "result=failed" >> "$GITHUB_OUTPUT"
+            echo "detail=unexpected status ${status}" >> "$GITHUB_OUTPUT"
+            echo "ledger snapshot smoke failed"
+            cat "$tmp_body"
+            rm -f "$tmp_body"
+            exit 1
+          fi
+          rm -f "$tmp_body"
 
       - name: Publish deployment summary
+        if: always()
         run: |
           echo "## Production Deployment" >> "$GITHUB_STEP_SUMMARY"
           echo "- Branch: ${{ github.ref_name }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Commit: ${{ github.sha }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- URL: https://okestro-edu-team-tms.vercel.app/" >> "$GITHUB_STEP_SUMMARY"
           echo "- Alias: https://edu-team-tms.vercel.app/ (동일 콘텐츠)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Ledger snapshot smoke:** ${{ steps.ledger_smoke.outputs.result || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "${{ steps.ledger_smoke.outputs.detail }}" ]; then
+            echo "- ${{ steps.ledger_smoke.outputs.detail }}" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "- 404 \`snapshot not found\`는 현재 수동 snapshot 정책상 허용 (cloud snapshot 부재, 앱 로드 실패 아님)" >> "$GITHUB_STEP_SUMMARY"

@@ -43,6 +43,8 @@ Repository Settings -> Environments 에 `production` 환경 생성:
 2. `production` 환경 승인 대기
 3. 승인 완료 후 운영 배포
 4. 스모크 체크(`/`, `/api/ledger-snapshot`) 실행
+   - ledger: HTTP 200(스냅샷 있음) 또는 `404 snapshot not found`(라우트 정상·스냅샷 없음) 허용
+   - 401/403/5xx·네트워크 오류는 실패
 
 ## 4. 장애 대응
 - 배포 실패 시 Actions 로그 확인

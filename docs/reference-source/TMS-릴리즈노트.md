@@ -29,6 +29,7 @@ Vercel Blob 무료 한도(Simple/Advanced 100%) 대응:
 - **일지 cloud 자동 pull/save 제거** — 「공유 일지 가져오기」·「공유 저장」 버튼만
 - **Cloud Health / Quota Guard** — quota·pause 의심 시 5분 쓰기 cooldown + 안내
 - **ledger legacy `list` fallback 제거** — `live-latest.json` + 정적 폴백만
+- **장부 snapshot API** — `ledger/live-latest.json` 또는 정적 snapshot이 없으면 `404 snapshot not found` (cloud snapshot 부재, 앱 로드 실패 아님)
 - **dev production snapshot proxy** — `VITE_PROD_SNAPSHOT_PROXY=true` 일 때만 opt-in
 
 ### 사용자 영향
