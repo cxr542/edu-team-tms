@@ -4,6 +4,7 @@ import Kpi3ElementsPanel from './Kpi3ElementsPanel';
 import { COMPETENCY_MEMBER_TABS } from '../constants/competencyTabs';
 import { COMPETENCY_USE_4060 } from '../constants/competencyConfig';
 import { KPI3_ELEMENTS } from '../constants/kpi3Elements';
+import { quarterMonthKeysFromYq } from '../constants/kpiOperationalStore';
 import { formatKpiMemberLabel } from '../constants/kpiMembers';
 import { useTeamKpiMetrics } from '../context/JournalProvider';
 import { monthlyFinalScore, quarterMonthKeys } from '../utils/competencyScore';
@@ -16,9 +17,9 @@ const KPI3_BY_KEY = Object.fromEntries(KPI3_ELEMENTS.map((el) => [el.key, el]));
 export default function CompetencyMemberSection({
   member,
   year,
-  month,
+  quarter,
   yq,
-  ym,
+  monthIndex,
   journal,
   canEditSelf,
   onToast,
@@ -27,21 +28,25 @@ export default function CompetencyMemberSection({
 }) {
   const [activeTab, setActiveTab] = useState(defaultTab);
   const memberCode = member.code;
-  const competencyRec = journal.getCompetencyMonth(year, month, memberCode);
-  const quarterRec = journal.getQuarterRecord(year, month, memberCode);
-  const kpiMetrics = useTeamKpiMetrics(year, month, memberCode);
+  const competencyRec = journal.getCompetencyQuarter(yq, memberCode);
+  const quarterRec = journal.getQuarterRecord(year, monthIndex, memberCode);
+  const kpiMetrics = useTeamKpiMetrics(year, monthIndex, memberCode);
   const readOnly = journal.kpiOperationalReadOnly || !canEditSelf;
   const q = quarterRec.quarter;
 
-  const monthlyFinal = useMemo(
-    () =>
-      monthlyFinalScore(
-        competencyRec?.self?.computed?.proposed,
-        competencyRec?.manager?.computed?.proposed,
+  const monthlyFinalRef = useMemo(() => {
+    const yms = quarterMonthKeys(year, monthIndex);
+    return yms.map((key) => {
+      const mIdx = parseInt(key.split('-')[1], 10) - 1;
+      const rec = journal.getCompetencyMonth(year, mIdx, memberCode);
+      const final = monthlyFinalScore(
+        rec?.self?.computed?.proposed,
+        rec?.manager?.computed?.proposed,
         COMPETENCY_USE_4060
-      ),
-    [competencyRec]
-  );
+      );
+      return { ym: key, final, managerLocked: rec?.managerLocked };
+    });
+  }, [journal, year, monthIndex, memberCode]);
 
   const activeMeta = COMPETENCY_MEMBER_TABS.find((t) => t.id === activeTab) ?? COMPETENCY_MEMBER_TABS[0];
 
@@ -59,20 +64,22 @@ export default function CompetencyMemberSection({
         {!pageMode && (
           <h3 className="competency-member-block__title">{formatKpiMemberLabel(member)}</h3>
         )}
-        {pageMode && (
-          <h2 className="competency-member-block__title">4가지 평가</h2>
-        )}
+        {pageMode && <h2 className="competency-member-block__title">4가지 평가</h2>}
         {!canEditSelf && <span className="competency-member-block__badge">조회</span>}
         <dl className="competency-member-block__status">
           <div>
-            <dt>{month + 1}월 자체</dt>
+            <dt>{quarter}분기 자체</dt>
             <dd className={competencyRec?.selfLocked ? 'is-done' : ''}>
               {competencyRec?.selfLocked ? '확정' : '작성중'}
             </dd>
           </div>
           <div>
-            <dt>월간 레벨</dt>
-            <dd>{competencyRec?.managerLocked && monthlyFinal != null ? monthlyFinal : '—'}</dd>
+            <dt>분기 제안</dt>
+            <dd>
+              {competencyRec?.selfLocked && competencyRec?.self?.computed?.proposed != null
+                ? competencyRec.self.computed.proposed
+                : '—'}
+            </dd>
           </div>
           <div>
             <dt>다면</dt>
@@ -116,31 +123,35 @@ export default function CompetencyMemberSection({
               record={competencyRec}
               readOnly={readOnly}
               memberView
-              onUpdate={(patch) => journal.updateCompetencySelf(year, month, memberCode, patch)}
+              onUpdate={(patch) => journal.updateCompetencyQuarterSelf(yq, memberCode, patch)}
               onLock={() => {
-                journal.lockCompetencyMonth(year, month, memberCode, { side: 'self' });
-                onToast?.(`${member.displayName} · ${ym} 자체평가 확정`);
+                const r = journal.lockCompetencyQuarter(yq, memberCode, { side: 'self' });
+                if (r.ok) {
+                  onToast?.(`${member.displayName} · ${yq} 분기 자체평가 확정`);
+                } else if (r.reason === 'invalid-int-level') {
+                  onToast?.('정수 레벨을 1~5 중에서 선택해 주세요');
+                }
               }}
             />
             <div className="competency-quarter-level-ref">
-              <h4 className="competency-quarter-level-ref__title">분기({yq}) 월간 확정 현황</h4>
+              <h4 className="competency-quarter-level-ref__title">이전 월별 평가(참고) · 분기 {yq}</h4>
               <ul className="team-kpi-memo-list">
-                {quarterMonthKeys(year, month).map((key) => {
+                {quarterMonthKeysFromYq(yq).map((key) => {
                   const mIdx = parseInt(key.split('-')[1], 10) - 1;
-                  const isCurrent = key === ym;
+                  const ref = monthlyFinalRef.find((x) => x.ym === key);
                   return (
-                    <li key={key} className={isCurrent ? 'is-current-month' : undefined}>
-                      {key}: 월간 {journal.getCompetencyMonthlyFinal(year, mIdx, memberCode) ?? '—'}
-                      {journal.getCompetencyMonth(year, mIdx, memberCode)?.managerLocked
-                        ? ' (팀장 확정)'
-                        : ''}
-                      {isCurrent ? ' ← 지금 보는 달' : ''}
+                    <li key={key}>
+                      {key}: 월간 {ref?.final ?? '—'}
+                      {ref?.managerLocked ? ' (팀장 확정)' : ''}
+                      {' · '}
+                      자체{' '}
+                      {journal.getCompetencyMonth(year, mIdx, memberCode)?.selfLocked ? '확정' : '작성중'}
                     </li>
                   );
                 })}
               </ul>
               <p className="team-kpi-hint">
-                분기 레벨: <strong>{q.level > 0 ? q.level : '—'}</strong>
+                KPI3 분기 레벨: <strong>{q.level > 0 ? q.level : '—'}</strong>
                 {q.levelAuto ? ' (월간 평균 자동 반영)' : ''}
               </p>
             </div>
@@ -154,7 +165,7 @@ export default function CompetencyMemberSection({
             </p>
             <Kpi3ElementsPanel
               year={year}
-              month={month}
+              month={monthIndex}
               memberCode={memberCode}
               yq={yq}
               quarterRec={quarterRec}

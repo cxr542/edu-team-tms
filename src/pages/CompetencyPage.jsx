@@ -1,12 +1,11 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { BookOpen, ChevronLeft, ChevronRight, Import, Upload } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, Import } from 'lucide-react';
 import AppModuleLink from '../components/AppModuleLink';
 import CompetencyMemberHub from '../components/CompetencyMemberHub';
 import CompetencyMemberSection from '../components/CompetencyMemberSection';
 import { buildDocsModuleUrl } from '../constants/referenceDocs';
 import { KPI3_FORMULA_TEXT } from '../constants/kpi3Elements';
 import { KPI3_NAME } from '../constants/kpiDisplayNames';
-import { quarterKey } from '../constants/kpiOperationalStore';
 import {
   TEAM_KPI_MEMBERS,
   TEAM_LEADER_MEMBER_CODE,
@@ -16,10 +15,10 @@ import {
 } from '../constants/kpiMembers';
 import { URL_ACCESS_LEADER } from '../constants/teamAccess';
 import { useJournal } from '../context/JournalProvider';
-import { useJournalPeriod } from '../hooks/useJournalPeriod';
+import { useCompetencyPeriod } from '../hooks/useCompetencyPeriod';
 import { useTeamAccess } from '../hooks/useTeamAccess';
 import { isEditorMode } from '../utils/appMode';
-import { quarterMonthKeys } from '../utils/competencyScore';
+import { quarterMonthKeysFromYq } from '../constants/kpiOperationalStore';
 import { uiTooltip } from '../utils/uiTooltip';
 import './TeamKpiPage.css';
 import './CompetencyPage.css';
@@ -39,7 +38,7 @@ function resolvePageMember(teamAccess) {
 
 /** 역량 평가 — 구성원별 별도 페이지(?member=) + 선택 허브 */
 export default function CompetencyPage() {
-  const { year, month, changeMonth, setPeriod } = useJournalPeriod();
+  const { year, quarter, yq, monthIndex, changeQuarter } = useCompetencyPeriod();
   const journal = useJournal();
   const teamAccess = useTeamAccess();
   const [toast, setToast] = useState('');
@@ -49,15 +48,12 @@ export default function CompetencyPage() {
   const showHub = !pageMemberCode && teamAccess.isLeader;
   const selectedMember = pageMemberCode ? findKpiMember(pageMemberCode) : null;
 
-  const yq = quarterKey(year, month);
-  const ym = `${year}-${String(month + 1).padStart(2, '0')}`;
-
-  const quarterMonths = useMemo(() => {
-    return quarterMonthKeys(year, month).map((key) => {
+  const quarterMonthLabels = useMemo(() => {
+    return quarterMonthKeysFromYq(yq).map((key) => {
       const m = parseInt(key.split('-')[1], 10);
       return { ym: key, monthIndex: m - 1, label: `${m}월` };
     });
-  }, [year, month]);
+  }, [yq]);
 
   const showToast = useCallback((msg) => {
     setToast(msg);
@@ -71,9 +67,7 @@ export default function CompetencyPage() {
     [teamAccess, canEdit]
   );
 
-  const canSaveSelectedMember =
-    Boolean(selectedMember) && canEditByCode(selectedMember?.code) && !journal.kpiOperationalReadOnly;
-  const showCloudActions = canEdit && Boolean(selectedMember);
+  const showCloudPull = canEdit && Boolean(selectedMember) && teamAccess.isLeader && !teamAccess.isMemberScope;
 
   return (
     <main className="team-kpi-main competency-page">
@@ -82,22 +76,22 @@ export default function CompetencyPage() {
           <button
             type="button"
             className="journal-icon-btn"
-            onClick={() => changeMonth(-1)}
-            aria-label="이전 달"
-            {...uiTooltip('이전 달로 이동')}
+            onClick={() => changeQuarter(-1)}
+            aria-label="이전 분기"
+            {...uiTooltip('이전 분기로 이동')}
           >
             <ChevronLeft size={18} />
           </button>
           <h1>
-            {year}년 {month + 1}월 · 역량 평가
+            {year}년 {quarter}분기 · 역량 평가
             {selectedMember ? ` · ${formatKpiMemberLabel(selectedMember)}` : ''}
           </h1>
           <button
             type="button"
             className="journal-icon-btn"
-            onClick={() => changeMonth(1)}
-            aria-label="다음 달"
-            {...uiTooltip('다음 달로 이동')}
+            onClick={() => changeQuarter(1)}
+            aria-label="다음 분기"
+            {...uiTooltip('다음 분기로 이동')}
           >
             <ChevronRight size={18} />
           </button>
@@ -106,7 +100,7 @@ export default function CompetencyPage() {
           <p className="competency-page-member-role">{formatKpiMemberRoleLine(selectedMember)}</p>
         )}
         <p className="team-kpi-hint" style={{ marginTop: 0 }}>
-          교육팀 구성원 <strong>{TEAM_KPI_MEMBERS.length}명</strong> · 분기 {yq}
+          교육팀 구성원 <strong>{TEAM_KPI_MEMBERS.length}명</strong> · 분기 키 {yq}
         </p>
         <p className="team-kpi-hint">{KPI3_FORMULA_TEXT}</p>
         {showHub && (
@@ -116,7 +110,8 @@ export default function CompetencyPage() {
         )}
         {teamAccess.isMemberScope && selectedMember && (
           <p className="competency-page-scope-hint">
-            <strong>{formatKpiMemberLabel(selectedMember)}</strong> 본인 평가만 작성·수정할 수 있습니다.
+            <strong>{formatKpiMemberLabel(selectedMember)}</strong> 본인 분기 자체평가만 작성·수정할 수
+            있습니다.
           </p>
         )}
         {isLeaderOwnSelf && selectedMember && (
@@ -128,7 +123,7 @@ export default function CompetencyPage() {
               mode="edit"
               access={URL_ACCESS_LEADER}
               year={year}
-              month={month + 1}
+              month={monthIndex + 1}
               style={{ fontWeight: 600 }}
             >
               팀 KPI 관리
@@ -144,7 +139,7 @@ export default function CompetencyPage() {
               member={null}
               access={URL_ACCESS_LEADER}
               year={year}
-              month={month + 1}
+              quarter={quarter}
             >
               ← 구성원 선택
             </AppModuleLink>
@@ -152,7 +147,7 @@ export default function CompetencyPage() {
         )}
       </header>
 
-      {showCloudActions && (
+      {showCloudPull && (
         <div className="competency-page-actions">
           <button
             type="button"
@@ -160,7 +155,7 @@ export default function CompetencyPage() {
             disabled={cloudBusy}
             aria-label="공유 역량 가져오기"
             {...uiTooltip(
-              '공유 저장소의 최신 역량 평가를 가져와 현재 화면에 반영합니다.',
+              '공유 저장소의 월별 역량 평가를 가져와 competencyMonths에 병합합니다. 분기 자체평가는 이 기기에만 저장됩니다.',
               undefined,
               { wrap: true }
             )}
@@ -168,7 +163,7 @@ export default function CompetencyPage() {
               setCloudBusy(true);
               try {
                 const r = await journal.pullCompetencyCloudSnapshot();
-                if (r.ok) showToast('공유 역량 평가를 이 기기에 병합했습니다');
+                if (r.ok) showToast('공유 역량 평가(월별)를 이 기기에 병합했습니다');
                 else if (r.reason === 'read-only') showToast('조회 모드에서는 가져올 수 없습니다');
                 else showToast(r.error?.message || '공유 역량 가져오기에 실패했습니다');
               } finally {
@@ -177,62 +172,31 @@ export default function CompetencyPage() {
             }}
           >
             <Import size={16} />
-            {cloudBusy ? '가져오는 중…' : '공유 역량 가져오기'}
+            {cloudBusy ? '가져오는 중…' : '공유 역량 가져오기 (월별)'}
           </button>
-          {canSaveSelectedMember && (
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={cloudBusy}
-              aria-label="현재 구성원 역량 공유 저장"
-              {...uiTooltip(
-                '현재 구성원의 이번 달 역량 평가를 공유 저장소에 저장합니다.',
-                undefined,
-                { wrap: true }
-              )}
-              onClick={async () => {
-                setCloudBusy(true);
-                try {
-                  const r = await journal.saveCompetencyMemberCloudSnapshot(
-                    selectedMember.code,
-                    ym
-                  );
-                  if (r.ok) {
-                    showToast(`${formatKpiMemberLabel(selectedMember)} · ${ym} 역량을 공유 저장했습니다`);
-                  } else if (r.reason === 'dev-blocked') {
-                    showToast('개발 환경에서는 공유 저장이 차단됩니다');
-                  } else if (r.reason === 'empty') {
-                    showToast('저장할 역량 평가 내용이 없습니다');
-                  } else {
-                    showToast(r.error?.message || '공유 역량 저장에 실패했습니다');
-                  }
-                } finally {
-                  setCloudBusy(false);
-                }
-              }}
-            >
-              <Upload size={16} />
-              {cloudBusy ? '저장 중…' : '현재 구성원 역량 공유 저장'}
-            </button>
-          )}
+          <p className="team-kpi-hint competency-page-cloud-hint">
+            분기 자체평가는 로컬 <code>competencyQuarters</code>에 저장됩니다. 월별 공유 저장은 이
+            화면에서 비활성화되어 있습니다.
+          </p>
         </div>
       )}
 
-      <nav className="competency-quarter-months" aria-label="분기 월 선택">
-        <span className="competency-quarter-months__label">분기 월간 평가</span>
-        {quarterMonths.map(({ ym: key, monthIndex, label }) => (
-          <button
-            key={key}
-            type="button"
-            className={`btn btn-secondary btn-sm${month === monthIndex ? ' is-active' : ''}`}
-            onClick={() => setPeriod(year, monthIndex)}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
+      {selectedMember && quarterMonthLabels.length > 0 && (
+        <aside className="competency-quarter-months competency-quarter-months--readonly" aria-label="분기 내 월별 참고">
+          <span className="competency-quarter-months__label">이전 월별 평가(참고)</span>
+          <ul className="competency-quarter-months__ref-list">
+            {quarterMonthLabels.map(({ ym, label }) => (
+              <li key={ym}>
+                {label} ({ym})
+              </li>
+            ))}
+          </ul>
+        </aside>
+      )}
 
-      {showHub && <CompetencyMemberHub year={year} month={month} canEditByCode={canEditByCode} />}
+      {showHub && (
+        <CompetencyMemberHub year={year} quarter={quarter} yq={yq} canEditByCode={canEditByCode} />
+      )}
 
       {selectedMember && (
         <section className="competency-page-group" aria-labelledby="competency-member-heading">
@@ -240,12 +204,12 @@ export default function CompetencyPage() {
             {formatKpiMemberLabel(selectedMember)} 평가
           </h2>
           <CompetencyMemberSection
-            key={`${selectedMember.code}-${month}`}
+            key={`${selectedMember.code}-${yq}`}
             member={selectedMember}
             year={year}
-            month={month}
+            quarter={quarter}
             yq={yq}
-            ym={ym}
+            monthIndex={monthIndex}
             journal={journal}
             canEditSelf={canEditByCode(selectedMember.code)}
             onToast={showToast}

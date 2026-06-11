@@ -2,7 +2,6 @@ import React from 'react';
 import { ChevronRight } from 'lucide-react';
 import AppModuleLink from './AppModuleLink';
 import { COMPETENCY_PAGE_HINT } from '../constants/competencyTabs';
-import { COMPETENCY_USE_4060 } from '../constants/competencyConfig';
 import { URL_ACCESS_LEADER } from '../constants/teamAccess';
 import {
   TEAM_KPI_MEMBERS,
@@ -10,12 +9,11 @@ import {
   formatKpiMemberRoleLine,
 } from '../constants/kpiMembers';
 import { useJournal } from '../context/JournalProvider';
-import { monthlyFinalScore } from '../utils/competencyScore';
 
 /**
  * 역량 평가 — 구성원 선택(각 구성원별 별도 페이지로 이동)
  */
-export default function CompetencyMemberHub({ year, month, canEditByCode }) {
+export default function CompetencyMemberHub({ year, quarter, yq, canEditByCode }) {
   const journal = useJournal();
 
   return (
@@ -26,13 +24,8 @@ export default function CompetencyMemberHub({ year, month, canEditByCode }) {
       <p className="team-kpi-hint competency-member-hub__intro">{COMPETENCY_PAGE_HINT}</p>
       <ul className="competency-member-hub__list">
         {TEAM_KPI_MEMBERS.map((member) => {
-          const rec = journal.getCompetencyMonth(year, month, member.code);
-          const q = journal.getQuarterRecord(year, month, member.code).quarter;
-          const monthlyFinal = monthlyFinalScore(
-            rec?.self?.computed?.proposed,
-            rec?.manager?.computed?.proposed,
-            COMPETENCY_USE_4060
-          );
+          const rec = journal.getCompetencyQuarter(yq, member.code);
+          const q = journal.getQuarterRecord(year, (quarter - 1) * 3, member.code).quarter;
           const canEdit = canEditByCode(member.code);
 
           return (
@@ -43,7 +36,7 @@ export default function CompetencyMemberHub({ year, month, canEditByCode }) {
                 member={member.code}
                 access={URL_ACCESS_LEADER}
                 year={year}
-                month={month + 1}
+                quarter={quarter}
                 className={`competency-member-hub__card${canEdit ? ' is-editable' : ''}`}
               >
                 <div className="competency-member-hub__card-head">
@@ -52,14 +45,18 @@ export default function CompetencyMemberHub({ year, month, canEditByCode }) {
                 </div>
                 <dl className="competency-member-hub__stats">
                   <div>
-                    <dt>{month + 1}월 자체</dt>
+                    <dt>{quarter}분기 자체</dt>
                     <dd className={rec?.selfLocked ? 'is-done' : ''}>
                       {rec?.selfLocked ? '확정' : '작성중'}
                     </dd>
                   </div>
                   <div>
-                    <dt>월간 레벨</dt>
-                    <dd>{rec?.managerLocked && monthlyFinal != null ? monthlyFinal : '—'}</dd>
+                    <dt>분기 제안</dt>
+                    <dd>
+                      {rec?.selfLocked && rec?.self?.computed?.proposed != null
+                        ? rec.self.computed.proposed
+                        : '—'}
+                    </dd>
                   </div>
                   <div>
                     <dt>다면</dt>

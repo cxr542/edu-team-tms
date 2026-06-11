@@ -9,6 +9,7 @@ export default function AppModuleLink({
   mode = 'edit',
   year,
   month,
+  quarter,
   member,
   access,
   className,
@@ -17,7 +18,7 @@ export default function AppModuleLink({
   onNavigate,
   ...rest
 }) {
-  const href = buildAppModuleUrl(module, { mode, year, month, member, access });
+  const href = buildAppModuleUrl(module, { mode, year, month, quarter, member, access });
 
   return (
     <a
@@ -26,7 +27,7 @@ export default function AppModuleLink({
       style={style}
       onClick={(e) => {
         e.preventDefault();
-        navigateAppModule(module, { mode, year, month, member, access });
+        navigateAppModule(module, { mode, year, month, quarter, member, access });
         onNavigate?.();
       }}
       {...rest}

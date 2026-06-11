@@ -48,11 +48,12 @@ export function isKpiRelatedModule(module) {
 }
 
 /** 현재 앱 경로(pathname)를 유지한 모듈 URL (GitHub Pages base 대응) */
-export function buildAppModuleUrl(module, { mode, year, month, member, access } = {}) {
+export function buildAppModuleUrl(module, { mode, year, month, quarter, member, access } = {}) {
   const url = new URL(window.location.href);
   if (mode === 'view') url.searchParams.set('mode', 'view');
   else if (mode === 'edit') url.searchParams.set('mode', 'edit');
   if (year != null) url.searchParams.set('year', String(year));
+  if (quarter != null) url.searchParams.set('quarter', String(quarter));
   if (month != null) url.searchParams.set('month', String(month));
 
   if (member !== undefined || access !== undefined) {
@@ -79,6 +80,7 @@ export function navigateAppModule(module, options = {}) {
     mode: options.mode,
     year: options.year,
     month: options.month,
+    quarter: options.quarter,
     member: options.member,
     access: options.access,
   });
