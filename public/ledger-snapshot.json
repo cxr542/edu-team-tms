@@ -1,0 +1,791 @@
+{
+  "publishedAt": "2026-06-09T04:21:10.510Z",
+  "categories": [
+    {
+      "id": "lunch-extra",
+      "label": "점심식사 추가분",
+      "color": "#3b82f6",
+      "description": "점심 식사 추가 정산",
+      "matchKeywords": [
+        "점심식사 추가분"
+      ]
+    },
+    {
+      "id": "snack",
+      "label": "간식",
+      "color": "#f59e0b",
+      "description": "간식·다과류 지출",
+      "matchKeywords": [
+        "간식"
+      ]
+    },
+    {
+      "id": "teatime",
+      "label": "티타임",
+      "color": "#ec4899",
+      "description": "티타임·다과 모임",
+      "matchKeywords": [
+        "티타임"
+      ]
+    },
+    {
+      "id": "other",
+      "label": "기타",
+      "color": "#94a3b8",
+      "description": "위 항목에 해당하지 않는 지출",
+      "matchKeywords": []
+    }
+  ],
+  "transactions": [
+    {
+      "id": "tx-excel-1",
+      "date": "2026-01-05",
+      "category": "기타",
+      "description": "점심",
+      "amount": 36000,
+      "balance": 114000,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-2",
+      "date": "2026-01-08",
+      "category": "기타",
+      "description": "점심",
+      "amount": 700,
+      "balance": 113300,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-3",
+      "date": "2026-01-09",
+      "category": "기타",
+      "description": "점심",
+      "amount": 2000,
+      "balance": 111300,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-4",
+      "date": "2026-01-21",
+      "category": "기타",
+      "description": "점심",
+      "amount": 40500,
+      "balance": 70800,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-5",
+      "date": "2026-01-21",
+      "category": "간식",
+      "description": "간식",
+      "amount": 12500,
+      "balance": 58300,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-6",
+      "date": "2026-01-23",
+      "category": "기타",
+      "description": "점심",
+      "amount": 7000,
+      "balance": 51300,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-7",
+      "date": "2026-01-23",
+      "category": "간식",
+      "description": "간식",
+      "amount": 13500,
+      "balance": 37800,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-8",
+      "date": "2026-01-30",
+      "category": "간식",
+      "description": "간식",
+      "amount": 42900,
+      "balance": -5100,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-9",
+      "date": "2026-02-03",
+      "category": "기타",
+      "description": "점심",
+      "amount": 3000,
+      "balance": 147000,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-10",
+      "date": "2026-02-09",
+      "category": "간식",
+      "description": "간식",
+      "amount": 11700,
+      "balance": 135300,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-11",
+      "date": "2026-02-12",
+      "category": "기타",
+      "description": "점심",
+      "amount": 6000,
+      "balance": 129300,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-12",
+      "date": "2026-02-13",
+      "category": "기타",
+      "description": "점심",
+      "amount": 34800,
+      "balance": 94500,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-13",
+      "date": "2026-02-26",
+      "category": "간식",
+      "description": "간식",
+      "amount": 5300,
+      "balance": 89200,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-14",
+      "date": "2026-02-26",
+      "category": "간식",
+      "description": "간식",
+      "amount": 21500,
+      "balance": 67700,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-15",
+      "date": "2026-02-27",
+      "category": "기타",
+      "description": "점심",
+      "amount": 50000,
+      "balance": 17700,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-16",
+      "date": "2026-02-27",
+      "category": "간식",
+      "description": "간식 · 비품 구매",
+      "amount": 7000,
+      "balance": 10700,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "비품 구매"
+      }
+    },
+    {
+      "id": "tx-excel-17",
+      "date": "2026-02-27",
+      "category": "간식",
+      "description": "간식",
+      "amount": 9700,
+      "balance": 1000,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-18",
+      "date": "2026-03-05",
+      "category": "기타",
+      "description": "점심",
+      "amount": 4000,
+      "balance": 146000,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-19",
+      "date": "2026-03-05",
+      "category": "티타임",
+      "description": "간식 · 티타임",
+      "amount": 11300,
+      "balance": 134700,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "티타임"
+      }
+    },
+    {
+      "id": "tx-excel-20",
+      "date": "2026-03-10",
+      "category": "티타임",
+      "description": "간식 · 티타임",
+      "amount": 10100,
+      "balance": 124600,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "티타임"
+      }
+    },
+    {
+      "id": "tx-excel-21",
+      "date": "2026-03-12",
+      "category": "기타",
+      "description": "점심",
+      "amount": 40900,
+      "balance": 83700,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-22",
+      "date": "2026-03-13",
+      "category": "기타",
+      "description": "점심",
+      "amount": 4000,
+      "balance": 79700,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-23",
+      "date": "2026-03-13",
+      "category": "티타임",
+      "description": "간식 · 티타임",
+      "amount": 12900,
+      "balance": 66800,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "티타임"
+      }
+    },
+    {
+      "id": "tx-excel-24",
+      "date": "2026-03-19",
+      "category": "기타",
+      "description": "점심",
+      "amount": 1000,
+      "balance": 65800,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-25",
+      "date": "2026-03-23",
+      "category": "기타",
+      "description": "점심",
+      "amount": 500,
+      "balance": 65300,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-26",
+      "date": "2026-03-24",
+      "category": "기타",
+      "description": "점심",
+      "amount": 4000,
+      "balance": 61300,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-27",
+      "date": "2026-03-26",
+      "category": "간식",
+      "description": "간식",
+      "amount": 16900,
+      "balance": 44400,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-28",
+      "date": "2026-03-26",
+      "category": "간식",
+      "description": "간식",
+      "amount": 13300,
+      "balance": 31100,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {}
+    },
+    {
+      "id": "tx-excel-29",
+      "date": "2026-04-06",
+      "category": "점심식사 추가분",
+      "description": "점심 · 점심식사 추가분",
+      "amount": 1000,
+      "balance": 149000,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "점심식사 추가분"
+      }
+    },
+    {
+      "id": "tx-excel-30",
+      "date": "2026-04-06",
+      "category": "티타임",
+      "description": "간식 · 티타임",
+      "amount": 9800,
+      "balance": 139200,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "티타임"
+      }
+    },
+    {
+      "id": "tx-excel-31",
+      "date": "2026-04-13",
+      "category": "간식",
+      "description": "간식 · 비품 구매",
+      "amount": 3000,
+      "balance": 136200,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "비품 구매"
+      }
+    },
+    {
+      "id": "tx-excel-32",
+      "date": "2026-04-14",
+      "category": "점심식사 추가분",
+      "description": "점심 · 점심식사 추가분",
+      "amount": 4000,
+      "balance": 132200,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "점심식사 추가분"
+      }
+    },
+    {
+      "id": "tx-excel-33",
+      "date": "2026-04-14",
+      "category": "티타임",
+      "description": "간식 · 티타임",
+      "amount": 11800,
+      "balance": 120400,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "티타임"
+      }
+    },
+    {
+      "id": "tx-excel-34",
+      "date": "2026-04-17",
+      "category": "티타임",
+      "description": "간식 · 티타임",
+      "amount": 4900,
+      "balance": 115500,
+      "paymentMethod": "법인카드",
+      "attendees": "김윤형, 신혜윤",
+      "extraData": {
+        "비고": "티타임"
+      }
+    },
+    {
+      "id": "tx-excel-35",
+      "date": "2026-04-21",
+      "category": "티타임",
+      "description": "간식 · 티타임",
+      "amount": 6300,
+      "balance": 109200,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "티타임"
+      }
+    },
+    {
+      "id": "tx-excel-36",
+      "date": "2026-04-22",
+      "category": "점심식사 추가분",
+      "description": "점심 · 점심식사 추가분",
+      "amount": 35200,
+      "balance": 74000,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "점심식사 추가분"
+      }
+    },
+    {
+      "id": "tx-excel-37",
+      "date": "2026-04-23",
+      "category": "티타임",
+      "description": "간식 · 티타임",
+      "amount": 20900,
+      "balance": 53100,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "티타임"
+      }
+    },
+    {
+      "id": "tx-excel-38",
+      "date": "2026-04-24",
+      "category": "점심식사 추가분",
+      "description": "점심 · 점심식사 추가분",
+      "amount": 4500,
+      "balance": 48600,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "점심식사 추가분"
+      }
+    },
+    {
+      "id": "tx-excel-39",
+      "date": "2026-04-27",
+      "category": "점심식사 추가분",
+      "description": "점심 · 점심식사 추가분",
+      "amount": 4000,
+      "balance": 44600,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "점심식사 추가분"
+      }
+    },
+    {
+      "id": "tx-excel-40",
+      "date": "2026-04-27",
+      "category": "티타임",
+      "description": "간식 · 티타임",
+      "amount": 4400,
+      "balance": 40200,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "티타임"
+      }
+    },
+    {
+      "id": "tx-excel-41",
+      "date": "2026-04-28",
+      "category": "점심식사 추가분",
+      "description": "점심 · 점심식사 추가분",
+      "amount": 4000,
+      "balance": 36200,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "점심식사 추가분"
+      }
+    },
+    {
+      "id": "tx-excel-42",
+      "date": "2026-04-29",
+      "category": "간식",
+      "description": "간식 · 간식",
+      "amount": 34400,
+      "balance": 1800,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "간식"
+      }
+    },
+    {
+      "id": "tx-excel-43",
+      "date": "2026-05-07",
+      "category": "티타임",
+      "description": "간식 · 티타임",
+      "amount": 10800,
+      "balance": 139200,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "티타임"
+      }
+    },
+    {
+      "id": "tx-excel-44",
+      "date": "2026-05-11",
+      "category": "점심식사 추가분",
+      "description": "점심 · 점심식사 추가분",
+      "amount": 4000,
+      "balance": 135200,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "점심식사 추가분"
+      }
+    },
+    {
+      "id": "tx-excel-45",
+      "date": "2026-05-11",
+      "category": "티타임",
+      "description": "간식 · 티타임",
+      "amount": 6900,
+      "balance": 128300,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "티타임"
+      }
+    },
+    {
+      "id": "tx-excel-46",
+      "date": "2026-05-12",
+      "category": "티타임",
+      "description": "간식 · 티타임",
+      "amount": 3900,
+      "balance": 124400,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "티타임"
+      }
+    },
+    {
+      "id": "tx-excel-47",
+      "date": "2026-05-14",
+      "category": "점심식사 추가분",
+      "description": "점심 · 점심식사 추가분",
+      "amount": 4000,
+      "balance": 120400,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "점심식사 추가분"
+      }
+    },
+    {
+      "id": "tx-excel-48",
+      "date": "2026-05-14",
+      "category": "티타임",
+      "description": "간식 · 티타임",
+      "amount": 11600,
+      "balance": 108800,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "티타임"
+      }
+    },
+    {
+      "id": "tx-excel-49",
+      "date": "2026-05-18",
+      "category": "티타임",
+      "description": "간식 · 티타임",
+      "amount": 9600,
+      "balance": 99200,
+      "paymentMethod": "법인카드",
+      "attendees": "김윤형, 신혜윤",
+      "extraData": {
+        "비고": "티타임"
+      }
+    },
+    {
+      "id": "tx-excel-50",
+      "date": "2026-05-21",
+      "category": "점심식사 추가분",
+      "description": "점심 · 점심식사 추가분",
+      "amount": 2700,
+      "balance": 96500,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "점심식사 추가분"
+      }
+    },
+    {
+      "id": "tx-excel-51",
+      "date": "2026-05-21",
+      "category": "티타임",
+      "description": "간식 · 티타임",
+      "amount": 7600,
+      "balance": 88900,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "티타임"
+      }
+    },
+    {
+      "id": "tx-excel-52",
+      "date": "2026-05-21",
+      "category": "간식",
+      "description": "간식 · 간식",
+      "amount": 60000,
+      "balance": 28900,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "간식"
+      }
+    },
+    {
+      "id": "tx-excel-53",
+      "date": "2026-05-27",
+      "category": "점심식사 추가분",
+      "description": "점심 · 점심식사 추가분",
+      "amount": 9000,
+      "balance": 19900,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "점심식사 추가분"
+      }
+    },
+    {
+      "id": "tx-excel-54",
+      "date": "2026-05-27",
+      "category": "티타임",
+      "description": "간식 · 티타임",
+      "amount": 6900,
+      "balance": 13000,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "티타임"
+      }
+    },
+    {
+      "id": "tx-kakao-1780035877054",
+      "date": "2026-05-29",
+      "amount": 5400,
+      "description": "티타임",
+      "paymentMethod": "법인카드",
+      "category": "티타임",
+      "attendees": "팀 모두",
+      "extraData": {
+        "비고": "카카오 법인카드 알림",
+        "원문": "브루다 한국노총\n5,400원 승인\n김*형 롯데법인카드(6713)\n일시불, 05/29 12:45"
+      },
+      "balance": 7600
+    },
+    {
+      "id": "tx-1780373122624",
+      "date": "2026-06-02",
+      "category": "점심식사 추가분",
+      "description": "용호낙지",
+      "amount": 6000,
+      "balance": 144000,
+      "paymentMethod": "법인카드",
+      "attendees": "팀 모두",
+      "extraData": {
+        "영수증번호": "",
+        "비고": ""
+      }
+    },
+    {
+      "id": "tx-kakao-1780632167153",
+      "date": "2026-06-05",
+      "amount": 2000,
+      "description": "김*형 롯데법인카드(6713)",
+      "paymentMethod": "법인카드",
+      "category": "점심식사 추가분",
+      "attendees": "팀 모두",
+      "extraData": {
+        "영수증번호": "",
+        "비고": "카카오 법인카드 알림",
+        "원문": "(주) 아워홈 푸드엠파이어IFC점\n2,000원 승인\n김*형 롯데법인카드(6713)\n일시불, 06/05 11:46"
+      },
+      "balance": 142000
+    },
+    {
+      "id": "tx-kakao-1780632217830",
+      "date": "2026-06-05",
+      "amount": 4000,
+      "description": "김*형 롯데법인카드(6713)",
+      "paymentMethod": "법인카드",
+      "category": "티타임",
+      "attendees": "팀 모두",
+      "extraData": {
+        "영수증번호": "",
+        "비고": "카카오 법인카드 알림",
+        "원문": "맥도날드여의도IFC점\n4,000원 승인\n김*형 롯데법인카드(6713)\n일시불, 06/05 12:13"
+      },
+      "balance": 138000
+    },
+    {
+      "id": "tx-kakao-1780640670911",
+      "date": "2026-06-05",
+      "amount": 6200,
+      "description": "김*형 롯데법인카드(6713)",
+      "paymentMethod": "법인카드",
+      "category": "티타임",
+      "attendees": "팀 모두",
+      "extraData": {
+        "영수증번호": "",
+        "비고": "카카오 법인카드 알림",
+        "원문": "더현대 서울(일반-오프라인)\n6,200원 승인\n김*형 롯데법인카드(6713)\n일시불, 06/05 15:04"
+      },
+      "balance": 131800
+    },
+    {
+      "id": "tx-kakao-1780978869602",
+      "date": "2026-06-09",
+      "amount": 13800,
+      "description": "김*형 롯데법인카드(6713)",
+      "paymentMethod": "법인카드",
+      "category": "티타임",
+      "attendees": "팀 모두",
+      "extraData": {
+        "영수증번호": "",
+        "비고": "카카오 법인카드 알림",
+        "원문": "올리버브라운\n13,800원 승인\n김*형 롯데법인카드(6713)\n일시불, 06/09 12:53"
+      },
+      "balance": 118000
+    }
+  ],
+  "viewerMenuVisibility": {
+    "ledger": true,
+    "lunch": true,
+    "idea-bank": true,
+    "kpi-report": false,
+    "kpi-approve": false,
+    "docs": false
+  }
+}
