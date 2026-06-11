@@ -27,6 +27,7 @@ import {
 } from '../utils/journalMm';
 import { exportKpiAnalysisWorkbook } from '../utils/kpiExcelExport';
 import { downloadJournalSnapshot } from '../utils/journalSnapshot';
+import { getCloudHealthUserMessage } from '../utils/cloudHealth';
 import { resolveJournalDay } from '../utils/journalHoliday2026';
 import { applyLeavePresetToDay, LEAVE_MEMO_TASK_RE, LEAVE_PRESET_BUTTONS } from '../utils/journalLeavePresets';
 import { scheduleScrollJournalDay } from '../utils/journalScroll';
@@ -179,11 +180,11 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     setTimeout(() => setToast(''), 2500);
   };
   const sharedSaveText = {
-    queued: ' · 공유 저장 대기',
     saving: ' · 공유 저장 중',
     saved: ' · 공유 저장 완료',
     error: ' · 공유 저장 실패 — 이 브라우저에는 임시 저장됨',
   }[journal.cloudSaveStatus] || '';
+  const cloudHealthMessage = getCloudHealthUserMessage();
 
   const memberDays = journal.getMemberDays(memberCode);
 
@@ -736,7 +737,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                     className="btn btn-import-shared"
                     aria-label="공유 일지 가져오기"
                     {...uiTooltip(
-                      '공유 저장소의 최신 일지를 가져와 현재 화면에 반영합니다.',
+                      '팀 공유 일지를 수동으로 가져옵니다. (자동 동기화 없음)',
                       undefined,
                       { wrap: true }
                     )}
@@ -756,7 +757,11 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   <button
                     type="button"
                     className="btn btn-primary"
-                    {...uiTooltip('현재 선택한 구성원 일지만 운영 공유 저장소에 저장')}
+                    {...uiTooltip(
+                      '현재 구성원 일지를 팀 공유 저장소에 수동 업로드합니다. (자동 저장 없음)',
+                      undefined,
+                      { wrap: true }
+                    )}
                     onClick={async () => {
                       const r = await journal.saveMemberToCloud(memberCode);
                       if (r.ok) showToast(`${memberCode} 일지를 공유 저장소에 저장했습니다`);
@@ -862,9 +867,13 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               {sharedSaveText}
             </p>
           )}
+          {!readOnly && cloudHealthMessage && (
+            <p className="journal-sync-hint journal-sync-hint--warn">{cloudHealthMessage}</p>
+          )}
           {!readOnly && (
             <p className="journal-sync-hint">
-              입력 내용은 이 브라우저에 즉시 백업되고, 가능한 경우 현재 구성원 일지만 운영 공유 저장소에도 저장됩니다.
+              브라우저 로컬 저장은 자동으로 유지됩니다. 팀 공유는 「공유 일지 가져오기」·「현재 구성원 공유
+              저장」 버튼을 눌렀을 때만 반영됩니다.
             </p>
           )}
         </div>

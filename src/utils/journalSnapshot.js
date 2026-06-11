@@ -1,4 +1,5 @@
 import { isProductionEnvironment } from '../constants/appEnv';
+import { canAttemptCloudWrite, recordCloudFailure, recordCloudSuccess } from './cloudHealth';
 import { apply2026PublicHolidaysToDays } from './journalHoliday2026';
 import { mergeJournalSnapshotsByMember, normalizeJournalCloudSnapshot } from './journalCloudSnapshot';
 import { recalcDayMmFromHours } from './journalMm';
@@ -67,10 +68,16 @@ export function downloadJournalSnapshot(store) {
 async function fetchSnapshotFrom(path) {
   const res = await fetch(`${path}?t=${Date.now()}`, { cache: 'no-store' });
   if (res.status === 404) return null;
+  const body = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(`공유 일지를 불러오지 못했습니다 (${res.status})`);
+    recordCloudFailure(res.status, body);
+    const err = new Error(body.message || body.error || `공유 일지를 불러오지 못했습니다 (${res.status})`);
+    err.status = res.status;
+    err.body = body;
+    throw err;
   }
-  return normalizeJournalSnapshot(await res.json());
+  recordCloudSuccess();
+  return normalizeJournalSnapshot(body);
 }
 
 export async function fetchJournalSnapshot() {
@@ -87,6 +94,11 @@ export async function saveJournalMemberSnapshot(memberCode, journal, updatedAt) 
   if (!isProductionEnvironment()) {
     throw new Error('개발 환경에서는 공유 저장이 차단됩니다.');
   }
+  if (!canAttemptCloudWrite()) {
+    const err = new Error('클라우드 공유가 일시 제한되었습니다. 잠시 후 다시 시도하세요.');
+    err.reason = 'cloud-limited';
+    throw err;
+  }
   const res = await fetch(JOURNAL_API_PATH, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -94,8 +106,10 @@ export async function saveJournalMemberSnapshot(memberCode, journal, updatedAt) 
   });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
+    recordCloudFailure(res.status, body);
     throw new Error(body.message || body.error || `공유 일지 저장 실패 (${res.status})`);
   }
+  recordCloudSuccess();
   return normalizeJournalSnapshot(body.snapshot);
 }
 

@@ -136,9 +136,18 @@ export default function App() {
 
   const { labels: navLabels, updateLabel: onNavLabelSave, resetLabels: onNavLabelsReset, defaults: navDefaults } =
     useNavLabels();
-  const { loading, error, data: snapshot, reload } = usePublicSnapshot(true, {
-    pollMs: isViewer ? 5000 : 12000,
-    silentPoll: true,
+  const provisionalDisplayModule = isViewer ? resolveViewerModule(module, viewerMenuVisibility) : module;
+  const ledgerSnapshotEnabled = provisionalDisplayModule === 'ledger';
+  const {
+    loading,
+    error,
+    data: snapshot,
+    reload,
+    refreshing,
+    reloadBlockedByCooldown,
+  } = usePublicSnapshot(ledgerSnapshotEnabled, {
+    pollMs: 0,
+    reloadCooldownMs: 30000,
   });
   const sharedViewerMenuVisibility = useMemo(
     () => normalizeViewerMenuVisibility(snapshot?.viewerMenuVisibility),
@@ -210,7 +219,7 @@ export default function App() {
   const onLivePublishSuccess = useCallback(
     (payload) => {
       markPublishedLocally(payload.publishedAt);
-      reload({ quiet: true });
+      reload({ quiet: true, force: true });
     },
     [markPublishedLocally, reload]
   );
@@ -229,9 +238,13 @@ export default function App() {
       onLivePublishSuccess(payload);
     },
     onFail: (result) => {
-      if (result.reason === 'not-configured' || result.reason === 'quota-exceeded') {
+      if (
+        result.reason === 'not-configured' ||
+        result.reason === 'quota-exceeded' ||
+        result.reason === 'cloud-limited'
+      ) {
         setLivePublishBlocked(true);
-        setLivePublishBlockReason(result.reason);
+        setLivePublishBlockReason(result.reason === 'cloud-limited' ? 'quota-exceeded' : result.reason);
       }
     },
   });
@@ -889,9 +902,14 @@ export default function App() {
     return (
       <div className="project-app theme-tms" style={{ alignItems: 'center', justifyContent: 'center', minHeight: '100vh', flexDirection: 'column', gap: '1rem', display: 'flex' }}>
         <p style={{ color: 'var(--color-danger)' }}>{error}</p>
-        <button type="button" className="btn btn-secondary" onClick={reload}>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => reload({ force: true })}
+          disabled={refreshing || reloadBlockedByCooldown}
+        >
           <RefreshCw size={16} />
-          다시 불러오기
+          {refreshing ? '불러오는 중…' : '다시 불러오기'}
         </button>
       </div>
     );
@@ -930,10 +948,7 @@ export default function App() {
         <IdeaBankPage readOnly={isViewer} />
       ) : isKpiRelatedModule(displayModule) &&
         (!isViewer || displayModule === 'kpi-approve' || displayModule === 'kpi-report') ? (
-        <JournalProvider
-          readOnly={isViewer && displayModule !== 'kpi-approve'}
-          autoSyncCloud={isProductionEnvironment() && !isViewer}
-        >
+        <JournalProvider readOnly={isViewer && displayModule !== 'kpi-approve'} autoSyncCloud={false}>
           {displayModule === 'journal' && <WeeklyJournalPage readOnly={false} />}
           {displayModule === 'competency' && <CompetencyPage />}
           {displayModule === 'kpi' && <TeamKpiPage />}
@@ -991,10 +1006,10 @@ export default function App() {
           >
             <CheckCircle size={18} style={{ color: 'var(--primary)' }} />
             <div className="custom-alert-content">
-              <h4 style={{ color: '#6ee7b7' }}>실시간 조회 동기화 켜짐</h4>
+              <h4 style={{ color: '#6ee7b7' }}>조회 반영 가능</h4>
               <p style={{ fontSize: '0.85rem' }}>
-                관리자에서 저장·수정하면 조회 URL에 약 10초 안에 반영됩니다.
-                {autoPublish.publishing ? ' (동기화 중…)' : ''}
+                작성 내용은 「지금 조회에 반영」을 눌러야 조회 URL에 올라갑니다.
+                {autoPublish.publishing ? ' (반영 중…)' : ''}
                 {autoPublish.lastPublishedAt &&
                   ` 마지막 반영: ${formatPublishedAt(autoPublish.lastPublishedAt)}`}
               </p>
@@ -1024,7 +1039,7 @@ export default function App() {
                     Blob을 비운 뒤 다시 누르세요.
                   </>
                 ) : (
-                  <> 한 건 더 저장하면 자동 동기화도 시도합니다.</>
+                  <> 「지금 조회에 반영」으로 수동 업로드하세요.</>
                 )}
               </p>
             </div>
@@ -1060,10 +1075,12 @@ export default function App() {
                 <Eye size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
                 {ledgerReadOnly ? '공개 기준' : '조회 화면 기준'}: {publishedLabel}
                 {isViewer && (
-                  <span style={{ marginLeft: 8, color: 'var(--text-muted)' }}>· 5초마다 자동 새로고침</span>
+                  <span style={{ marginLeft: 8, color: 'var(--text-muted)' }}>
+                    · 「새로고침」으로 최신 조회 데이터 불러오기
+                  </span>
                 )}
                 {!ledgerReadOnly && autoPublish.liveReady && (
-                  <span style={{ marginLeft: 8, color: '#6ee7b7' }}>· 실시간 동기화</span>
+                  <span style={{ marginLeft: 8, color: '#6ee7b7' }}>· 조회 반영 가능</span>
                 )}
                 {!ledgerReadOnly && syncStatus === 'local-ahead' && !autoPublish.liveReady && (
                   <span style={{ marginLeft: 8, color: '#f59e0b' }}>· 작성본이 더 최신 → 「지금 조회에 반영」</span>
@@ -1078,9 +1095,15 @@ export default function App() {
           <div className="header-action-area">
             {ledgerReadOnly ? (
               <>
-                <button type="button" className="btn btn-secondary" onClick={reload}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => reload({ force: true })}
+                  disabled={refreshing || reloadBlockedByCooldown}
+                  title="조회용 장부 스냅샷을 서버에서 다시 불러옵니다 (30초 간격)"
+                >
                   <RefreshCw size={16} />
-                  새로고침
+                  {refreshing ? '새로고침 중…' : '새로고침'}
                 </button>
                 <button className="btn btn-primary" onClick={handleExcelExport}>
                   <Download size={16} />

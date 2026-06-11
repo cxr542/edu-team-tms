@@ -55,6 +55,10 @@
   margin: -0.5rem 0 0.25rem;
 }
 
+.journal-sync-hint--warn {
+  color: #f59e0b;
+}
+
 .journal-sticky-top {
   position: sticky;
   top: 0;

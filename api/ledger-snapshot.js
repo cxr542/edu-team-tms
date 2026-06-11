@@ -6,8 +6,6 @@ import { readFile } from 'fs/promises';
 import path from 'path';
 
 const LIVE_LATEST_PATH = 'ledger/live-latest.json';
-/** @deprecated 타임스탬프 파일 — npm run prune:ledger-blobs 로 정리 */
-const LEGACY_PREFIX = 'ledger/live-';
 
 const ALLOWED_HOST_RE =
   /^(https?:\/\/)?([^/]*\.)?(edu-team-tms|okestro-edu-team-tms)\.vercel\.app|localhost(:\d+)?/i;
@@ -58,33 +56,6 @@ async function readLiveLatestBlob() {
     const meta = await head(LIVE_LATEST_PATH, { token });
     return fetchBlobJson(meta.downloadUrl || meta.url);
   } catch {
-    return readLegacyLatestBlob(token);
-  }
-}
-
-/** 레거시 타임스탬프 파일 — 전체 목록 순회 후 최신 1건 (정리 전 호환) */
-async function readLegacyLatestBlob(token) {
-  try {
-    const { list } = await import('@vercel/blob');
-    let latest = null;
-    let cursor;
-    do {
-      const res = await list({ prefix: LEGACY_PREFIX, token, limit: 1000, cursor });
-      for (const b of res.blobs) {
-        if (
-          !latest ||
-          new Date(b.uploadedAt).getTime() > new Date(latest.uploadedAt).getTime()
-        ) {
-          latest = b;
-        }
-      }
-      cursor = res.cursor;
-    } while (cursor);
-
-    if (!latest) return null;
-    return fetchBlobJson(latest.downloadUrl || latest.url);
-  } catch (e) {
-    console.warn('ledger legacy blob list', e.message);
     return null;
   }
 }

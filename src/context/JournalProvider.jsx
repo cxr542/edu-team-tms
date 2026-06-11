@@ -7,7 +7,7 @@ import { JOURNAL_LINKED_MEMBER_CODE } from '../constants/kpiMembers';
 
 const JournalContext = createContext(null);
 
-export function JournalProvider({ children, readOnly = false, autoSyncCloud = true }) {
+export function JournalProvider({ children, readOnly = false, autoSyncCloud = false }) {
   const journal = useWeeklyJournal({ readOnly, autoSyncCloud });
   const kpiApi = useKpiOperational({ readOnly });
   const improveProjectsApi = useImproveProjects({ readOnly });

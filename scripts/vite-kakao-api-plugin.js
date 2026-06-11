@@ -23,6 +23,17 @@ const PROD_SNAPSHOT_API_PATHS = new Set([
   '/api/kpi-operational-snapshot',
 ]);
 
+let prodProxyWarned = false;
+
+function isProdSnapshotProxyEnabled() {
+  try {
+    const env = loadEnv('development', tmsAppRoot, '');
+    return env.VITE_PROD_SNAPSHOT_PROXY === 'true';
+  } catch {
+    return process.env.VITE_PROD_SNAPSHOT_PROXY === 'true';
+  }
+}
+
 function sendJson(res, status, body) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -42,6 +53,18 @@ export function prodSnapshotReadProxyPlugin() {
         if (!PROD_SNAPSHOT_API_PATHS.has(pathname)) {
           next();
           return;
+        }
+
+        if (!isProdSnapshotProxyEnabled()) {
+          next();
+          return;
+        }
+
+        if (!prodProxyWarned) {
+          prodProxyWarned = true;
+          console.warn(
+            '[tms] VITE_PROD_SNAPSHOT_PROXY=true — dev가 운영 Blob snapshot GET을 프록시합니다. 용량 보호를 위해 기본 OFF입니다.'
+          );
         }
 
         const method = (req.method || 'GET').toUpperCase();

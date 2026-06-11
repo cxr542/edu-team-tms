@@ -133,7 +133,7 @@ function updateMemberJournal(prev, memberCode, updater) {
   };
 }
 
-export function useWeeklyJournal({ readOnly = false, autoSyncCloud = true } = {}) {
+export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {}) {
   const [store, setStore] = useState(loadStore);
   const [syncStatus, setSyncStatus] = useState('idle');
   const [cloudSaveStatus, setCloudSaveStatus] = useState('idle');
