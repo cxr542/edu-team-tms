@@ -52,6 +52,8 @@ import {
   transactionDedupeKey,
 } from './utils/ledgerCopy';
 import { isViewerMode, formatPublishedAt } from './utils/appMode';
+import { canAttemptCloudWrite, getCloudHealthUserMessage } from './utils/cloudHealth';
+import { describeLedgerPublishFailure } from './utils/ledgerPublishUi';
 import {
   buildTeamSnapshot,
   downloadTeamSnapshot,
@@ -439,24 +441,27 @@ export default function App() {
       showAlert(`조회 페이지에 ${transactions.length}건을 반영했습니다.`, 'success', 5000);
       return;
     }
+    const failure = describeLedgerPublishFailure(remote);
+    if (failure.blockLivePublish) {
+      setLivePublishBlocked(true);
+      setLivePublishBlockReason(failure.isQuota ? 'quota-exceeded' : remote?.reason || 'not-configured');
+    }
+    showAlert(failure.userMessage, 'warning', 12000);
+  };
+
+  const handleDownloadLedgerBackup = () => {
     const payload = buildTeamSnapshot(transactions, categories, activeViewerMenuVisibility);
     downloadTeamSnapshot(payload);
-    markPublishedLocally(payload.publishedAt);
-    const isQuota =
-      remote?.reason === 'quota-exceeded' || /quota|exceeded|용량/i.test(remote?.message || '');
-    if (isQuota) {
-      setLivePublishBlocked(true);
-      setLivePublishBlockReason('quota-exceeded');
-    }
-    showAlert(
-      isQuota
-        ? `조회 반영 실패: Vercel Blob 저장 용량(1GB)이 가득 찼습니다. Vercel Storage에서 Blob 파일을 삭제하거나, 내려받은 ledger-snapshot.json → npm run publish:team → 배포하세요. (방금 JSON도 저장했습니다.)`
-        : remote?.message ||
-            `즉시 반영 실패 — ledger-snapshot.json 저장됨. publish:team 후 배포하거나 Vercel Blob을 연결하세요.`,
-      'warning',
-      12000
-    );
+    showAlert('장부 JSON 백업 파일(ledger-snapshot.json)을 다운로드했습니다.', 'info', 5000);
   };
+
+  const ledgerPublishBlocked =
+    livePublishBlocked || !canAttemptCloudWrite();
+  const ledgerPublishBlockTooltip =
+    getCloudHealthUserMessage() ||
+    (livePublishBlocked
+      ? 'Blob 제한 상태에서는 조회 반영이 실패할 수 있습니다. 로컬 데이터는 유지됩니다.'
+      : '조회 URL에 즉시 반영 (서버 Blob publish)');
 
   const handleApplyViewerMenuVisibility = useCallback(
     async (next) => {
@@ -1200,11 +1205,20 @@ export default function App() {
             </button>
             <button
               type="button"
+              className="btn btn-secondary"
+              onClick={handleDownloadLedgerBackup}
+              title="조회 반영과 별도로 현재 작성 장부를 ledger-snapshot.json으로 백업합니다"
+            >
+              <Download size={16} />
+              장부 JSON 백업 다운로드
+            </button>
+            <button
+              type="button"
               className="btn btn-primary"
               style={{ backgroundColor: 'var(--primary)', boxShadow: '0 4px 14px rgba(14, 165, 233, 0.25)' }}
               onClick={handlePublishForTeam}
-              disabled={autoPublish.publishing}
-              title="조회 URL에 즉시 반영 (실시간 동기화)"
+              disabled={autoPublish.publishing || ledgerPublishBlocked}
+              title={ledgerPublishBlockTooltip}
             >
               <Share2 size={16} />
               {autoPublish.publishing ? '반영 중…' : '지금 조회에 반영'}
