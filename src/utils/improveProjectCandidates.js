@@ -20,6 +20,8 @@ export function collectImproveMmCandidates({
   getMemberDays,
   memberCodes = [],
   improveProjects = [],
+  /** UI 전용 — true면 alreadyRegistered 후보도 포함 (집계 조건은 동일) */
+  includeRegistered = false,
 }) {
   const prefix = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
   const byKey = new Map();
@@ -61,7 +63,7 @@ export function collectImproveMmCandidates({
   });
 
   return [...byKey.values()]
-    .filter((c) => !c.alreadyRegistered)
+    .filter((c) => includeRegistered || !c.alreadyRegistered)
     .sort((a, b) => {
       if (b.withActualCount !== a.withActualCount) return b.withActualCount - a.withActualCount;
       if (b.totalActual !== a.totalActual) return b.totalActual - a.totalActual;

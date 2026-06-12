@@ -123,6 +123,26 @@ describe('collectImproveMmCandidates', () => {
     expect(rows).toHaveLength(0);
   });
 
+  it('includes registered titles when includeRegistered is true', () => {
+    const rows = collectImproveMmCandidates({
+      year: 2026,
+      monthIndex: 5,
+      getMemberDays: () =>
+        makeDays({
+          '2026-06-14': {
+            tasks: [
+              { id: 't6', cat: 'ai', title: 'PPT-Academizer', plan: 1, actual: 2, done: true },
+            ],
+          },
+        }),
+      memberCodes: ['B'],
+      improveProjects: IMPROVE_PROJECTS,
+      includeRegistered: true,
+    });
+    expect(rows).toHaveLength(1);
+    expect(rows[0].alreadyRegistered).toBe(true);
+  });
+
   it('sorts candidates with actual hours first', () => {
     const rows = collect({
       '2026-06-01': {

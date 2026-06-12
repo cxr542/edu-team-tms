@@ -51,7 +51,7 @@ import './TeamKpiPage.css';
 const TABS = [
   { id: 'overview', label: '개요', hint: '월 KPI 요약·제출 상태' },
   { id: 'kpi1', label: KPI1_NAME, hint: '주간 M/M·가동률 (01c)' },
-  { id: 'kpi2', label: KPI2_NAME, hint: '생산향상 효과 건·승인' },
+  { id: 'kpi2', label: KPI2_NAME, hint: '생산성향상 도구/과제·KPI2 효과 제출' },
   { id: 'kpi3', label: KPI3_NAME, hint: '역량 팀장평가·분기 KPI3 확정' },
   { id: 'close', label: '월 확정', hint: '월 M/M 확정·제출·철회' },
   { id: 'export', label: '보내기', hint: 'Excel·클립보드·스냅샷' },
@@ -76,7 +76,7 @@ export default function TeamKpiPage() {
   const { improveProjects, improveProjectsApi, kpiOperational, getMemberDays } = journal;
   const days = getMemberDays(memberCode);
   const metrics = useTeamKpiMetrics(year, month, memberCode);
-  const improveMmCandidates = useMemo(
+  const improveMmEntries = useMemo(
     () =>
       collectImproveMmCandidates({
         year,
@@ -84,8 +84,17 @@ export default function TeamKpiPage() {
         getMemberDays,
         memberCodes: TEAM_KPI_MEMBERS.map((m) => m.code),
         improveProjects,
+        includeRegistered: true,
       }),
     [year, month, getMemberDays, improveProjects]
+  );
+  const improveMmCandidates = useMemo(
+    () => improveMmEntries.filter((c) => !c.alreadyRegistered),
+    [improveMmEntries]
+  );
+  const improveMmRegistered = useMemo(
+    () => improveMmEntries.filter((c) => c.alreadyRegistered),
+    [improveMmEntries]
   );
   const monthly01Stored = journal.getMonthly01(year, month, memberCode);
   const monthly01Form = monthly01Stored ?? defaultMonthly01();
@@ -504,12 +513,27 @@ export default function TeamKpiPage() {
 
       {tab === 'kpi2' && (
         <section className="team-kpi-section">
-          <h2>향상 과제 · {KPI2_NAME} 효과 건</h2>
+          <h2>생산성향상 도구/과제 · {KPI2_NAME} 효과 제출</h2>
+          <div className="team-kpi-improve-flow" aria-label="생산성향상 관리 흐름">
+            <p className="team-kpi-improve-flow__lead">
+              업무일지에서 생산성향상 M/M으로 기록된 업무를 후보로 확인하고, 팀장이 운영 목록에 등록한 뒤, KPI2
+              효과 제출 여부와 상태를 관리합니다.
+            </p>
+            <ol className="team-kpi-improve-flow__steps">
+              <li>구성원이 일지에 <strong>생산성향상 M/M</strong>을 입력합니다.</li>
+              <li>팀장은 <strong>후보</strong>를 확인합니다.</li>
+              <li>필요한 항목을 <strong>운영 목록</strong>에 등록합니다.</li>
+              <li>
+                <strong>KPI2 효과</strong> 제출 대상은 일지에서 KPI2 효과로 표시합니다 (자동 제출 아님).
+              </li>
+            </ol>
+          </div>
+
           <div className="team-kpi-improve-candidates">
-            <h3 className="team-kpi-improve-candidates__title">생산성향상 M/M 후보</h3>
+            <h3 className="team-kpi-improve-candidates__title">업무일지에서 발견된 후보</h3>
             <p className="team-kpi-hint team-kpi-improve-candidates__hint">
-              {year}년 {month + 1}월 일지에서 생산향상 M/M으로 기록된 업무입니다. 등록해야만 향상 과제
-              목록·KPI2 효과 건 선택에 나타납니다 (효과 건은 자동으로 켜지지 않습니다).
+              {year}년 {month + 1}월 일지의 생산성향상 M/M 또는 개선 성격 업무에서 자동으로 모입니다.{' '}
+              <strong>후보 등록</strong>은 KPI2 운영 목록에 올리는 작업이며, 원본 일지를 수정하지 않습니다.
             </p>
             {improveMmCandidates.length === 0 ? (
               <p className="team-kpi-hint">이 달 등록 가능한 후보가 없습니다.</p>
@@ -534,23 +558,54 @@ export default function TeamKpiPage() {
                       type="button"
                       className="btn btn-secondary btn-sm team-kpi-improve-candidates__register"
                       disabled={journal.kpiOperationalReadOnly}
+                      title="KPI2 운영 목록에 등록합니다. 일지 원본은 변경하지 않습니다."
+                      aria-label={`${candidate.title} — KPI2 운영 목록에 등록`}
                       onClick={() => {
                         const added = improveProjectsApi.addProject({ name: candidate.title });
                         if (added) {
-                          showToast(`「${candidate.title}」 향상 과제로 등록했습니다`);
+                          showToast(`「${candidate.title}」을 KPI2 운영 목록에 등록했습니다`);
                         } else {
-                          showToast('이미 등록된 과제이거나 추가할 수 없습니다');
+                          showToast('이미 운영 목록에 있거나 등록할 수 없습니다');
                         }
                       }}
                     >
-                      향상 과제로 등록
+                      KPI2 운영 목록에 등록
                     </button>
                   </li>
                 ))}
               </ul>
             )}
+            {improveMmRegistered.length > 0 && (
+              <div className="team-kpi-improve-registered">
+                <h4 className="team-kpi-improve-registered__title">이미 운영 목록에 있음</h4>
+                <ul className="team-kpi-improve-candidates__list team-kpi-improve-registered__list">
+                  {improveMmRegistered.map((candidate) => (
+                    <li
+                      key={candidate.normalizedKey}
+                      className="team-kpi-improve-candidates__item team-kpi-improve-registered__item"
+                    >
+                      <div className="team-kpi-improve-candidates__meta">
+                        <strong>{candidate.title}</strong>
+                        <span className="team-kpi-improve-candidates__stats">
+                          {candidate.occurrenceCount}건
+                          {candidate.totalActual > 0 ? ` · 실작업 ${candidate.totalActual}h` : ''}
+                        </span>
+                        <span className="team-kpi-improve-registered__badge">운영 목록 등록됨</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
-          <div className="team-kpi-projects">
+
+          <div className="team-kpi-projects team-kpi-projects-panel">
+            <h3 className="team-kpi-projects-panel__title">운영 중인 생산성향상 도구/과제</h3>
+            <p className="team-kpi-hint team-kpi-projects-panel__hint">
+              팀에서 관리하는 생산성향상 도구/과제 목록입니다. 일지 편집 시 KPI2 효과 건의 「향상 과제」 선택에
+              사용됩니다. KPI2 효과는 개선 효과로 제출할 항목에만 표시합니다 — 생산성향상 M/M 전체가 자동으로
+              KPI2 효과가 되지는 않습니다.
+            </p>
             <ul>
               {improveProjects.map((p) => (
                 <li key={p.id}>
@@ -564,26 +619,35 @@ export default function TeamKpiPage() {
             <div className="team-kpi-add-project">
               <input
                 className="form-input"
-                placeholder="새 향상 과제명"
+                placeholder="새 생산성향상 도구/과제명"
                 value={newProjectName}
                 onChange={(e) => setNewProjectName(e.target.value)}
               />
               <button
                 type="button"
                 className="btn btn-secondary"
+                title="운영 목록에 직접 추가합니다"
                 onClick={() => {
                   const added = improveProjectsApi.addProject({ name: newProjectName });
                   if (added) {
                     setNewProjectName('');
-                    showToast('과제 추가');
+                    showToast('운영 목록에 추가했습니다');
                   } else {
                     showToast('과제명을 확인하거나 중복 여부를 확인하세요');
                   }
                 }}
               >
-                추가
+                운영 목록에 추가
               </button>
             </div>
+          </div>
+
+          <div className="team-kpi-kpi2-effects">
+            <h3 className="team-kpi-kpi2-effects__title">{KPI2_NAME} 효과 제출 관리</h3>
+            <p className="team-kpi-hint team-kpi-kpi2-effects__hint">
+              아래 목록은 일지에서 <strong>KPI2 효과</strong>로 체크한 항목만 표시됩니다. 완료(상태)는 업무
+              마감/제출 의미이며, 실제 투입 M/M 집계와는 별개입니다.
+            </p>
           </div>
           <div className="team-kpi-table-wrap">
             <table className="team-kpi-table">
