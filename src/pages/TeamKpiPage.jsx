@@ -51,7 +51,12 @@ import './TeamKpiPage.css';
 const TABS = [
   { id: 'overview', label: '개요', hint: '월 KPI 요약·제출 상태' },
   { id: 'kpi1', label: KPI1_NAME, hint: '주간 M/M·가동률 (01c)' },
-  { id: 'kpi2', label: KPI2_NAME, hint: '생산성향상 도구/과제·KPI2 효과 제출' },
+  {
+    id: 'kpi2',
+    label: KPI2_NAME,
+    hint: 'KPI2 · 생산성향상 도구/과제·효과 제출 관리',
+    ariaLabel: `${KPI2_NAME} (KPI2 · 생산성향상 관리)`,
+  },
   { id: 'kpi3', label: KPI3_NAME, hint: '역량 팀장평가·분기 KPI3 확정' },
   { id: 'close', label: '월 확정', hint: '월 M/M 확정·제출·철회' },
   { id: 'export', label: '보내기', hint: 'Excel·클립보드·스냅샷' },
@@ -314,6 +319,7 @@ export default function TeamKpiPage() {
               type="button"
               className={`team-kpi-tab${tab === t.id ? ' is-active' : ''}`}
               onClick={() => setTab(t.id)}
+              aria-label={t.ariaLabel || t.label}
               {...(t.hint ? uiTooltip(t.hint) : {})}
             >
               {t.label}
@@ -353,11 +359,15 @@ export default function TeamKpiPage() {
               className="team-kpi-card team-kpi-card--clickable kpi2"
               role="button"
               tabIndex={0}
-              aria-label={`${KPI2_NAME} 상세보기`}
+              aria-label={`KPI2 · ${KPI2_NAME} 상세보기`}
               onClick={() => openKpiTab('kpi2')}
               onKeyDown={(e) => handleOverviewCardKeyDown(e, 'kpi2')}
             >
               <h2>{KPI2_NAME}</h2>
+              <p className="team-kpi-card-kpi-tag">KPI2 · 생산성향상 관리</p>
+              <p className="team-kpi-hint team-kpi-card-desc">
+                생산성향상 후보와 효과 제출을 관리합니다.
+              </p>
               <p className="team-kpi-big">{formatPct(kpi2DisplayPct)}</p>
               <p className="team-kpi-grade">
                 등급 {gradeKpi2(kpi2DisplayPct)}
@@ -376,7 +386,7 @@ export default function TeamKpiPage() {
                     <li>미승인 포함 {formatPct(metrics.kpi2Preview.productivityPct)}</li>
                   )}
               </ul>
-              <span className="team-kpi-card-detail">상세보기 →</span>
+              <span className="team-kpi-card-detail">KPI2 상세보기 →</span>
             </article>
             <article
               className="team-kpi-card team-kpi-card--clickable kpi3"
@@ -512,8 +522,22 @@ export default function TeamKpiPage() {
       )}
 
       {tab === 'kpi2' && (
-        <section className="team-kpi-section">
-          <h2>생산성향상 도구/과제 · {KPI2_NAME} 효과 제출</h2>
+        <section className="team-kpi-section team-kpi-section--kpi2-detail">
+          <div className="team-kpi-detail-nav">
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm team-kpi-back-btn"
+              onClick={() => setTab('overview')}
+              aria-label={`${formatKpiMemberLabel(findKpiMember(memberCode))} 구성원 개요로 돌아가기`}
+            >
+              <ChevronLeft size={16} aria-hidden />
+              구성원 개요로 돌아가기
+            </button>
+          </div>
+          <h2>KPI2 · 생산성향상 도구/과제 관리</h2>
+          <p className="team-kpi-section-lead">
+            생산성향상 M/M 후보를 확인하고, 운영 목록에 등록한 뒤, KPI2 효과 제출 대상을 관리합니다.
+          </p>
           <div className="team-kpi-improve-flow" aria-label="생산성향상 관리 흐름">
             <p className="team-kpi-improve-flow__lead">
               업무일지에서 생산성향상 M/M으로 기록된 업무를 후보로 확인하고, 팀장이 운영 목록에 등록한 뒤, KPI2

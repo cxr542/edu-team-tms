@@ -16,7 +16,7 @@ describe('improve project management UX', () => {
     expect(kpiPage).toContain('업무일지에서 발견된 후보');
     expect(kpiPage).toContain('운영 중인 생산성향상 도구/과제');
     expect(kpiPage).toContain('team-kpi-projects-panel');
-    expect(kpiPage).toContain('생산성향상 도구/과제 ·');
+    expect(kpiPage).toContain('KPI2 · 생산성향상 도구/과제 관리');
   });
 
   it('clarifies register button and duplicate guidance', () => {
