@@ -122,6 +122,18 @@ function getTodayParts() {
   return { year: now.getFullYear(), month: now.getMonth(), key: dateKey(now.getFullYear(), now.getMonth(), now.getDate()) };
 }
 
+function formatJournalDayHeading(key) {
+  const [y, m, d] = key.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')} ${DAY_NAMES[dt.getDay()]}요일 업무일지`;
+}
+
+function describeFocusDayTasks(tasks) {
+  const count = (tasks || []).length;
+  if (count === 0) return '선택 날짜에 아직 항목 없음';
+  return `선택 날짜에 항목 ${count}건`;
+}
+
 export default function WeeklyJournalPage({ readOnly = false }) {
   const journal = useJournal();
   const { year, month, setYear, setMonth, changeMonth } = useJournalPeriod();
@@ -269,6 +281,14 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     return { work, improve, leave, shortDays, doneTasks };
   }, [weeks, getDay]);
 
+  const todayKey = useMemo(() => getTodayParts().key, []);
+  const focusDayKey = selectedDayKey || todayKey;
+  const focusDay = useMemo(() => getDay(focusDayKey), [focusDayKey, getDay]);
+  const focusIsToday = focusDayKey === todayKey;
+  const localSavedAtLabel = journal.meta?.updatedAt
+    ? new Date(journal.meta.updatedAt).toLocaleString('ko-KR')
+    : null;
+
   const openPresetLeave = () => {
     const key =
       selectedDayKey || dateKey(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
@@ -318,7 +338,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       return next;
     });
     closeAll();
-    showToast('저장됨');
+    showToast('이 브라우저에 저장됨');
   };
 
   const deleteTask = () => {
@@ -664,10 +684,20 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               </button>
             </div>
             <div className="journal-author-chip">
-              작성자 <strong>{selectedMember.displayName}</strong>{' '}
-              <span>
-                ({formatKpiMemberRoleLine(selectedMember)}){readOnly ? ' · 조회' : ''}
-              </span>
+              {teamAccess.isMemberScope ? (
+                <>
+                  구성원 <strong>{memberCode}</strong> 업무일지 ·{' '}
+                  <strong>{selectedMember.displayName}</strong>{' '}
+                  <span>({formatKpiMemberRoleLine(selectedMember)}){readOnly ? ' · 조회' : ''}</span>
+                </>
+              ) : (
+                <>
+                  작성자 <strong>{selectedMember.displayName}</strong>{' '}
+                  <span>
+                    ({formatKpiMemberRoleLine(selectedMember)}){readOnly ? ' · 조회' : ''}
+                  </span>
+                </>
+              )}
             </div>
             <div className="journal-actions">
               {(teamAccess.isMemberScope || memberCode === TEAM_LEADER_MEMBER_CODE || teamAccess.isLeader) && (
@@ -735,41 +765,42 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   <button
                     type="button"
                     className="btn btn-import-shared"
-                    aria-label="공유 일지 가져오기"
+                    aria-label="팀 공유본 가져오기"
                     {...uiTooltip(
-                      '팀 공유 일지를 수동으로 가져옵니다. (자동 동기화 없음)',
+                      '팀 공유 일지를 수동으로 가져옵니다. 자동 동기화는 사용하지 않습니다.',
                       undefined,
                       { wrap: true }
                     )}
                     onClick={async () => {
                       try {
                         const r = await journal.pullFromCloud();
-                        if (r.ok) showToast('공유 일지를 이 기기에 병합했습니다');
-                        else if (r.reason === 'no-remote') showToast('공유 일지가 아직 없습니다');
+                        if (r.ok) showToast('팀 공유본을 이 브라우저에 병합했습니다');
+                        else if (r.reason === 'no-remote') showToast('팀 공유본이 아직 없습니다');
                       } catch (e) {
                         showToast(e.message);
                       }
                     }}
                   >
                     <Import size={16} />
-                    공유 일지 가져오기
+                    팀 공유본 가져오기
                   </button>
                   <button
                     type="button"
                     className="btn btn-primary"
+                    aria-label="팀 공유 저장"
                     {...uiTooltip(
-                      '현재 구성원 일지를 팀 공유 저장소에 수동 업로드합니다. (자동 저장 없음)',
+                      '현재 구성원 일지를 팀 공유 저장소에 수동 업로드합니다. 자동 저장은 사용하지 않습니다.',
                       undefined,
                       { wrap: true }
                     )}
                     onClick={async () => {
                       const r = await journal.saveMemberToCloud(memberCode);
-                      if (r.ok) showToast(`${memberCode} 일지를 공유 저장소에 저장했습니다`);
-                      else showToast(r.error?.message || '공유 저장 실패 — 이 브라우저에는 임시 저장됨');
+                      if (r.ok) showToast(`${memberCode} 일지를 팀 공유 저장소에 저장했습니다`);
+                      else showToast(r.error?.message || '팀 공유 저장 실패 — 이 브라우저에는 임시 저장됨');
                     }}
                   >
                     <Upload size={16} />
-                    현재 구성원 공유 저장
+                    팀 공유 저장
                   </button>
                   <button
                     type="button"
@@ -839,6 +870,50 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             </div>
           </header>
 
+          {!readOnly && (
+            <section className="journal-status-panel" aria-label="선택 날짜 및 저장 상태">
+              <h2 className="journal-status-panel__title">{formatJournalDayHeading(focusDayKey)}</h2>
+              <p className="journal-status-panel__meta">
+                {focusIsToday ? (
+                  <span className="journal-status-panel__today">오늘 작성 중</span>
+                ) : (
+                  <span>선택한 날짜 · 표에서 날짜 셀을 눌러 변경</span>
+                )}
+                <span className="journal-status-panel__sep" aria-hidden="true">
+                  ·
+                </span>
+                <span>{describeFocusDayTasks(focusDay.tasks)}</span>
+              </p>
+              <p className="journal-status-panel__save">
+                {localSavedAtLabel ? (
+                  <>로컬 저장됨 ({localSavedAtLabel})</>
+                ) : (
+                  <>저장은 이 브라우저에 먼저 반영됩니다.</>
+                )}
+              </p>
+            </section>
+          )}
+
+          {!readOnly && (
+            <details className="journal-kpi-help">
+              <summary>M/M · KPI2 효과 안내</summary>
+              <ul>
+                <li>
+                  <strong>일반 업무 M/M</strong>: 실제 투입 시간을 기록합니다. (실작업 h ÷ 8)
+                </li>
+                <li>
+                  <strong>생산성향상 M/M</strong>: 개선·자동화·효율화 성격의 업무 시간을 기록합니다.
+                </li>
+                <li>
+                  <strong>{KPI2_NAME} 효과</strong>: 개선 효과로 제출할 항목만 체크합니다.
+                </li>
+                <li>
+                  <strong>완료 체크</strong>: 업무 마감 또는 제출 상태 표시이며, M/M 집계와는 별개입니다.
+                </li>
+              </ul>
+            </details>
+          )}
+
           {!teamAccess.memberLocked && (
             <nav className="journal-member-tabs" aria-label="구성원">
               {TEAM_KPI_MEMBERS.map((m) => (
@@ -872,8 +947,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           )}
           {!readOnly && (
             <p className="journal-sync-hint">
-              브라우저 로컬 저장은 자동으로 유지됩니다. 팀 공유는 「공유 일지 가져오기」·「현재 구성원 공유
-              저장」 버튼을 눌렀을 때만 반영됩니다.
+              항목 저장·수정은 <strong>이 브라우저(localStorage)</strong>에 먼저 반영됩니다. 팀 공유가 필요할 때만
+              「팀 공유 저장」·「팀 공유본 가져오기」를 사용하세요. 자동 공유 저장은 사용하지 않습니다.
             </p>
           )}
         </div>
@@ -1158,11 +1233,15 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   value={editTask.mmAxis || ''}
                   onChange={(e) => setEditTask({ ...editTask, mmAxis: e.target.value || undefined })}
                   disabled={readOnly}
+                  aria-describedby="journal-mm-axis-help"
                 >
                   <option value="">자동 (AI→향상)</option>
                   <option value="work">업무 M/M</option>
                   <option value="improve">생산향상 M/M</option>
                 </select>
+                <p id="journal-mm-axis-help" className="journal-field-help">
+                  업무 M/M은 실제 투입 시간, 생산향상 M/M은 개선·자동화 업무 시간입니다.
+                </p>
               </div>
               <div className="form-group">
                 <label>시간대</label>
@@ -1208,6 +1287,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   />{' '}
                   {KPI2_NAME} 효과 건 (도구 활용·시간 단축)
                 </label>
+                <p className="journal-field-help">개선 효과로 제출할 항목만 체크합니다.</p>
               </div>
               {editTask.kpi2Effect?.enabled && (
                 <>
@@ -1261,6 +1341,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               <label>
                 <input type="checkbox" checked={editTask.done} onChange={(e) => setEditTask({ ...editTask, done: e.target.checked })} disabled={readOnly} /> 완료
               </label>
+              <p className="journal-field-help">완료 체크는 마감·제출 상태이며 M/M 집계와는 별개입니다.</p>
             </div>
             {!readOnly && (
               <div className="modal-actions journal-edit-actions">
@@ -1281,8 +1362,13 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   <button type="button" className="btn btn-secondary" onClick={closeAll}>
                     취소
                   </button>
-                  <button type="submit" className="btn btn-primary">
-                    저장
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    title="선택 항목을 이 브라우저 localStorage에 저장합니다"
+                    aria-label="이 브라우저에 저장"
+                  >
+                    이 브라우저에 저장
                   </button>
                 </div>
               </div>

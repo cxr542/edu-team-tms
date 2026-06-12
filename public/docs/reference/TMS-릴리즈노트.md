@@ -11,6 +11,7 @@
 - **공식 URL 유지:** 팀장 `?mode=edit&access=leader` · 구성원 일지 `?mode=edit&module=journal&member=B|C` · 구성원 장부 조회 `?mode=view&module=ledger&member=B|C&year=2026&month=6`
 - snapshot `viewerMenuVisibility` 필드는 호환 유지; **public viewer UI 노출만** 제거.
 - 참고문서 **「TMS 접속 URL · 북마크」** 갱신.
+- 일일 업무일지 화면에 **로컬 저장/팀 공유 저장 안내**와 **M/M·KPI2 효과 설명**을 보강했습니다.
 
 ## 2026-06-11 — Blob 트래픽 절감·구성원 운영·배포 복구
 

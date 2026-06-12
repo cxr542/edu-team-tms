@@ -59,6 +59,74 @@
   color: #f59e0b;
 }
 
+.journal-status-panel {
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md, 10px);
+  border: 1px solid var(--border-color, #d0d5dd);
+  background: rgba(0, 109, 255, 0.06);
+}
+
+.journal-status-panel__title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.35rem;
+  color: var(--text-primary);
+}
+
+.journal-status-panel__meta {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.25rem;
+  line-height: 1.5;
+}
+
+.journal-status-panel__today {
+  color: #006dff;
+  font-weight: 600;
+}
+
+.journal-status-panel__sep {
+  margin: 0 0.35rem;
+}
+
+.journal-status-panel__save {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.journal-kpi-help {
+  font-size: 0.8rem;
+  border: 1px solid var(--border-color, #d0d5dd);
+  border-radius: var(--radius-md, 10px);
+  padding: 0.5rem 0.85rem;
+  background: var(--surface, #fff);
+}
+
+.journal-kpi-help summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.journal-kpi-help ul {
+  margin: 0.65rem 0 0.25rem;
+  padding-left: 1.1rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.journal-kpi-help li + li {
+  margin-top: 0.35rem;
+}
+
+.journal-field-help {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0.35rem 0 0;
+  line-height: 1.45;
+}
+
 .journal-sticky-top {
   position: sticky;
   top: 0;
