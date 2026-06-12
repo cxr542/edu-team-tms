@@ -51,6 +51,7 @@ export default function AppShell({
   onNavLabelSave,
   onNavLabelsReset,
   isViewer,
+  isPublicViewerScope = false,
   viewerMenuVisibility = null,
   onOpenViewerMenuSettings,
   sidebarFooter = null,
@@ -130,6 +131,7 @@ export default function AppShell({
 
   const viewerLedgerOnly =
     isViewer &&
+    !isPublicViewerScope &&
     viewerMenuVisibility &&
     !viewerMenuVisibility.lunch &&
     !viewerMenuVisibility['idea-bank'] &&
@@ -141,7 +143,7 @@ export default function AppShell({
   const railTitle = collapsed ? '메뉴 펼치기' : '메뉴 접기';
   return (
     <div
-      className={`project-app theme-tms${isProd ? ' is-prod-env' : ' is-dev-env'}${viewerLedgerOnly ? ' is-viewer-ledger-only' : ''}`}
+      className={`project-app theme-tms${isProd ? ' is-prod-env' : ' is-dev-env'}${viewerLedgerOnly ? ' is-viewer-ledger-only' : ''}${isPublicViewerScope ? ' is-public-viewer-guide' : ''}`}
     >
       <p className="app-banner">
         <span className="app-banner__brand">
@@ -150,7 +152,11 @@ export default function AppShell({
           <span className={`app-env-badge app-env-badge--${isProd ? 'prod' : 'dev'}`}>{envLabel}</span>
         </span>
         <span className="app-banner__tagline">
-          {isViewer ? '교육팀 팀 빌딩비 장부' : '팀 빌딩비·주간 업무 일지'}
+          {isPublicViewerScope
+            ? '역할별 접속 URL 안내'
+            : isViewer
+              ? '교육팀 팀 빌딩비 장부'
+              : '팀 빌딩비·주간 업무 일지'}
         </span>
         <span className="app-banner__meta">{banner.meta}</span>
       </p>
@@ -181,7 +187,7 @@ export default function AppShell({
             </div>
           </div>
 
-          {!viewerLedgerOnly && (
+          {!viewerLedgerOnly && !isPublicViewerScope && (
             <nav className="sidebar-nav project-sidebar-nav" aria-label="주 메뉴">
               {isViewer ? (
                 <>
@@ -234,7 +240,7 @@ export default function AppShell({
             </nav>
           )}
 
-          {!viewerLedgerOnly && (showGeneralNav || isViewer) && (
+          {!viewerLedgerOnly && !isPublicViewerScope && (showGeneralNav || isViewer) && (
             <nav className="sidebar-nav sidebar-nav--footer project-sidebar-nav-footer" aria-label="도구·참고">
               {showGeneralNav && navBtn('idea-bank', Lightbulb)}
               {(showGeneralNav || isViewer) && navBtn('docs', BookOpen, isViewer ? { viewer: true } : undefined)}
@@ -261,7 +267,7 @@ export default function AppShell({
               </button>
               {settingsOpen && (
                 <div className="project-settings-popover" role="menu" aria-label="설정 메뉴">
-                  {canEditNav && (
+                  {canEditNav && !isPublicViewerScope && (
                     <>
                       <button
                         type="button"
@@ -325,7 +331,9 @@ export default function AppShell({
             </div>
 
             <p className="sidebar-note project-sidebar-note">
-              {isViewer ? (
+              {isPublicViewerScope ? (
+                <>ℹ️ 공개 조회 중단 · 역할별 URL 안내</>
+              ) : isViewer ? (
                 <>👀 교육팀 조회 · 팀 빌딩비 장부</>
               ) : teamAccess?.isMemberScope ? (
                 <>👤 팀원 · 일지·역량·팀 공통</>
@@ -384,7 +392,7 @@ export default function AppShell({
               </a>
             )}
             <p className="project-toolbar__title">
-              {navLabels[activeModule]}
+              {isPublicViewerScope ? '접속 안내' : navLabels[activeModule]}
               <span className="project-toolbar__env">{envLabel}</span>
               {teamAccess?.isMemberScope && teamAccess.scopedMember && (
                 <span className="project-toolbar__scope">

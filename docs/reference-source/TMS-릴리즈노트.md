@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-06-12 — 공개 조회 랜딩 축소·역할 URL 정리
+
+- **`member` 없는 `?mode=view`** (루트·`module=ledger`·런치·이것도?·KPI·docs 등) → **역할별 접속 안내 화면**으로 대체. 장부·공개 메뉴 직접 노출 없음.
+- **공식 URL 유지:** 팀장 `?mode=edit&access=leader` · 구성원 일지 `?mode=edit&module=journal&member=B|C` · 구성원 장부 조회 `?mode=view&module=ledger&member=B|C&year=2026&month=6`
+- snapshot `viewerMenuVisibility` 필드는 호환 유지; **public viewer UI 노출만** 제거.
+- 참고문서 **「TMS 접속 URL · 북마크」** 갱신.
+
 ## 2026-06-11 — Blob 트래픽 절감·구성원 운영·배포 복구
 
 **대표 운영 URL:** https://okestro-edu-team-tms.vercel.app

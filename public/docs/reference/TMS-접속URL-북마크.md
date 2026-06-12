@@ -3,21 +3,22 @@
 > **운영 사이트:** https://okestro-edu-team-tms.vercel.app  
 > (동일 콘텐츠: https://edu-team-tms.vercel.app)  
 > 로그인 없음 — **아래 URL을 그대로 북마크**하세요.  
-> 마지막 갱신: 2026-06-05
+> 마지막 갱신: 2026-06-12
 
 ---
 
-## 1. 공통 · 조회
+## 1. 공통 · 역할별 접속
 
-| 용도 | URL |
-|------|-----|
-| **팀 빌딩비 장부 조회** (누구나) | https://okestro-edu-team-tms.vercel.app/?mode=view |
-| 점심 뭐 먹지 (조회) | https://okestro-edu-team-tms.vercel.app/?mode=view&module=lunch |
-| 이것도? (조회) | https://okestro-edu-team-tms.vercel.app/?mode=view&module=idea-bank |
-| KPI 리포트 (조회) | https://okestro-edu-team-tms.vercel.app/?mode=view&module=kpi-report |
-| KPI 승인 현황 (조회) | https://okestro-edu-team-tms.vercel.app/?mode=view&module=kpi-approve |
+> **2026-06-12 정책:** `member` 없는 `?mode=view` 공개 조회(장부·런치·이것도?·KPI·참고문서)는 **사용 중단**되었습니다. 해당 URL 접속 시 **역할별 접속 안내 화면**만 표시됩니다.
 
-조회 화면은 **팀장 설정 → 조회 화면 메뉴**에서 노출 항목을 켜고 끌 수 있습니다.
+| 상태 | URL 예시 | 비고 |
+|------|----------|------|
+| **사용 중단** (안내 화면) | `?mode=view` · `?mode=view&module=ledger` · `?mode=view&module=lunch` 등 | member 없음 |
+| **공식 — 팀장** | `?mode=edit&access=leader` | 장부 편집·KPI·승인·리포트 등 |
+| **공식 — 구성원 일지** | `?mode=edit&module=journal&member=B\|C` | 본인 작성 |
+| **공식 — 구성원 장부 조회** | `?mode=view&module=ledger&member=B\|C&year=2026&month=6` | read-only |
+
+운영 사이트 루트(`/`, `mode` 생략)도 조회 모드로 열리지만, **member 없으면 동일하게 안내 화면**입니다.
 
 ---
 

@@ -1410,3 +1410,38 @@ h1, h2, h3, h4, h5, h6 {
     grid-column: span 1;
   }
 }
+
+.public-viewer-guide {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding-top: 0.5rem;
+}
+
+.public-viewer-guide__title {
+  font-size: 1.05rem;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.public-viewer-guide__list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.public-viewer-guide__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: fit-content;
+  text-decoration: none;
+}
+
+.public-viewer-guide__hint {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}

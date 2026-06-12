@@ -57,6 +57,7 @@ import {
   canEditLedger,
   isLedgerReadOnly,
   isMemberLedgerScope,
+  isPublicViewerScope,
   usesPublishedLedgerData as resolveUsesPublishedLedgerData,
 } from './utils/ledgerAccess';
 import { canAttemptCloudWrite, getCloudHealthUserMessage } from './utils/cloudHealth';
@@ -81,6 +82,7 @@ import AcademizerEmbedPage from './pages/AcademizerEmbedPage';
 import CloudChatbotEmbedPage from './pages/CloudChatbotEmbedPage';
 import LunchPickPage from './pages/LunchPickPage';
 import IdeaBankPage from './pages/IdeaBankPage';
+import PublicViewerGuidePage from './pages/PublicViewerGuidePage';
 import { isProductionEnvironment } from './constants/appEnv';
 import { uiTooltip } from './utils/uiTooltip';
 import { JournalProvider } from './context/JournalProvider';
@@ -152,6 +154,10 @@ export default function App() {
   const accessParam =
     typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('access') : null;
   const isMemberLedger = isMemberLedgerScope({ module, isMemberScope: teamAccess.isMemberScope });
+  const isPublicViewer = isPublicViewerScope({
+    isViewer,
+    isMemberScope: teamAccess.isMemberScope,
+  });
   /** 공개 조회·구성원 장부 — mode와 무관하게 read-only */
   const ledgerReadOnly = isLedgerReadOnly({
     isViewer,
@@ -183,7 +189,7 @@ export default function App() {
   const { labels: navLabels, updateLabel: onNavLabelSave, resetLabels: onNavLabelsReset, defaults: navDefaults } =
     useNavLabels();
   const provisionalDisplayModule = isViewer ? resolveViewerModule(module, viewerMenuVisibility) : module;
-  const ledgerSnapshotEnabled = provisionalDisplayModule === 'ledger';
+  const ledgerSnapshotEnabled = !isPublicViewer && provisionalDisplayModule === 'ledger';
   const {
     loading,
     error,
@@ -206,10 +212,10 @@ export default function App() {
   const displayModule = isViewer ? resolveViewerModule(module, activeViewerMenuVisibility) : module;
 
   useEffect(() => {
-    if (!isViewer) return;
+    if (!isViewer || isPublicViewer) return;
     const resolved = resolveViewerModule(module, activeViewerMenuVisibility);
     if (resolved !== module) setModule('ledger');
-  }, [isViewer, module, activeViewerMenuVisibility, setModule]);
+  }, [isViewer, isPublicViewer, module, activeViewerMenuVisibility, setModule]);
 
   useEffect(() => {
     if (isViewer) return;
@@ -963,6 +969,7 @@ export default function App() {
         onNavLabelSave={onNavLabelSave}
         onNavLabelsReset={onNavLabelsReset}
         isViewer={isViewer}
+        isPublicViewerScope={isPublicViewer}
         viewerMenuVisibility={activeViewerMenuVisibility}
         onOpenViewerMenuSettings={() => setViewerMenuSettingsOpen(true)}
         teamAccess={isViewer ? null : teamAccess}
@@ -972,7 +979,9 @@ export default function App() {
           ) : null
         }
       >
-      {displayModule === 'docs' ? (
+      {isPublicViewer ? (
+        <PublicViewerGuidePage />
+      ) : displayModule === 'docs' ? (
         <ReferenceDocsPage />
       ) : displayModule === 'academizer' && !isViewer ? (
         <AcademizerEmbedPage />

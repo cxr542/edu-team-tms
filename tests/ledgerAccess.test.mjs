@@ -65,6 +65,8 @@ describe('ledgerAccess policy', () => {
   it('keeps member scope on published ledger data even on journal module', () => {
     expect(usesPublishedLedgerData({ isViewer: false, isMemberScope: true })).toBe(true);
     expect(usesPublishedLedgerData({ isViewer: false, isMemberScope: false })).toBe(false);
+    expect(usesPublishedLedgerData({ isViewer: true, isMemberScope: false })).toBe(false);
+    expect(usesPublishedLedgerData({ isViewer: true, isMemberScope: true })).toBe(true);
   });
 
   it('uses mode=view for official member ledger URLs', () => {
