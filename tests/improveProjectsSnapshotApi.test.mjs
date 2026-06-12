@@ -1,8 +1,10 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  IMPROVE_PROJECTS_LIVE_PATH,
+  IMPROVE_PROJECTS_BLOB_KEY,
   normalizeImproveProjectsSnapshot,
-} from '../src/utils/improveProjectsCloudSnapshot.js';
+} from '../api/utils/improveProjectsSnapshotCore.js';
 
 const headMock = vi.fn();
 const putMock = vi.fn();
@@ -32,6 +34,15 @@ async function loadHandler() {
 }
 
 describe('improve-projects-snapshot API', () => {
+  const apiSource = readFileSync(
+    path.join(process.cwd(), 'api/improve-projects-snapshot.js'),
+    'utf8'
+  );
+  const coreSource = readFileSync(
+    path.join(process.cwd(), 'api/utils/improveProjectsSnapshotCore.js'),
+    'utf8'
+  );
+
   beforeEach(() => {
     vi.resetModules();
     headMock.mockReset();
@@ -49,6 +60,19 @@ describe('improve-projects-snapshot API', () => {
     }));
   });
 
+  it('imports server core only, not client snapshot utilities', () => {
+    expect(apiSource).toContain('./utils/improveProjectsSnapshotCore.js');
+    expect(apiSource).not.toContain('src/utils/improveProjectsCloudSnapshot');
+    expect(apiSource).not.toContain('cloudHealth');
+    expect(apiSource).not.toContain('appEnv');
+    expect(coreSource).not.toMatch(/\bwindow\b|\blocalStorage\b|\bnavigator\b/);
+  });
+
+  it('handler can be imported without browser globals', async () => {
+    const handler = await loadHandler();
+    expect(typeof handler).toBe('function');
+  });
+
   it('GET returns empty snapshot when blob is missing', async () => {
     headMock.mockRejectedValue(new Error('not found'));
     const handler = await loadHandler();
@@ -59,6 +83,19 @@ describe('improve-projects-snapshot API', () => {
     expect(res.statusCode).toBe(200);
     expect(res.headers['x-improve-projects-source']).toBe('empty');
     expect(body.projects).toEqual([]);
+    expect(body.source).toBe('team-kpi-improve-projects');
+    expect(body.meta.publishedBy).toBeNull();
+  });
+
+  it('GET returns disabled snapshot when blob token is missing', async () => {
+    delete process.env.BLOB_READ_WRITE_TOKEN;
+    const handler = await loadHandler();
+    const req = { method: 'GET', headers: { referer: 'http://localhost:4173/' } };
+    const res = createRes();
+    await handler(req, res);
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['x-improve-projects-source']).toBe('disabled');
+    process.env.BLOB_READ_WRITE_TOKEN = 'test-token';
   });
 
   it('GET returns blob snapshot when available', async () => {
@@ -89,8 +126,9 @@ describe('improve-projects-snapshot API', () => {
     expect(res.statusCode).toBe(200);
     expect(body.ok).toBe(true);
     expect(putMock).toHaveBeenCalledTimes(1);
+    expect(headMock).not.toHaveBeenCalled();
     const [pathname, content] = putMock.mock.calls[0];
-    expect(pathname).toBe(IMPROVE_PROJECTS_LIVE_PATH);
+    expect(pathname).toBe(IMPROVE_PROJECTS_BLOB_KEY);
     expect(pathname).not.toMatch(/live-\d/);
     const saved = JSON.parse(content);
     expect(saved.projects).toHaveLength(1);

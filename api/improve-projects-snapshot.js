@@ -1,10 +1,10 @@
 import {
   buildImproveProjectsSnapshot,
   createEmptyImproveProjectsSnapshot,
-  IMPROVE_PROJECTS_LIVE_PATH,
+  IMPROVE_PROJECTS_BLOB_KEY,
   normalizeImproveProjectsSnapshot,
   validateImproveProjectsPayload,
-} from '../src/utils/improveProjectsCloudSnapshot.js';
+} from './utils/improveProjectsSnapshotCore.js';
 
 const ALLOWED_HOST_RE =
   /^(https?:\/\/)?([^/]*\.)?(edu-team-tms|okestro-edu-team-tms)\.vercel\.app|localhost(:\d+)?/i;
@@ -48,7 +48,7 @@ async function readLiveLatestBlob() {
 
   try {
     const { head } = await import('@vercel/blob');
-    const meta = await head(IMPROVE_PROJECTS_LIVE_PATH, { token });
+    const meta = await head(IMPROVE_PROJECTS_BLOB_KEY, { token });
     const raw = await fetchBlobJson(meta.downloadUrl || meta.url);
     if (!raw) return null;
     return normalizeImproveProjectsSnapshot(raw);
@@ -66,7 +66,7 @@ async function writeLiveBlob(payload) {
   }
 
   const { put } = await import('@vercel/blob');
-  await put(IMPROVE_PROJECTS_LIVE_PATH, JSON.stringify(payload), {
+  await put(IMPROVE_PROJECTS_BLOB_KEY, JSON.stringify(payload), {
     access: 'public',
     token,
     addRandomSuffix: false,
@@ -74,7 +74,7 @@ async function writeLiveBlob(payload) {
     contentType: 'application/json',
     cacheControlMaxAge: 60,
   });
-  return IMPROVE_PROJECTS_LIVE_PATH;
+  return IMPROVE_PROJECTS_BLOB_KEY;
 }
 
 function requestBody(req) {
@@ -148,7 +148,10 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
       const body = requestBody(req);
-      const projects = Array.isArray(body?.projects) ? body.projects : body;
+      const projects = Array.isArray(body?.projects) ? body.projects : null;
+      if (!projects) {
+        return json(res, 400, { error: 'projects 배열이 필요합니다.' });
+      }
       const validation = validateImproveProjectsPayload(projects);
       if (!validation.ok) {
         return json(res, 400, { error: validation.error });

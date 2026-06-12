@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   buildImproveProjectsSnapshot,
   createEmptyImproveProjectsSnapshot,
-  IMPROVE_PROJECTS_LIVE_PATH,
   mergeImproveProjects,
   normalizeImproveProjectEntry,
   normalizeImproveProjectsSnapshot,
   validateImproveProjectsPayload,
-} from '../src/utils/improveProjectsCloudSnapshot.js';
+} from '../api/utils/improveProjectsSnapshotCore.js';
+import { IMPROVE_PROJECTS_LIVE_PATH } from '../src/utils/improveProjectsCloudSnapshot.js';
 
 describe('improveProjectsCloudSnapshot utilities', () => {
   it('builds snapshot with schema and meta', () => {
@@ -24,7 +24,8 @@ describe('improveProjectsCloudSnapshot utilities', () => {
   it('normalizes empty snapshot', () => {
     const empty = createEmptyImproveProjectsSnapshot();
     expect(empty.projects).toEqual([]);
-    expect(empty.source).toBe('empty');
+    expect(empty.source).toBe('team-kpi-improve-projects');
+    expect(empty.meta.publishedBy).toBeNull();
   });
 
   it('preserves unknown fields on project entries', () => {
@@ -68,6 +69,16 @@ describe('improveProjectsCloudSnapshot utilities', () => {
   it('uses live-latest path constant only', () => {
     expect(IMPROVE_PROJECTS_LIVE_PATH).toBe('improve-projects/live-latest.json');
     expect(IMPROVE_PROJECTS_LIVE_PATH).not.toMatch(/live-\d/);
+  });
+
+  it('server core has no browser-only globals', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const core = readFileSync(
+      join(process.cwd(), 'api/utils/improveProjectsSnapshotCore.js'),
+      'utf8'
+    );
+    expect(core).not.toMatch(/\bwindow\b|\blocalStorage\b|\bnavigator\b/);
   });
 
   it('normalizes malformed snapshot safely', () => {
