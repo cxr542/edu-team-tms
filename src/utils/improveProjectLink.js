@@ -7,10 +7,10 @@ export const IMPROVE_PROJECT_SOURCE = {
 };
 
 export const IMPROVE_PROJECT_LOCAL_SCOPE_NOTICE =
-  '향상 과제 운영 목록은 이 브라우저에 먼저 저장됩니다. 팀 공유가 필요할 때만 「팀 공유 저장」·「팀 공유본 가져오기」를 사용하세요. 자동 동기화는 사용하지 않습니다.';
+  '향상 과제 운영 목록은 이 브라우저에 먼저 저장됩니다. 구성원에게 전달할 때는 JSON 파일을 다운로드하고, 받은 JSON은 수동으로 가져오세요. 자동 동기화는 사용하지 않습니다.';
 
 export const IMPROVE_PROJECT_JOURNAL_SCOPE_NOTICE =
-  '향상 과제 운영 목록은 이 브라우저에 저장됩니다. 팀장이 공유 저장한 목록은 「팀 공유본 가져오기」로 수동 반영하세요. 자동 동기화는 사용하지 않습니다.';
+  '향상 과제 운영 목록은 이 브라우저에 저장됩니다. 팀장이 전달한 JSON 파일을 수동으로 가져와 반영하세요. 자동 동기화는 사용하지 않습니다.';
 
 /** 후보 출처에서 가장 많이 등장한 구성원 코드 */
 export function getPrimaryOwnerFromSources(sources = []) {

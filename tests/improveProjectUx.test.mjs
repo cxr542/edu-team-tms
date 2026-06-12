@@ -6,6 +6,14 @@ describe('improve project management UX', () => {
   const kpiPage = readFileSync(path.join(process.cwd(), 'src/pages/TeamKpiPage.jsx'), 'utf8');
   const kpiCss = readFileSync(path.join(process.cwd(), 'src/pages/TeamKpiPage.css'), 'utf8');
   const appSource = readFileSync(path.join(process.cwd(), 'src/App.jsx'), 'utf8');
+  const sharingConfigSource = readFileSync(
+    path.join(process.cwd(), 'src/constants/improveProjectSharingConfig.js'),
+    'utf8'
+  );
+  const fileSnapshotSource = readFileSync(
+    path.join(process.cwd(), 'src/utils/improveProjectsFileSnapshot.js'),
+    'utf8'
+  );
   const candidatesSource = readFileSync(
     path.join(process.cwd(), 'src/utils/improveProjectCandidates.js'),
     'utf8'
@@ -34,8 +42,10 @@ describe('improve project management UX', () => {
     expect(kpiPage).toContain('buildManualImproveProjectRegistration');
   });
 
-  it('shows manual shared improve project controls on KPI2 tab', () => {
+  it('keeps manual shared improve project controls behind a disabled Blob UI flag', () => {
     expect(kpiPage).toContain('team-kpi-improve-share');
+    expect(kpiPage).toContain('SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI');
+    expect(sharingConfigSource).toContain('SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI = false');
     expect(kpiPage).toContain('팀 공유 저장');
     expect(kpiPage).toContain('팀 공유본 가져오기');
     expect(kpiPage).toContain('publishSharedProjects');
@@ -43,9 +53,10 @@ describe('improve project management UX', () => {
     expect(kpiPage).toContain('자동 동기화는 사용하지 않습니다');
   });
 
-  it('shows JSON file fallback controls and blob limit guidance on KPI2 tab', () => {
+  it('shows JSON file sharing controls on KPI2 tab', () => {
     expect(kpiPage).toContain('team-kpi-improve-file');
-    expect(kpiPage).toContain('향상 과제 JSON 다운로드');
+    expect(fileSnapshotSource).toContain('JSON 파일로 구성원에게 전달');
+    expect(kpiPage).toContain('구성원 전달용 JSON 다운로드');
     expect(kpiPage).toContain('향상 과제 JSON 가져오기');
     expect(kpiPage).toContain('downloadProjectsFile');
     expect(kpiPage).toContain('importProjectsFromFile');

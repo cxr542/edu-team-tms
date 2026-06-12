@@ -164,6 +164,10 @@ describe('journal improve project UI wiring', () => {
   const kpiPage = readFileSync(path.join(process.cwd(), 'src/pages/TeamKpiPage.jsx'), 'utf8');
   const hookSource = readFileSync(path.join(process.cwd(), 'src/hooks/useImproveProjects.js'), 'utf8');
   const appSource = readFileSync(path.join(process.cwd(), 'src/App.jsx'), 'utf8');
+  const sharingConfigSource = readFileSync(
+    path.join(process.cwd(), 'src/constants/improveProjectSharingConfig.js'),
+    'utf8'
+  );
 
   it('shows operating improve projects panel for member journals', () => {
     expect(journalSource).toContain('journal-improve-projects-panel');
@@ -178,8 +182,10 @@ describe('journal improve project UI wiring', () => {
     expect(journalSource).toContain('생산성향상 M/M 또는 KPI2 효과 업무라면');
   });
 
-  it('shows manual shared improve project import on member journal only', () => {
+  it('keeps manual shared improve project import behind a disabled Blob UI flag', () => {
     expect(journalSource).toContain('journal-improve-projects-panel__actions');
+    expect(journalSource).toContain('SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI');
+    expect(sharingConfigSource).toContain('SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI = false');
     expect(journalSource).toContain('IMPROVE_PROJECTS_IMPORT_HINT');
     expect(journalSource).toContain('loadSharedProjects');
     expect(journalSource).not.toMatch(
@@ -188,7 +194,7 @@ describe('journal improve project UI wiring', () => {
   });
 
   it('shows JSON import fallback on member journal without download button', () => {
-    expect(journalSource).toContain('향상 과제 JSON 가져오기');
+    expect(journalSource).toContain('팀장에게 받은 JSON 가져오기');
     expect(journalSource).toContain('importProjectsFromFile');
     expect(journalSource).toContain('IMPROVE_PROJECTS_FILE_IMPORT_HINT');
     expect(journalSource).toContain('IMPROVE_PROJECTS_BLOB_FALLBACK_HINT');

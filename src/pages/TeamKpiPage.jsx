@@ -66,6 +66,7 @@ import TeamKpiSummarySection from '../components/TeamKpiSummarySection';
 import { COMPETENCY_USE_4060 } from '../constants/competencyConfig';
 import { KPI3_ELEMENTS, KPI3_FORMULA_TEXT } from '../constants/kpi3Elements';
 import { KPI3_DEMO_MONTH_INDEX, KPI3_DEMO_YEAR } from '../data/kpi3SeedAcademizerScenario';
+import { SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI } from '../constants/improveProjectSharingConfig';
 import './TeamKpiPage.css';
 
 const TABS = [
@@ -678,58 +679,66 @@ export default function TeamKpiPage() {
               KPI2 효과가 되지는 않습니다.
             </p>
             <div className="team-kpi-improve-share">
-              <p className="team-kpi-hint team-kpi-improve-share__hint">{IMPROVE_PROJECTS_SHARE_HINT}</p>
-              <p className="team-kpi-hint team-kpi-improve-share__policy">{IMPROVE_PROJECTS_MERGE_POLICY_HINT}</p>
-              {cloudHealthMessage && (
+              {SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI && (
+                <>
+                  <p className="team-kpi-hint team-kpi-improve-share__hint">{IMPROVE_PROJECTS_SHARE_HINT}</p>
+                  <p className="team-kpi-hint team-kpi-improve-share__policy">{IMPROVE_PROJECTS_MERGE_POLICY_HINT}</p>
+                </>
+              )}
+              {SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI && cloudHealthMessage && (
                 <p className="team-kpi-hint team-kpi-improve-share__warn">{cloudHealthMessage}</p>
               )}
-              <p className="team-kpi-hint team-kpi-improve-share__warn">{IMPROVE_PROJECTS_BLOB_FALLBACK_HINT}</p>
-              <div className="team-kpi-improve-share__group">
-                <p className="team-kpi-hint team-kpi-improve-share__group-label">Blob 팀 공유</p>
-                <div className="team-kpi-improve-share__actions">
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    disabled={improveProjectsApi.sharedBusy}
-                    aria-label="팀 공유 저장"
-                    title="수동 — 현재 운영 목록을 팀 공용 snapshot으로 저장합니다"
-                    {...uiTooltip(
-                      '현재 운영 목록을 팀 공용 snapshot에 수동 업로드합니다. 자동 저장은 사용하지 않습니다.',
-                      undefined,
-                      { wrap: true }
-                    )}
-                    onClick={async () => {
-                      const r = await improveProjectsApi.publishSharedProjects();
-                      if (r.ok) showToast('향상 과제 운영 목록을 팀 공유 저장했습니다');
-                      else showToast(r.message || '팀 공유 저장에 실패했습니다');
-                    }}
-                  >
-                    <Upload size={16} />
-                    팀 공유 저장
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-import-shared"
-                    disabled={improveProjectsApi.sharedBusy}
-                    aria-label="팀 공유본 가져오기"
-                    title="수동 — 팀 공유 snapshot을 이 브라우저 운영 목록에 병합합니다"
-                    {...uiTooltip(
-                      '팀 공유 snapshot을 수동으로 가져와 이 브라우저 운영 목록에 병합합니다. 자동 동기화는 사용하지 않습니다.',
-                      undefined,
-                      { wrap: true }
-                    )}
-                    onClick={async () => {
-                      const r = await improveProjectsApi.loadSharedProjects();
-                      if (r.ok) showToast(`팀 공유본 ${r.snapshot?.projects?.length || 0}건을 병합했습니다`);
-                      else if (r.reason === 'no-remote') showToast('팀 공유본이 아직 없습니다');
-                      else showToast(r.message || '팀 공유본을 가져오지 못했습니다');
-                    }}
-                  >
-                    <Import size={16} />
-                    팀 공유본 가져오기
-                  </button>
-                </div>
-              </div>
+              {SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI && (
+                <>
+                  <p className="team-kpi-hint team-kpi-improve-share__warn">{IMPROVE_PROJECTS_BLOB_FALLBACK_HINT}</p>
+                  <div className="team-kpi-improve-share__group">
+                    <p className="team-kpi-hint team-kpi-improve-share__group-label">Blob 팀 공유</p>
+                    <div className="team-kpi-improve-share__actions">
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        disabled={improveProjectsApi.sharedBusy}
+                        aria-label="팀 공유 저장"
+                        title="수동 — 현재 운영 목록을 팀 공용 snapshot으로 저장합니다"
+                        {...uiTooltip(
+                          '현재 운영 목록을 팀 공용 snapshot에 수동 업로드합니다. 자동 저장은 사용하지 않습니다.',
+                          undefined,
+                          { wrap: true }
+                        )}
+                        onClick={async () => {
+                          const r = await improveProjectsApi.publishSharedProjects();
+                          if (r.ok) showToast('향상 과제 운영 목록을 팀 공유 저장했습니다');
+                          else showToast(r.message || '팀 공유 저장에 실패했습니다');
+                        }}
+                      >
+                        <Upload size={16} />
+                        팀 공유 저장
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-import-shared"
+                        disabled={improveProjectsApi.sharedBusy}
+                        aria-label="팀 공유본 가져오기"
+                        title="수동 — 팀 공유 snapshot을 이 브라우저 운영 목록에 병합합니다"
+                        {...uiTooltip(
+                          '팀 공유 snapshot을 수동으로 가져와 이 브라우저 운영 목록에 병합합니다. 자동 동기화는 사용하지 않습니다.',
+                          undefined,
+                          { wrap: true }
+                        )}
+                        onClick={async () => {
+                          const r = await improveProjectsApi.loadSharedProjects();
+                          if (r.ok) showToast(`팀 공유본 ${r.snapshot?.projects?.length || 0}건을 병합했습니다`);
+                          else if (r.reason === 'no-remote') showToast('팀 공유본이 아직 없습니다');
+                          else showToast(r.message || '팀 공유본을 가져오지 못했습니다');
+                        }}
+                      >
+                        <Import size={16} />
+                        팀 공유본 가져오기
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
               <div className="team-kpi-improve-file">
                 <p className="team-kpi-hint team-kpi-improve-file__hint">{IMPROVE_PROJECTS_FILE_SHARE_HINT}</p>
                 <p className="team-kpi-hint team-kpi-improve-file__policy">{IMPROVE_PROJECTS_FILE_MERGE_POLICY_HINT}</p>
@@ -738,10 +747,10 @@ export default function TeamKpiPage() {
                     type="button"
                     className="btn btn-secondary"
                     disabled={improveProjectsApi.sharedBusy || improveProjects.length === 0}
-                    aria-label="향상 과제 JSON 다운로드"
-                    title="현재 운영 목록을 JSON 파일로 다운로드합니다"
+                    aria-label="구성원 전달용 JSON 다운로드"
+                    title="구성원에게 전달할 현재 운영 목록을 JSON 파일로 다운로드합니다"
                     {...uiTooltip(
-                      '현재 운영 목록을 JSON 파일로 다운로드합니다. Blob/API를 사용하지 않습니다.',
+                      '구성원에게 전달할 현재 운영 목록을 JSON 파일로 다운로드합니다. Blob/API를 사용하지 않습니다.',
                       undefined,
                       { wrap: true }
                     )}
@@ -753,7 +762,7 @@ export default function TeamKpiPage() {
                     }}
                   >
                     <Download size={16} />
-                    향상 과제 JSON 다운로드
+                    구성원 전달용 JSON 다운로드
                   </button>
                   <button
                     type="button"
@@ -787,7 +796,7 @@ export default function TeamKpiPage() {
                   />
                 </div>
               </div>
-              {(improveProjectsApi.sharedMeta?.publishedAt ||
+              {SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI && (improveProjectsApi.sharedMeta?.publishedAt ||
                 improveProjectsApi.sharedMeta?.importedAt) && (
                 <p className="team-kpi-hint team-kpi-improve-share__meta">
                   {improveProjectsApi.sharedMeta.publishedAt &&
@@ -797,6 +806,11 @@ export default function TeamKpiPage() {
                     ' · '}
                   {improveProjectsApi.sharedMeta.importedAt &&
                     `마지막 가져오기: ${new Date(improveProjectsApi.sharedMeta.importedAt).toLocaleString('ko-KR')}`}
+                </p>
+              )}
+              {!SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI && improveProjectsApi.sharedMeta?.fileImportedAt && (
+                <p className="team-kpi-hint team-kpi-improve-share__meta">
+                  마지막 JSON 가져오기: {new Date(improveProjectsApi.sharedMeta.fileImportedAt).toLocaleString('ko-KR')}
                 </p>
               )}
             </div>

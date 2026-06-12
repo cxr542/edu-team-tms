@@ -8,10 +8,10 @@ import {
 export const IMPROVE_PROJECTS_FILE_SNAPSHOT_SOURCE = 'team-kpi-improve-projects-file';
 
 export const IMPROVE_PROJECTS_FILE_SHARE_HINT =
-  'Blob 팀 공유가 제한된 경우 JSON 파일로 향상 과제 운영 목록을 전달할 수 있습니다.';
+  'JSON 파일로 구성원에게 전달할 향상 과제 운영 목록을 내려받을 수 있습니다.';
 
 export const IMPROVE_PROJECTS_FILE_IMPORT_HINT =
-  '팀장이 전달한 향상 과제 JSON 파일을 이 브라우저로 가져옵니다. 자동 동기화는 사용하지 않습니다.';
+  '팀장에게 받은 JSON 파일을 이 브라우저로 가져옵니다. 자동 동기화는 사용하지 않습니다.';
 
 export const IMPROVE_PROJECTS_FILE_MERGE_POLICY_HINT =
   'JSON 가져오기는 같은 id/code 항목을 갱신하고 이 브라우저에만 있는 항목은 유지합니다.';

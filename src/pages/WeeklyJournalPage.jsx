@@ -71,6 +71,10 @@ import {
   IMPROVE_PROJECTS_FILE_IMPORT_HINT,
   IMPROVE_PROJECTS_FILE_IMPORT_SUCCESS,
 } from '../utils/improveProjectsFileSnapshot';
+import {
+  SHOW_BC_JOURNAL_TEAM_SHARE_UI,
+  SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI,
+} from '../constants/improveProjectSharingConfig';
 import './WeeklyJournalPage.css';
 
 const MEMBER_IMPROVE_PROJECT_CODES = new Set(['B', 'C']);
@@ -185,8 +189,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     () => resolveMemberCategories(journal.memberJournals?.[memberCode]?.prefs),
     [journal.memberJournals, memberCode]
   );
-  const showImproveProjectPanel =
-    !readOnly && (teamAccess.isMemberScope || MEMBER_IMPROVE_PROJECT_CODES.has(memberCode));
+  const isImproveProjectMember = MEMBER_IMPROVE_PROJECT_CODES.has(memberCode);
+  const showImproveProjectPanel = !readOnly && (teamAccess.isMemberScope || isImproveProjectMember);
+  const showJournalTeamShareControls =
+    !readOnly && (SHOW_BC_JOURNAL_TEAM_SHARE_UI || !isImproveProjectMember);
   const linkableImproveProjects = useMemo(
     () => filterImproveProjectsForMember(journal.improveProjects, memberCode),
     [journal.improveProjects, memberCode]
@@ -783,46 +789,50 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               </button>
               {!readOnly && (
                 <>
-                  <button
-                    type="button"
-                    className="btn btn-import-shared"
-                    aria-label="팀 공유본 가져오기"
-                    {...uiTooltip(
-                      '팀 공유 일지를 수동으로 가져옵니다. 자동 동기화는 사용하지 않습니다.',
-                      undefined,
-                      { wrap: true }
-                    )}
-                    onClick={async () => {
-                      try {
-                        const r = await journal.pullFromCloud();
-                        if (r.ok) showToast('팀 공유본을 이 브라우저에 병합했습니다');
-                        else if (r.reason === 'no-remote') showToast('팀 공유본이 아직 없습니다');
-                      } catch (e) {
-                        showToast(e.message);
-                      }
-                    }}
-                  >
-                    <Import size={16} />
-                    팀 공유본 가져오기
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    aria-label="팀 공유 저장"
-                    {...uiTooltip(
-                      '현재 구성원 일지를 팀 공유 저장소에 수동 업로드합니다. 자동 저장은 사용하지 않습니다.',
-                      undefined,
-                      { wrap: true }
-                    )}
-                    onClick={async () => {
-                      const r = await journal.saveMemberToCloud(memberCode);
-                      if (r.ok) showToast(`${memberCode} 일지를 팀 공유 저장소에 저장했습니다`);
-                      else showToast(r.error?.message || '팀 공유 저장 실패 — 이 브라우저에는 임시 저장됨');
-                    }}
-                  >
-                    <Upload size={16} />
-                    팀 공유 저장
-                  </button>
+                  {showJournalTeamShareControls && (
+                    <>
+                      <button
+                        type="button"
+                        className="btn btn-import-shared"
+                        aria-label="팀 공유본 가져오기"
+                        {...uiTooltip(
+                          '팀 공유 일지를 수동으로 가져옵니다. 자동 동기화는 사용하지 않습니다.',
+                          undefined,
+                          { wrap: true }
+                        )}
+                        onClick={async () => {
+                          try {
+                            const r = await journal.pullFromCloud();
+                            if (r.ok) showToast('팀 공유본을 이 브라우저에 병합했습니다');
+                            else if (r.reason === 'no-remote') showToast('팀 공유본이 아직 없습니다');
+                          } catch (e) {
+                            showToast(e.message);
+                          }
+                        }}
+                      >
+                        <Import size={16} />
+                        팀 공유본 가져오기
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        aria-label="팀 공유 저장"
+                        {...uiTooltip(
+                          '현재 구성원 일지를 팀 공유 저장소에 수동 업로드합니다. 자동 저장은 사용하지 않습니다.',
+                          undefined,
+                          { wrap: true }
+                        )}
+                        onClick={async () => {
+                          const r = await journal.saveMemberToCloud(memberCode);
+                          if (r.ok) showToast(`${memberCode} 일지를 팀 공유 저장소에 저장했습니다`);
+                          else showToast(r.error?.message || '팀 공유 저장 실패 — 이 브라우저에는 임시 저장됨');
+                        }}
+                      >
+                        <Upload size={16} />
+                        팀 공유 저장
+                      </button>
+                    </>
+                  )}
                   <button
                     type="button"
                     className="btn btn-secondary"
@@ -943,49 +953,55 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 있습니다.
               </p>
               <p className="journal-sync-hint">{IMPROVE_PROJECT_JOURNAL_SCOPE_NOTICE}</p>
-              <p className="journal-field-help">{IMPROVE_PROJECTS_IMPORT_HINT}</p>
+              {SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI && (
+                <p className="journal-field-help">{IMPROVE_PROJECTS_IMPORT_HINT}</p>
+              )}
               <p className="journal-field-help">{IMPROVE_PROJECTS_FILE_IMPORT_HINT}</p>
-              {cloudHealthMessage && (
+              {SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI && cloudHealthMessage && (
                 <p className="journal-sync-hint journal-sync-hint--warn">{cloudHealthMessage}</p>
               )}
-              <p className="journal-sync-hint journal-sync-hint--warn">{IMPROVE_PROJECTS_BLOB_FALLBACK_HINT}</p>
+              {SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI && (
+                <p className="journal-sync-hint journal-sync-hint--warn">{IMPROVE_PROJECTS_BLOB_FALLBACK_HINT}</p>
+              )}
               <div className="journal-improve-projects-panel__actions">
-                <button
-                  type="button"
-                  className="btn btn-import-shared"
-                  disabled={journal.improveProjectsApi.sharedBusy}
-                  aria-label="팀 공유본 가져오기"
-                  title="수동 — 팀장이 공유 저장한 향상 과제 운영 목록을 가져옵니다"
-                  {...uiTooltip(
-                    '팀장이 공유 저장한 향상 과제 운영 목록을 수동으로 가져옵니다. 자동 동기화는 사용하지 않습니다.',
-                    undefined,
-                    { wrap: true }
-                  )}
-                  onClick={async () => {
-                    const r = await journal.improveProjectsApi.loadSharedProjects();
-                    if (r.ok) showToast(`팀 공유 향상 과제 ${r.snapshot?.projects?.length || 0}건을 병합했습니다`);
-                    else if (r.reason === 'no-remote') showToast('팀 공유본이 아직 없습니다');
-                    else showToast(r.message || '팀 공유본을 가져오지 못했습니다');
-                  }}
-                >
-                  <Import size={16} />
-                  팀 공유본 가져오기
-                </button>
+                {SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI && (
+                  <button
+                    type="button"
+                    className="btn btn-import-shared"
+                    disabled={journal.improveProjectsApi.sharedBusy}
+                    aria-label="팀 공유본 가져오기"
+                    title="수동 — 팀장이 공유 저장한 향상 과제 운영 목록을 가져옵니다"
+                    {...uiTooltip(
+                      '팀장이 공유 저장한 향상 과제 운영 목록을 수동으로 가져옵니다. 자동 동기화는 사용하지 않습니다.',
+                      undefined,
+                      { wrap: true }
+                    )}
+                    onClick={async () => {
+                      const r = await journal.improveProjectsApi.loadSharedProjects();
+                      if (r.ok) showToast(`팀 공유 향상 과제 ${r.snapshot?.projects?.length || 0}건을 병합했습니다`);
+                      else if (r.reason === 'no-remote') showToast('팀 공유본이 아직 없습니다');
+                      else showToast(r.message || '팀 공유본을 가져오지 못했습니다');
+                    }}
+                  >
+                    <Import size={16} />
+                    팀 공유본 가져오기
+                  </button>
+                )}
                 <button
                   type="button"
                   className="btn btn-secondary"
                   disabled={journal.improveProjectsApi.sharedBusy}
-                  aria-label="향상 과제 JSON 가져오기"
+                  aria-label="팀장에게 받은 JSON 가져오기"
                   title="팀장이 전달한 JSON 파일을 이 브라우저 운영 목록에 병합합니다"
                   {...uiTooltip(
-                    '팀장이 전달한 향상 과제 JSON 파일을 수동으로 가져옵니다. 자동 동기화는 사용하지 않습니다.',
+                    '팀장에게 받은 향상 과제 JSON 파일을 수동으로 가져옵니다. 자동 동기화는 사용하지 않습니다.',
                     undefined,
                     { wrap: true }
                   )}
                   onClick={() => improveProjectsFileInputRef.current?.click()}
                 >
                   <Import size={16} />
-                  향상 과제 JSON 가져오기
+                  팀장에게 받은 JSON 가져오기
                 </button>
                 <input
                   ref={improveProjectsFileInputRef}
@@ -1058,8 +1074,17 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           )}
           {!readOnly && (
             <p className="journal-sync-hint">
-              항목 저장·수정은 <strong>이 브라우저(localStorage)</strong>에 먼저 반영됩니다. 팀 공유가 필요할 때만
-              「팀 공유 저장」·「팀 공유본 가져오기」를 사용하세요. 자동 공유 저장은 사용하지 않습니다.
+              {isImproveProjectMember ? (
+                <>
+                  항목 저장·수정은 <strong>이 브라우저(localStorage)</strong>에 먼저 반영됩니다. 향상 과제 공유는
+                  「팀장에게 받은 JSON 가져오기」를 사용하세요. 자동 공유 저장은 사용하지 않습니다.
+                </>
+              ) : (
+                <>
+                  항목 저장·수정은 <strong>이 브라우저(localStorage)</strong>에 먼저 반영됩니다. 팀 공유가 필요할 때만
+                  「팀 공유 저장」·「팀 공유본 가져오기」를 사용하세요. 자동 공유 저장은 사용하지 않습니다.
+                </>
+              )}
             </p>
           )}
         </div>
