@@ -415,6 +415,11 @@ h1, h2, h3, h4, h5, h6 {
   -webkit-overflow-scrolling: touch;
 }
 
+/* 조회·구성원 장부: 메인 패널 세로 스크롤 (거래 목록 하단까지) */
+.main-content--ledger-readonly {
+  overscroll-behavior: contain;
+}
+
 /* Header Section */
 .content-header {
   display: flex;

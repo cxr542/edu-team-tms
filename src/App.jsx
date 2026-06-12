@@ -141,6 +141,8 @@ export default function App() {
   /** 조회 URL·구성원 URL에서 장부는 공개 스냅샷만 (편집 불가) */
   const ledgerReadOnly = isViewer || teamAccess.isMemberScope;
   const usesPublishedLedgerData = ledgerReadOnly;
+  /** 공개 조회(?mode=view)만 상세 접기 — 구성원 B/C 장부는 거래 목록 항상 표시 */
+  const ledgerDetailsCollapsible = isViewer && !teamAccess.isMemberScope;
   const {
     visibility: viewerMenuVisibility,
     applyVisibility: applyViewerMenuVisibility,
@@ -274,9 +276,10 @@ export default function App() {
   const [selectedYear, setSelectedYear] = useState(todayPeriod.year);
   const [selectedMonth, setSelectedMonth] = useState(todayPeriod.month);
 
-  /** 조회(공개) 화면: 지출 상세·목록은 잔액 카드 「상세보기」로만 펼침 */
+  /** 조회(공개) 화면: 지출 상세·목록은 잔액 카드 「상세보기」로만 펼침 (구성원 장부 제외) */
   const [viewerDetailsOpen, setViewerDetailsOpen] = useState(false);
   const viewerDetailsRef = useRef(null);
+  const showLedgerDetails = !ledgerDetailsCollapsible || viewerDetailsOpen;
   
   // 검색 및 상세 필터 상태
   const [searchTerm, setSearchTerm] = useState('');
@@ -366,7 +369,12 @@ export default function App() {
       const next = !open;
       if (next) {
         requestAnimationFrame(() => {
-          viewerDetailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          const main = document.querySelector('.main-content');
+          const target = viewerDetailsRef.current;
+          if (main && target) {
+            const top = target.offsetTop - 16;
+            main.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+          }
         });
       }
       return next;
@@ -956,7 +964,7 @@ export default function App() {
         </JournalProvider>
       ) : (
       <>
-      <main className="main-content">
+      <main className={`main-content${ledgerReadOnly ? ' main-content--ledger-readonly' : ''}`}>
 
         {ledgerReadOnly && loading && <LoadingScreen inline />}
 
@@ -1327,7 +1335,7 @@ export default function App() {
             <div className="stat-card-footer">
               {remainingBalance >= 0 ? (
                 <span>
-                  {ledgerReadOnly && !viewerDetailsOpen
+                  {ledgerDetailsCollapsible && !viewerDetailsOpen
                     ? '상세보기에서 지출 내역·분석 확인'
                     : '사용 가능 한도 여유 있음'}
                 </span>
@@ -1335,7 +1343,7 @@ export default function App() {
                 <span style={{ color: '#ef4444', fontWeight: 600 }}>⚠️ 예산 초과 상태!</span>
               )}
             </div>
-            {ledgerReadOnly && (
+            {ledgerDetailsCollapsible && (
               <button
                 type="button"
                 className="stat-card-detail-btn"
@@ -1388,7 +1396,7 @@ export default function App() {
           </div>
         </section>
 
-        {(!ledgerReadOnly || viewerDetailsOpen) && (
+        {(!ledgerReadOnly || showLedgerDetails) && (
         <div
           ref={ledgerReadOnly ? viewerDetailsRef : null}
           className={ledgerReadOnly ? 'viewer-ledger-details' : undefined}
