@@ -27,9 +27,8 @@ html.project-sidebar-collapsed-boot .project-app.theme-tms {
 .project-app {
   display: flex;
   flex-direction: column;
-  height: 100vh;
   min-height: 100vh;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .project-app .app-banner {
@@ -195,7 +194,7 @@ html.project-sidebar-collapsed-boot .project-app.theme-tms {
   display: grid;
   grid-template-columns: var(--shell-sidebar-current) 1fr;
   flex: 1;
-  min-height: 0;
+  min-height: calc(100vh - var(--shell-banner-h));
   transition: grid-template-columns 0.22s ease;
 }
 
@@ -727,7 +726,7 @@ html.project-sidebar-collapsed-boot .project-sidebar-rail__icon {
 .project-content {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   flex-direction: column;
 }
