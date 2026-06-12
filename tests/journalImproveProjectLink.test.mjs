@@ -163,6 +163,7 @@ describe('journal improve project UI wiring', () => {
   );
   const kpiPage = readFileSync(path.join(process.cwd(), 'src/pages/TeamKpiPage.jsx'), 'utf8');
   const hookSource = readFileSync(path.join(process.cwd(), 'src/hooks/useImproveProjects.js'), 'utf8');
+  const appSource = readFileSync(path.join(process.cwd(), 'src/App.jsx'), 'utf8');
 
   it('shows operating improve projects panel for member journals', () => {
     expect(journalSource).toContain('journal-improve-projects-panel');
@@ -177,6 +178,15 @@ describe('journal improve project UI wiring', () => {
     expect(journalSource).toContain('생산성향상 M/M 또는 KPI2 효과 업무라면');
   });
 
+  it('shows manual shared improve project import on member journal only', () => {
+    expect(journalSource).toContain('journal-improve-projects-panel__actions');
+    expect(journalSource).toContain('IMPROVE_PROJECTS_IMPORT_HINT');
+    expect(journalSource).toContain('loadSharedProjects');
+    expect(journalSource).not.toMatch(
+      /journal-improve-projects-panel[\s\S]*publishSharedProjects/
+    );
+  });
+
   it('registers candidates with owner metadata on KPI2 tab', () => {
     expect(kpiPage).toContain('buildImproveProjectRegistrationFromCandidate');
     expect(kpiPage).toContain('buildManualImproveProjectRegistration');
@@ -185,6 +195,17 @@ describe('journal improve project UI wiring', () => {
     expect(kpiPage).toContain('IMPROVE_PROJECT_LOCAL_SCOPE_NOTICE');
     expect(hookSource).toContain('ownerMemberId');
     expect(hookSource).toContain('sourceLabel');
+  });
+
+  it('keeps auto cloud sync disabled and manual-only shared improve project methods', () => {
+    expect(appSource).toContain('autoSyncCloud={false}');
+    expect(hookSource).toContain('publishSharedProjects');
+    expect(hookSource).toContain('loadSharedProjects');
+    const localPersistEffect = hookSource.match(
+      /useEffect\(\(\) => \{([\s\S]*?)\}, \[projects, readOnly\]\)/
+    );
+    expect(localPersistEffect?.[1]).toContain('saveImproveProjects(projects)');
+    expect(localPersistEffect?.[1] || '').not.toContain('fetchSharedImproveProjectsSnapshot');
   });
 
   it('collects improve MM candidates for leader KPI display unchanged', () => {

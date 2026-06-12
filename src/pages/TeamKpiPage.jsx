@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { BookOpen, ChevronLeft, ChevronRight, ClipboardCopy, Download } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, ClipboardCopy, Download, Import, Upload } from 'lucide-react';
 import AppModuleLink from '../components/AppModuleLink';
 import { buildDocsModuleUrl } from '../constants/referenceDocs';
 import { useJournal, useTeamKpiMetrics } from '../context/JournalProvider';
@@ -39,6 +39,11 @@ import {
   findRegisteredProjectForCandidate,
   IMPROVE_PROJECT_LOCAL_SCOPE_NOTICE,
 } from '../utils/improveProjectLink';
+import {
+  IMPROVE_PROJECTS_MERGE_POLICY_HINT,
+  IMPROVE_PROJECTS_SHARE_HINT,
+} from '../utils/improveProjectsCloudSnapshot';
+import { getCloudHealthUserMessage } from '../utils/cloudHealth';
 import {
   apply01cToMonthly01,
   computeUtilization,
@@ -87,6 +92,7 @@ export default function TeamKpiPage() {
   const journal = useJournal();
   const [memberCode, setMemberCode] = useState(TEAM_LEADER_MEMBER_CODE);
   const { improveProjects, improveProjectsApi, kpiOperational, getMemberDays } = journal;
+  const cloudHealthMessage = getCloudHealthUserMessage();
   const days = getMemberDays(memberCode);
   const metrics = useTeamKpiMetrics(year, month, memberCode);
   const improveMmEntries = useMemo(
@@ -663,6 +669,68 @@ export default function TeamKpiPage() {
               사용됩니다. KPI2 효과는 개선 효과로 제출할 항목에만 표시합니다 — 생산성향상 M/M 전체가 자동으로
               KPI2 효과가 되지는 않습니다.
             </p>
+            <div className="team-kpi-improve-share">
+              <p className="team-kpi-hint team-kpi-improve-share__hint">{IMPROVE_PROJECTS_SHARE_HINT}</p>
+              <p className="team-kpi-hint team-kpi-improve-share__policy">{IMPROVE_PROJECTS_MERGE_POLICY_HINT}</p>
+              {cloudHealthMessage && (
+                <p className="team-kpi-hint team-kpi-improve-share__warn">{cloudHealthMessage}</p>
+              )}
+              <div className="team-kpi-improve-share__actions">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={improveProjectsApi.sharedBusy}
+                  aria-label="팀 공유 저장"
+                  title="수동 — 현재 운영 목록을 팀 공용 snapshot으로 저장합니다"
+                  {...uiTooltip(
+                    '현재 운영 목록을 팀 공용 snapshot에 수동 업로드합니다. 자동 저장은 사용하지 않습니다.',
+                    undefined,
+                    { wrap: true }
+                  )}
+                  onClick={async () => {
+                    const r = await improveProjectsApi.publishSharedProjects();
+                    if (r.ok) showToast('향상 과제 운영 목록을 팀 공유 저장했습니다');
+                    else showToast(r.message || '팀 공유 저장에 실패했습니다');
+                  }}
+                >
+                  <Upload size={16} />
+                  팀 공유 저장
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-import-shared"
+                  disabled={improveProjectsApi.sharedBusy}
+                  aria-label="팀 공유본 가져오기"
+                  title="수동 — 팀 공유 snapshot을 이 브라우저 운영 목록에 병합합니다"
+                  {...uiTooltip(
+                    '팀 공유 snapshot을 수동으로 가져와 이 브라우저 운영 목록에 병합합니다. 자동 동기화는 사용하지 않습니다.',
+                    undefined,
+                    { wrap: true }
+                  )}
+                  onClick={async () => {
+                    const r = await improveProjectsApi.loadSharedProjects();
+                    if (r.ok) showToast(`팀 공유본 ${r.snapshot?.projects?.length || 0}건을 병합했습니다`);
+                    else if (r.reason === 'no-remote') showToast('팀 공유본이 아직 없습니다');
+                    else showToast(r.message || '팀 공유본을 가져오지 못했습니다');
+                  }}
+                >
+                  <Import size={16} />
+                  팀 공유본 가져오기
+                </button>
+              </div>
+              {(improveProjectsApi.sharedMeta?.publishedAt ||
+                improveProjectsApi.sharedMeta?.importedAt) && (
+                <p className="team-kpi-hint team-kpi-improve-share__meta">
+                  {improveProjectsApi.sharedMeta.publishedAt &&
+                    `마지막 팀 공유 저장: ${new Date(improveProjectsApi.sharedMeta.publishedAt).toLocaleString('ko-KR')}`}
+                  {improveProjectsApi.sharedMeta.publishedAt &&
+                    improveProjectsApi.sharedMeta.importedAt &&
+                    ' · '}
+                  {improveProjectsApi.sharedMeta.importedAt &&
+                    `마지막 가져오기: ${new Date(improveProjectsApi.sharedMeta.importedAt).toLocaleString('ko-KR')}`}
+                </p>
+              )}
+            </div>
             <ul>
               {improveProjects.map((p) => (
                 <li key={p.id} className="team-kpi-project-row">

@@ -5,6 +5,13 @@ import {
   loadImproveProjects,
   saveImproveProjects,
 } from '../constants/improveProjects';
+import {
+  fetchSharedImproveProjectsSnapshot,
+  IMPROVE_PROJECTS_IMPORT_FAIL_MESSAGE,
+  IMPROVE_PROJECTS_PUBLISH_FAIL_MESSAGE,
+  mergeImproveProjects,
+  publishSharedImproveProjectsSnapshot,
+} from '../utils/improveProjectsCloudSnapshot';
 
 function slugId(name) {
   const base = String(name)
@@ -17,6 +24,8 @@ function slugId(name) {
 
 export function useImproveProjects({ readOnly = false } = {}) {
   const [projects, setProjects] = useState(loadImproveProjects);
+  const [sharedBusy, setSharedBusy] = useState(false);
+  const [sharedMeta, setSharedMeta] = useState({ publishedAt: null, importedAt: null });
 
   useEffect(() => {
     if (!readOnly) saveImproveProjects(projects);
@@ -89,5 +98,70 @@ export function useImproveProjects({ readOnly = false } = {}) {
     }
   }, [readOnly]);
 
-  return { projects, addProject, updateProject, removeProject, resetProjects };
+  const publishSharedProjects = useCallback(async () => {
+    if (readOnly || sharedBusy) {
+      return { ok: false, reason: readOnly ? 'read-only' : 'busy' };
+    }
+    setSharedBusy(true);
+    try {
+      const snapshot = await publishSharedImproveProjectsSnapshot(projects, { publishedBy: 'leader' });
+      setSharedMeta((prev) => ({
+        ...prev,
+        publishedAt: snapshot.publishedAt || new Date().toISOString(),
+      }));
+      return { ok: true, snapshot };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e,
+        message: e.message || IMPROVE_PROJECTS_PUBLISH_FAIL_MESSAGE,
+      };
+    } finally {
+      setSharedBusy(false);
+    }
+  }, [projects, readOnly, sharedBusy]);
+
+  const loadSharedProjects = useCallback(async () => {
+    if (readOnly || sharedBusy) {
+      return { ok: false, reason: readOnly ? 'read-only' : 'busy' };
+    }
+    setSharedBusy(true);
+    try {
+      const { snapshot, source } = await fetchSharedImproveProjectsSnapshot();
+      if (!snapshot.projects?.length) {
+        return { ok: false, reason: 'no-remote', source };
+      }
+      let merged = projects;
+      setProjects((prev) => {
+        merged = mergeImproveProjects(prev, snapshot.projects);
+        return merged;
+      });
+      setSharedMeta((prev) => ({
+        ...prev,
+        importedAt: new Date().toISOString(),
+        remotePublishedAt: snapshot.publishedAt || null,
+      }));
+      return { ok: true, snapshot, source, mergedCount: merged.length };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e,
+        message: e.message || IMPROVE_PROJECTS_IMPORT_FAIL_MESSAGE,
+      };
+    } finally {
+      setSharedBusy(false);
+    }
+  }, [projects, readOnly, sharedBusy]);
+
+  return {
+    projects,
+    addProject,
+    updateProject,
+    removeProject,
+    resetProjects,
+    publishSharedProjects,
+    loadSharedProjects,
+    sharedBusy,
+    sharedMeta,
+  };
 }

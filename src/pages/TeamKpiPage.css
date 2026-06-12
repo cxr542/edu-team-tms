@@ -620,6 +620,34 @@
   min-width: 0;
 }
 
+.team-kpi-improve-share {
+  margin: 0.5rem 0 0.85rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-soft, #e8ebf0);
+  background: var(--bg-secondary, #f8f9fb);
+}
+
+.team-kpi-improve-share__hint,
+.team-kpi-improve-share__policy,
+.team-kpi-improve-share__meta {
+  margin: 0 0 0.35rem;
+  font-size: 0.82rem;
+}
+
+.team-kpi-improve-share__warn {
+  margin: 0 0 0.5rem;
+  font-size: 0.82rem;
+  color: var(--color-warning, #b45309);
+}
+
+.team-kpi-improve-share__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
 .team-kpi-improve-candidates__register {
   flex: 0 0 auto;
 }

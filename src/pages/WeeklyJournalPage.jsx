@@ -64,6 +64,7 @@ import {
   formatImproveProjectOwnerLine,
   IMPROVE_PROJECT_JOURNAL_SCOPE_NOTICE,
 } from '../utils/improveProjectLink';
+import { IMPROVE_PROJECTS_IMPORT_HINT } from '../utils/improveProjectsCloudSnapshot';
 import './WeeklyJournalPage.css';
 
 const MEMBER_IMPROVE_PROJECT_CODES = new Set(['B', 'C']);
@@ -935,6 +936,30 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 있습니다.
               </p>
               <p className="journal-sync-hint">{IMPROVE_PROJECT_JOURNAL_SCOPE_NOTICE}</p>
+              <p className="journal-field-help">{IMPROVE_PROJECTS_IMPORT_HINT}</p>
+              <div className="journal-improve-projects-panel__actions">
+                <button
+                  type="button"
+                  className="btn btn-import-shared"
+                  disabled={journal.improveProjectsApi.sharedBusy}
+                  aria-label="팀 공유본 가져오기"
+                  title="수동 — 팀장이 공유 저장한 향상 과제 운영 목록을 가져옵니다"
+                  {...uiTooltip(
+                    '팀장이 공유 저장한 향상 과제 운영 목록을 수동으로 가져옵니다. 자동 동기화는 사용하지 않습니다.',
+                    undefined,
+                    { wrap: true }
+                  )}
+                  onClick={async () => {
+                    const r = await journal.improveProjectsApi.loadSharedProjects();
+                    if (r.ok) showToast(`팀 공유 향상 과제 ${r.snapshot?.projects?.length || 0}건을 병합했습니다`);
+                    else if (r.reason === 'no-remote') showToast('팀 공유본이 아직 없습니다');
+                    else showToast(r.message || '팀 공유본을 가져오지 못했습니다');
+                  }}
+                >
+                  <Import size={16} />
+                  팀 공유본 가져오기
+                </button>
+              </div>
               {linkableImproveProjects.length === 0 ? (
                 <p className="journal-improve-projects-panel__empty">
                   아직 연결 가능한 향상 과제가 없습니다. 생산성향상 M/M 업무를 작성하면 팀장 KPI 화면에서 후보로

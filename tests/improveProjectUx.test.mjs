@@ -34,6 +34,15 @@ describe('improve project management UX', () => {
     expect(kpiPage).toContain('buildManualImproveProjectRegistration');
   });
 
+  it('shows manual shared improve project controls on KPI2 tab', () => {
+    expect(kpiPage).toContain('team-kpi-improve-share');
+    expect(kpiPage).toContain('팀 공유 저장');
+    expect(kpiPage).toContain('팀 공유본 가져오기');
+    expect(kpiPage).toContain('publishSharedProjects');
+    expect(kpiPage).toContain('loadSharedProjects');
+    expect(kpiPage).toContain('자동 동기화는 사용하지 않습니다');
+  });
+
   it('explains KPI2 effect is not automatic from improve MM', () => {
     expect(kpiPage).toContain('효과 제출 관리');
     expect(kpiPage).toContain('KPI2 효과가 되지는 않습니다');
@@ -56,6 +65,7 @@ describe('improve project management UX', () => {
     expect(kpiCss).toContain('.team-kpi-kpi2-effects');
     expect(kpiCss).toContain('.team-kpi-local-scope-notice');
     expect(kpiCss).toContain('.team-kpi-project-row');
+    expect(kpiCss).toContain('.team-kpi-improve-share');
   });
 
   it('preserves journal auto sync off and ledger/public viewer policies', () => {
