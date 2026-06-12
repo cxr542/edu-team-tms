@@ -5,6 +5,10 @@
 
 ---
 
+## 2026-06-12 — KPI2 향상 과제 JSON 다운로드/가져오기 fallback
+
+- Vercel Blob 사용량 제한 상황에서도 KPI2 향상 과제 운영 목록을 공유할 수 있도록 **JSON 다운로드/가져오기 fallback**을 추가했습니다.
+
 ## 2026-06-12 — KPI2 향상 과제 팀 공유 API hotfix
 
 - KPI2 향상 과제 팀 공유 snapshot API가 서버리스 환경에서 client-only 의존성을 불러오지 않도록 **서버 전용 유틸**로 분리했습니다.

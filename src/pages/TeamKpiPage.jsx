@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen, ChevronLeft, ChevronRight, ClipboardCopy, Download, Import, Upload } from 'lucide-react';
 import AppModuleLink from '../components/AppModuleLink';
 import { buildDocsModuleUrl } from '../constants/referenceDocs';
@@ -43,6 +43,13 @@ import {
   IMPROVE_PROJECTS_MERGE_POLICY_HINT,
   IMPROVE_PROJECTS_SHARE_HINT,
 } from '../utils/improveProjectsCloudSnapshot';
+import {
+  IMPROVE_PROJECTS_BLOB_FALLBACK_HINT,
+  IMPROVE_PROJECTS_FILE_IMPORT_FAIL,
+  IMPROVE_PROJECTS_FILE_IMPORT_SUCCESS,
+  IMPROVE_PROJECTS_FILE_MERGE_POLICY_HINT,
+  IMPROVE_PROJECTS_FILE_SHARE_HINT,
+} from '../utils/improveProjectsFileSnapshot';
 import { getCloudHealthUserMessage } from '../utils/cloudHealth';
 import {
   apply01cToMonthly01,
@@ -93,6 +100,7 @@ export default function TeamKpiPage() {
   const [memberCode, setMemberCode] = useState(TEAM_LEADER_MEMBER_CODE);
   const { improveProjects, improveProjectsApi, kpiOperational, getMemberDays } = journal;
   const cloudHealthMessage = getCloudHealthUserMessage();
+  const improveProjectsFileInputRef = useRef(null);
   const days = getMemberDays(memberCode);
   const metrics = useTeamKpiMetrics(year, month, memberCode);
   const improveMmEntries = useMemo(
@@ -675,48 +683,109 @@ export default function TeamKpiPage() {
               {cloudHealthMessage && (
                 <p className="team-kpi-hint team-kpi-improve-share__warn">{cloudHealthMessage}</p>
               )}
-              <div className="team-kpi-improve-share__actions">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  disabled={improveProjectsApi.sharedBusy}
-                  aria-label="팀 공유 저장"
-                  title="수동 — 현재 운영 목록을 팀 공용 snapshot으로 저장합니다"
-                  {...uiTooltip(
-                    '현재 운영 목록을 팀 공용 snapshot에 수동 업로드합니다. 자동 저장은 사용하지 않습니다.',
-                    undefined,
-                    { wrap: true }
-                  )}
-                  onClick={async () => {
-                    const r = await improveProjectsApi.publishSharedProjects();
-                    if (r.ok) showToast('향상 과제 운영 목록을 팀 공유 저장했습니다');
-                    else showToast(r.message || '팀 공유 저장에 실패했습니다');
-                  }}
-                >
-                  <Upload size={16} />
-                  팀 공유 저장
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-import-shared"
-                  disabled={improveProjectsApi.sharedBusy}
-                  aria-label="팀 공유본 가져오기"
-                  title="수동 — 팀 공유 snapshot을 이 브라우저 운영 목록에 병합합니다"
-                  {...uiTooltip(
-                    '팀 공유 snapshot을 수동으로 가져와 이 브라우저 운영 목록에 병합합니다. 자동 동기화는 사용하지 않습니다.',
-                    undefined,
-                    { wrap: true }
-                  )}
-                  onClick={async () => {
-                    const r = await improveProjectsApi.loadSharedProjects();
-                    if (r.ok) showToast(`팀 공유본 ${r.snapshot?.projects?.length || 0}건을 병합했습니다`);
-                    else if (r.reason === 'no-remote') showToast('팀 공유본이 아직 없습니다');
-                    else showToast(r.message || '팀 공유본을 가져오지 못했습니다');
-                  }}
-                >
-                  <Import size={16} />
-                  팀 공유본 가져오기
-                </button>
+              <p className="team-kpi-hint team-kpi-improve-share__warn">{IMPROVE_PROJECTS_BLOB_FALLBACK_HINT}</p>
+              <div className="team-kpi-improve-share__group">
+                <p className="team-kpi-hint team-kpi-improve-share__group-label">Blob 팀 공유</p>
+                <div className="team-kpi-improve-share__actions">
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={improveProjectsApi.sharedBusy}
+                    aria-label="팀 공유 저장"
+                    title="수동 — 현재 운영 목록을 팀 공용 snapshot으로 저장합니다"
+                    {...uiTooltip(
+                      '현재 운영 목록을 팀 공용 snapshot에 수동 업로드합니다. 자동 저장은 사용하지 않습니다.',
+                      undefined,
+                      { wrap: true }
+                    )}
+                    onClick={async () => {
+                      const r = await improveProjectsApi.publishSharedProjects();
+                      if (r.ok) showToast('향상 과제 운영 목록을 팀 공유 저장했습니다');
+                      else showToast(r.message || '팀 공유 저장에 실패했습니다');
+                    }}
+                  >
+                    <Upload size={16} />
+                    팀 공유 저장
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-import-shared"
+                    disabled={improveProjectsApi.sharedBusy}
+                    aria-label="팀 공유본 가져오기"
+                    title="수동 — 팀 공유 snapshot을 이 브라우저 운영 목록에 병합합니다"
+                    {...uiTooltip(
+                      '팀 공유 snapshot을 수동으로 가져와 이 브라우저 운영 목록에 병합합니다. 자동 동기화는 사용하지 않습니다.',
+                      undefined,
+                      { wrap: true }
+                    )}
+                    onClick={async () => {
+                      const r = await improveProjectsApi.loadSharedProjects();
+                      if (r.ok) showToast(`팀 공유본 ${r.snapshot?.projects?.length || 0}건을 병합했습니다`);
+                      else if (r.reason === 'no-remote') showToast('팀 공유본이 아직 없습니다');
+                      else showToast(r.message || '팀 공유본을 가져오지 못했습니다');
+                    }}
+                  >
+                    <Import size={16} />
+                    팀 공유본 가져오기
+                  </button>
+                </div>
+              </div>
+              <div className="team-kpi-improve-file">
+                <p className="team-kpi-hint team-kpi-improve-file__hint">{IMPROVE_PROJECTS_FILE_SHARE_HINT}</p>
+                <p className="team-kpi-hint team-kpi-improve-file__policy">{IMPROVE_PROJECTS_FILE_MERGE_POLICY_HINT}</p>
+                <div className="team-kpi-improve-file__actions">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    disabled={improveProjectsApi.sharedBusy || improveProjects.length === 0}
+                    aria-label="향상 과제 JSON 다운로드"
+                    title="현재 운영 목록을 JSON 파일로 다운로드합니다"
+                    {...uiTooltip(
+                      '현재 운영 목록을 JSON 파일로 다운로드합니다. Blob/API를 사용하지 않습니다.',
+                      undefined,
+                      { wrap: true }
+                    )}
+                    onClick={() => {
+                      const r = improveProjectsApi.downloadProjectsFile();
+                      if (r.ok) showToast('향상 과제 JSON 파일을 다운로드했습니다');
+                      else if (r.reason === 'empty') showToast('다운로드할 운영 목록이 없습니다');
+                      else showToast(r.message || '향상 과제 JSON을 다운로드하지 못했습니다');
+                    }}
+                  >
+                    <Download size={16} />
+                    향상 과제 JSON 다운로드
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-import-shared"
+                    disabled={improveProjectsApi.sharedBusy}
+                    aria-label="향상 과제 JSON 가져오기"
+                    title="JSON 파일을 이 브라우저 운영 목록에 병합합니다"
+                    {...uiTooltip(
+                      'JSON 파일을 수동으로 가져와 이 브라우저 운영 목록에 병합합니다. 자동 동기화는 사용하지 않습니다.',
+                      undefined,
+                      { wrap: true }
+                    )}
+                    onClick={() => improveProjectsFileInputRef.current?.click()}
+                  >
+                    <Import size={16} />
+                    향상 과제 JSON 가져오기
+                  </button>
+                  <input
+                    ref={improveProjectsFileInputRef}
+                    type="file"
+                    accept="application/json,.json"
+                    hidden
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const r = await improveProjectsApi.importProjectsFromFile(file);
+                      if (r.ok) showToast(IMPROVE_PROJECTS_FILE_IMPORT_SUCCESS);
+                      else showToast(r.message || IMPROVE_PROJECTS_FILE_IMPORT_FAIL);
+                      e.target.value = '';
+                    }}
+                  />
+                </div>
               </div>
               {(improveProjectsApi.sharedMeta?.publishedAt ||
                 improveProjectsApi.sharedMeta?.importedAt) && (

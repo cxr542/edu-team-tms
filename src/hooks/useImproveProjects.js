@@ -12,6 +12,12 @@ import {
   mergeImproveProjects,
   publishSharedImproveProjectsSnapshot,
 } from '../utils/improveProjectsCloudSnapshot';
+import {
+  downloadImproveProjectsSnapshot,
+  IMPROVE_PROJECTS_FILE_IMPORT_FAIL,
+  mergeImproveProjectsFromSnapshot,
+  readImproveProjectsSnapshotFile,
+} from '../utils/improveProjectsFileSnapshot';
 
 function slugId(name) {
   const base = String(name)
@@ -153,6 +159,68 @@ export function useImproveProjects({ readOnly = false } = {}) {
     }
   }, [projects, readOnly, sharedBusy]);
 
+  const downloadProjectsFile = useCallback(() => {
+    if (readOnly) {
+      return { ok: false, reason: 'read-only' };
+    }
+    if (!projects.length) {
+      return { ok: false, reason: 'empty' };
+    }
+    try {
+      const snapshot = downloadImproveProjectsSnapshot(projects);
+      return { ok: true, snapshot };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e,
+        message: e.message || '향상 과제 JSON을 다운로드하지 못했습니다.',
+      };
+    }
+  }, [projects, readOnly]);
+
+  const importProjectsFromFile = useCallback(
+    async (file) => {
+      if (readOnly || sharedBusy) {
+        return { ok: false, reason: readOnly ? 'read-only' : 'busy' };
+      }
+      setSharedBusy(true);
+      try {
+        const parsed = await readImproveProjectsSnapshotFile(file);
+        if (!parsed.ok) {
+          return {
+            ok: false,
+            reason: parsed.error,
+            message: IMPROVE_PROJECTS_FILE_IMPORT_FAIL,
+          };
+        }
+        if (!parsed.snapshot.projects?.length) {
+          return { ok: false, reason: 'no-projects', message: IMPROVE_PROJECTS_FILE_IMPORT_FAIL };
+        }
+        let merged = projects;
+        setProjects((prev) => {
+          merged = mergeImproveProjectsFromSnapshot(prev, parsed.snapshot.projects);
+          return merged;
+        });
+        setSharedMeta((prev) => ({
+          ...prev,
+          importedAt: new Date().toISOString(),
+          fileImportedAt: new Date().toISOString(),
+          filePublishedAt: parsed.snapshot.publishedAt || null,
+        }));
+        return { ok: true, snapshot: parsed.snapshot, mergedCount: merged.length };
+      } catch (e) {
+        return {
+          ok: false,
+          error: e,
+          message: e.message || IMPROVE_PROJECTS_FILE_IMPORT_FAIL,
+        };
+      } finally {
+        setSharedBusy(false);
+      }
+    },
+    [projects, readOnly, sharedBusy]
+  );
+
   return {
     projects,
     addProject,
@@ -161,6 +229,8 @@ export function useImproveProjects({ readOnly = false } = {}) {
     resetProjects,
     publishSharedProjects,
     loadSharedProjects,
+    downloadProjectsFile,
+    importProjectsFromFile,
     sharedBusy,
     sharedMeta,
   };

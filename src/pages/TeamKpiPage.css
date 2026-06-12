@@ -641,7 +641,37 @@
   color: var(--color-warning, #b45309);
 }
 
+.team-kpi-improve-share__group {
+  margin-top: 0.5rem;
+}
+
+.team-kpi-improve-share__group-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted, #5c6570);
+}
+
 .team-kpi-improve-share__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.team-kpi-improve-file {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--border-soft, #e8ebf0);
+}
+
+.team-kpi-improve-file__hint,
+.team-kpi-improve-file__policy {
+  margin: 0 0 0.35rem;
+  font-size: 0.82rem;
+}
+
+.team-kpi-improve-file__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;

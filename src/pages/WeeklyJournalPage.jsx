@@ -65,6 +65,12 @@ import {
   IMPROVE_PROJECT_JOURNAL_SCOPE_NOTICE,
 } from '../utils/improveProjectLink';
 import { IMPROVE_PROJECTS_IMPORT_HINT } from '../utils/improveProjectsCloudSnapshot';
+import {
+  IMPROVE_PROJECTS_BLOB_FALLBACK_HINT,
+  IMPROVE_PROJECTS_FILE_IMPORT_FAIL,
+  IMPROVE_PROJECTS_FILE_IMPORT_HINT,
+  IMPROVE_PROJECTS_FILE_IMPORT_SUCCESS,
+} from '../utils/improveProjectsFileSnapshot';
 import './WeeklyJournalPage.css';
 
 const MEMBER_IMPROVE_PROJECT_CODES = new Set(['B', 'C']);
@@ -146,6 +152,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const journal = useJournal();
   const { year, month, setYear, setMonth, changeMonth } = useJournalPeriod();
   const importInputRef = useRef(null);
+  const improveProjectsFileInputRef = useRef(null);
   const journalMainRef = useRef(null);
   const scrollToDayRef = useRef(null);
   const teamAccess = useTeamAccess();
@@ -937,6 +944,11 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               </p>
               <p className="journal-sync-hint">{IMPROVE_PROJECT_JOURNAL_SCOPE_NOTICE}</p>
               <p className="journal-field-help">{IMPROVE_PROJECTS_IMPORT_HINT}</p>
+              <p className="journal-field-help">{IMPROVE_PROJECTS_FILE_IMPORT_HINT}</p>
+              {cloudHealthMessage && (
+                <p className="journal-sync-hint journal-sync-hint--warn">{cloudHealthMessage}</p>
+              )}
+              <p className="journal-sync-hint journal-sync-hint--warn">{IMPROVE_PROJECTS_BLOB_FALLBACK_HINT}</p>
               <div className="journal-improve-projects-panel__actions">
                 <button
                   type="button"
@@ -959,6 +971,36 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   <Import size={16} />
                   팀 공유본 가져오기
                 </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  disabled={journal.improveProjectsApi.sharedBusy}
+                  aria-label="향상 과제 JSON 가져오기"
+                  title="팀장이 전달한 JSON 파일을 이 브라우저 운영 목록에 병합합니다"
+                  {...uiTooltip(
+                    '팀장이 전달한 향상 과제 JSON 파일을 수동으로 가져옵니다. 자동 동기화는 사용하지 않습니다.',
+                    undefined,
+                    { wrap: true }
+                  )}
+                  onClick={() => improveProjectsFileInputRef.current?.click()}
+                >
+                  <Import size={16} />
+                  향상 과제 JSON 가져오기
+                </button>
+                <input
+                  ref={improveProjectsFileInputRef}
+                  type="file"
+                  accept="application/json,.json"
+                  hidden
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const r = await journal.improveProjectsApi.importProjectsFromFile(file);
+                    if (r.ok) showToast(IMPROVE_PROJECTS_FILE_IMPORT_SUCCESS);
+                    else showToast(r.message || IMPROVE_PROJECTS_FILE_IMPORT_FAIL);
+                    e.target.value = '';
+                  }}
+                />
               </div>
               {linkableImproveProjects.length === 0 ? (
                 <p className="journal-improve-projects-panel__empty">

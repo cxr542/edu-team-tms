@@ -43,6 +43,16 @@ describe('improve project management UX', () => {
     expect(kpiPage).toContain('자동 동기화는 사용하지 않습니다');
   });
 
+  it('shows JSON file fallback controls and blob limit guidance on KPI2 tab', () => {
+    expect(kpiPage).toContain('team-kpi-improve-file');
+    expect(kpiPage).toContain('향상 과제 JSON 다운로드');
+    expect(kpiPage).toContain('향상 과제 JSON 가져오기');
+    expect(kpiPage).toContain('downloadProjectsFile');
+    expect(kpiPage).toContain('importProjectsFromFile');
+    expect(kpiPage).toContain('IMPROVE_PROJECTS_BLOB_FALLBACK_HINT');
+    expect(kpiPage).toContain('IMPROVE_PROJECTS_FILE_SHARE_HINT');
+  });
+
   it('explains KPI2 effect is not automatic from improve MM', () => {
     expect(kpiPage).toContain('효과 제출 관리');
     expect(kpiPage).toContain('KPI2 효과가 되지는 않습니다');
@@ -66,6 +76,7 @@ describe('improve project management UX', () => {
     expect(kpiCss).toContain('.team-kpi-local-scope-notice');
     expect(kpiCss).toContain('.team-kpi-project-row');
     expect(kpiCss).toContain('.team-kpi-improve-share');
+    expect(kpiCss).toContain('.team-kpi-improve-file');
   });
 
   it('preserves journal auto sync off and ledger/public viewer policies', () => {

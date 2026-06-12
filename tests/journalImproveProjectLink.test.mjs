@@ -187,6 +187,16 @@ describe('journal improve project UI wiring', () => {
     );
   });
 
+  it('shows JSON import fallback on member journal without download button', () => {
+    expect(journalSource).toContain('향상 과제 JSON 가져오기');
+    expect(journalSource).toContain('importProjectsFromFile');
+    expect(journalSource).toContain('IMPROVE_PROJECTS_FILE_IMPORT_HINT');
+    expect(journalSource).toContain('IMPROVE_PROJECTS_BLOB_FALLBACK_HINT');
+    expect(journalSource).not.toContain('향상 과제 JSON 다운로드');
+    expect(journalSource).toContain('관련 향상 과제');
+    expect(journalSource).toContain('선택 안 함');
+  });
+
   it('registers candidates with owner metadata on KPI2 tab', () => {
     expect(kpiPage).toContain('buildImproveProjectRegistrationFromCandidate');
     expect(kpiPage).toContain('buildManualImproveProjectRegistration');
@@ -201,11 +211,15 @@ describe('journal improve project UI wiring', () => {
     expect(appSource).toContain('autoSyncCloud={false}');
     expect(hookSource).toContain('publishSharedProjects');
     expect(hookSource).toContain('loadSharedProjects');
+    expect(hookSource).toContain('downloadProjectsFile');
+    expect(hookSource).toContain('importProjectsFromFile');
     const localPersistEffect = hookSource.match(
       /useEffect\(\(\) => \{([\s\S]*?)\}, \[projects, readOnly\]\)/
     );
     expect(localPersistEffect?.[1]).toContain('saveImproveProjects(projects)');
     expect(localPersistEffect?.[1] || '').not.toContain('fetchSharedImproveProjectsSnapshot');
+    expect(localPersistEffect?.[1] || '').not.toContain('importProjectsFromFile');
+    expect(localPersistEffect?.[1] || '').not.toContain('downloadProjectsFile');
   });
 
   it('collects improve MM candidates for leader KPI display unchanged', () => {
