@@ -52,6 +52,11 @@ import {
   transactionDedupeKey,
 } from './utils/ledgerCopy';
 import { isViewerMode, formatPublishedAt } from './utils/appMode';
+import { URL_ACCESS_LEADER } from './constants/teamAccess';
+
+const LEDGER_SNAPSHOT_REFRESH_LABEL = '조회 데이터 새로고침';
+const LEDGER_SNAPSHOT_REFRESH_TITLE =
+  '저장된 조회용 장부 snapshot을 다시 불러옵니다. 장부 데이터는 수정하지 않습니다.';
 import { canAttemptCloudWrite, getCloudHealthUserMessage } from './utils/cloudHealth';
 import { describeLedgerPublishFailure } from './utils/ledgerPublishUi';
 import {
@@ -143,6 +148,11 @@ export default function App() {
   const usesPublishedLedgerData = ledgerReadOnly;
   /** 공개 조회(?mode=view)만 상세 접기 — 구성원 B/C 장부는 거래 목록 항상 표시 */
   const ledgerDetailsCollapsible = isViewer && !teamAccess.isMemberScope;
+  const isLeaderEditAccess =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('access') === URL_ACCESS_LEADER;
+  /** 팀장 편집(?mode=edit&access=leader) 장부에서만 엑셀 내보내기 */
+  const canExportLedgerExcel = !isViewer && isLeaderEditAccess;
   const {
     visibility: viewerMenuVisibility,
     applyVisibility: applyViewerMenuVisibility,
@@ -1147,7 +1157,7 @@ export default function App() {
                 {ledgerReadOnly ? '공개 기준' : '조회 화면 기준'}: {publishedLabel}
                 {isViewer && (
                   <span style={{ marginLeft: 8, color: 'var(--text-muted)' }}>
-                    · 「새로고침」으로 최신 조회 데이터 불러오기
+                    · 「{LEDGER_SNAPSHOT_REFRESH_LABEL}」으로 최신 조회 데이터 불러오기
                   </span>
                 )}
                 {!ledgerReadOnly && autoPublish.liveReady && (
@@ -1171,14 +1181,11 @@ export default function App() {
                   className="btn btn-secondary"
                   onClick={() => reload({ force: true })}
                   disabled={refreshing || reloadBlockedByCooldown}
-                  title="조회용 장부 스냅샷을 서버에서 다시 불러옵니다 (30초 간격)"
+                  title={LEDGER_SNAPSHOT_REFRESH_TITLE}
+                  aria-label={LEDGER_SNAPSHOT_REFRESH_LABEL}
                 >
                   <RefreshCw size={16} />
-                  {refreshing ? '새로고침 중…' : '새로고침'}
-                </button>
-                <button className="btn btn-primary" onClick={handleExcelExport}>
-                  <Download size={16} />
-                  엑셀로 내보내기
+                  {refreshing ? '불러오는 중…' : LEDGER_SNAPSHOT_REFRESH_LABEL}
                 </button>
               </>
             ) : (
@@ -1247,11 +1254,17 @@ export default function App() {
               />
             </div>
 
-            {/* 엑셀 파일 내보내기 */}
-            <button className="btn btn-primary" style={{ backgroundColor: 'var(--primary)', boxShadow: '0 4px 14px var(--color-success-bg)' }} onClick={handleExcelExport}>
-              <Download size={16} />
-              엑셀로 내보내기
-            </button>
+            {canExportLedgerExcel ? (
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ backgroundColor: 'var(--primary)', boxShadow: '0 4px 14px var(--color-success-bg)' }}
+                onClick={handleExcelExport}
+              >
+                <Download size={16} />
+                엑셀로 내보내기
+              </button>
+            ) : null}
             </>
             )}
           </div>
