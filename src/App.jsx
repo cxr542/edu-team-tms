@@ -53,10 +53,12 @@ import {
 } from './utils/ledgerCopy';
 import { isViewerMode, formatPublishedAt } from './utils/appMode';
 import { URL_ACCESS_LEADER } from './constants/teamAccess';
-
-const LEDGER_SNAPSHOT_REFRESH_LABEL = '조회 데이터 새로고침';
-const LEDGER_SNAPSHOT_REFRESH_TITLE =
-  '저장된 조회용 장부 snapshot을 다시 불러옵니다. 장부 데이터는 수정하지 않습니다.';
+import {
+  canEditLedger,
+  isLedgerReadOnly,
+  isMemberLedgerScope,
+  usesPublishedLedgerData as resolveUsesPublishedLedgerData,
+} from './utils/ledgerAccess';
 import { canAttemptCloudWrite, getCloudHealthUserMessage } from './utils/cloudHealth';
 import { describeLedgerPublishFailure } from './utils/ledgerPublishUi';
 import {
@@ -93,6 +95,10 @@ import {
 } from './constants/viewerMenu';
 import ViewerMenuSettingsModal from './components/ViewerMenuSettingsModal';
 import UsageStandardsPanel from './components/UsageStandardsPanel';
+
+const LEDGER_SNAPSHOT_REFRESH_LABEL = '조회 데이터 새로고침';
+const LEDGER_SNAPSHOT_REFRESH_TITLE =
+  '저장된 조회용 장부 snapshot을 다시 불러옵니다. 장부 데이터는 수정하지 않습니다.';
 
 function sanitizeExtraData(extraData) {
   const base = { 영수증번호: '', 비고: '' };
@@ -143,14 +149,29 @@ export default function App() {
   const isViewer = isViewerMode();
   const { module, setModule } = useAppModule();
   const teamAccess = useTeamAccess();
-  /** 조회 URL·구성원 URL에서 장부는 공개 스냅샷만 (편집 불가) */
-  const ledgerReadOnly = isViewer || teamAccess.isMemberScope;
-  const usesPublishedLedgerData = ledgerReadOnly;
+  const accessParam =
+    typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('access') : null;
+  const isMemberLedger = isMemberLedgerScope({ module, isMemberScope: teamAccess.isMemberScope });
+  /** 공개 조회·구성원 장부 — mode와 무관하게 read-only */
+  const ledgerReadOnly = isLedgerReadOnly({
+    isViewer,
+    module,
+    isMemberScope: teamAccess.isMemberScope,
+  });
+  const usesPublishedLedgerData = resolveUsesPublishedLedgerData({
+    isViewer,
+    isMemberScope: teamAccess.isMemberScope,
+  });
+  const canEditLedgerNow = canEditLedger({
+    isViewer,
+    module,
+    isMemberScope: teamAccess.isMemberScope,
+    isLeader: teamAccess.isLeader,
+    accessParam,
+  });
   /** 공개 조회(?mode=view)만 상세 접기 — 구성원 B/C 장부는 거래 목록 항상 표시 */
   const ledgerDetailsCollapsible = isViewer && !teamAccess.isMemberScope;
-  const isLeaderEditAccess =
-    typeof window !== 'undefined' &&
-    new URLSearchParams(window.location.search).get('access') === URL_ACCESS_LEADER;
+  const isLeaderEditAccess = accessParam === URL_ACCESS_LEADER;
   /** 팀장 편집(?mode=edit&access=leader) 장부에서만 엑셀 내보내기 */
   const canExportLedgerExcel = !isViewer && isLeaderEditAccess;
   const {
@@ -255,7 +276,7 @@ export default function App() {
   const [livePublishBlockReason, setLivePublishBlockReason] = useState(null); // 'not-configured' | 'quota-exceeded'
 
   const autoPublish = useAutoPublishLedger({
-    enabled: !usesPublishedLedgerData,
+    enabled: canEditLedgerNow,
     transactions,
     categories,
     viewerMenuVisibility: activeViewerMenuVisibility,
@@ -564,7 +585,7 @@ export default function App() {
   const showDevProdLedgerImport =
     !isProductionEnvironment() &&
     displayModule === 'ledger' &&
-    !ledgerReadOnly &&
+    canEditLedgerNow &&
     !isViewer &&
     teamAccess.isLeader;
 
@@ -1042,7 +1063,7 @@ export default function App() {
           </div>
         )}
 
-        {!ledgerReadOnly && livePublishBlocked && (
+        {canEditLedgerNow && livePublishBlocked && (
           <div
             className="custom-alert"
             style={{
@@ -1075,7 +1096,7 @@ export default function App() {
           </div>
         )}
 
-        {!ledgerReadOnly && !livePublishBlocked && autoPublish.liveReady && (
+        {canEditLedgerNow && !livePublishBlocked && autoPublish.liveReady && (
           <div
             className="custom-alert"
             style={{
@@ -1098,7 +1119,7 @@ export default function App() {
           </div>
         )}
 
-        {!ledgerReadOnly && !autoPublish.liveReady && unpublishedToView.length > 0 && (
+        {canEditLedgerNow && !autoPublish.liveReady && unpublishedToView.length > 0 && (
           <div
             className="custom-alert"
             style={{
@@ -1148,9 +1169,17 @@ export default function App() {
             <h1>교육팀 팀 빌딩비 장부</h1>
             <p>
               {ledgerReadOnly
-                ? '교육팀 팀 빌딩 지출·잔액을 조회합니다. (작성·수정은 팀장만 가능)'
+                ? isMemberLedger
+                  ? '구성원 장부는 조회 전용입니다. 거래 추가·수정·삭제는 팀장 화면에서만 가능합니다.'
+                  : '교육팀 팀 빌딩 지출·잔액을 조회합니다. (작성·수정은 팀장만 가능)'
                 : '매월 150,000원씩 배정되는 교육팀의 팀 빌딩 지출 및 잔액 흐름을 꼼꼼하게 관리합니다.'}
             </p>
+            {isMemberLedger && !isViewer && (
+              <p style={{ marginTop: '0.35rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                조회 전용 화면입니다. 북마크 URL은{' '}
+                <code>?mode=view&amp;module=ledger&amp;member={teamAccess.scopedMember}</code> 형식을 권장합니다.
+              </p>
+            )}
             {publishedLabel && (
               <p style={{ marginTop: '0.35rem', fontSize: '0.8rem', color: 'var(--accent)' }}>
                 <Eye size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
@@ -1486,7 +1515,7 @@ export default function App() {
           </div>
         </section>
 
-        {!ledgerReadOnly && (
+        {canEditLedgerNow && (
           <section className="ledger-usage-standards-wrap" aria-label="사용 유형 기준">
             <UsageStandardsPanel
               categories={categories}
@@ -1499,15 +1528,15 @@ export default function App() {
 
         {/* 5. 지출 장부 목록 테이블 영역 */}
         <section className="table-container-card">
-          {!ledgerReadOnly && (
+          {canEditLedgerNow && (
             <div ref={ledgerToolbarSentinelRef} className="ledger-toolbar-sentinel" aria-hidden="true" />
           )}
-          {!ledgerReadOnly && ledgerToolbarPinned && ledgerToolbarHeight > 0 && (
+          {canEditLedgerNow && ledgerToolbarPinned && ledgerToolbarHeight > 0 && (
             <div style={{ height: ledgerToolbarHeight, flexShrink: 0 }} aria-hidden="true" />
           )}
           <div
-            ref={!ledgerReadOnly ? ledgerToolbarRef : null}
-            className={`table-controls${!ledgerReadOnly ? ' ledger-table-toolbar' : ''}${ledgerToolbarPinned ? ' is-pinned' : ''}`}
+            ref={canEditLedgerNow ? ledgerToolbarRef : null}
+            className={`table-controls${canEditLedgerNow ? ' ledger-table-toolbar' : ''}${ledgerToolbarPinned ? ' is-pinned' : ''}`}
           >
             
             {/* 검색 필드 */}
@@ -1546,7 +1575,7 @@ export default function App() {
                 <option value="현금">현금</option>
               </select>
 
-              {!ledgerReadOnly && (
+              {canEditLedgerNow && (
                 <>
                   <button
                     type="button"
@@ -1566,7 +1595,7 @@ export default function App() {
             </div>
           </div>
 
-          {!ledgerReadOnly && filteredTransactions.length > 0 && (
+          {canEditLedgerNow && filteredTransactions.length > 0 && (
             <div className={`ledger-bulk-actions${bulkDeleteMode ? ' ledger-bulk-actions--active' : ''}`}>
               <span className="ledger-bulk-actions__hint">
                 {bulkDeleteMode
@@ -1622,7 +1651,7 @@ export default function App() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    {!ledgerReadOnly && bulkDeleteMode && (
+                    {canEditLedgerNow && bulkDeleteMode && (
                       <th className="ledger-select-col">
                         <input
                           type="checkbox"
@@ -1650,7 +1679,7 @@ export default function App() {
                       <th key={idx}>{key}</th>
                     ))}
 
-                    {!ledgerReadOnly && (
+                    {canEditLedgerNow && (
                       <th style={{ textAlign: 'center' }}>{bulkDeleteMode ? '삭제' : '수정'}</th>
                     )}
                   </tr>
@@ -1663,7 +1692,7 @@ export default function App() {
                         bulkDeleteMode && selectedTxIds.includes(tx.id) ? 'ledger-row-selected' : undefined
                       }
                     >
-                      {!ledgerReadOnly && bulkDeleteMode && (
+                      {canEditLedgerNow && bulkDeleteMode && (
                         <td className="ledger-select-col">
                           <input
                             type="checkbox"
@@ -1728,7 +1757,7 @@ export default function App() {
                         );
                       })}
 
-                      {!ledgerReadOnly && (
+                      {canEditLedgerNow && (
                       <td>
                         {bulkDeleteMode ? (
                           <button
@@ -1773,7 +1802,7 @@ export default function App() {
               </div>
               <h3>해당 월에 등록된 지출 내역이 없습니다</h3>
               <p>{ledgerReadOnly ? '다른 월을 선택해 보세요.' : '오른쪽 상단의 엑셀 불러오기를 하거나 신규 지출 내역을 직접 추가해 보세요.'}</p>
-              {!ledgerReadOnly && (
+              {canEditLedgerNow && (
               <button
                 className="btn btn-secondary"
                 style={{ borderColor: 'var(--color-success-bg)' }}
@@ -1793,7 +1822,7 @@ export default function App() {
         </div>
         )}
 
-        {!ledgerReadOnly && (
+        {canEditLedgerNow && (
           <div className="ledger-fab-stack" role="group" aria-label="빠른 지출 입력">
             <button
               type="button"
@@ -1819,7 +1848,7 @@ export default function App() {
       </main>
 
       {/* 6. 지출 내역 기록/수정 폼 모달 다이얼로그 */}
-      {!ledgerReadOnly && (
+      {canEditLedgerNow && (
       <div className={`modal-overlay ${isModalOpen ? 'active' : ''}`}>
         <div className="modal-content" style={{ borderColor: 'var(--color-success-bg)' }}>
           <div className="modal-header">
@@ -1942,7 +1971,7 @@ export default function App() {
       </div>
       )}
 
-      {!ledgerReadOnly && (
+      {canEditLedgerNow && (
       <>
       <CategoryManageModal
         isOpen={isCategoryManageOpen}
@@ -1971,7 +2000,7 @@ export default function App() {
       </>
       )}
       </AppShell>
-      {!ledgerReadOnly && (
+      {!isViewer && teamAccess.isLeader && !teamAccess.isMemberScope && (
         <ViewerMenuSettingsModal
           isOpen={viewerMenuSettingsOpen}
           onClose={() => setViewerMenuSettingsOpen(false)}

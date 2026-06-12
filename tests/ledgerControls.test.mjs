@@ -23,7 +23,7 @@ describe('ledger control labels and export visibility', () => {
   });
 
   it('limits excel export to leader edit access', () => {
-    expect(source).toContain("get('access') === URL_ACCESS_LEADER");
+    expect(source).toContain('accessParam === URL_ACCESS_LEADER');
     expect(source).toContain('const canExportLedgerExcel = !isViewer && isLeaderEditAccess');
     expect(source).toContain('{canExportLedgerExcel ? (');
     expect(source).toContain('onClick={handleExcelExport}');

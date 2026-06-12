@@ -60,7 +60,7 @@
 |------|-----|
 | **★ 일지 (북마크 권장)** | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=journal |
 | 역량 평가 | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=competency |
-| 팀 빌딩비 장부 (조회) | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=ledger |
+| 팀 빌딩비 장부 (조회) | https://okestro-edu-team-tms.vercel.app/?mode=view&member=B&module=ledger&year=2026&month=6 |
 | 점심 뭐 먹지 | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=lunch |
 | 이것도? | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=idea-bank |
 
@@ -76,7 +76,7 @@
 |------|-----|
 | **★ 일지 (북마크 권장)** | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=journal |
 | 역량 평가 | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=competency |
-| 팀 빌딩비 장부 (조회) | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=ledger |
+| 팀 빌딩비 장부 (조회) | https://okestro-edu-team-tms.vercel.app/?mode=view&member=C&module=ledger&year=2026&month=6 |
 | 점심 뭐 먹지 | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=lunch |
 | 이것도? | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=idea-bank |
 

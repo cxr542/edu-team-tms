@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { URL_ACCESS_LEADER } from '../constants/teamAccess';
+import { resolveMemberLedgerViewMode } from '../utils/ledgerAccess';
 import { applyTeamAccessToUrl } from './useTeamAccess';
 
 const KPI_MODULES = new Set(['journal', 'competency', 'kpi', 'kpi-approve', 'kpi-report']);
@@ -50,8 +51,6 @@ export function isKpiRelatedModule(module) {
 /** 현재 앱 경로(pathname)를 유지한 모듈 URL (GitHub Pages base 대응) */
 export function buildAppModuleUrl(module, { mode, year, month, quarter, member, access } = {}) {
   const url = new URL(window.location.href);
-  if (mode === 'view') url.searchParams.set('mode', 'view');
-  else if (mode === 'edit') url.searchParams.set('mode', 'edit');
   if (year != null) url.searchParams.set('year', String(year));
   if (quarter != null) url.searchParams.set('quarter', String(quarter));
   if (month != null) url.searchParams.set('month', String(month));
@@ -69,6 +68,19 @@ export function buildAppModuleUrl(module, { mode, year, month, quarter, member, 
   if (module !== undefined) {
     if (!module) url.searchParams.delete('module');
     else applyModuleToUrl(url, module);
+  }
+
+  const memberLedgerViewMode = resolveMemberLedgerViewMode({
+    module: url.searchParams.get('module') || module,
+    member: url.searchParams.get('member'),
+    access: url.searchParams.get('access'),
+  });
+  if (memberLedgerViewMode === 'view') {
+    url.searchParams.set('mode', 'view');
+  } else if (mode === 'view') {
+    url.searchParams.set('mode', 'view');
+  } else if (mode === 'edit') {
+    url.searchParams.set('mode', 'edit');
   }
 
   return `${url.pathname}${url.search}`;
@@ -101,6 +113,15 @@ export function useAppModule() {
   const setModule = useCallback((next) => {
     const url = new URL(window.location.href);
     applyModuleToUrl(url, next);
+    if (
+      resolveMemberLedgerViewMode({
+        module: next,
+        member: url.searchParams.get('member'),
+        access: url.searchParams.get('access'),
+      }) === 'view'
+    ) {
+      url.searchParams.set('mode', 'view');
+    }
     if (next === 'competency') {
       const member = url.searchParams.get('member');
       const access = url.searchParams.get('access');
