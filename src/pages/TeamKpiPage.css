@@ -592,9 +592,32 @@
 }
 
 .team-kpi-improve-candidates__stats,
-.team-kpi-improve-candidates__sources {
+.team-kpi-improve-candidates__sources,
+.team-kpi-improve-candidates__source-hint {
   font-size: 0.82rem;
   color: var(--text-secondary, #5c6578);
+}
+
+.team-kpi-improve-candidates__source-hint {
+  font-size: 0.78rem;
+}
+
+.team-kpi-local-scope-notice {
+  margin: 0.35rem 0 0.75rem;
+  font-size: 0.82rem;
+}
+
+.team-kpi-project-row {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.team-kpi-project-row__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1 1 12rem;
+  min-width: 0;
 }
 
 .team-kpi-improve-candidates__register {

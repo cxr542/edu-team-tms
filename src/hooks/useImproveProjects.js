@@ -23,7 +23,17 @@ export function useImproveProjects({ readOnly = false } = {}) {
   }, [projects, readOnly]);
 
   const addProject = useCallback(
-    ({ name, code }) => {
+    ({
+      name,
+      code,
+      ownerMemberId,
+      ownerName,
+      source,
+      sourceLabel,
+      sourceJournalRefs,
+      createdAt,
+      status,
+    } = {}) => {
       if (readOnly) return null;
       const trimmed = String(name).trim();
       if (!trimmed) return null;
@@ -32,7 +42,20 @@ export function useImproveProjects({ readOnly = false } = {}) {
       setProjects((prev) => {
         if (isImproveProjectTitleRegistered(trimmed, prev)) return prev;
         if (prev.some((p) => p.id === id)) return prev;
-        added = { id, name: trimmed, code: String(code || id).trim() };
+        added = {
+          id,
+          name: trimmed,
+          code: String(code || id).trim(),
+          ...(ownerMemberId ? { ownerMemberId } : {}),
+          ...(ownerName ? { ownerName } : {}),
+          ...(source ? { source } : {}),
+          ...(sourceLabel ? { sourceLabel } : {}),
+          ...(Array.isArray(sourceJournalRefs) && sourceJournalRefs.length
+            ? { sourceJournalRefs }
+            : {}),
+          ...(createdAt ? { createdAt } : {}),
+          ...(status ? { status } : {}),
+        };
         return [...prev, added];
       });
       return added;

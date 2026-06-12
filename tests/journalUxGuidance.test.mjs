@@ -55,4 +55,12 @@ describe('journal UX guidance', () => {
     expect(appSource).toContain('isPublicViewerScope');
     expect(appSource).toContain('canEditLedgerNow');
   });
+
+  it('shows operating improve projects and link select for member journals', () => {
+    expect(journalSource).toContain('journal-improve-projects-panel');
+    expect(journalSource).toContain('운영 중인 생산성향상 과제');
+    expect(journalSource).toContain('관련 향상 과제');
+    expect(journalSource).toContain('IMPROVE_PROJECT_JOURNAL_SCOPE_NOTICE');
+    expect(cssSource).toContain('.journal-improve-projects-panel');
+  });
 });

@@ -26,6 +26,14 @@ describe('improve project management UX', () => {
     expect(kpiPage).toContain('원본 일지를 수정하지 않습니다');
   });
 
+  it('shows owner/source on candidates and operating list', () => {
+    expect(kpiPage).toContain('담당/출처:');
+    expect(kpiPage).toContain('업무일지 후보');
+    expect(kpiPage).toContain('formatImproveProjectOwnerLine');
+    expect(kpiPage).toContain('IMPROVE_PROJECT_LOCAL_SCOPE_NOTICE');
+    expect(kpiPage).toContain('buildManualImproveProjectRegistration');
+  });
+
   it('explains KPI2 effect is not automatic from improve MM', () => {
     expect(kpiPage).toContain('효과 제출 관리');
     expect(kpiPage).toContain('KPI2 효과가 되지는 않습니다');
@@ -46,6 +54,8 @@ describe('improve project management UX', () => {
     expect(kpiCss).toContain('.team-kpi-improve-flow');
     expect(kpiCss).toContain('.team-kpi-projects-panel');
     expect(kpiCss).toContain('.team-kpi-kpi2-effects');
+    expect(kpiCss).toContain('.team-kpi-local-scope-notice');
+    expect(kpiCss).toContain('.team-kpi-project-row');
   });
 
   it('preserves journal auto sync off and ledger/public viewer policies', () => {

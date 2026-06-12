@@ -113,4 +113,16 @@ describe('journalTaskFields — KPI2 effect persist', () => {
     );
     expect(fields.kpi2Effect).toBeUndefined();
   });
+
+  it('persists improveProjectId without affecting kpi2Effect save', () => {
+    const edit = editFromTask(baseTask(), {
+      improveProjectId: 'ppt-academizer',
+      improveProjectTitle: 'PPT-Academizer',
+      kpi2Effect: { enabled: true, projectId: 'ppt-academizer', baselineHours: 8 },
+    });
+    const saved = mergeTaskFromEdit(baseTask(), edit);
+    expect(saved.improveProjectId).toBe('ppt-academizer');
+    expect(saved.improveProjectTitle).toBe('PPT-Academizer');
+    expect(saved.kpi2Effect?.enabled).toBe(true);
+  });
 });

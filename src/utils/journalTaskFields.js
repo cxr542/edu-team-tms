@@ -20,6 +20,10 @@ export function taskFieldsFromEdit(editTask) {
       baselineHours: Number(editTask.kpi2Effect.baselineHours) || Number(editTask.plan) || 0,
     };
   }
+  if (editTask.improveProjectId) {
+    fields.improveProjectId = editTask.improveProjectId;
+    fields.improveProjectTitle = String(editTask.improveProjectTitle || '').trim();
+  }
   return fields;
 }
 
@@ -28,6 +32,10 @@ export function mergeTaskFromEdit(existingTask, editTask) {
   const next = { ...existingTask, ...taskFieldsFromEdit(editTask) };
   if (!editTask.kpi2Effect?.enabled) {
     delete next.kpi2Effect;
+  }
+  if (!editTask.improveProjectId) {
+    delete next.improveProjectId;
+    delete next.improveProjectTitle;
   }
   return next;
 }

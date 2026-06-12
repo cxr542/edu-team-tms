@@ -59,7 +59,14 @@ import JournalCategoryLegend from '../components/JournalCategoryLegend';
 import JournalMemberPrefsModal from '../components/JournalMemberPrefsModal';
 import MemberKpiApprovalPanel from '../components/MemberKpiApprovalPanel';
 import { isEditorMode } from '../utils/appMode';
+import {
+  filterImproveProjectsForMember,
+  formatImproveProjectOwnerLine,
+  IMPROVE_PROJECT_JOURNAL_SCOPE_NOTICE,
+} from '../utils/improveProjectLink';
 import './WeeklyJournalPage.css';
+
+const MEMBER_IMPROVE_PROJECT_CODES = new Set(['B', 'C']);
 
 const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -169,6 +176,12 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const memberCategoryView = useMemo(
     () => resolveMemberCategories(journal.memberJournals?.[memberCode]?.prefs),
     [journal.memberJournals, memberCode]
+  );
+  const showImproveProjectPanel =
+    !readOnly && (teamAccess.isMemberScope || MEMBER_IMPROVE_PROJECT_CODES.has(memberCode));
+  const linkableImproveProjects = useMemo(
+    () => filterImproveProjectsForMember(journal.improveProjects, memberCode),
+    [journal.improveProjects, memberCode]
   );
 
   useEffect(() => {
@@ -914,6 +927,37 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             </details>
           )}
 
+          {showImproveProjectPanel && (
+            <section className="journal-improve-projects-panel" aria-label="운영 중인 생산성향상 과제">
+              <h3 className="journal-improve-projects-panel__title">운영 중인 생산성향상 과제</h3>
+              <p className="journal-field-help">
+                팀장이 KPI2 운영 목록에 등록한 향상 과제입니다. 관련 업무를 작성할 때 과제를 선택해 연결할 수
+                있습니다.
+              </p>
+              <p className="journal-sync-hint">{IMPROVE_PROJECT_JOURNAL_SCOPE_NOTICE}</p>
+              {linkableImproveProjects.length === 0 ? (
+                <p className="journal-improve-projects-panel__empty">
+                  아직 연결 가능한 향상 과제가 없습니다. 생산성향상 M/M 업무를 작성하면 팀장 KPI 화면에서 후보로
+                  확인할 수 있습니다.
+                </p>
+              ) : (
+                <ul className="journal-improve-projects-panel__list">
+                  {linkableImproveProjects.map((p) => (
+                    <li key={p.id}>
+                      <strong>{p.name}</strong>
+                      <span className="journal-improve-projects-panel__meta">
+                        {formatImproveProjectOwnerLine(p, (code) => {
+                          const m = findKpiMember(code);
+                          return m ? `${m.code}(${m.displayName})` : code;
+                        })}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
+
           {!teamAccess.memberLocked && (
             <nav className="journal-member-tabs" aria-label="구성원">
               {TEAM_KPI_MEMBERS.map((m) => (
@@ -1243,6 +1287,47 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   업무 M/M은 실제 투입 시간, 생산향상 M/M은 개선·자동화 업무 시간입니다.
                 </p>
               </div>
+              {showImproveProjectPanel && (
+                <div className="form-group">
+                  <label htmlFor="edit-improve-project-link">관련 향상 과제</label>
+                  <select
+                    id="edit-improve-project-link"
+                    className="form-input"
+                    value={editTask.improveProjectId || ''}
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      if (!id) {
+                        setEditTask({
+                          ...editTask,
+                          improveProjectId: undefined,
+                          improveProjectTitle: undefined,
+                        });
+                        return;
+                      }
+                      const project =
+                        linkableImproveProjects.find((p) => p.id === id) ||
+                        journal.improveProjects.find((p) => p.id === id);
+                      setEditTask({
+                        ...editTask,
+                        improveProjectId: id,
+                        improveProjectTitle: project?.name || '',
+                      });
+                    }}
+                    disabled={readOnly}
+                    aria-describedby="journal-improve-project-link-help"
+                  >
+                    <option value="">선택 안 함</option>
+                    {linkableImproveProjects.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p id="journal-improve-project-link-help" className="journal-field-help">
+                    생산성향상 M/M 또는 KPI2 효과 업무라면 관련 향상 과제를 선택하세요.
+                  </p>
+                </div>
+              )}
               <div className="form-group">
                 <label>시간대</label>
                 <div className="journal-slot-options" role="group" aria-label="시간대">

@@ -32,6 +32,14 @@ import {
   formatImproveCandidateSources,
 } from '../utils/improveProjectCandidates';
 import {
+  buildImproveProjectRegistrationFromCandidate,
+  buildManualImproveProjectRegistration,
+  formatCandidateMemberSummary,
+  formatImproveProjectOwnerLine,
+  findRegisteredProjectForCandidate,
+  IMPROVE_PROJECT_LOCAL_SCOPE_NOTICE,
+} from '../utils/improveProjectLink';
+import {
   apply01cToMonthly01,
   computeUtilization,
   isMonthly01ContentUnset,
@@ -538,6 +546,7 @@ export default function TeamKpiPage() {
           <p className="team-kpi-section-lead">
             생산성향상 M/M 후보를 확인하고, 운영 목록에 등록한 뒤, KPI2 효과 제출 대상을 관리합니다.
           </p>
+          <p className="team-kpi-hint team-kpi-local-scope-notice">{IMPROVE_PROJECT_LOCAL_SCOPE_NOTICE}</p>
           <div className="team-kpi-improve-flow" aria-label="생산성향상 관리 흐름">
             <p className="team-kpi-improve-flow__lead">
               업무일지에서 생산성향상 M/M으로 기록된 업무를 후보로 확인하고, 팀장이 운영 목록에 등록한 뒤, KPI2
@@ -572,10 +581,14 @@ export default function TeamKpiPage() {
                         {candidate.totalActual > 0 ? ` · 실작업 ${candidate.totalActual}h` : ''}
                       </span>
                       <span className="team-kpi-improve-candidates__sources">
-                        {formatImproveCandidateSources(candidate.sources, (code) => {
+                        담당/출처:{' '}
+                        {formatCandidateMemberSummary(candidate.sources, (code) => {
                           const m = findKpiMember(code);
                           return m ? `${m.code}(${m.displayName})` : code;
                         })}
+                      </span>
+                      <span className="team-kpi-improve-candidates__source-hint">
+                        출처: {year}년 {month + 1}월 업무일지 후보
                       </span>
                     </div>
                     <button
@@ -585,7 +598,9 @@ export default function TeamKpiPage() {
                       title="KPI2 운영 목록에 등록합니다. 일지 원본은 변경하지 않습니다."
                       aria-label={`${candidate.title} — KPI2 운영 목록에 등록`}
                       onClick={() => {
-                        const added = improveProjectsApi.addProject({ name: candidate.title });
+                        const added = improveProjectsApi.addProject(
+                          buildImproveProjectRegistrationFromCandidate(candidate, { year, monthIndex: month })
+                        );
                         if (added) {
                           showToast(`「${candidate.title}」을 KPI2 운영 목록에 등록했습니다`);
                         } else {
@@ -603,7 +618,13 @@ export default function TeamKpiPage() {
               <div className="team-kpi-improve-registered">
                 <h4 className="team-kpi-improve-registered__title">이미 운영 목록에 있음</h4>
                 <ul className="team-kpi-improve-candidates__list team-kpi-improve-registered__list">
-                  {improveMmRegistered.map((candidate) => (
+                  {improveMmRegistered.map((candidate) => {
+                    const registered = findRegisteredProjectForCandidate(candidate, improveProjects);
+                    const memberSummary = formatCandidateMemberSummary(candidate.sources, (code) => {
+                      const m = findKpiMember(code);
+                      return m ? `${m.code}(${m.displayName})` : code;
+                    });
+                    return (
                     <li
                       key={candidate.normalizedKey}
                       className="team-kpi-improve-candidates__item team-kpi-improve-registered__item"
@@ -614,10 +635,22 @@ export default function TeamKpiPage() {
                           {candidate.occurrenceCount}건
                           {candidate.totalActual > 0 ? ` · 실작업 ${candidate.totalActual}h` : ''}
                         </span>
-                        <span className="team-kpi-improve-registered__badge">운영 목록 등록됨</span>
+                        <span className="team-kpi-improve-registered__badge">
+                          운영 목록 등록됨
+                          {memberSummary ? ` · ${memberSummary}` : ''}
+                        </span>
+                        {registered && (
+                          <span className="team-kpi-improve-candidates__source-hint">
+                            {formatImproveProjectOwnerLine(registered, (code) => {
+                              const m = findKpiMember(code);
+                              return m ? `${m.code}(${m.displayName})` : code;
+                            })}
+                          </span>
+                        )}
                       </div>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
               </div>
             )}
@@ -632,8 +665,17 @@ export default function TeamKpiPage() {
             </p>
             <ul>
               {improveProjects.map((p) => (
-                <li key={p.id}>
-                  <strong>{p.name}</strong> <code>{p.code}</code>
+                <li key={p.id} className="team-kpi-project-row">
+                  <div className="team-kpi-project-row__meta">
+                    <strong>{p.name}</strong> <code>{p.code}</code>
+                    <span className="team-kpi-improve-candidates__source-hint">
+                      {formatImproveProjectOwnerLine(p, (code) => {
+                        const m = findKpiMember(code);
+                        return m ? `${m.code}(${m.displayName})` : code;
+                      })}
+                      {p.sourceLabel && p.source !== 'manual' ? ` · ${p.sourceLabel}` : ''}
+                    </span>
+                  </div>
                   <button type="button" className="btn btn-ghost btn-sm" onClick={() => improveProjectsApi.removeProject(p.id)}>
                     삭제
                   </button>
@@ -652,7 +694,9 @@ export default function TeamKpiPage() {
                 className="btn btn-secondary"
                 title="운영 목록에 직접 추가합니다"
                 onClick={() => {
-                  const added = improveProjectsApi.addProject({ name: newProjectName });
+                  const added = improveProjectsApi.addProject(
+                    buildManualImproveProjectRegistration(newProjectName)
+                  );
                   if (added) {
                     setNewProjectName('');
                     showToast('운영 목록에 추가했습니다');
