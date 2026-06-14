@@ -664,6 +664,12 @@
   border-top: 1px dashed var(--border-soft, #e8ebf0);
 }
 
+.team-kpi-improve-file__title {
+  margin: 0 0 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 .team-kpi-improve-file__hint,
 .team-kpi-improve-file__policy {
   margin: 0 0 0.35rem;

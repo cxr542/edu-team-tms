@@ -40,15 +40,9 @@ import {
   IMPROVE_PROJECT_LOCAL_SCOPE_NOTICE,
 } from '../utils/improveProjectLink';
 import {
-  IMPROVE_PROJECTS_MERGE_POLICY_HINT,
-  IMPROVE_PROJECTS_SHARE_HINT,
-} from '../utils/improveProjectsCloudSnapshot';
-import {
   IMPROVE_PROJECTS_BLOB_FALLBACK_HINT,
   IMPROVE_PROJECTS_FILE_IMPORT_FAIL,
   IMPROVE_PROJECTS_FILE_IMPORT_SUCCESS,
-  IMPROVE_PROJECTS_FILE_MERGE_POLICY_HINT,
-  IMPROVE_PROJECTS_FILE_SHARE_HINT,
 } from '../utils/improveProjectsFileSnapshot';
 import { getCloudHealthUserMessage } from '../utils/cloudHealth';
 import {
@@ -66,7 +60,20 @@ import TeamKpiSummarySection from '../components/TeamKpiSummarySection';
 import { COMPETENCY_USE_4060 } from '../constants/competencyConfig';
 import { KPI3_ELEMENTS, KPI3_FORMULA_TEXT } from '../constants/kpi3Elements';
 import { KPI3_DEMO_MONTH_INDEX, KPI3_DEMO_YEAR } from '../data/kpi3SeedAcademizerScenario';
-import { SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI } from '../constants/improveProjectSharingConfig';
+import {
+  IMPROVE_PROJECT_BLOB_SHARE_ENABLED,
+  IMPROVE_PROJECTS_FILE_ONLY_NOTICE,
+  IMPROVE_PROJECTS_JSON_DOWNLOAD_LABEL,
+  IMPROVE_PROJECTS_JSON_DOWNLOAD_SUCCESS,
+  IMPROVE_PROJECTS_JSON_IMPORT_LABEL_LEADER,
+  IMPROVE_PROJECTS_JSON_MERGE_POLICY_HINT,
+  IMPROVE_PROJECTS_JSON_SHARE_LEAD,
+  IMPROVE_PROJECTS_JSON_SHARE_SECTION_TITLE,
+} from '../constants/improveProjectsShare';
+import {
+  IMPROVE_PROJECTS_MERGE_POLICY_HINT,
+  IMPROVE_PROJECTS_SHARE_HINT,
+} from '../utils/improveProjectsCloudSnapshot';
 import './TeamKpiPage.css';
 
 const TABS = [
@@ -679,16 +686,18 @@ export default function TeamKpiPage() {
               KPI2 효과가 되지는 않습니다.
             </p>
             <div className="team-kpi-improve-share">
-              {SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI && (
+              {IMPROVE_PROJECT_BLOB_SHARE_ENABLED ? (
                 <>
                   <p className="team-kpi-hint team-kpi-improve-share__hint">{IMPROVE_PROJECTS_SHARE_HINT}</p>
                   <p className="team-kpi-hint team-kpi-improve-share__policy">{IMPROVE_PROJECTS_MERGE_POLICY_HINT}</p>
                 </>
+              ) : (
+                <p className="team-kpi-hint team-kpi-improve-share__hint">{IMPROVE_PROJECTS_FILE_ONLY_NOTICE}</p>
               )}
-              {SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI && cloudHealthMessage && (
+              {IMPROVE_PROJECT_BLOB_SHARE_ENABLED && cloudHealthMessage && (
                 <p className="team-kpi-hint team-kpi-improve-share__warn">{cloudHealthMessage}</p>
               )}
-              {SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI && (
+              {IMPROVE_PROJECT_BLOB_SHARE_ENABLED && (
                 <>
                   <p className="team-kpi-hint team-kpi-improve-share__warn">{IMPROVE_PROJECTS_BLOB_FALLBACK_HINT}</p>
                   <div className="team-kpi-improve-share__group">
@@ -740,35 +749,36 @@ export default function TeamKpiPage() {
                 </>
               )}
               <div className="team-kpi-improve-file">
-                <p className="team-kpi-hint team-kpi-improve-file__hint">{IMPROVE_PROJECTS_FILE_SHARE_HINT}</p>
-                <p className="team-kpi-hint team-kpi-improve-file__policy">{IMPROVE_PROJECTS_FILE_MERGE_POLICY_HINT}</p>
+                <h4 className="team-kpi-improve-file__title">{IMPROVE_PROJECTS_JSON_SHARE_SECTION_TITLE}</h4>
+                <p className="team-kpi-hint team-kpi-improve-file__hint">{IMPROVE_PROJECTS_JSON_SHARE_LEAD}</p>
+                <p className="team-kpi-hint team-kpi-improve-file__policy">{IMPROVE_PROJECTS_JSON_MERGE_POLICY_HINT}</p>
                 <div className="team-kpi-improve-file__actions">
                   <button
                     type="button"
                     className="btn btn-secondary"
                     disabled={improveProjectsApi.sharedBusy || improveProjects.length === 0}
-                    aria-label="구성원 전달용 JSON 다운로드"
-                    title="구성원에게 전달할 현재 운영 목록을 JSON 파일로 다운로드합니다"
+                    aria-label={IMPROVE_PROJECTS_JSON_DOWNLOAD_LABEL}
+                    title="구성원에게 전달할 JSON 파일을 다운로드합니다"
                     {...uiTooltip(
-                      '구성원에게 전달할 현재 운영 목록을 JSON 파일로 다운로드합니다. Blob/API를 사용하지 않습니다.',
+                      '구성원에게 전달할 JSON 파일을 다운로드합니다. 네트워크 요청 없이 이 브라우저에서만 생성됩니다.',
                       undefined,
                       { wrap: true }
                     )}
                     onClick={() => {
                       const r = improveProjectsApi.downloadProjectsFile();
-                      if (r.ok) showToast('향상 과제 JSON 파일을 다운로드했습니다');
+                      if (r.ok) showToast(IMPROVE_PROJECTS_JSON_DOWNLOAD_SUCCESS);
                       else if (r.reason === 'empty') showToast('다운로드할 운영 목록이 없습니다');
-                      else showToast(r.message || '향상 과제 JSON을 다운로드하지 못했습니다');
+                      else showToast(r.message || 'JSON 파일을 다운로드하지 못했습니다');
                     }}
                   >
                     <Download size={16} />
-                    구성원 전달용 JSON 다운로드
+                    {IMPROVE_PROJECTS_JSON_DOWNLOAD_LABEL}
                   </button>
                   <button
                     type="button"
                     className="btn btn-import-shared"
                     disabled={improveProjectsApi.sharedBusy}
-                    aria-label="향상 과제 JSON 가져오기"
+                    aria-label={IMPROVE_PROJECTS_JSON_IMPORT_LABEL_LEADER}
                     title="JSON 파일을 이 브라우저 운영 목록에 병합합니다"
                     {...uiTooltip(
                       'JSON 파일을 수동으로 가져와 이 브라우저 운영 목록에 병합합니다. 자동 동기화는 사용하지 않습니다.',
@@ -778,7 +788,7 @@ export default function TeamKpiPage() {
                     onClick={() => improveProjectsFileInputRef.current?.click()}
                   >
                     <Import size={16} />
-                    향상 과제 JSON 가져오기
+                    {IMPROVE_PROJECTS_JSON_IMPORT_LABEL_LEADER}
                   </button>
                   <input
                     ref={improveProjectsFileInputRef}
@@ -796,19 +806,20 @@ export default function TeamKpiPage() {
                   />
                 </div>
               </div>
-              {SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI && (improveProjectsApi.sharedMeta?.publishedAt ||
-                improveProjectsApi.sharedMeta?.importedAt) && (
+              {(improveProjectsApi.sharedMeta?.importedAt ||
+                (IMPROVE_PROJECT_BLOB_SHARE_ENABLED && improveProjectsApi.sharedMeta?.publishedAt)) && (
                 <p className="team-kpi-hint team-kpi-improve-share__meta">
-                  {improveProjectsApi.sharedMeta.publishedAt &&
+                  {IMPROVE_PROJECT_BLOB_SHARE_ENABLED && improveProjectsApi.sharedMeta.publishedAt &&
                     `마지막 팀 공유 저장: ${new Date(improveProjectsApi.sharedMeta.publishedAt).toLocaleString('ko-KR')}`}
-                  {improveProjectsApi.sharedMeta.publishedAt &&
+                  {IMPROVE_PROJECT_BLOB_SHARE_ENABLED &&
+                    improveProjectsApi.sharedMeta.publishedAt &&
                     improveProjectsApi.sharedMeta.importedAt &&
                     ' · '}
                   {improveProjectsApi.sharedMeta.importedAt &&
                     `마지막 가져오기: ${new Date(improveProjectsApi.sharedMeta.importedAt).toLocaleString('ko-KR')}`}
                 </p>
               )}
-              {!SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI && improveProjectsApi.sharedMeta?.fileImportedAt && (
+              {!IMPROVE_PROJECT_BLOB_SHARE_ENABLED && improveProjectsApi.sharedMeta?.fileImportedAt && (
                 <p className="team-kpi-hint team-kpi-improve-share__meta">
                   마지막 JSON 가져오기: {new Date(improveProjectsApi.sharedMeta.fileImportedAt).toLocaleString('ko-KR')}
                 </p>

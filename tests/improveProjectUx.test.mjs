@@ -10,10 +10,6 @@ describe('improve project management UX', () => {
     path.join(process.cwd(), 'src/constants/improveProjectSharingConfig.js'),
     'utf8'
   );
-  const fileSnapshotSource = readFileSync(
-    path.join(process.cwd(), 'src/utils/improveProjectsFileSnapshot.js'),
-    'utf8'
-  );
   const candidatesSource = readFileSync(
     path.join(process.cwd(), 'src/utils/improveProjectCandidates.js'),
     'utf8'
@@ -44,8 +40,9 @@ describe('improve project management UX', () => {
 
   it('keeps manual shared improve project controls behind a disabled Blob UI flag', () => {
     expect(kpiPage).toContain('team-kpi-improve-share');
-    expect(kpiPage).toContain('SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI');
     expect(sharingConfigSource).toContain('SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI = false');
+    expect(kpiPage).toContain('IMPROVE_PROJECT_BLOB_SHARE_ENABLED');
+    expect(kpiPage).toContain('IMPROVE_PROJECTS_FILE_ONLY_NOTICE');
     expect(kpiPage).toContain('팀 공유 저장');
     expect(kpiPage).toContain('팀 공유본 가져오기');
     expect(kpiPage).toContain('publishSharedProjects');
@@ -55,13 +52,15 @@ describe('improve project management UX', () => {
 
   it('shows JSON file sharing controls on KPI2 tab', () => {
     expect(kpiPage).toContain('team-kpi-improve-file');
-    expect(fileSnapshotSource).toContain('JSON 파일로 구성원에게 전달');
-    expect(kpiPage).toContain('구성원 전달용 JSON 다운로드');
-    expect(kpiPage).toContain('향상 과제 JSON 가져오기');
+    expect(kpiPage).toContain('IMPROVE_PROJECTS_JSON_SHARE_SECTION_TITLE');
+    expect(kpiPage).toContain('IMPROVE_PROJECTS_JSON_SHARE_LEAD');
+    expect(kpiPage).toContain('IMPROVE_PROJECTS_JSON_MERGE_POLICY_HINT');
+    expect(kpiPage).toContain('IMPROVE_PROJECTS_JSON_DOWNLOAD_LABEL');
+    expect(kpiPage).toContain('IMPROVE_PROJECTS_JSON_IMPORT_LABEL_LEADER');
     expect(kpiPage).toContain('downloadProjectsFile');
     expect(kpiPage).toContain('importProjectsFromFile');
-    expect(kpiPage).toContain('IMPROVE_PROJECTS_BLOB_FALLBACK_HINT');
-    expect(kpiPage).toContain('IMPROVE_PROJECTS_FILE_SHARE_HINT');
+    expect(kpiPage).toContain('IMPROVE_PROJECTS_FILE_ONLY_NOTICE');
+    expect(kpiPage).toContain('IMPROVE_PROJECTS_JSON_DOWNLOAD_SUCCESS');
   });
 
   it('explains KPI2 effect is not automatic from improve MM', () => {

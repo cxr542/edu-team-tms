@@ -184,9 +184,9 @@ describe('journal improve project UI wiring', () => {
 
   it('keeps manual shared improve project import behind a disabled Blob UI flag', () => {
     expect(journalSource).toContain('journal-improve-projects-panel__actions');
-    expect(journalSource).toContain('SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI');
     expect(sharingConfigSource).toContain('SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI = false');
-    expect(journalSource).toContain('IMPROVE_PROJECTS_IMPORT_HINT');
+    expect(journalSource).toContain('IMPROVE_PROJECT_BLOB_SHARE_ENABLED');
+    expect(journalSource).toContain('IMPROVE_PROJECTS_JSON_MEMBER_HINT');
     expect(journalSource).toContain('loadSharedProjects');
     expect(journalSource).not.toMatch(
       /journal-improve-projects-panel[\s\S]*publishSharedProjects/
@@ -194,11 +194,11 @@ describe('journal improve project UI wiring', () => {
   });
 
   it('shows JSON import fallback on member journal without download button', () => {
-    expect(journalSource).toContain('팀장에게 받은 JSON 가져오기');
+    expect(journalSource).toContain('IMPROVE_PROJECTS_JSON_IMPORT_LABEL_MEMBER');
     expect(journalSource).toContain('importProjectsFromFile');
-    expect(journalSource).toContain('IMPROVE_PROJECTS_FILE_IMPORT_HINT');
-    expect(journalSource).toContain('IMPROVE_PROJECTS_BLOB_FALLBACK_HINT');
-    expect(journalSource).not.toContain('향상 과제 JSON 다운로드');
+    expect(journalSource).toContain('IMPROVE_PROJECT_JOURNAL_SCOPE_NOTICE');
+    expect(journalSource).not.toContain('IMPROVE_PROJECTS_JSON_DOWNLOAD_LABEL');
+    expect(journalSource).not.toContain('구성원 전달용 JSON 다운로드');
     expect(journalSource).toContain('관련 향상 과제');
     expect(journalSource).toContain('선택 안 함');
   });
