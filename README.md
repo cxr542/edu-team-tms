@@ -73,6 +73,22 @@ GitHub Actions (`edu-team-tms` repo):
 - [docs/ledger-live-sync.md](docs/ledger-live-sync.md)
 - [docs/mobile-home-screen.md](docs/mobile-home-screen.md)
 
+## Documentation Map
+- `AGENTS.md` — AI/Codex 작업 규칙. 작업자는 변경 전 이 문서를 먼저 확인합니다.
+- `DESIGN.md` — EDU-TMS 제품/시스템 설계 문서.
+- `docs/sot-map.md` — 문서 Source of Truth 지도. URL, 데이터, 배포, KPI, 참고문서 기준을 찾을 때 먼저 봅니다.
+- `docs/obsidian-graph-poc.md` — Obsidian/docs graph PoC 안내.
+
+## Current Sharing Model
+Improve-project sharing currently uses the JSON fallback flow. Blob-based improve-project sharing UI is hidden/disabled, and `IMPROVE_PROJECT_BLOB_SHARE_ENABLED` remains `false`.
+Team leaders use JSON download/import. Members use the "팀장에게 받은 JSON 가져오기" flow.
+
+## Source of Truth Note
+Source reference documents live under `docs/reference-source/*`. Published/static copies under `public/docs/*` are not the source of truth. Build output under `.vercel/output/static/*` is also not source documentation.
+
+## Docs Graph PoC
+The docs graph PoC writes `docs/docs-graph.json` from Markdown sources. If only `generatedAt` changes after regeneration, do not treat it as a meaningful documentation change.
+
 ## 버전
 
 - 현재: **1.0.0** (`package.json` → UI **v1.0**)
