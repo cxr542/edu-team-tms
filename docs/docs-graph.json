@@ -1,0 +1,6108 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-06-14T11:46:30.757Z",
+  "documents": [
+    {
+      "id": "DESIGN.md",
+      "path": "DESIGN.md",
+      "title": "DESIGN.md",
+      "sourceKind": "primary",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Overview"
+        },
+        {
+          "level": 2,
+          "text": "Colors"
+        },
+        {
+          "level": 3,
+          "text": "Brand & Accent"
+        },
+        {
+          "level": 3,
+          "text": "Surface"
+        },
+        {
+          "level": 3,
+          "text": "Text"
+        },
+        {
+          "level": 3,
+          "text": "Hairlines & Borders"
+        },
+        {
+          "level": 3,
+          "text": "Brand Gradient"
+        },
+        {
+          "level": 2,
+          "text": "Typography"
+        },
+        {
+          "level": 3,
+          "text": "Font Family"
+        },
+        {
+          "level": 3,
+          "text": "Hierarchy"
+        },
+        {
+          "level": 3,
+          "text": "Principles"
+        },
+        {
+          "level": 3,
+          "text": "Note on Font Substitutes"
+        },
+        {
+          "level": 2,
+          "text": "Layout"
+        },
+        {
+          "level": 3,
+          "text": "Spacing System"
+        },
+        {
+          "level": 3,
+          "text": "Grid & Container"
+        },
+        {
+          "level": 3,
+          "text": "Whitespace Philosophy"
+        },
+        {
+          "level": 2,
+          "text": "Elevation & Depth"
+        },
+        {
+          "level": 3,
+          "text": "Decorative Depth"
+        },
+        {
+          "level": 2,
+          "text": "Shapes"
+        },
+        {
+          "level": 3,
+          "text": "Border Radius Scale"
+        },
+        {
+          "level": 3,
+          "text": "Photography Geometry"
+        },
+        {
+          "level": 2,
+          "text": "Components"
+        },
+        {
+          "level": 3,
+          "text": "Top Navigation"
+        },
+        {
+          "level": 3,
+          "text": "Buttons"
+        },
+        {
+          "level": 3,
+          "text": "Cards & Containers"
+        },
+        {
+          "level": 3,
+          "text": "Inputs & Forms"
+        },
+        {
+          "level": 3,
+          "text": "Footer"
+        },
+        {
+          "level": 2,
+          "text": "Do's and Don'ts"
+        },
+        {
+          "level": 3,
+          "text": "Do"
+        },
+        {
+          "level": 3,
+          "text": "Don't"
+        },
+        {
+          "level": 2,
+          "text": "Responsive Behavior"
+        },
+        {
+          "level": 3,
+          "text": "Breakpoints"
+        },
+        {
+          "level": 3,
+          "text": "Touch Targets"
+        },
+        {
+          "level": 3,
+          "text": "Collapsing Strategy"
+        },
+        {
+          "level": 3,
+          "text": "Image Behavior"
+        },
+        {
+          "level": 2,
+          "text": "Iteration Guide"
+        },
+        {
+          "level": 2,
+          "text": "Known Gaps"
+        }
+      ],
+      "links": [],
+      "keywords": []
+    },
+    {
+      "id": "docs/deployment-process.md",
+      "path": "docs/deployment-process.md",
+      "title": "TMS 배포 프로세스 (GitHub Actions + Vercel)",
+      "sourceKind": "primary",
+      "headings": [
+        {
+          "level": 1,
+          "text": "TMS 배포 프로세스 (GitHub Actions + Vercel)"
+        },
+        {
+          "level": 2,
+          "text": "1. 환경 구조"
+        },
+        {
+          "level": 2,
+          "text": "2. 사전 준비"
+        },
+        {
+          "level": 3,
+          "text": "GitHub Secrets"
+        },
+        {
+          "level": 3,
+          "text": "GitHub Environment"
+        },
+        {
+          "level": 3,
+          "text": "Vercel Environment Variables 점검"
+        },
+        {
+          "level": 2,
+          "text": "3. 파이프라인 동작"
+        },
+        {
+          "level": 3,
+          "text": "PR 생성/수정 시"
+        },
+        {
+          "level": 3,
+          "text": "main 머지 후"
+        },
+        {
+          "level": 2,
+          "text": "4. 장애 대응"
+        },
+        {
+          "level": 2,
+          "text": "5. 운영 원칙"
+        }
+      ],
+      "links": [
+        "workspace-guide.md",
+        "https://okestro-edu-team-tms.vercel.app/`"
+      ],
+      "keywords": [
+        "Blob",
+        "ledger",
+        "snapshot",
+        "Vercel",
+        "GitHub Actions",
+        "deploy"
+      ]
+    },
+    {
+      "id": "docs/ledger-live-sync.md",
+      "path": "docs/ledger-live-sync.md",
+      "title": "팀 빌딩비 장부 — 관리자 작성 → 조회 실시간 반영",
+      "sourceKind": "primary",
+      "headings": [
+        {
+          "level": 1,
+          "text": "팀 빌딩비 장부 — 관리자 작성 → 조회 실시간 반영"
+        },
+        {
+          "level": 2,
+          "text": "동작"
+        },
+        {
+          "level": 2,
+          "text": "Vercel 설정 (최초 1회)"
+        },
+        {
+          "level": 2,
+          "text": "수동 배포 (Blob 미사용 시)"
+        },
+        {
+          "level": 2,
+          "text": "작성은 보이는데 조회에 안 보일 때"
+        },
+        {
+          "level": 3,
+          "text": "Blob 정리 (자동 저장이 수만 번 쌓인 경우)"
+        },
+        {
+          "level": 1,
+          "text": "스토어 전체 비우기 (rate limit 시 1~3분 뒤 재시도)"
+        },
+        {
+          "level": 1,
+          "text": "또는 ledger/live- 타임스탬프 파일만 배치 삭제"
+        }
+      ],
+      "links": [
+        "https://vercel.com"
+      ],
+      "keywords": [
+        "Blob",
+        "ledger",
+        "localStorage",
+        "snapshot",
+        "Vercel",
+        "deploy",
+        "mode=edit"
+      ]
+    },
+    {
+      "id": "docs/lunch-pick-setup.md",
+      "path": "docs/lunch-pick-setup.md",
+      "title": "오늘 뭐 먹지 — 설정",
+      "sourceKind": "supporting",
+      "headings": [
+        {
+          "level": 1,
+          "text": "오늘 뭐 먹지 — 설정"
+        },
+        {
+          "level": 2,
+          "text": "기준 위치"
+        },
+        {
+          "level": 2,
+          "text": "맛집 목록 (수동)"
+        },
+        {
+          "level": 2,
+          "text": "카카오 로컬 API (검색 탭)"
+        },
+        {
+          "level": 1,
+          "text": ".env.local 에 KAKAO_REST_API_KEY=발급받은키 입력 후"
+        },
+        {
+          "level": 2,
+          "text": "로컬 실행"
+        },
+        {
+          "level": 1,
+          "text": "기본 http://localhost:3000/?mode=edit&module=lunch"
+        },
+        {
+          "level": 1,
+          "text": "3000 포트가 이미 쓰이면 Vite가 3001, 3002… 로 자동 변경 — 터미널에 뜨는 Local URL을 사용"
+        },
+        {
+          "level": 2,
+          "text": "방문 기록"
+        },
+        {
+          "level": 2,
+          "text": "신규 식당 등록"
+        }
+      ],
+      "links": [
+        "../public/data/yeouido-lunch.json",
+        "https://developers.kakao.com/",
+        "http://localhost:3000/?mode=edit&module=lunch"
+      ],
+      "keywords": [
+        "localStorage",
+        "Vercel",
+        "mode=edit"
+      ]
+    },
+    {
+      "id": "docs/memo-아이폰-홈화면-TMS.md",
+      "path": "docs/memo-아이폰-홈화면-TMS.md",
+      "title": "[나중에 할 일] iPhone — 교육팀 TMS 홈 화면 추가",
+      "sourceKind": "supporting",
+      "headings": [
+        {
+          "level": 1,
+          "text": "[나중에 할 일] iPhone — 교육팀 TMS 홈 화면 추가"
+        },
+        {
+          "level": 2,
+          "text": "URL"
+        },
+        {
+          "level": 2,
+          "text": "체크리스트"
+        },
+        {
+          "level": 3,
+          "text": "조회용 아이콘"
+        },
+        {
+          "level": 3,
+          "text": "편집용 아이콘 (팀장만, 선택)"
+        },
+        {
+          "level": 2,
+          "text": "참고"
+        }
+      ],
+      "links": [
+        "https://okestro-edu-team-tms.vercel.app/",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit"
+      ],
+      "keywords": [
+        "Vercel",
+        "mode=edit"
+      ]
+    },
+    {
+      "id": "docs/mobile-home-screen.md",
+      "path": "docs/mobile-home-screen.md",
+      "title": "교육팀 TMS — 모바일 홈 화면 추가",
+      "sourceKind": "supporting",
+      "headings": [
+        {
+          "level": 1,
+          "text": "교육팀 TMS — 모바일 홈 화면 추가"
+        },
+        {
+          "level": 2,
+          "text": "URL (복사용)"
+        },
+        {
+          "level": 2,
+          "text": "iPhone (Safari)"
+        },
+        {
+          "level": 3,
+          "text": "1) 조회용 아이콘"
+        },
+        {
+          "level": 3,
+          "text": "2) 편집용 아이콘 (팀장만)"
+        },
+        {
+          "level": 2,
+          "text": "Android (Chrome)"
+        },
+        {
+          "level": 2,
+          "text": "앱 안에서"
+        },
+        {
+          "level": 2,
+          "text": "나중에 설정용 메모 (파일)"
+        },
+        {
+          "level": 2,
+          "text": "참고"
+        }
+      ],
+      "links": [
+        "./memo-아이폰-홈화면-TMS.md",
+        "https://okestro-edu-team-tms.vercel.app/",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit",
+        "https://edu-team-tms.vercel.app/"
+      ],
+      "keywords": [
+        "Vercel",
+        "mode=edit"
+      ]
+    },
+    {
+      "id": "docs/obsidian-graph-poc.md",
+      "path": "docs/obsidian-graph-poc.md",
+      "title": "EDU-TMS Obsidian / Docs Graph PoC",
+      "sourceKind": "supporting",
+      "headings": [
+        {
+          "level": 1,
+          "text": "EDU-TMS Obsidian / Docs Graph PoC"
+        },
+        {
+          "level": 2,
+          "text": "Purpose"
+        },
+        {
+          "level": 2,
+          "text": "Concept"
+        },
+        {
+          "level": 2,
+          "text": "Initial Scope"
+        },
+        {
+          "level": 2,
+          "text": "Node Types"
+        },
+        {
+          "level": 2,
+          "text": "Edge Types"
+        },
+        {
+          "level": 2,
+          "text": "High-Value Keywords"
+        },
+        {
+          "level": 2,
+          "text": "Non-Goals"
+        },
+        {
+          "level": 2,
+          "text": "Suggested Workflow"
+        },
+        {
+          "level": 2,
+          "text": "Future Ideas"
+        }
+      ],
+      "links": [],
+      "keywords": [
+        "Blob",
+        "ledger",
+        "journal",
+        "localStorage",
+        "snapshot",
+        "static JSON",
+        "Vercel",
+        "GitHub Actions",
+        "deploy",
+        "push",
+        "team share",
+        "업무일지",
+        "KPI",
+        "향상 과제",
+        "improve-projects",
+        "mode=edit",
+        "access=leader",
+        "member"
+      ]
+    },
+    {
+      "id": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md",
+      "path": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md",
+      "title": "PPT-Academizer × TMS KPI 시나리오 예시",
+      "sourceKind": "reference-source",
+      "headings": [
+        {
+          "level": 1,
+          "text": "PPT-Academizer × TMS KPI 시나리오 예시"
+        },
+        {
+          "level": 2,
+          "text": "일지 입력 요약"
+        },
+        {
+          "level": 2,
+          "text": "TMS 화면에서 기대값"
+        },
+        {
+          "level": 3,
+          "text": "2주차(6월 w2) — 개발만 (6/8~6/12)"
+        },
+        {
+          "level": 3,
+          "text": "3주차(6월 w3) — 활용 1건 (6/16)"
+        },
+        {
+          "level": 2,
+          "text": "KPI1 vs KPI2 구분 (기억용)"
+        },
+        {
+          "level": 2,
+          "text": "확인 URL"
+        },
+        {
+          "level": 2,
+          "text": "로컬에 예전 일지가 있을 때"
+        },
+        {
+          "level": 2,
+          "text": "관련 코드"
+        }
+      ],
+      "links": [
+        "http://localhost:3000/?mode=edit`",
+        "http://localhost:3000/?mode=edit&module=kpi`"
+      ],
+      "keywords": [
+        "journal",
+        "localStorage",
+        "KPI",
+        "mode=edit"
+      ]
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-traceability-tms.md",
+      "path": "docs/reference-source/KPI-TMS-traceability-tms.md",
+      "title": "TMS KPI 필드 ↔ 엑셀 매핑 (v2)",
+      "sourceKind": "reference-source",
+      "headings": [
+        {
+          "level": 1,
+          "text": "TMS KPI 필드 ↔ 엑셀 매핑 (v2)"
+        },
+        {
+          "level": 2,
+          "text": "KPI1"
+        },
+        {
+          "level": 2,
+          "text": "KPI2"
+        },
+        {
+          "level": 2,
+          "text": "KPI3"
+        },
+        {
+          "level": 2,
+          "text": "승인·리포트"
+        }
+      ],
+      "links": [
+        "./traceability.md"
+      ],
+      "keywords": [
+        "KPI"
+      ]
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-운영모델-v2.md",
+      "path": "docs/reference-source/KPI-TMS-운영모델-v2.md",
+      "title": "TMS KPI 운영 모델 v2",
+      "sourceKind": "reference-source",
+      "headings": [
+        {
+          "level": 1,
+          "text": "TMS KPI 운영 모델 v2"
+        },
+        {
+          "level": 2,
+          "text": "역할"
+        },
+        {
+          "level": 2,
+          "text": "데이터 흐름"
+        },
+        {
+          "level": 2,
+          "text": "엑셀과의 관계"
+        },
+        {
+          "level": 2,
+          "text": "동기화"
+        },
+        {
+          "level": 2,
+          "text": "관련 문서"
+        }
+      ],
+      "links": [
+        "./KPI-Academizer-TMS-시나리오예시.md",
+        "./KPI-TMS-traceability-tms.md",
+        "./KPI-TMS-팀KPI메뉴.md",
+        "./pilot-checklist-v2-tms.md"
+      ],
+      "keywords": [
+        "journal",
+        "localStorage",
+        "snapshot",
+        "KPI",
+        "mode=edit"
+      ]
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "path": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "title": "TMS 팀 KPI 관리 (v2 · TMS SoT)",
+      "sourceKind": "reference-source",
+      "headings": [
+        {
+          "level": 1,
+          "text": "TMS 팀 KPI 관리 (v2 · TMS SoT)"
+        },
+        {
+          "level": 2,
+          "text": "메뉴"
+        },
+        {
+          "level": 2,
+          "text": "URL 스코프 (로그인 없이 북마크)"
+        },
+        {
+          "level": 2,
+          "text": "운영 절차"
+        },
+        {
+          "level": 2,
+          "text": "동기화"
+        },
+        {
+          "level": 1,
+          "text": "운영 배포: main 머지 → GitHub Actions (Deploy Production)"
+        },
+        {
+          "level": 2,
+          "text": "관련 문서"
+        }
+      ],
+      "links": [
+        "./TMS-접속URL-북마크.md",
+        "./KPI-일지-TMS-연계-가이드.md",
+        "./KPI-TMS-운영모델-v2.md",
+        "./pilot-checklist-v2-tms.md"
+      ],
+      "keywords": [
+        "journal",
+        "GitHub Actions",
+        "deploy",
+        "업무일지",
+        "KPI",
+        "mode=edit",
+        "access=leader",
+        "member"
+      ]
+    },
+    {
+      "id": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
+      "path": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
+      "title": "일지 ↔ TMS KPI 연계 가이드",
+      "sourceKind": "reference-source",
+      "headings": [
+        {
+          "level": 1,
+          "text": "일지 ↔ TMS KPI 연계 가이드"
+        },
+        {
+          "level": 2,
+          "text": "이번 달 예상 (일지 상단)"
+        },
+        {
+          "level": 2,
+          "text": "일지 입력 → KPI 반영"
+        },
+        {
+          "level": 3,
+          "text": "M/M · 생산성 규칙 (요약)"
+        },
+        {
+          "level": 2,
+          "text": "항목 편집 시 미리보기"
+        },
+        {
+          "level": 2,
+          "text": "관련 문서"
+        },
+        {
+          "level": 2,
+          "text": "TMS에서 열기"
+        }
+      ],
+      "links": [
+        "http://localhost:3000/?mode=edit&module=kpi",
+        "./KPI-TMS-운영모델-v2.md",
+        "./KPI-Academizer-TMS-시나리오예시.md",
+        "./KPI-TMS-traceability-tms.md",
+        "http://localhost:3000/docs/KPI-일지-TMS-연계-가이드.md`"
+      ],
+      "keywords": [
+        "KPI",
+        "mode=edit"
+      ]
+    },
+    {
+      "id": "docs/reference-source/pilot-checklist-v2-tms.md",
+      "path": "docs/reference-source/pilot-checklist-v2-tms.md",
+      "title": "KPI 파일럿 체크리스트 v2 (TMS SoT)",
+      "sourceKind": "reference-source",
+      "headings": [
+        {
+          "level": 1,
+          "text": "KPI 파일럿 체크리스트 v2 (TMS SoT)"
+        },
+        {
+          "level": 2,
+          "text": "매주"
+        },
+        {
+          "level": 2,
+          "text": "월말"
+        },
+        {
+          "level": 2,
+          "text": "분기 (2Q 시범)"
+        },
+        {
+          "level": 2,
+          "text": "성공 기준"
+        }
+      ],
+      "links": [],
+      "keywords": [
+        "KPI"
+      ]
+    },
+    {
+      "id": "docs/reference-source/README.md",
+      "path": "docs/reference-source/README.md",
+      "title": "TMS 참고문서 원본",
+      "sourceKind": "reference-source",
+      "headings": [
+        {
+          "level": 1,
+          "text": "TMS 참고문서 원본"
+        }
+      ],
+      "links": [],
+      "keywords": [
+        "KPI"
+      ]
+    },
+    {
+      "id": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md",
+      "path": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md",
+      "title": "KPI1 가동률 (v5 정의서 요약)",
+      "sourceKind": "reference-source",
+      "headings": [
+        {
+          "level": 1,
+          "text": "KPI1 가동률 (v5 정의서 요약)"
+        },
+        {
+          "level": 2,
+          "text": "정의"
+        },
+        {
+          "level": 2,
+          "text": "월 산식"
+        },
+        {
+          "level": 2,
+          "text": "주간 → 월 (운영)"
+        },
+        {
+          "level": 2,
+          "text": "분기 산식"
+        },
+        {
+          "level": 2,
+          "text": "분기 등급 (가동률 %)"
+        },
+        {
+          "level": 2,
+          "text": "시뮬레이터 전용"
+        }
+      ],
+      "links": [
+        "../traceability.md",
+        "../../config/kpi1_rules.yaml"
+      ],
+      "keywords": [
+        "KPI"
+      ]
+    },
+    {
+      "id": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md",
+      "path": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md",
+      "title": "KPI2 생산성 (v5 / 엑셀 요약)",
+      "sourceKind": "reference-source",
+      "headings": [
+        {
+          "level": 1,
+          "text": "KPI2 생산성 (v5 / 엑셀 요약)"
+        },
+        {
+          "level": 2,
+          "text": "정의"
+        },
+        {
+          "level": 2,
+          "text": "건별"
+        },
+        {
+          "level": 2,
+          "text": "월 집계 (승인 건)"
+        },
+        {
+          "level": 2,
+          "text": "분기"
+        },
+        {
+          "level": 2,
+          "text": "분기 등급"
+        },
+        {
+          "level": 2,
+          "text": "시뮬레이터"
+        }
+      ],
+      "links": [
+        "../../config/kpi2_rules.yaml"
+      ],
+      "keywords": [
+        "localStorage",
+        "KPI"
+      ]
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md",
+      "path": "docs/reference-source/TMS-릴리즈노트.md",
+      "title": "TMS · 팀 KPI 릴리즈 노트",
+      "sourceKind": "reference-source",
+      "headings": [
+        {
+          "level": 1,
+          "text": "TMS · 팀 KPI 릴리즈 노트"
+        },
+        {
+          "level": 2,
+          "text": "2026-06-12 — KPI2 향상 과제 JSON 공유 UX 정리"
+        },
+        {
+          "level": 2,
+          "text": "2026-06-12 — KPI2 향상 과제 JSON 다운로드/가져오기 fallback"
+        },
+        {
+          "level": 2,
+          "text": "2026-06-12 — KPI2 향상 과제 팀 공유 API hotfix"
+        },
+        {
+          "level": 2,
+          "text": "2026-06-12 — KPI2 향상 과제 운영 목록 팀 공유 1차"
+        },
+        {
+          "level": 2,
+          "text": "2026-06-10 — KPI2 운영 목록·구성원 일지 연결 1차"
+        },
+        {
+          "level": 2,
+          "text": "2026-06-12 — 공개 조회 랜딩 축소·역할 URL 정리"
+        },
+        {
+          "level": 2,
+          "text": "2026-06-11 — Blob 트래픽 절감·구성원 운영·배포 복구"
+        },
+        {
+          "level": 3,
+          "text": "구성원 기능·운영 반영"
+        },
+        {
+          "level": 3,
+          "text": "API·배포"
+        },
+        {
+          "level": 3,
+          "text": "Blob P0 핫픽스 (`af0dfeb`)"
+        },
+        {
+          "level": 3,
+          "text": "사용자 영향"
+        },
+        {
+          "level": 3,
+          "text": "후속 (별도 승인)"
+        },
+        {
+          "level": 2,
+          "text": "2026-06-05 — 역량·메뉴·접속 URL"
+        },
+        {
+          "level": 2,
+          "text": "2026-06-02 — 오늘 뭐 먹지"
+        },
+        {
+          "level": 2,
+          "text": "2026-06-02 — PPT 아카데미화·정의서 v5"
+        },
+        {
+          "level": 2,
+          "text": "2026-06-02 — 참고문서·UI"
+        },
+        {
+          "level": 2,
+          "text": "2026-06 — TMS KPI v2 (SoT)"
+        },
+        {
+          "level": 2,
+          "text": "2026-05 — 엑셀·시뮬레이터 (kpi-app-new)"
+        },
+        {
+          "level": 3,
+          "text": "문서 수정 방법"
+        }
+      ],
+      "links": [
+        "https://okestro-edu-team-tms.vercel.app",
+        "https://edu-team-tms.vercel.app"
+      ],
+      "keywords": [
+        "Blob",
+        "ledger",
+        "journal",
+        "localStorage",
+        "snapshot",
+        "Vercel",
+        "GitHub Actions",
+        "업무일지",
+        "KPI",
+        "향상 과제",
+        "mode=edit",
+        "access=leader",
+        "member"
+      ]
+    },
+    {
+      "id": "docs/reference-source/TMS-접속URL-북마크.md",
+      "path": "docs/reference-source/TMS-접속URL-북마크.md",
+      "title": "TMS 접속 URL · 북마크 (운영)",
+      "sourceKind": "reference-source",
+      "headings": [
+        {
+          "level": 1,
+          "text": "TMS 접속 URL · 북마크 (운영)"
+        },
+        {
+          "level": 2,
+          "text": "1. 공통 · 역할별 접속"
+        },
+        {
+          "level": 2,
+          "text": "2. 팀장 · 총무 (김윤형 A)"
+        },
+        {
+          "level": 2,
+          "text": "3. 팀원 — 최우성 (B · 겸업)"
+        },
+        {
+          "level": 2,
+          "text": "4. 팀원 — 신혜윤 (C · 기획/운영)"
+        },
+        {
+          "level": 2,
+          "text": "5. 사이드바 메뉴 그룹 (2026-06)"
+        },
+        {
+          "level": 2,
+          "text": "6. PDF로 저장하기"
+        },
+        {
+          "level": 2,
+          "text": "7. 데이터 · 주의"
+        },
+        {
+          "level": 2,
+          "text": "관련 문서"
+        }
+      ],
+      "links": [
+        "./KPI-TMS-팀KPI메뉴.md",
+        "./KPI-일지-TMS-연계-가이드.md",
+        "https://okestro-edu-team-tms.vercel.app",
+        "https://edu-team-tms.vercel.app",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=journal",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=competency&member=A",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=kpi",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=kpi-approve",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=kpi-report",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=lunch",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=academizer",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=cloud-chatbot",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=docs",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&member=B&module=journal",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&member=C&module=journal",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=journal",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=competency",
+        "https://okestro-edu-team-tms.vercel.app/?mode=view&member=B&module=ledger&year=2026&month=6",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=lunch",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=idea-bank",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=journal",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=competency",
+        "https://okestro-edu-team-tms.vercel.app/?mode=view&member=C&module=ledger&year=2026&month=6",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=lunch",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=idea-bank"
+      ],
+      "keywords": [
+        "ledger",
+        "journal",
+        "localStorage",
+        "Vercel",
+        "KPI",
+        "mode=edit",
+        "access=leader",
+        "member"
+      ]
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md",
+      "path": "docs/reference-source/교육팀_KPI_정의서.md",
+      "title": "교육팀 KPI 정의서",
+      "sourceKind": "reference-source",
+      "headings": [
+        {
+          "level": 1,
+          "text": "교육팀 KPI 정의서"
+        },
+        {
+          "level": 2,
+          "text": "KPI 전체 구조"
+        },
+        {
+          "level": 2,
+          "text": "팀 KPI. 교육팀 업무 가동률 향상"
+        },
+        {
+          "level": 3,
+          "text": "지표 설명"
+        },
+        {
+          "level": 3,
+          "text": "측정 산식"
+        },
+        {
+          "level": 3,
+          "text": "결과 평가"
+        },
+        {
+          "level": 2,
+          "text": "지표 1. 교육팀 업무 리소스 가동률"
+        },
+        {
+          "level": 3,
+          "text": "지표 설명"
+        },
+        {
+          "level": 3,
+          "text": "측정 산식"
+        },
+        {
+          "level": 3,
+          "text": "M/M 구성"
+        },
+        {
+          "level": 3,
+          "text": "결과 평가"
+        },
+        {
+          "level": 2,
+          "text": "팀 KPI. 교육팀 업무 생산성 향상"
+        },
+        {
+          "level": 3,
+          "text": "지표 설명"
+        },
+        {
+          "level": 3,
+          "text": "측정 산식"
+        },
+        {
+          "level": 3,
+          "text": "결과 평가"
+        },
+        {
+          "level": 2,
+          "text": "지표 2. 교육팀 업무 리소스 생산성"
+        },
+        {
+          "level": 3,
+          "text": "지표 설명"
+        },
+        {
+          "level": 3,
+          "text": "측정 산식"
+        },
+        {
+          "level": 3,
+          "text": "결과 평가"
+        },
+        {
+          "level": 2,
+          "text": "팀 KPI. 교육팀 핵심 역량 레벨 향상"
+        },
+        {
+          "level": 3,
+          "text": "지표 설명"
+        },
+        {
+          "level": 3,
+          "text": "측정 산식"
+        },
+        {
+          "level": 3,
+          "text": "분기별 목표"
+        },
+        {
+          "level": 3,
+          "text": "결과 평가"
+        },
+        {
+          "level": 2,
+          "text": "지표 3. 교육팀 핵심 역량 레벨"
+        },
+        {
+          "level": 3,
+          "text": "지표 설명"
+        },
+        {
+          "level": 3,
+          "text": "측정 산식"
+        },
+        {
+          "level": 3,
+          "text": "분기별 목표"
+        },
+        {
+          "level": 3,
+          "text": "결과 평가"
+        },
+        {
+          "level": 2,
+          "text": "세부 지표 ① 레벨 (35%)"
+        },
+        {
+          "level": 3,
+          "text": "정의"
+        },
+        {
+          "level": 3,
+          "text": "측정 산식"
+        },
+        {
+          "level": 3,
+          "text": "측정 방법"
+        },
+        {
+          "level": 3,
+          "text": "측정 주기: 분기별"
+        },
+        {
+          "level": 3,
+          "text": "5개 평가 차원"
+        },
+        {
+          "level": 2,
+          "text": "세부 지표 ② 다면 평가 점수 (15%)"
+        },
+        {
+          "level": 3,
+          "text": "정의"
+        },
+        {
+          "level": 3,
+          "text": "측정 산식"
+        },
+        {
+          "level": 3,
+          "text": "유효 응답 최소 N 기준"
+        },
+        {
+          "level": 3,
+          "text": "유효 응답만 평균"
+        },
+        {
+          "level": 3,
+          "text": "유효 응답만 평균"
+        },
+        {
+          "level": 3,
+          "text": "N 미달 시 처리 기준"
+        },
+        {
+          "level": 3,
+          "text": "측정 주기"
+        },
+        {
+          "level": 2,
+          "text": "세부 지표 ③ 리더 평가 (25%)"
+        },
+        {
+          "level": 3,
+          "text": "정의"
+        },
+        {
+          "level": 3,
+          "text": "측정 산식"
+        },
+        {
+          "level": 3,
+          "text": "측정 방법"
+        },
+        {
+          "level": 3,
+          "text": "측정 주기: 분기별"
+        },
+        {
+          "level": 2,
+          "text": "세부 지표 ④ 역량 실전 적용률 (25%)"
+        },
+        {
+          "level": 3,
+          "text": "정의"
+        },
+        {
+          "level": 3,
+          "text": "평가 방법"
+        },
+        {
+          "level": 3,
+          "text": "5점 척도 기준"
+        },
+        {
+          "level": 3,
+          "text": "측정 산식"
+        },
+        {
+          "level": 3,
+          "text": "측정 주기: 분기별"
+        },
+        {
+          "level": 2,
+          "text": "측정 요소 종합"
+        },
+        {
+          "level": 3,
+          "text": "측정 주기"
+        },
+        {
+          "level": 2,
+          "text": "운영 규칙"
+        }
+      ],
+      "links": [],
+      "keywords": [
+        "KPI"
+      ]
+    },
+    {
+      "id": "docs/reference-source/교육팀_역량평가_설계노트.md",
+      "path": "docs/reference-source/교육팀_역량평가_설계노트.md",
+      "title": "2026 교육팀 핵심 역량 평가 — 설계 노트",
+      "sourceKind": "reference-source",
+      "headings": [
+        {
+          "level": 1,
+          "text": "2026 교육팀 핵심 역량 평가 — 설계 노트"
+        },
+        {
+          "level": 2,
+          "text": "1. 목적과 원칙"
+        },
+        {
+          "level": 2,
+          "text": "2. 본부 정합성"
+        },
+        {
+          "level": 3,
+          "text": "2.1 최종 역량 점수(월간 Raw의 KPI 연계용)"
+        },
+        {
+          "level": 3,
+          "text": "2.2 허용 소수"
+        },
+        {
+          "level": 2,
+          "text": "3. 직군(역할) 정의"
+        },
+        {
+          "level": 2,
+          "text": "4. 루브릭 시트 분리(방향 2)"
+        },
+        {
+          "level": 3,
+          "text": "4.1 공통 축"
+        },
+        {
+          "level": 3,
+          "text": "4.2 시트 이름(안)"
+        },
+        {
+          "level": 2,
+          "text": "5. 소수 누적 우선순위(직군별) — 합의 필요"
+        },
+        {
+          "level": 2,
+          "text": "6. 캡(Cap) 규칙 — 합의 필요"
+        },
+        {
+          "level": 2,
+          "text": "7. 시트·수식 매핑(구현 체크리스트)"
+        },
+        {
+          "level": 2,
+          "text": "8. 운영 메모(성장 가이드)"
+        },
+        {
+          "level": 2,
+          "text": "9. 다음 액션"
+        }
+      ],
+      "links": [],
+      "keywords": [
+        "KPI"
+      ]
+    },
+    {
+      "id": "docs/sot-map.md",
+      "path": "docs/sot-map.md",
+      "title": "EDU-TMS Source of Truth Map",
+      "sourceKind": "primary",
+      "headings": [
+        {
+          "level": 1,
+          "text": "EDU-TMS Source of Truth Map"
+        },
+        {
+          "level": 2,
+          "text": "Purpose"
+        },
+        {
+          "level": 2,
+          "text": "Golden Rules"
+        },
+        {
+          "level": 2,
+          "text": "Primary SoT Documents"
+        },
+        {
+          "level": 2,
+          "text": "Non-SoT Copies and Build Outputs"
+        },
+        {
+          "level": 2,
+          "text": "Missing but Recommended Documents"
+        },
+        {
+          "level": 2,
+          "text": "Operational Safety References"
+        },
+        {
+          "level": 2,
+          "text": "AI/Codex Work Rules"
+        },
+        {
+          "level": 2,
+          "text": "Obsidian and Graph Notes"
+        },
+        {
+          "level": 2,
+          "text": "Next Cleanup Candidates"
+        }
+      ],
+      "links": [],
+      "keywords": [
+        "Blob",
+        "ledger",
+        "journal",
+        "localStorage",
+        "Vercel",
+        "deploy",
+        "push",
+        "업무일지",
+        "KPI"
+      ]
+    },
+    {
+      "id": "docs/workspace-guide.md",
+      "path": "docs/workspace-guide.md",
+      "title": "워크스페이스·폴더 정리 가이드",
+      "sourceKind": "supporting",
+      "headings": [
+        {
+          "level": 1,
+          "text": "워크스페이스·폴더 정리 가이드"
+        },
+        {
+          "level": 2,
+          "text": "1. 일상 작업 — repo 두 개만"
+        },
+        {
+          "level": 3,
+          "text": "TMS (이 repo)"
+        },
+        {
+          "level": 3,
+          "text": "cxr542-portal (별도 repo)"
+        },
+        {
+          "level": 2,
+          "text": "2. okestro-app monorepo `apps/` 폴더 감사 (2026-06)"
+        },
+        {
+          "level": 3,
+          "text": "삭제해도 무방 (로컬 정리)"
+        },
+        {
+          "level": 3,
+          "text": "지금은 안 써도 되지만, 삭제 전 확인 권장"
+        },
+        {
+          "level": 3,
+          "text": "유지 권장 (가끔/별도 용도)"
+        },
+        {
+          "level": 3,
+          "text": "운영 중 — 삭제하지 말 것"
+        },
+        {
+          "level": 2,
+          "text": "3. 헷갈릴 때 체크리스트"
+        },
+        {
+          "level": 2,
+          "text": "4. CI/CD Secrets (repo별)"
+        }
+      ],
+      "links": [
+        "deployment-process.md",
+        "https://github.com/cxr542/edu-team-tms.git",
+        "https://github.com/cxr542/cxr542-portal.git"
+      ],
+      "keywords": [
+        "Blob",
+        "ledger",
+        "Vercel",
+        "deploy",
+        "KPI"
+      ]
+    },
+    {
+      "id": "README.md",
+      "path": "README.md",
+      "title": "교육팀 TMS (Team Management System) · v1.0",
+      "sourceKind": "primary",
+      "headings": [
+        {
+          "level": 1,
+          "text": "교육팀 TMS (Team Management System) · v1.0"
+        },
+        {
+          "level": 2,
+          "text": "환경"
+        },
+        {
+          "level": 3,
+          "text": "운영 URL"
+        },
+        {
+          "level": 2,
+          "text": "로컬 실행 (repo 단독)"
+        },
+        {
+          "level": 1,
+          "text": "→ http://localhost:3000/"
+        },
+        {
+          "level": 2,
+          "text": "참고문서·PPT 아카데미화 (TMS repo 내부)"
+        },
+        {
+          "level": 2,
+          "text": "빌드·배포"
+        },
+        {
+          "level": 2,
+          "text": "문서"
+        },
+        {
+          "level": 2,
+          "text": "버전"
+        }
+      ],
+      "links": [
+        "docs/workspace-guide.md",
+        "docs/sot-map.md",
+        "docs/deployment-process.md",
+        "docs/ledger-live-sync.md",
+        "docs/mobile-home-screen.md",
+        "https://okestro-edu-team-tms.vercel.app/",
+        "http://localhost:3000/",
+        "https://okestro-edu-team-tms.vercel.app/?mode=edit",
+        "https://github.com/cxr542/edu-team-tms.git"
+      ],
+      "keywords": [
+        "ledger",
+        "journal",
+        "localStorage",
+        "Vercel",
+        "GitHub Actions",
+        "deploy",
+        "업무일지",
+        "KPI",
+        "mode=edit"
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "DESIGN.md",
+      "type": "document",
+      "title": "DESIGN.md",
+      "path": "DESIGN.md",
+      "sourceKind": "primary"
+    },
+    {
+      "id": "DESIGN.md#overview",
+      "type": "heading",
+      "title": "Overview",
+      "level": 2,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#colors",
+      "type": "heading",
+      "title": "Colors",
+      "level": 2,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#brand-accent",
+      "type": "heading",
+      "title": "Brand & Accent",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#surface",
+      "type": "heading",
+      "title": "Surface",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#text",
+      "type": "heading",
+      "title": "Text",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#hairlines-borders",
+      "type": "heading",
+      "title": "Hairlines & Borders",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#brand-gradient",
+      "type": "heading",
+      "title": "Brand Gradient",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#typography",
+      "type": "heading",
+      "title": "Typography",
+      "level": 2,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#font-family",
+      "type": "heading",
+      "title": "Font Family",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#hierarchy",
+      "type": "heading",
+      "title": "Hierarchy",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#principles",
+      "type": "heading",
+      "title": "Principles",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#note-on-font-substitutes",
+      "type": "heading",
+      "title": "Note on Font Substitutes",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#layout",
+      "type": "heading",
+      "title": "Layout",
+      "level": 2,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#spacing-system",
+      "type": "heading",
+      "title": "Spacing System",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#grid-container",
+      "type": "heading",
+      "title": "Grid & Container",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#whitespace-philosophy",
+      "type": "heading",
+      "title": "Whitespace Philosophy",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#elevation-depth",
+      "type": "heading",
+      "title": "Elevation & Depth",
+      "level": 2,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#decorative-depth",
+      "type": "heading",
+      "title": "Decorative Depth",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#shapes",
+      "type": "heading",
+      "title": "Shapes",
+      "level": 2,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#border-radius-scale",
+      "type": "heading",
+      "title": "Border Radius Scale",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#photography-geometry",
+      "type": "heading",
+      "title": "Photography Geometry",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#components",
+      "type": "heading",
+      "title": "Components",
+      "level": 2,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#top-navigation",
+      "type": "heading",
+      "title": "Top Navigation",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#buttons",
+      "type": "heading",
+      "title": "Buttons",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#cards-containers",
+      "type": "heading",
+      "title": "Cards & Containers",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#inputs-forms",
+      "type": "heading",
+      "title": "Inputs & Forms",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#footer",
+      "type": "heading",
+      "title": "Footer",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#do-s-and-don-ts",
+      "type": "heading",
+      "title": "Do's and Don'ts",
+      "level": 2,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#do",
+      "type": "heading",
+      "title": "Do",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#don-t",
+      "type": "heading",
+      "title": "Don't",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#responsive-behavior",
+      "type": "heading",
+      "title": "Responsive Behavior",
+      "level": 2,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#breakpoints",
+      "type": "heading",
+      "title": "Breakpoints",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#touch-targets",
+      "type": "heading",
+      "title": "Touch Targets",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#collapsing-strategy",
+      "type": "heading",
+      "title": "Collapsing Strategy",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#image-behavior",
+      "type": "heading",
+      "title": "Image Behavior",
+      "level": 3,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#iteration-guide",
+      "type": "heading",
+      "title": "Iteration Guide",
+      "level": 2,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "DESIGN.md#known-gaps",
+      "type": "heading",
+      "title": "Known Gaps",
+      "level": 2,
+      "path": "DESIGN.md"
+    },
+    {
+      "id": "docs/deployment-process.md",
+      "type": "document",
+      "title": "TMS 배포 프로세스 (GitHub Actions + Vercel)",
+      "path": "docs/deployment-process.md",
+      "sourceKind": "primary"
+    },
+    {
+      "id": "docs/deployment-process.md#tms-배포-프로세스-github-actions-vercel",
+      "type": "heading",
+      "title": "TMS 배포 프로세스 (GitHub Actions + Vercel)",
+      "level": 1,
+      "path": "docs/deployment-process.md"
+    },
+    {
+      "id": "docs/deployment-process.md#1-환경-구조",
+      "type": "heading",
+      "title": "1. 환경 구조",
+      "level": 2,
+      "path": "docs/deployment-process.md"
+    },
+    {
+      "id": "docs/deployment-process.md#2-사전-준비",
+      "type": "heading",
+      "title": "2. 사전 준비",
+      "level": 2,
+      "path": "docs/deployment-process.md"
+    },
+    {
+      "id": "docs/deployment-process.md#github-secrets",
+      "type": "heading",
+      "title": "GitHub Secrets",
+      "level": 3,
+      "path": "docs/deployment-process.md"
+    },
+    {
+      "id": "docs/deployment-process.md#github-environment",
+      "type": "heading",
+      "title": "GitHub Environment",
+      "level": 3,
+      "path": "docs/deployment-process.md"
+    },
+    {
+      "id": "docs/deployment-process.md#vercel-environment-variables-점검",
+      "type": "heading",
+      "title": "Vercel Environment Variables 점검",
+      "level": 3,
+      "path": "docs/deployment-process.md"
+    },
+    {
+      "id": "docs/deployment-process.md#3-파이프라인-동작",
+      "type": "heading",
+      "title": "3. 파이프라인 동작",
+      "level": 2,
+      "path": "docs/deployment-process.md"
+    },
+    {
+      "id": "docs/deployment-process.md#pr-생성-수정-시",
+      "type": "heading",
+      "title": "PR 생성/수정 시",
+      "level": 3,
+      "path": "docs/deployment-process.md"
+    },
+    {
+      "id": "docs/deployment-process.md#main-머지-후",
+      "type": "heading",
+      "title": "main 머지 후",
+      "level": 3,
+      "path": "docs/deployment-process.md"
+    },
+    {
+      "id": "docs/deployment-process.md#4-장애-대응",
+      "type": "heading",
+      "title": "4. 장애 대응",
+      "level": 2,
+      "path": "docs/deployment-process.md"
+    },
+    {
+      "id": "docs/deployment-process.md#5-운영-원칙",
+      "type": "heading",
+      "title": "5. 운영 원칙",
+      "level": 2,
+      "path": "docs/deployment-process.md"
+    },
+    {
+      "id": "url:workspace-guide.md",
+      "type": "url",
+      "label": "workspace-guide.md"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/`",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/`"
+    },
+    {
+      "id": "keyword:blob",
+      "type": "keyword",
+      "label": "Blob"
+    },
+    {
+      "id": "keyword:ledger",
+      "type": "keyword",
+      "label": "ledger"
+    },
+    {
+      "id": "keyword:snapshot",
+      "type": "keyword",
+      "label": "snapshot"
+    },
+    {
+      "id": "keyword:vercel",
+      "type": "keyword",
+      "label": "Vercel"
+    },
+    {
+      "id": "keyword:github-actions",
+      "type": "keyword",
+      "label": "GitHub Actions"
+    },
+    {
+      "id": "keyword:deploy",
+      "type": "keyword",
+      "label": "deploy"
+    },
+    {
+      "id": "docs/ledger-live-sync.md",
+      "type": "document",
+      "title": "팀 빌딩비 장부 — 관리자 작성 → 조회 실시간 반영",
+      "path": "docs/ledger-live-sync.md",
+      "sourceKind": "primary"
+    },
+    {
+      "id": "docs/ledger-live-sync.md#팀-빌딩비-장부-관리자-작성-조회-실시간-반영",
+      "type": "heading",
+      "title": "팀 빌딩비 장부 — 관리자 작성 → 조회 실시간 반영",
+      "level": 1,
+      "path": "docs/ledger-live-sync.md"
+    },
+    {
+      "id": "docs/ledger-live-sync.md#동작",
+      "type": "heading",
+      "title": "동작",
+      "level": 2,
+      "path": "docs/ledger-live-sync.md"
+    },
+    {
+      "id": "docs/ledger-live-sync.md#vercel-설정-최초-1회",
+      "type": "heading",
+      "title": "Vercel 설정 (최초 1회)",
+      "level": 2,
+      "path": "docs/ledger-live-sync.md"
+    },
+    {
+      "id": "docs/ledger-live-sync.md#수동-배포-blob-미사용-시",
+      "type": "heading",
+      "title": "수동 배포 (Blob 미사용 시)",
+      "level": 2,
+      "path": "docs/ledger-live-sync.md"
+    },
+    {
+      "id": "docs/ledger-live-sync.md#작성은-보이는데-조회에-안-보일-때",
+      "type": "heading",
+      "title": "작성은 보이는데 조회에 안 보일 때",
+      "level": 2,
+      "path": "docs/ledger-live-sync.md"
+    },
+    {
+      "id": "docs/ledger-live-sync.md#blob-정리-자동-저장이-수만-번-쌓인-경우",
+      "type": "heading",
+      "title": "Blob 정리 (자동 저장이 수만 번 쌓인 경우)",
+      "level": 3,
+      "path": "docs/ledger-live-sync.md"
+    },
+    {
+      "id": "docs/ledger-live-sync.md#스토어-전체-비우기-rate-limit-시-1-3분-뒤-재시도",
+      "type": "heading",
+      "title": "스토어 전체 비우기 (rate limit 시 1~3분 뒤 재시도)",
+      "level": 1,
+      "path": "docs/ledger-live-sync.md"
+    },
+    {
+      "id": "docs/ledger-live-sync.md#또는-ledger-live-타임스탬프-파일만-배치-삭제",
+      "type": "heading",
+      "title": "또는 ledger/live- 타임스탬프 파일만 배치 삭제",
+      "level": 1,
+      "path": "docs/ledger-live-sync.md"
+    },
+    {
+      "id": "url:https://vercel.com",
+      "type": "url",
+      "label": "https://vercel.com"
+    },
+    {
+      "id": "keyword:localstorage",
+      "type": "keyword",
+      "label": "localStorage"
+    },
+    {
+      "id": "keyword:mode-edit",
+      "type": "keyword",
+      "label": "mode=edit"
+    },
+    {
+      "id": "docs/lunch-pick-setup.md",
+      "type": "document",
+      "title": "오늘 뭐 먹지 — 설정",
+      "path": "docs/lunch-pick-setup.md",
+      "sourceKind": "supporting"
+    },
+    {
+      "id": "docs/lunch-pick-setup.md#오늘-뭐-먹지-설정",
+      "type": "heading",
+      "title": "오늘 뭐 먹지 — 설정",
+      "level": 1,
+      "path": "docs/lunch-pick-setup.md"
+    },
+    {
+      "id": "docs/lunch-pick-setup.md#기준-위치",
+      "type": "heading",
+      "title": "기준 위치",
+      "level": 2,
+      "path": "docs/lunch-pick-setup.md"
+    },
+    {
+      "id": "docs/lunch-pick-setup.md#맛집-목록-수동",
+      "type": "heading",
+      "title": "맛집 목록 (수동)",
+      "level": 2,
+      "path": "docs/lunch-pick-setup.md"
+    },
+    {
+      "id": "docs/lunch-pick-setup.md#카카오-로컬-api-검색-탭",
+      "type": "heading",
+      "title": "카카오 로컬 API (검색 탭)",
+      "level": 2,
+      "path": "docs/lunch-pick-setup.md"
+    },
+    {
+      "id": "docs/lunch-pick-setup.md#env-local-에-kakao-rest-api-key-발급받은키-입력-후",
+      "type": "heading",
+      "title": ".env.local 에 KAKAO_REST_API_KEY=발급받은키 입력 후",
+      "level": 1,
+      "path": "docs/lunch-pick-setup.md"
+    },
+    {
+      "id": "docs/lunch-pick-setup.md#로컬-실행",
+      "type": "heading",
+      "title": "로컬 실행",
+      "level": 2,
+      "path": "docs/lunch-pick-setup.md"
+    },
+    {
+      "id": "docs/lunch-pick-setup.md#기본-http-localhost-3000-mode-edit-module-lunch",
+      "type": "heading",
+      "title": "기본 http://localhost:3000/?mode=edit&module=lunch",
+      "level": 1,
+      "path": "docs/lunch-pick-setup.md"
+    },
+    {
+      "id": "docs/lunch-pick-setup.md#3000-포트가-이미-쓰이면-vite가-3001-3002-로-자동-변경-터미널에-뜨는-local-url을-사용",
+      "type": "heading",
+      "title": "3000 포트가 이미 쓰이면 Vite가 3001, 3002… 로 자동 변경 — 터미널에 뜨는 Local URL을 사용",
+      "level": 1,
+      "path": "docs/lunch-pick-setup.md"
+    },
+    {
+      "id": "docs/lunch-pick-setup.md#방문-기록",
+      "type": "heading",
+      "title": "방문 기록",
+      "level": 2,
+      "path": "docs/lunch-pick-setup.md"
+    },
+    {
+      "id": "docs/lunch-pick-setup.md#신규-식당-등록",
+      "type": "heading",
+      "title": "신규 식당 등록",
+      "level": 2,
+      "path": "docs/lunch-pick-setup.md"
+    },
+    {
+      "id": "url:../public/data/yeouido-lunch.json",
+      "type": "url",
+      "label": "../public/data/yeouido-lunch.json"
+    },
+    {
+      "id": "url:https://developers.kakao.com/",
+      "type": "url",
+      "label": "https://developers.kakao.com/"
+    },
+    {
+      "id": "url:http://localhost:3000/?mode=edit&module=lunch",
+      "type": "url",
+      "label": "http://localhost:3000/?mode=edit&module=lunch"
+    },
+    {
+      "id": "docs/memo-아이폰-홈화면-TMS.md",
+      "type": "document",
+      "title": "[나중에 할 일] iPhone — 교육팀 TMS 홈 화면 추가",
+      "path": "docs/memo-아이폰-홈화면-TMS.md",
+      "sourceKind": "supporting"
+    },
+    {
+      "id": "docs/memo-아이폰-홈화면-TMS.md#나중에-할-일-iphone-교육팀-tms-홈-화면-추가",
+      "type": "heading",
+      "title": "[나중에 할 일] iPhone — 교육팀 TMS 홈 화면 추가",
+      "level": 1,
+      "path": "docs/memo-아이폰-홈화면-TMS.md"
+    },
+    {
+      "id": "docs/memo-아이폰-홈화면-TMS.md#url",
+      "type": "heading",
+      "title": "URL",
+      "level": 2,
+      "path": "docs/memo-아이폰-홈화면-TMS.md"
+    },
+    {
+      "id": "docs/memo-아이폰-홈화면-TMS.md#체크리스트",
+      "type": "heading",
+      "title": "체크리스트",
+      "level": 2,
+      "path": "docs/memo-아이폰-홈화면-TMS.md"
+    },
+    {
+      "id": "docs/memo-아이폰-홈화면-TMS.md#조회용-아이콘",
+      "type": "heading",
+      "title": "조회용 아이콘",
+      "level": 3,
+      "path": "docs/memo-아이폰-홈화면-TMS.md"
+    },
+    {
+      "id": "docs/memo-아이폰-홈화면-TMS.md#편집용-아이콘-팀장만-선택",
+      "type": "heading",
+      "title": "편집용 아이콘 (팀장만, 선택)",
+      "level": 3,
+      "path": "docs/memo-아이폰-홈화면-TMS.md"
+    },
+    {
+      "id": "docs/memo-아이폰-홈화면-TMS.md#참고",
+      "type": "heading",
+      "title": "참고",
+      "level": 2,
+      "path": "docs/memo-아이폰-홈화면-TMS.md"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=edit"
+    },
+    {
+      "id": "docs/mobile-home-screen.md",
+      "type": "document",
+      "title": "교육팀 TMS — 모바일 홈 화면 추가",
+      "path": "docs/mobile-home-screen.md",
+      "sourceKind": "supporting"
+    },
+    {
+      "id": "docs/mobile-home-screen.md#교육팀-tms-모바일-홈-화면-추가",
+      "type": "heading",
+      "title": "교육팀 TMS — 모바일 홈 화면 추가",
+      "level": 1,
+      "path": "docs/mobile-home-screen.md"
+    },
+    {
+      "id": "docs/mobile-home-screen.md#url-복사용",
+      "type": "heading",
+      "title": "URL (복사용)",
+      "level": 2,
+      "path": "docs/mobile-home-screen.md"
+    },
+    {
+      "id": "docs/mobile-home-screen.md#iphone-safari",
+      "type": "heading",
+      "title": "iPhone (Safari)",
+      "level": 2,
+      "path": "docs/mobile-home-screen.md"
+    },
+    {
+      "id": "docs/mobile-home-screen.md#1-조회용-아이콘",
+      "type": "heading",
+      "title": "1) 조회용 아이콘",
+      "level": 3,
+      "path": "docs/mobile-home-screen.md"
+    },
+    {
+      "id": "docs/mobile-home-screen.md#2-편집용-아이콘-팀장만",
+      "type": "heading",
+      "title": "2) 편집용 아이콘 (팀장만)",
+      "level": 3,
+      "path": "docs/mobile-home-screen.md"
+    },
+    {
+      "id": "docs/mobile-home-screen.md#android-chrome",
+      "type": "heading",
+      "title": "Android (Chrome)",
+      "level": 2,
+      "path": "docs/mobile-home-screen.md"
+    },
+    {
+      "id": "docs/mobile-home-screen.md#앱-안에서",
+      "type": "heading",
+      "title": "앱 안에서",
+      "level": 2,
+      "path": "docs/mobile-home-screen.md"
+    },
+    {
+      "id": "docs/mobile-home-screen.md#나중에-설정용-메모-파일",
+      "type": "heading",
+      "title": "나중에 설정용 메모 (파일)",
+      "level": 2,
+      "path": "docs/mobile-home-screen.md"
+    },
+    {
+      "id": "docs/mobile-home-screen.md#참고",
+      "type": "heading",
+      "title": "참고",
+      "level": 2,
+      "path": "docs/mobile-home-screen.md"
+    },
+    {
+      "id": "url:./memo-아이폰-홈화면-TMS.md",
+      "type": "url",
+      "label": "./memo-아이폰-홈화면-TMS.md"
+    },
+    {
+      "id": "url:https://edu-team-tms.vercel.app/",
+      "type": "url",
+      "label": "https://edu-team-tms.vercel.app/"
+    },
+    {
+      "id": "docs/obsidian-graph-poc.md",
+      "type": "document",
+      "title": "EDU-TMS Obsidian / Docs Graph PoC",
+      "path": "docs/obsidian-graph-poc.md",
+      "sourceKind": "supporting"
+    },
+    {
+      "id": "docs/obsidian-graph-poc.md#edu-tms-obsidian-docs-graph-poc",
+      "type": "heading",
+      "title": "EDU-TMS Obsidian / Docs Graph PoC",
+      "level": 1,
+      "path": "docs/obsidian-graph-poc.md"
+    },
+    {
+      "id": "docs/obsidian-graph-poc.md#purpose",
+      "type": "heading",
+      "title": "Purpose",
+      "level": 2,
+      "path": "docs/obsidian-graph-poc.md"
+    },
+    {
+      "id": "docs/obsidian-graph-poc.md#concept",
+      "type": "heading",
+      "title": "Concept",
+      "level": 2,
+      "path": "docs/obsidian-graph-poc.md"
+    },
+    {
+      "id": "docs/obsidian-graph-poc.md#initial-scope",
+      "type": "heading",
+      "title": "Initial Scope",
+      "level": 2,
+      "path": "docs/obsidian-graph-poc.md"
+    },
+    {
+      "id": "docs/obsidian-graph-poc.md#node-types",
+      "type": "heading",
+      "title": "Node Types",
+      "level": 2,
+      "path": "docs/obsidian-graph-poc.md"
+    },
+    {
+      "id": "docs/obsidian-graph-poc.md#edge-types",
+      "type": "heading",
+      "title": "Edge Types",
+      "level": 2,
+      "path": "docs/obsidian-graph-poc.md"
+    },
+    {
+      "id": "docs/obsidian-graph-poc.md#high-value-keywords",
+      "type": "heading",
+      "title": "High-Value Keywords",
+      "level": 2,
+      "path": "docs/obsidian-graph-poc.md"
+    },
+    {
+      "id": "docs/obsidian-graph-poc.md#non-goals",
+      "type": "heading",
+      "title": "Non-Goals",
+      "level": 2,
+      "path": "docs/obsidian-graph-poc.md"
+    },
+    {
+      "id": "docs/obsidian-graph-poc.md#suggested-workflow",
+      "type": "heading",
+      "title": "Suggested Workflow",
+      "level": 2,
+      "path": "docs/obsidian-graph-poc.md"
+    },
+    {
+      "id": "docs/obsidian-graph-poc.md#future-ideas",
+      "type": "heading",
+      "title": "Future Ideas",
+      "level": 2,
+      "path": "docs/obsidian-graph-poc.md"
+    },
+    {
+      "id": "keyword:journal",
+      "type": "keyword",
+      "label": "journal"
+    },
+    {
+      "id": "keyword:static-json",
+      "type": "keyword",
+      "label": "static JSON"
+    },
+    {
+      "id": "keyword:push",
+      "type": "keyword",
+      "label": "push"
+    },
+    {
+      "id": "keyword:team-share",
+      "type": "keyword",
+      "label": "team share"
+    },
+    {
+      "id": "keyword:업무일지",
+      "type": "keyword",
+      "label": "업무일지"
+    },
+    {
+      "id": "keyword:kpi",
+      "type": "keyword",
+      "label": "KPI"
+    },
+    {
+      "id": "keyword:향상-과제",
+      "type": "keyword",
+      "label": "향상 과제"
+    },
+    {
+      "id": "keyword:improve-projects",
+      "type": "keyword",
+      "label": "improve-projects"
+    },
+    {
+      "id": "keyword:access-leader",
+      "type": "keyword",
+      "label": "access=leader"
+    },
+    {
+      "id": "keyword:member",
+      "type": "keyword",
+      "label": "member"
+    },
+    {
+      "id": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md",
+      "type": "document",
+      "title": "PPT-Academizer × TMS KPI 시나리오 예시",
+      "path": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md",
+      "sourceKind": "reference-source"
+    },
+    {
+      "id": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md#ppt-academizer-tms-kpi-시나리오-예시",
+      "type": "heading",
+      "title": "PPT-Academizer × TMS KPI 시나리오 예시",
+      "level": 1,
+      "path": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md#일지-입력-요약",
+      "type": "heading",
+      "title": "일지 입력 요약",
+      "level": 2,
+      "path": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md#tms-화면에서-기대값",
+      "type": "heading",
+      "title": "TMS 화면에서 기대값",
+      "level": 2,
+      "path": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md#2주차-6월-w2-개발만-6-8-6-12",
+      "type": "heading",
+      "title": "2주차(6월 w2) — 개발만 (6/8~6/12)",
+      "level": 3,
+      "path": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md#3주차-6월-w3-활용-1건-6-16",
+      "type": "heading",
+      "title": "3주차(6월 w3) — 활용 1건 (6/16)",
+      "level": 3,
+      "path": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md#kpi1-vs-kpi2-구분-기억용",
+      "type": "heading",
+      "title": "KPI1 vs KPI2 구분 (기억용)",
+      "level": 2,
+      "path": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md#확인-url",
+      "type": "heading",
+      "title": "확인 URL",
+      "level": 2,
+      "path": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md#로컬에-예전-일지가-있을-때",
+      "type": "heading",
+      "title": "로컬에 예전 일지가 있을 때",
+      "level": 2,
+      "path": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md#관련-코드",
+      "type": "heading",
+      "title": "관련 코드",
+      "level": 2,
+      "path": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md"
+    },
+    {
+      "id": "url:http://localhost:3000/?mode=edit`",
+      "type": "url",
+      "label": "http://localhost:3000/?mode=edit`"
+    },
+    {
+      "id": "url:http://localhost:3000/?mode=edit&module=kpi`",
+      "type": "url",
+      "label": "http://localhost:3000/?mode=edit&module=kpi`"
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-traceability-tms.md",
+      "type": "document",
+      "title": "TMS KPI 필드 ↔ 엑셀 매핑 (v2)",
+      "path": "docs/reference-source/KPI-TMS-traceability-tms.md",
+      "sourceKind": "reference-source"
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-traceability-tms.md#tms-kpi-필드-엑셀-매핑-v2",
+      "type": "heading",
+      "title": "TMS KPI 필드 ↔ 엑셀 매핑 (v2)",
+      "level": 1,
+      "path": "docs/reference-source/KPI-TMS-traceability-tms.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-traceability-tms.md#kpi1",
+      "type": "heading",
+      "title": "KPI1",
+      "level": 2,
+      "path": "docs/reference-source/KPI-TMS-traceability-tms.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-traceability-tms.md#kpi2",
+      "type": "heading",
+      "title": "KPI2",
+      "level": 2,
+      "path": "docs/reference-source/KPI-TMS-traceability-tms.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-traceability-tms.md#kpi3",
+      "type": "heading",
+      "title": "KPI3",
+      "level": 2,
+      "path": "docs/reference-source/KPI-TMS-traceability-tms.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-traceability-tms.md#승인-리포트",
+      "type": "heading",
+      "title": "승인·리포트",
+      "level": 2,
+      "path": "docs/reference-source/KPI-TMS-traceability-tms.md"
+    },
+    {
+      "id": "url:./traceability.md",
+      "type": "url",
+      "label": "./traceability.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-운영모델-v2.md",
+      "type": "document",
+      "title": "TMS KPI 운영 모델 v2",
+      "path": "docs/reference-source/KPI-TMS-운영모델-v2.md",
+      "sourceKind": "reference-source"
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-운영모델-v2.md#tms-kpi-운영-모델-v2",
+      "type": "heading",
+      "title": "TMS KPI 운영 모델 v2",
+      "level": 1,
+      "path": "docs/reference-source/KPI-TMS-운영모델-v2.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-운영모델-v2.md#역할",
+      "type": "heading",
+      "title": "역할",
+      "level": 2,
+      "path": "docs/reference-source/KPI-TMS-운영모델-v2.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-운영모델-v2.md#데이터-흐름",
+      "type": "heading",
+      "title": "데이터 흐름",
+      "level": 2,
+      "path": "docs/reference-source/KPI-TMS-운영모델-v2.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-운영모델-v2.md#엑셀과의-관계",
+      "type": "heading",
+      "title": "엑셀과의 관계",
+      "level": 2,
+      "path": "docs/reference-source/KPI-TMS-운영모델-v2.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-운영모델-v2.md#동기화",
+      "type": "heading",
+      "title": "동기화",
+      "level": 2,
+      "path": "docs/reference-source/KPI-TMS-운영모델-v2.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-운영모델-v2.md#관련-문서",
+      "type": "heading",
+      "title": "관련 문서",
+      "level": 2,
+      "path": "docs/reference-source/KPI-TMS-운영모델-v2.md"
+    },
+    {
+      "id": "url:./KPI-Academizer-TMS-시나리오예시.md",
+      "type": "url",
+      "label": "./KPI-Academizer-TMS-시나리오예시.md"
+    },
+    {
+      "id": "url:./KPI-TMS-traceability-tms.md",
+      "type": "url",
+      "label": "./KPI-TMS-traceability-tms.md"
+    },
+    {
+      "id": "url:./KPI-TMS-팀KPI메뉴.md",
+      "type": "url",
+      "label": "./KPI-TMS-팀KPI메뉴.md"
+    },
+    {
+      "id": "url:./pilot-checklist-v2-tms.md",
+      "type": "url",
+      "label": "./pilot-checklist-v2-tms.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "type": "document",
+      "title": "TMS 팀 KPI 관리 (v2 · TMS SoT)",
+      "path": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "sourceKind": "reference-source"
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-팀KPI메뉴.md#tms-팀-kpi-관리-v2-tms-sot",
+      "type": "heading",
+      "title": "TMS 팀 KPI 관리 (v2 · TMS SoT)",
+      "level": 1,
+      "path": "docs/reference-source/KPI-TMS-팀KPI메뉴.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-팀KPI메뉴.md#메뉴",
+      "type": "heading",
+      "title": "메뉴",
+      "level": 2,
+      "path": "docs/reference-source/KPI-TMS-팀KPI메뉴.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-팀KPI메뉴.md#url-스코프-로그인-없이-북마크",
+      "type": "heading",
+      "title": "URL 스코프 (로그인 없이 북마크)",
+      "level": 2,
+      "path": "docs/reference-source/KPI-TMS-팀KPI메뉴.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-팀KPI메뉴.md#운영-절차",
+      "type": "heading",
+      "title": "운영 절차",
+      "level": 2,
+      "path": "docs/reference-source/KPI-TMS-팀KPI메뉴.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-팀KPI메뉴.md#동기화",
+      "type": "heading",
+      "title": "동기화",
+      "level": 2,
+      "path": "docs/reference-source/KPI-TMS-팀KPI메뉴.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-팀KPI메뉴.md#운영-배포-main-머지-github-actions-deploy-production",
+      "type": "heading",
+      "title": "운영 배포: main 머지 → GitHub Actions (Deploy Production)",
+      "level": 1,
+      "path": "docs/reference-source/KPI-TMS-팀KPI메뉴.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-TMS-팀KPI메뉴.md#관련-문서",
+      "type": "heading",
+      "title": "관련 문서",
+      "level": 2,
+      "path": "docs/reference-source/KPI-TMS-팀KPI메뉴.md"
+    },
+    {
+      "id": "url:./TMS-접속URL-북마크.md",
+      "type": "url",
+      "label": "./TMS-접속URL-북마크.md"
+    },
+    {
+      "id": "url:./KPI-일지-TMS-연계-가이드.md",
+      "type": "url",
+      "label": "./KPI-일지-TMS-연계-가이드.md"
+    },
+    {
+      "id": "url:./KPI-TMS-운영모델-v2.md",
+      "type": "url",
+      "label": "./KPI-TMS-운영모델-v2.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
+      "type": "document",
+      "title": "일지 ↔ TMS KPI 연계 가이드",
+      "path": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
+      "sourceKind": "reference-source"
+    },
+    {
+      "id": "docs/reference-source/KPI-일지-TMS-연계-가이드.md#일지-tms-kpi-연계-가이드",
+      "type": "heading",
+      "title": "일지 ↔ TMS KPI 연계 가이드",
+      "level": 1,
+      "path": "docs/reference-source/KPI-일지-TMS-연계-가이드.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-일지-TMS-연계-가이드.md#이번-달-예상-일지-상단",
+      "type": "heading",
+      "title": "이번 달 예상 (일지 상단)",
+      "level": 2,
+      "path": "docs/reference-source/KPI-일지-TMS-연계-가이드.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-일지-TMS-연계-가이드.md#일지-입력-kpi-반영",
+      "type": "heading",
+      "title": "일지 입력 → KPI 반영",
+      "level": 2,
+      "path": "docs/reference-source/KPI-일지-TMS-연계-가이드.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-일지-TMS-연계-가이드.md#m-m-생산성-규칙-요약",
+      "type": "heading",
+      "title": "M/M · 생산성 규칙 (요약)",
+      "level": 3,
+      "path": "docs/reference-source/KPI-일지-TMS-연계-가이드.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-일지-TMS-연계-가이드.md#항목-편집-시-미리보기",
+      "type": "heading",
+      "title": "항목 편집 시 미리보기",
+      "level": 2,
+      "path": "docs/reference-source/KPI-일지-TMS-연계-가이드.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-일지-TMS-연계-가이드.md#관련-문서",
+      "type": "heading",
+      "title": "관련 문서",
+      "level": 2,
+      "path": "docs/reference-source/KPI-일지-TMS-연계-가이드.md"
+    },
+    {
+      "id": "docs/reference-source/KPI-일지-TMS-연계-가이드.md#tms에서-열기",
+      "type": "heading",
+      "title": "TMS에서 열기",
+      "level": 2,
+      "path": "docs/reference-source/KPI-일지-TMS-연계-가이드.md"
+    },
+    {
+      "id": "url:http://localhost:3000/?mode=edit&module=kpi",
+      "type": "url",
+      "label": "http://localhost:3000/?mode=edit&module=kpi"
+    },
+    {
+      "id": "url:http://localhost:3000/docs/KPI-일지-TMS-연계-가이드.md`",
+      "type": "url",
+      "label": "http://localhost:3000/docs/KPI-일지-TMS-연계-가이드.md`"
+    },
+    {
+      "id": "docs/reference-source/pilot-checklist-v2-tms.md",
+      "type": "document",
+      "title": "KPI 파일럿 체크리스트 v2 (TMS SoT)",
+      "path": "docs/reference-source/pilot-checklist-v2-tms.md",
+      "sourceKind": "reference-source"
+    },
+    {
+      "id": "docs/reference-source/pilot-checklist-v2-tms.md#kpi-파일럿-체크리스트-v2-tms-sot",
+      "type": "heading",
+      "title": "KPI 파일럿 체크리스트 v2 (TMS SoT)",
+      "level": 1,
+      "path": "docs/reference-source/pilot-checklist-v2-tms.md"
+    },
+    {
+      "id": "docs/reference-source/pilot-checklist-v2-tms.md#매주",
+      "type": "heading",
+      "title": "매주",
+      "level": 2,
+      "path": "docs/reference-source/pilot-checklist-v2-tms.md"
+    },
+    {
+      "id": "docs/reference-source/pilot-checklist-v2-tms.md#월말",
+      "type": "heading",
+      "title": "월말",
+      "level": 2,
+      "path": "docs/reference-source/pilot-checklist-v2-tms.md"
+    },
+    {
+      "id": "docs/reference-source/pilot-checklist-v2-tms.md#분기-2q-시범",
+      "type": "heading",
+      "title": "분기 (2Q 시범)",
+      "level": 2,
+      "path": "docs/reference-source/pilot-checklist-v2-tms.md"
+    },
+    {
+      "id": "docs/reference-source/pilot-checklist-v2-tms.md#성공-기준",
+      "type": "heading",
+      "title": "성공 기준",
+      "level": 2,
+      "path": "docs/reference-source/pilot-checklist-v2-tms.md"
+    },
+    {
+      "id": "docs/reference-source/README.md",
+      "type": "document",
+      "title": "TMS 참고문서 원본",
+      "path": "docs/reference-source/README.md",
+      "sourceKind": "reference-source"
+    },
+    {
+      "id": "docs/reference-source/README.md#tms-참고문서-원본",
+      "type": "heading",
+      "title": "TMS 참고문서 원본",
+      "level": 1,
+      "path": "docs/reference-source/README.md"
+    },
+    {
+      "id": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md",
+      "type": "document",
+      "title": "KPI1 가동률 (v5 정의서 요약)",
+      "path": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md",
+      "sourceKind": "reference-source"
+    },
+    {
+      "id": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md#kpi1-가동률-v5-정의서-요약",
+      "type": "heading",
+      "title": "KPI1 가동률 (v5 정의서 요약)",
+      "level": 1,
+      "path": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md"
+    },
+    {
+      "id": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md#정의",
+      "type": "heading",
+      "title": "정의",
+      "level": 2,
+      "path": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md"
+    },
+    {
+      "id": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md#월-산식",
+      "type": "heading",
+      "title": "월 산식",
+      "level": 2,
+      "path": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md"
+    },
+    {
+      "id": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md#주간-월-운영",
+      "type": "heading",
+      "title": "주간 → 월 (운영)",
+      "level": 2,
+      "path": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md"
+    },
+    {
+      "id": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md#분기-산식",
+      "type": "heading",
+      "title": "분기 산식",
+      "level": 2,
+      "path": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md"
+    },
+    {
+      "id": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md#분기-등급-가동률",
+      "type": "heading",
+      "title": "분기 등급 (가동률 %)",
+      "level": 2,
+      "path": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md"
+    },
+    {
+      "id": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md#시뮬레이터-전용",
+      "type": "heading",
+      "title": "시뮬레이터 전용",
+      "level": 2,
+      "path": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md"
+    },
+    {
+      "id": "url:../traceability.md",
+      "type": "url",
+      "label": "../traceability.md"
+    },
+    {
+      "id": "url:../../config/kpi1_rules.yaml",
+      "type": "url",
+      "label": "../../config/kpi1_rules.yaml"
+    },
+    {
+      "id": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md",
+      "type": "document",
+      "title": "KPI2 생산성 (v5 / 엑셀 요약)",
+      "path": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md",
+      "sourceKind": "reference-source"
+    },
+    {
+      "id": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md#kpi2-생산성-v5-엑셀-요약",
+      "type": "heading",
+      "title": "KPI2 생산성 (v5 / 엑셀 요약)",
+      "level": 1,
+      "path": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md"
+    },
+    {
+      "id": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md#정의",
+      "type": "heading",
+      "title": "정의",
+      "level": 2,
+      "path": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md"
+    },
+    {
+      "id": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md#건별",
+      "type": "heading",
+      "title": "건별",
+      "level": 2,
+      "path": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md"
+    },
+    {
+      "id": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md#월-집계-승인-건",
+      "type": "heading",
+      "title": "월 집계 (승인 건)",
+      "level": 2,
+      "path": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md"
+    },
+    {
+      "id": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md#분기",
+      "type": "heading",
+      "title": "분기",
+      "level": 2,
+      "path": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md"
+    },
+    {
+      "id": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md#분기-등급",
+      "type": "heading",
+      "title": "분기 등급",
+      "level": 2,
+      "path": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md"
+    },
+    {
+      "id": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md#시뮬레이터",
+      "type": "heading",
+      "title": "시뮬레이터",
+      "level": 2,
+      "path": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md"
+    },
+    {
+      "id": "url:../../config/kpi2_rules.yaml",
+      "type": "url",
+      "label": "../../config/kpi2_rules.yaml"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md",
+      "type": "document",
+      "title": "TMS · 팀 KPI 릴리즈 노트",
+      "path": "docs/reference-source/TMS-릴리즈노트.md",
+      "sourceKind": "reference-source"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#tms-팀-kpi-릴리즈-노트",
+      "type": "heading",
+      "title": "TMS · 팀 KPI 릴리즈 노트",
+      "level": 1,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12-kpi2-향상-과제-json-공유-ux-정리",
+      "type": "heading",
+      "title": "2026-06-12 — KPI2 향상 과제 JSON 공유 UX 정리",
+      "level": 2,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12-kpi2-향상-과제-json-다운로드-가져오기-fallback",
+      "type": "heading",
+      "title": "2026-06-12 — KPI2 향상 과제 JSON 다운로드/가져오기 fallback",
+      "level": 2,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12-kpi2-향상-과제-팀-공유-api-hotfix",
+      "type": "heading",
+      "title": "2026-06-12 — KPI2 향상 과제 팀 공유 API hotfix",
+      "level": 2,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12-kpi2-향상-과제-운영-목록-팀-공유-1차",
+      "type": "heading",
+      "title": "2026-06-12 — KPI2 향상 과제 운영 목록 팀 공유 1차",
+      "level": 2,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-10-kpi2-운영-목록-구성원-일지-연결-1차",
+      "type": "heading",
+      "title": "2026-06-10 — KPI2 운영 목록·구성원 일지 연결 1차",
+      "level": 2,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12-공개-조회-랜딩-축소-역할-url-정리",
+      "type": "heading",
+      "title": "2026-06-12 — 공개 조회 랜딩 축소·역할 URL 정리",
+      "level": 2,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-11-blob-트래픽-절감-구성원-운영-배포-복구",
+      "type": "heading",
+      "title": "2026-06-11 — Blob 트래픽 절감·구성원 운영·배포 복구",
+      "level": 2,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#구성원-기능-운영-반영",
+      "type": "heading",
+      "title": "구성원 기능·운영 반영",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#api-배포",
+      "type": "heading",
+      "title": "API·배포",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#blob-p0-핫픽스-af0dfeb",
+      "type": "heading",
+      "title": "Blob P0 핫픽스 (`af0dfeb`)",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#사용자-영향",
+      "type": "heading",
+      "title": "사용자 영향",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#후속-별도-승인",
+      "type": "heading",
+      "title": "후속 (별도 승인)",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-05-역량-메뉴-접속-url",
+      "type": "heading",
+      "title": "2026-06-05 — 역량·메뉴·접속 URL",
+      "level": 2,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-02-오늘-뭐-먹지",
+      "type": "heading",
+      "title": "2026-06-02 — 오늘 뭐 먹지",
+      "level": 2,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-02-ppt-아카데미화-정의서-v5",
+      "type": "heading",
+      "title": "2026-06-02 — PPT 아카데미화·정의서 v5",
+      "level": 2,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-02-참고문서-ui",
+      "type": "heading",
+      "title": "2026-06-02 — 참고문서·UI",
+      "level": 2,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-tms-kpi-v2-sot",
+      "type": "heading",
+      "title": "2026-06 — TMS KPI v2 (SoT)",
+      "level": 2,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-05-엑셀-시뮬레이터-kpi-app-new",
+      "type": "heading",
+      "title": "2026-05 — 엑셀·시뮬레이터 (kpi-app-new)",
+      "level": 2,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#문서-수정-방법",
+      "type": "heading",
+      "title": "문서 수정 방법",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app"
+    },
+    {
+      "id": "url:https://edu-team-tms.vercel.app",
+      "type": "url",
+      "label": "https://edu-team-tms.vercel.app"
+    },
+    {
+      "id": "docs/reference-source/TMS-접속URL-북마크.md",
+      "type": "document",
+      "title": "TMS 접속 URL · 북마크 (운영)",
+      "path": "docs/reference-source/TMS-접속URL-북마크.md",
+      "sourceKind": "reference-source"
+    },
+    {
+      "id": "docs/reference-source/TMS-접속URL-북마크.md#tms-접속-url-북마크-운영",
+      "type": "heading",
+      "title": "TMS 접속 URL · 북마크 (운영)",
+      "level": 1,
+      "path": "docs/reference-source/TMS-접속URL-북마크.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-접속URL-북마크.md#1-공통-역할별-접속",
+      "type": "heading",
+      "title": "1. 공통 · 역할별 접속",
+      "level": 2,
+      "path": "docs/reference-source/TMS-접속URL-북마크.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-접속URL-북마크.md#2-팀장-총무-김윤형-a",
+      "type": "heading",
+      "title": "2. 팀장 · 총무 (김윤형 A)",
+      "level": 2,
+      "path": "docs/reference-source/TMS-접속URL-북마크.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-접속URL-북마크.md#3-팀원-최우성-b-겸업",
+      "type": "heading",
+      "title": "3. 팀원 — 최우성 (B · 겸업)",
+      "level": 2,
+      "path": "docs/reference-source/TMS-접속URL-북마크.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-접속URL-북마크.md#4-팀원-신혜윤-c-기획-운영",
+      "type": "heading",
+      "title": "4. 팀원 — 신혜윤 (C · 기획/운영)",
+      "level": 2,
+      "path": "docs/reference-source/TMS-접속URL-북마크.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-접속URL-북마크.md#5-사이드바-메뉴-그룹-2026-06",
+      "type": "heading",
+      "title": "5. 사이드바 메뉴 그룹 (2026-06)",
+      "level": 2,
+      "path": "docs/reference-source/TMS-접속URL-북마크.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-접속URL-북마크.md#6-pdf로-저장하기",
+      "type": "heading",
+      "title": "6. PDF로 저장하기",
+      "level": 2,
+      "path": "docs/reference-source/TMS-접속URL-북마크.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-접속URL-북마크.md#7-데이터-주의",
+      "type": "heading",
+      "title": "7. 데이터 · 주의",
+      "level": 2,
+      "path": "docs/reference-source/TMS-접속URL-북마크.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-접속URL-북마크.md#관련-문서",
+      "type": "heading",
+      "title": "관련 문서",
+      "level": 2,
+      "path": "docs/reference-source/TMS-접속URL-북마크.md"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=journal",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=journal"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=competency&member=A",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=competency&member=A"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=kpi",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=kpi"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=kpi-approve",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=kpi-approve"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=kpi-report",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=kpi-report"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=lunch",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=lunch"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=academizer",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=academizer"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=cloud-chatbot",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=cloud-chatbot"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=docs",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=docs"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&member=B&module=journal",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&member=B&module=journal"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&member=C&module=journal",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&member=C&module=journal"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=journal",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=journal"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=competency",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=competency"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=view&member=B&module=ledger&year=2026&month=6",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=view&member=B&module=ledger&year=2026&month=6"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=lunch",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=lunch"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=idea-bank",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=idea-bank"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=journal",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=journal"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=competency",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=competency"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=view&member=C&module=ledger&year=2026&month=6",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=view&member=C&module=ledger&year=2026&month=6"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=lunch",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=lunch"
+    },
+    {
+      "id": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=idea-bank",
+      "type": "url",
+      "label": "https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=idea-bank"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md",
+      "type": "document",
+      "title": "교육팀 KPI 정의서",
+      "path": "docs/reference-source/교육팀_KPI_정의서.md",
+      "sourceKind": "reference-source"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#교육팀-kpi-정의서",
+      "type": "heading",
+      "title": "교육팀 KPI 정의서",
+      "level": 1,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#kpi-전체-구조",
+      "type": "heading",
+      "title": "KPI 전체 구조",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#팀-kpi-교육팀-업무-가동률-향상",
+      "type": "heading",
+      "title": "팀 KPI. 교육팀 업무 가동률 향상",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#지표-설명",
+      "type": "heading",
+      "title": "지표 설명",
+      "level": 3,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#측정-산식",
+      "type": "heading",
+      "title": "측정 산식",
+      "level": 3,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#결과-평가",
+      "type": "heading",
+      "title": "결과 평가",
+      "level": 3,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#지표-1-교육팀-업무-리소스-가동률",
+      "type": "heading",
+      "title": "지표 1. 교육팀 업무 리소스 가동률",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#m-m-구성",
+      "type": "heading",
+      "title": "M/M 구성",
+      "level": 3,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#팀-kpi-교육팀-업무-생산성-향상",
+      "type": "heading",
+      "title": "팀 KPI. 교육팀 업무 생산성 향상",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#지표-2-교육팀-업무-리소스-생산성",
+      "type": "heading",
+      "title": "지표 2. 교육팀 업무 리소스 생산성",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#팀-kpi-교육팀-핵심-역량-레벨-향상",
+      "type": "heading",
+      "title": "팀 KPI. 교육팀 핵심 역량 레벨 향상",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#분기별-목표",
+      "type": "heading",
+      "title": "분기별 목표",
+      "level": 3,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#지표-3-교육팀-핵심-역량-레벨",
+      "type": "heading",
+      "title": "지표 3. 교육팀 핵심 역량 레벨",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#세부-지표-레벨-35",
+      "type": "heading",
+      "title": "세부 지표 ① 레벨 (35%)",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#정의",
+      "type": "heading",
+      "title": "정의",
+      "level": 3,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#측정-방법",
+      "type": "heading",
+      "title": "측정 방법",
+      "level": 3,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#측정-주기-분기별",
+      "type": "heading",
+      "title": "측정 주기: 분기별",
+      "level": 3,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#5개-평가-차원",
+      "type": "heading",
+      "title": "5개 평가 차원",
+      "level": 3,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#세부-지표-다면-평가-점수-15",
+      "type": "heading",
+      "title": "세부 지표 ② 다면 평가 점수 (15%)",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#유효-응답-최소-n-기준",
+      "type": "heading",
+      "title": "유효 응답 최소 N 기준",
+      "level": 3,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#유효-응답만-평균",
+      "type": "heading",
+      "title": "유효 응답만 평균",
+      "level": 3,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#n-미달-시-처리-기준",
+      "type": "heading",
+      "title": "N 미달 시 처리 기준",
+      "level": 3,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#측정-주기",
+      "type": "heading",
+      "title": "측정 주기",
+      "level": 3,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#세부-지표-리더-평가-25",
+      "type": "heading",
+      "title": "세부 지표 ③ 리더 평가 (25%)",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#세부-지표-역량-실전-적용률-25",
+      "type": "heading",
+      "title": "세부 지표 ④ 역량 실전 적용률 (25%)",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#평가-방법",
+      "type": "heading",
+      "title": "평가 방법",
+      "level": 3,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#5점-척도-기준",
+      "type": "heading",
+      "title": "5점 척도 기준",
+      "level": 3,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#측정-요소-종합",
+      "type": "heading",
+      "title": "측정 요소 종합",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_KPI_정의서.md#운영-규칙",
+      "type": "heading",
+      "title": "운영 규칙",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_KPI_정의서.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_역량평가_설계노트.md",
+      "type": "document",
+      "title": "2026 교육팀 핵심 역량 평가 — 설계 노트",
+      "path": "docs/reference-source/교육팀_역량평가_설계노트.md",
+      "sourceKind": "reference-source"
+    },
+    {
+      "id": "docs/reference-source/교육팀_역량평가_설계노트.md#2026-교육팀-핵심-역량-평가-설계-노트",
+      "type": "heading",
+      "title": "2026 교육팀 핵심 역량 평가 — 설계 노트",
+      "level": 1,
+      "path": "docs/reference-source/교육팀_역량평가_설계노트.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_역량평가_설계노트.md#1-목적과-원칙",
+      "type": "heading",
+      "title": "1. 목적과 원칙",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_역량평가_설계노트.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_역량평가_설계노트.md#2-본부-정합성",
+      "type": "heading",
+      "title": "2. 본부 정합성",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_역량평가_설계노트.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_역량평가_설계노트.md#2-1-최종-역량-점수-월간-raw의-kpi-연계용",
+      "type": "heading",
+      "title": "2.1 최종 역량 점수(월간 Raw의 KPI 연계용)",
+      "level": 3,
+      "path": "docs/reference-source/교육팀_역량평가_설계노트.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_역량평가_설계노트.md#2-2-허용-소수",
+      "type": "heading",
+      "title": "2.2 허용 소수",
+      "level": 3,
+      "path": "docs/reference-source/교육팀_역량평가_설계노트.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_역량평가_설계노트.md#3-직군-역할-정의",
+      "type": "heading",
+      "title": "3. 직군(역할) 정의",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_역량평가_설계노트.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_역량평가_설계노트.md#4-루브릭-시트-분리-방향-2",
+      "type": "heading",
+      "title": "4. 루브릭 시트 분리(방향 2)",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_역량평가_설계노트.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_역량평가_설계노트.md#4-1-공통-축",
+      "type": "heading",
+      "title": "4.1 공통 축",
+      "level": 3,
+      "path": "docs/reference-source/교육팀_역량평가_설계노트.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_역량평가_설계노트.md#4-2-시트-이름-안",
+      "type": "heading",
+      "title": "4.2 시트 이름(안)",
+      "level": 3,
+      "path": "docs/reference-source/교육팀_역량평가_설계노트.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_역량평가_설계노트.md#5-소수-누적-우선순위-직군별-합의-필요",
+      "type": "heading",
+      "title": "5. 소수 누적 우선순위(직군별) — 합의 필요",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_역량평가_설계노트.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_역량평가_설계노트.md#6-캡-cap-규칙-합의-필요",
+      "type": "heading",
+      "title": "6. 캡(Cap) 규칙 — 합의 필요",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_역량평가_설계노트.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_역량평가_설계노트.md#7-시트-수식-매핑-구현-체크리스트",
+      "type": "heading",
+      "title": "7. 시트·수식 매핑(구현 체크리스트)",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_역량평가_설계노트.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_역량평가_설계노트.md#8-운영-메모-성장-가이드",
+      "type": "heading",
+      "title": "8. 운영 메모(성장 가이드)",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_역량평가_설계노트.md"
+    },
+    {
+      "id": "docs/reference-source/교육팀_역량평가_설계노트.md#9-다음-액션",
+      "type": "heading",
+      "title": "9. 다음 액션",
+      "level": 2,
+      "path": "docs/reference-source/교육팀_역량평가_설계노트.md"
+    },
+    {
+      "id": "docs/sot-map.md",
+      "type": "document",
+      "title": "EDU-TMS Source of Truth Map",
+      "path": "docs/sot-map.md",
+      "sourceKind": "primary"
+    },
+    {
+      "id": "docs/sot-map.md#edu-tms-source-of-truth-map",
+      "type": "heading",
+      "title": "EDU-TMS Source of Truth Map",
+      "level": 1,
+      "path": "docs/sot-map.md"
+    },
+    {
+      "id": "docs/sot-map.md#purpose",
+      "type": "heading",
+      "title": "Purpose",
+      "level": 2,
+      "path": "docs/sot-map.md"
+    },
+    {
+      "id": "docs/sot-map.md#golden-rules",
+      "type": "heading",
+      "title": "Golden Rules",
+      "level": 2,
+      "path": "docs/sot-map.md"
+    },
+    {
+      "id": "docs/sot-map.md#primary-sot-documents",
+      "type": "heading",
+      "title": "Primary SoT Documents",
+      "level": 2,
+      "path": "docs/sot-map.md"
+    },
+    {
+      "id": "docs/sot-map.md#non-sot-copies-and-build-outputs",
+      "type": "heading",
+      "title": "Non-SoT Copies and Build Outputs",
+      "level": 2,
+      "path": "docs/sot-map.md"
+    },
+    {
+      "id": "docs/sot-map.md#missing-but-recommended-documents",
+      "type": "heading",
+      "title": "Missing but Recommended Documents",
+      "level": 2,
+      "path": "docs/sot-map.md"
+    },
+    {
+      "id": "docs/sot-map.md#operational-safety-references",
+      "type": "heading",
+      "title": "Operational Safety References",
+      "level": 2,
+      "path": "docs/sot-map.md"
+    },
+    {
+      "id": "docs/sot-map.md#ai-codex-work-rules",
+      "type": "heading",
+      "title": "AI/Codex Work Rules",
+      "level": 2,
+      "path": "docs/sot-map.md"
+    },
+    {
+      "id": "docs/sot-map.md#obsidian-and-graph-notes",
+      "type": "heading",
+      "title": "Obsidian and Graph Notes",
+      "level": 2,
+      "path": "docs/sot-map.md"
+    },
+    {
+      "id": "docs/sot-map.md#next-cleanup-candidates",
+      "type": "heading",
+      "title": "Next Cleanup Candidates",
+      "level": 2,
+      "path": "docs/sot-map.md"
+    },
+    {
+      "id": "docs/workspace-guide.md",
+      "type": "document",
+      "title": "워크스페이스·폴더 정리 가이드",
+      "path": "docs/workspace-guide.md",
+      "sourceKind": "supporting"
+    },
+    {
+      "id": "docs/workspace-guide.md#워크스페이스-폴더-정리-가이드",
+      "type": "heading",
+      "title": "워크스페이스·폴더 정리 가이드",
+      "level": 1,
+      "path": "docs/workspace-guide.md"
+    },
+    {
+      "id": "docs/workspace-guide.md#1-일상-작업-repo-두-개만",
+      "type": "heading",
+      "title": "1. 일상 작업 — repo 두 개만",
+      "level": 2,
+      "path": "docs/workspace-guide.md"
+    },
+    {
+      "id": "docs/workspace-guide.md#tms-이-repo",
+      "type": "heading",
+      "title": "TMS (이 repo)",
+      "level": 3,
+      "path": "docs/workspace-guide.md"
+    },
+    {
+      "id": "docs/workspace-guide.md#cxr542-portal-별도-repo",
+      "type": "heading",
+      "title": "cxr542-portal (별도 repo)",
+      "level": 3,
+      "path": "docs/workspace-guide.md"
+    },
+    {
+      "id": "docs/workspace-guide.md#2-okestro-app-monorepo-apps-폴더-감사-2026-06",
+      "type": "heading",
+      "title": "2. okestro-app monorepo `apps/` 폴더 감사 (2026-06)",
+      "level": 2,
+      "path": "docs/workspace-guide.md"
+    },
+    {
+      "id": "docs/workspace-guide.md#삭제해도-무방-로컬-정리",
+      "type": "heading",
+      "title": "삭제해도 무방 (로컬 정리)",
+      "level": 3,
+      "path": "docs/workspace-guide.md"
+    },
+    {
+      "id": "docs/workspace-guide.md#지금은-안-써도-되지만-삭제-전-확인-권장",
+      "type": "heading",
+      "title": "지금은 안 써도 되지만, 삭제 전 확인 권장",
+      "level": 3,
+      "path": "docs/workspace-guide.md"
+    },
+    {
+      "id": "docs/workspace-guide.md#유지-권장-가끔-별도-용도",
+      "type": "heading",
+      "title": "유지 권장 (가끔/별도 용도)",
+      "level": 3,
+      "path": "docs/workspace-guide.md"
+    },
+    {
+      "id": "docs/workspace-guide.md#운영-중-삭제하지-말-것",
+      "type": "heading",
+      "title": "운영 중 — 삭제하지 말 것",
+      "level": 3,
+      "path": "docs/workspace-guide.md"
+    },
+    {
+      "id": "docs/workspace-guide.md#3-헷갈릴-때-체크리스트",
+      "type": "heading",
+      "title": "3. 헷갈릴 때 체크리스트",
+      "level": 2,
+      "path": "docs/workspace-guide.md"
+    },
+    {
+      "id": "docs/workspace-guide.md#4-ci-cd-secrets-repo별",
+      "type": "heading",
+      "title": "4. CI/CD Secrets (repo별)",
+      "level": 2,
+      "path": "docs/workspace-guide.md"
+    },
+    {
+      "id": "url:deployment-process.md",
+      "type": "url",
+      "label": "deployment-process.md"
+    },
+    {
+      "id": "url:https://github.com/cxr542/edu-team-tms.git",
+      "type": "url",
+      "label": "https://github.com/cxr542/edu-team-tms.git"
+    },
+    {
+      "id": "url:https://github.com/cxr542/cxr542-portal.git",
+      "type": "url",
+      "label": "https://github.com/cxr542/cxr542-portal.git"
+    },
+    {
+      "id": "README.md",
+      "type": "document",
+      "title": "교육팀 TMS (Team Management System) · v1.0",
+      "path": "README.md",
+      "sourceKind": "primary"
+    },
+    {
+      "id": "README.md#교육팀-tms-team-management-system-v1-0",
+      "type": "heading",
+      "title": "교육팀 TMS (Team Management System) · v1.0",
+      "level": 1,
+      "path": "README.md"
+    },
+    {
+      "id": "README.md#환경",
+      "type": "heading",
+      "title": "환경",
+      "level": 2,
+      "path": "README.md"
+    },
+    {
+      "id": "README.md#운영-url",
+      "type": "heading",
+      "title": "운영 URL",
+      "level": 3,
+      "path": "README.md"
+    },
+    {
+      "id": "README.md#로컬-실행-repo-단독",
+      "type": "heading",
+      "title": "로컬 실행 (repo 단독)",
+      "level": 2,
+      "path": "README.md"
+    },
+    {
+      "id": "README.md#http-localhost-3000",
+      "type": "heading",
+      "title": "→ http://localhost:3000/",
+      "level": 1,
+      "path": "README.md"
+    },
+    {
+      "id": "README.md#참고문서-ppt-아카데미화-tms-repo-내부",
+      "type": "heading",
+      "title": "참고문서·PPT 아카데미화 (TMS repo 내부)",
+      "level": 2,
+      "path": "README.md"
+    },
+    {
+      "id": "README.md#빌드-배포",
+      "type": "heading",
+      "title": "빌드·배포",
+      "level": 2,
+      "path": "README.md"
+    },
+    {
+      "id": "README.md#문서",
+      "type": "heading",
+      "title": "문서",
+      "level": 2,
+      "path": "README.md"
+    },
+    {
+      "id": "README.md#버전",
+      "type": "heading",
+      "title": "버전",
+      "level": 2,
+      "path": "README.md"
+    },
+    {
+      "id": "url:docs/workspace-guide.md",
+      "type": "url",
+      "label": "docs/workspace-guide.md"
+    },
+    {
+      "id": "url:docs/sot-map.md",
+      "type": "url",
+      "label": "docs/sot-map.md"
+    },
+    {
+      "id": "url:docs/deployment-process.md",
+      "type": "url",
+      "label": "docs/deployment-process.md"
+    },
+    {
+      "id": "url:docs/ledger-live-sync.md",
+      "type": "url",
+      "label": "docs/ledger-live-sync.md"
+    },
+    {
+      "id": "url:docs/mobile-home-screen.md",
+      "type": "url",
+      "label": "docs/mobile-home-screen.md"
+    },
+    {
+      "id": "url:http://localhost:3000/",
+      "type": "url",
+      "label": "http://localhost:3000/"
+    }
+  ],
+  "edges": [
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#overview",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#colors",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#brand-accent",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#surface",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#text",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#hairlines-borders",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#brand-gradient",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#typography",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#font-family",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#hierarchy",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#principles",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#note-on-font-substitutes",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#layout",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#spacing-system",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#grid-container",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#whitespace-philosophy",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#elevation-depth",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#decorative-depth",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#shapes",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#border-radius-scale",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#photography-geometry",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#components",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#top-navigation",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#buttons",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#cards-containers",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#inputs-forms",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#footer",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#do-s-and-don-ts",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#do",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#don-t",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#responsive-behavior",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#breakpoints",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#touch-targets",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#collapsing-strategy",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#image-behavior",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#iteration-guide",
+      "type": "documents"
+    },
+    {
+      "from": "DESIGN.md",
+      "to": "DESIGN.md#known-gaps",
+      "type": "documents"
+    },
+    {
+      "from": "docs/deployment-process.md",
+      "to": "docs/deployment-process.md#tms-배포-프로세스-github-actions-vercel",
+      "type": "documents"
+    },
+    {
+      "from": "docs/deployment-process.md",
+      "to": "docs/deployment-process.md#1-환경-구조",
+      "type": "documents"
+    },
+    {
+      "from": "docs/deployment-process.md",
+      "to": "docs/deployment-process.md#2-사전-준비",
+      "type": "documents"
+    },
+    {
+      "from": "docs/deployment-process.md",
+      "to": "docs/deployment-process.md#github-secrets",
+      "type": "documents"
+    },
+    {
+      "from": "docs/deployment-process.md",
+      "to": "docs/deployment-process.md#github-environment",
+      "type": "documents"
+    },
+    {
+      "from": "docs/deployment-process.md",
+      "to": "docs/deployment-process.md#vercel-environment-variables-점검",
+      "type": "documents"
+    },
+    {
+      "from": "docs/deployment-process.md",
+      "to": "docs/deployment-process.md#3-파이프라인-동작",
+      "type": "documents"
+    },
+    {
+      "from": "docs/deployment-process.md",
+      "to": "docs/deployment-process.md#pr-생성-수정-시",
+      "type": "documents"
+    },
+    {
+      "from": "docs/deployment-process.md",
+      "to": "docs/deployment-process.md#main-머지-후",
+      "type": "documents"
+    },
+    {
+      "from": "docs/deployment-process.md",
+      "to": "docs/deployment-process.md#4-장애-대응",
+      "type": "documents"
+    },
+    {
+      "from": "docs/deployment-process.md",
+      "to": "docs/deployment-process.md#5-운영-원칙",
+      "type": "documents"
+    },
+    {
+      "from": "docs/deployment-process.md",
+      "to": "url:workspace-guide.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/deployment-process.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/`",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/deployment-process.md",
+      "to": "keyword:blob",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/deployment-process.md",
+      "to": "keyword:ledger",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/deployment-process.md",
+      "to": "keyword:snapshot",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/deployment-process.md",
+      "to": "keyword:vercel",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/deployment-process.md",
+      "to": "keyword:github-actions",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/deployment-process.md",
+      "to": "keyword:deploy",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/ledger-live-sync.md",
+      "to": "docs/ledger-live-sync.md#팀-빌딩비-장부-관리자-작성-조회-실시간-반영",
+      "type": "documents"
+    },
+    {
+      "from": "docs/ledger-live-sync.md",
+      "to": "docs/ledger-live-sync.md#동작",
+      "type": "documents"
+    },
+    {
+      "from": "docs/ledger-live-sync.md",
+      "to": "docs/ledger-live-sync.md#vercel-설정-최초-1회",
+      "type": "documents"
+    },
+    {
+      "from": "docs/ledger-live-sync.md",
+      "to": "docs/ledger-live-sync.md#수동-배포-blob-미사용-시",
+      "type": "documents"
+    },
+    {
+      "from": "docs/ledger-live-sync.md",
+      "to": "docs/ledger-live-sync.md#작성은-보이는데-조회에-안-보일-때",
+      "type": "documents"
+    },
+    {
+      "from": "docs/ledger-live-sync.md",
+      "to": "docs/ledger-live-sync.md#blob-정리-자동-저장이-수만-번-쌓인-경우",
+      "type": "documents"
+    },
+    {
+      "from": "docs/ledger-live-sync.md",
+      "to": "docs/ledger-live-sync.md#스토어-전체-비우기-rate-limit-시-1-3분-뒤-재시도",
+      "type": "documents"
+    },
+    {
+      "from": "docs/ledger-live-sync.md",
+      "to": "docs/ledger-live-sync.md#또는-ledger-live-타임스탬프-파일만-배치-삭제",
+      "type": "documents"
+    },
+    {
+      "from": "docs/ledger-live-sync.md",
+      "to": "url:https://vercel.com",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/ledger-live-sync.md",
+      "to": "keyword:blob",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/ledger-live-sync.md",
+      "to": "keyword:ledger",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/ledger-live-sync.md",
+      "to": "keyword:localstorage",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/ledger-live-sync.md",
+      "to": "keyword:snapshot",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/ledger-live-sync.md",
+      "to": "keyword:vercel",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/ledger-live-sync.md",
+      "to": "keyword:deploy",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/ledger-live-sync.md",
+      "to": "keyword:mode-edit",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/lunch-pick-setup.md",
+      "to": "docs/lunch-pick-setup.md#오늘-뭐-먹지-설정",
+      "type": "documents"
+    },
+    {
+      "from": "docs/lunch-pick-setup.md",
+      "to": "docs/lunch-pick-setup.md#기준-위치",
+      "type": "documents"
+    },
+    {
+      "from": "docs/lunch-pick-setup.md",
+      "to": "docs/lunch-pick-setup.md#맛집-목록-수동",
+      "type": "documents"
+    },
+    {
+      "from": "docs/lunch-pick-setup.md",
+      "to": "docs/lunch-pick-setup.md#카카오-로컬-api-검색-탭",
+      "type": "documents"
+    },
+    {
+      "from": "docs/lunch-pick-setup.md",
+      "to": "docs/lunch-pick-setup.md#env-local-에-kakao-rest-api-key-발급받은키-입력-후",
+      "type": "documents"
+    },
+    {
+      "from": "docs/lunch-pick-setup.md",
+      "to": "docs/lunch-pick-setup.md#로컬-실행",
+      "type": "documents"
+    },
+    {
+      "from": "docs/lunch-pick-setup.md",
+      "to": "docs/lunch-pick-setup.md#기본-http-localhost-3000-mode-edit-module-lunch",
+      "type": "documents"
+    },
+    {
+      "from": "docs/lunch-pick-setup.md",
+      "to": "docs/lunch-pick-setup.md#3000-포트가-이미-쓰이면-vite가-3001-3002-로-자동-변경-터미널에-뜨는-local-url을-사용",
+      "type": "documents"
+    },
+    {
+      "from": "docs/lunch-pick-setup.md",
+      "to": "docs/lunch-pick-setup.md#방문-기록",
+      "type": "documents"
+    },
+    {
+      "from": "docs/lunch-pick-setup.md",
+      "to": "docs/lunch-pick-setup.md#신규-식당-등록",
+      "type": "documents"
+    },
+    {
+      "from": "docs/lunch-pick-setup.md",
+      "to": "url:../public/data/yeouido-lunch.json",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/lunch-pick-setup.md",
+      "to": "url:https://developers.kakao.com/",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/lunch-pick-setup.md",
+      "to": "url:http://localhost:3000/?mode=edit&module=lunch",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/lunch-pick-setup.md",
+      "to": "keyword:localstorage",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/lunch-pick-setup.md",
+      "to": "keyword:vercel",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/lunch-pick-setup.md",
+      "to": "keyword:mode-edit",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/memo-아이폰-홈화면-TMS.md",
+      "to": "docs/memo-아이폰-홈화면-TMS.md#나중에-할-일-iphone-교육팀-tms-홈-화면-추가",
+      "type": "documents"
+    },
+    {
+      "from": "docs/memo-아이폰-홈화면-TMS.md",
+      "to": "docs/memo-아이폰-홈화면-TMS.md#url",
+      "type": "documents"
+    },
+    {
+      "from": "docs/memo-아이폰-홈화면-TMS.md",
+      "to": "docs/memo-아이폰-홈화면-TMS.md#체크리스트",
+      "type": "documents"
+    },
+    {
+      "from": "docs/memo-아이폰-홈화면-TMS.md",
+      "to": "docs/memo-아이폰-홈화면-TMS.md#조회용-아이콘",
+      "type": "documents"
+    },
+    {
+      "from": "docs/memo-아이폰-홈화면-TMS.md",
+      "to": "docs/memo-아이폰-홈화면-TMS.md#편집용-아이콘-팀장만-선택",
+      "type": "documents"
+    },
+    {
+      "from": "docs/memo-아이폰-홈화면-TMS.md",
+      "to": "docs/memo-아이폰-홈화면-TMS.md#참고",
+      "type": "documents"
+    },
+    {
+      "from": "docs/memo-아이폰-홈화면-TMS.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/memo-아이폰-홈화면-TMS.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/memo-아이폰-홈화면-TMS.md",
+      "to": "keyword:vercel",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/memo-아이폰-홈화면-TMS.md",
+      "to": "keyword:mode-edit",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/mobile-home-screen.md",
+      "to": "docs/mobile-home-screen.md#교육팀-tms-모바일-홈-화면-추가",
+      "type": "documents"
+    },
+    {
+      "from": "docs/mobile-home-screen.md",
+      "to": "docs/mobile-home-screen.md#url-복사용",
+      "type": "documents"
+    },
+    {
+      "from": "docs/mobile-home-screen.md",
+      "to": "docs/mobile-home-screen.md#iphone-safari",
+      "type": "documents"
+    },
+    {
+      "from": "docs/mobile-home-screen.md",
+      "to": "docs/mobile-home-screen.md#1-조회용-아이콘",
+      "type": "documents"
+    },
+    {
+      "from": "docs/mobile-home-screen.md",
+      "to": "docs/mobile-home-screen.md#2-편집용-아이콘-팀장만",
+      "type": "documents"
+    },
+    {
+      "from": "docs/mobile-home-screen.md",
+      "to": "docs/mobile-home-screen.md#android-chrome",
+      "type": "documents"
+    },
+    {
+      "from": "docs/mobile-home-screen.md",
+      "to": "docs/mobile-home-screen.md#앱-안에서",
+      "type": "documents"
+    },
+    {
+      "from": "docs/mobile-home-screen.md",
+      "to": "docs/mobile-home-screen.md#나중에-설정용-메모-파일",
+      "type": "documents"
+    },
+    {
+      "from": "docs/mobile-home-screen.md",
+      "to": "docs/mobile-home-screen.md#참고",
+      "type": "documents"
+    },
+    {
+      "from": "docs/mobile-home-screen.md",
+      "to": "url:./memo-아이폰-홈화면-TMS.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/mobile-home-screen.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/mobile-home-screen.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/mobile-home-screen.md",
+      "to": "url:https://edu-team-tms.vercel.app/",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/mobile-home-screen.md",
+      "to": "keyword:vercel",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/mobile-home-screen.md",
+      "to": "keyword:mode-edit",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "docs/obsidian-graph-poc.md#edu-tms-obsidian-docs-graph-poc",
+      "type": "documents"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "docs/obsidian-graph-poc.md#purpose",
+      "type": "documents"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "docs/obsidian-graph-poc.md#concept",
+      "type": "documents"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "docs/obsidian-graph-poc.md#initial-scope",
+      "type": "documents"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "docs/obsidian-graph-poc.md#node-types",
+      "type": "documents"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "docs/obsidian-graph-poc.md#edge-types",
+      "type": "documents"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "docs/obsidian-graph-poc.md#high-value-keywords",
+      "type": "documents"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "docs/obsidian-graph-poc.md#non-goals",
+      "type": "documents"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "docs/obsidian-graph-poc.md#suggested-workflow",
+      "type": "documents"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "docs/obsidian-graph-poc.md#future-ideas",
+      "type": "documents"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "keyword:blob",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "keyword:ledger",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "keyword:journal",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "keyword:localstorage",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "keyword:snapshot",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "keyword:static-json",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "keyword:vercel",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "keyword:github-actions",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "keyword:deploy",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "keyword:push",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "keyword:team-share",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "keyword:업무일지",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "keyword:kpi",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "keyword:향상-과제",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "keyword:improve-projects",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "keyword:mode-edit",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "keyword:access-leader",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "keyword:member",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md",
+      "to": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md#ppt-academizer-tms-kpi-시나리오-예시",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md",
+      "to": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md#일지-입력-요약",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md",
+      "to": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md#tms-화면에서-기대값",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md",
+      "to": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md#2주차-6월-w2-개발만-6-8-6-12",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md",
+      "to": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md#3주차-6월-w3-활용-1건-6-16",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md",
+      "to": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md#kpi1-vs-kpi2-구분-기억용",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md",
+      "to": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md#확인-url",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md",
+      "to": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md#로컬에-예전-일지가-있을-때",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md",
+      "to": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md#관련-코드",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md",
+      "to": "url:http://localhost:3000/?mode=edit`",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md",
+      "to": "url:http://localhost:3000/?mode=edit&module=kpi`",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md",
+      "to": "keyword:journal",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md",
+      "to": "keyword:localstorage",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md",
+      "to": "keyword:kpi",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md",
+      "to": "keyword:mode-edit",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-traceability-tms.md",
+      "to": "docs/reference-source/KPI-TMS-traceability-tms.md#tms-kpi-필드-엑셀-매핑-v2",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-traceability-tms.md",
+      "to": "docs/reference-source/KPI-TMS-traceability-tms.md#kpi1",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-traceability-tms.md",
+      "to": "docs/reference-source/KPI-TMS-traceability-tms.md#kpi2",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-traceability-tms.md",
+      "to": "docs/reference-source/KPI-TMS-traceability-tms.md#kpi3",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-traceability-tms.md",
+      "to": "docs/reference-source/KPI-TMS-traceability-tms.md#승인-리포트",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-traceability-tms.md",
+      "to": "url:./traceability.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-traceability-tms.md",
+      "to": "keyword:kpi",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-운영모델-v2.md",
+      "to": "docs/reference-source/KPI-TMS-운영모델-v2.md#tms-kpi-운영-모델-v2",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-운영모델-v2.md",
+      "to": "docs/reference-source/KPI-TMS-운영모델-v2.md#역할",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-운영모델-v2.md",
+      "to": "docs/reference-source/KPI-TMS-운영모델-v2.md#데이터-흐름",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-운영모델-v2.md",
+      "to": "docs/reference-source/KPI-TMS-운영모델-v2.md#엑셀과의-관계",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-운영모델-v2.md",
+      "to": "docs/reference-source/KPI-TMS-운영모델-v2.md#동기화",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-운영모델-v2.md",
+      "to": "docs/reference-source/KPI-TMS-운영모델-v2.md#관련-문서",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-운영모델-v2.md",
+      "to": "url:./KPI-Academizer-TMS-시나리오예시.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-운영모델-v2.md",
+      "to": "url:./KPI-TMS-traceability-tms.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-운영모델-v2.md",
+      "to": "url:./KPI-TMS-팀KPI메뉴.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-운영모델-v2.md",
+      "to": "url:./pilot-checklist-v2-tms.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-운영모델-v2.md",
+      "to": "keyword:journal",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-운영모델-v2.md",
+      "to": "keyword:localstorage",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-운영모델-v2.md",
+      "to": "keyword:snapshot",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-운영모델-v2.md",
+      "to": "keyword:kpi",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-운영모델-v2.md",
+      "to": "keyword:mode-edit",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "to": "docs/reference-source/KPI-TMS-팀KPI메뉴.md#tms-팀-kpi-관리-v2-tms-sot",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "to": "docs/reference-source/KPI-TMS-팀KPI메뉴.md#메뉴",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "to": "docs/reference-source/KPI-TMS-팀KPI메뉴.md#url-스코프-로그인-없이-북마크",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "to": "docs/reference-source/KPI-TMS-팀KPI메뉴.md#운영-절차",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "to": "docs/reference-source/KPI-TMS-팀KPI메뉴.md#동기화",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "to": "docs/reference-source/KPI-TMS-팀KPI메뉴.md#운영-배포-main-머지-github-actions-deploy-production",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "to": "docs/reference-source/KPI-TMS-팀KPI메뉴.md#관련-문서",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "to": "url:./TMS-접속URL-북마크.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "to": "url:./KPI-일지-TMS-연계-가이드.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "to": "url:./KPI-TMS-운영모델-v2.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "to": "url:./pilot-checklist-v2-tms.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "to": "keyword:journal",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "to": "keyword:github-actions",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "to": "keyword:deploy",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "to": "keyword:업무일지",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "to": "keyword:kpi",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "to": "keyword:mode-edit",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "to": "keyword:access-leader",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
+      "to": "keyword:member",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
+      "to": "docs/reference-source/KPI-일지-TMS-연계-가이드.md#일지-tms-kpi-연계-가이드",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
+      "to": "docs/reference-source/KPI-일지-TMS-연계-가이드.md#이번-달-예상-일지-상단",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
+      "to": "docs/reference-source/KPI-일지-TMS-연계-가이드.md#일지-입력-kpi-반영",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
+      "to": "docs/reference-source/KPI-일지-TMS-연계-가이드.md#m-m-생산성-규칙-요약",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
+      "to": "docs/reference-source/KPI-일지-TMS-연계-가이드.md#항목-편집-시-미리보기",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
+      "to": "docs/reference-source/KPI-일지-TMS-연계-가이드.md#관련-문서",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
+      "to": "docs/reference-source/KPI-일지-TMS-연계-가이드.md#tms에서-열기",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
+      "to": "url:http://localhost:3000/?mode=edit&module=kpi",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
+      "to": "url:./KPI-TMS-운영모델-v2.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
+      "to": "url:./KPI-Academizer-TMS-시나리오예시.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
+      "to": "url:./KPI-TMS-traceability-tms.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
+      "to": "url:http://localhost:3000/docs/KPI-일지-TMS-연계-가이드.md`",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
+      "to": "keyword:kpi",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
+      "to": "keyword:mode-edit",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/pilot-checklist-v2-tms.md",
+      "to": "docs/reference-source/pilot-checklist-v2-tms.md#kpi-파일럿-체크리스트-v2-tms-sot",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/pilot-checklist-v2-tms.md",
+      "to": "docs/reference-source/pilot-checklist-v2-tms.md#매주",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/pilot-checklist-v2-tms.md",
+      "to": "docs/reference-source/pilot-checklist-v2-tms.md#월말",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/pilot-checklist-v2-tms.md",
+      "to": "docs/reference-source/pilot-checklist-v2-tms.md#분기-2q-시범",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/pilot-checklist-v2-tms.md",
+      "to": "docs/reference-source/pilot-checklist-v2-tms.md#성공-기준",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/pilot-checklist-v2-tms.md",
+      "to": "keyword:kpi",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/README.md",
+      "to": "docs/reference-source/README.md#tms-참고문서-원본",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/README.md",
+      "to": "keyword:kpi",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md",
+      "to": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md#kpi1-가동률-v5-정의서-요약",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md",
+      "to": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md#정의",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md",
+      "to": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md#월-산식",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md",
+      "to": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md#주간-월-운영",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md",
+      "to": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md#분기-산식",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md",
+      "to": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md#분기-등급-가동률",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md",
+      "to": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md#시뮬레이터-전용",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md",
+      "to": "url:../traceability.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md",
+      "to": "url:../../config/kpi1_rules.yaml",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI1.md",
+      "to": "keyword:kpi",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md",
+      "to": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md#kpi2-생산성-v5-엑셀-요약",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md",
+      "to": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md#정의",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md",
+      "to": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md#건별",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md",
+      "to": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md#월-집계-승인-건",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md",
+      "to": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md#분기",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md",
+      "to": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md#분기-등급",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md",
+      "to": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md#시뮬레이터",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md",
+      "to": "url:../../config/kpi2_rules.yaml",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md",
+      "to": "keyword:localstorage",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/sources/교육팀_KPI_정의서_v5_KPI2.md",
+      "to": "keyword:kpi",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#tms-팀-kpi-릴리즈-노트",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12-kpi2-향상-과제-json-공유-ux-정리",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12-kpi2-향상-과제-json-다운로드-가져오기-fallback",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12-kpi2-향상-과제-팀-공유-api-hotfix",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12-kpi2-향상-과제-운영-목록-팀-공유-1차",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-10-kpi2-운영-목록-구성원-일지-연결-1차",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12-공개-조회-랜딩-축소-역할-url-정리",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-11-blob-트래픽-절감-구성원-운영-배포-복구",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#구성원-기능-운영-반영",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#api-배포",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#blob-p0-핫픽스-af0dfeb",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#사용자-영향",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#후속-별도-승인",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-05-역량-메뉴-접속-url",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-02-오늘-뭐-먹지",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-02-ppt-아카데미화-정의서-v5",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-02-참고문서-ui",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-tms-kpi-v2-sot",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-05-엑셀-시뮬레이터-kpi-app-new",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#문서-수정-방법",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "url:https://edu-team-tms.vercel.app",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "keyword:blob",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "keyword:ledger",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "keyword:journal",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "keyword:localstorage",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "keyword:snapshot",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "keyword:vercel",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "keyword:github-actions",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "keyword:업무일지",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "keyword:kpi",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "keyword:향상-과제",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "keyword:mode-edit",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "keyword:access-leader",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "keyword:member",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "docs/reference-source/TMS-접속URL-북마크.md#tms-접속-url-북마크-운영",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "docs/reference-source/TMS-접속URL-북마크.md#1-공통-역할별-접속",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "docs/reference-source/TMS-접속URL-북마크.md#2-팀장-총무-김윤형-a",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "docs/reference-source/TMS-접속URL-북마크.md#3-팀원-최우성-b-겸업",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "docs/reference-source/TMS-접속URL-북마크.md#4-팀원-신혜윤-c-기획-운영",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "docs/reference-source/TMS-접속URL-북마크.md#5-사이드바-메뉴-그룹-2026-06",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "docs/reference-source/TMS-접속URL-북마크.md#6-pdf로-저장하기",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "docs/reference-source/TMS-접속URL-북마크.md#7-데이터-주의",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "docs/reference-source/TMS-접속URL-북마크.md#관련-문서",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:./KPI-TMS-팀KPI메뉴.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:./KPI-일지-TMS-연계-가이드.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://edu-team-tms.vercel.app",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=journal",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=competency&member=A",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=kpi",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=kpi-approve",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=kpi-report",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=lunch",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=academizer",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=cloud-chatbot",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=docs",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&member=B&module=journal",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&member=C&module=journal",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=journal",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=competency",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=view&member=B&module=ledger&year=2026&month=6",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=lunch",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=idea-bank",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=journal",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=competency",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=view&member=C&module=ledger&year=2026&month=6",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=lunch",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=idea-bank",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "keyword:ledger",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "keyword:journal",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "keyword:localstorage",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "keyword:vercel",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "keyword:kpi",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "keyword:mode-edit",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "keyword:access-leader",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/TMS-접속URL-북마크.md",
+      "to": "keyword:member",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#교육팀-kpi-정의서",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#kpi-전체-구조",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#팀-kpi-교육팀-업무-가동률-향상",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#지표-설명",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-산식",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#결과-평가",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#지표-1-교육팀-업무-리소스-가동률",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#지표-설명",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-산식",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#m-m-구성",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#결과-평가",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#팀-kpi-교육팀-업무-생산성-향상",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#지표-설명",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-산식",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#결과-평가",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#지표-2-교육팀-업무-리소스-생산성",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#지표-설명",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-산식",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#결과-평가",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#팀-kpi-교육팀-핵심-역량-레벨-향상",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#지표-설명",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-산식",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#분기별-목표",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#결과-평가",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#지표-3-교육팀-핵심-역량-레벨",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#지표-설명",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-산식",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#분기별-목표",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#결과-평가",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#세부-지표-레벨-35",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#정의",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-산식",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-방법",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-주기-분기별",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#5개-평가-차원",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#세부-지표-다면-평가-점수-15",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#정의",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-산식",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#유효-응답-최소-n-기준",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#유효-응답만-평균",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#유효-응답만-평균",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#n-미달-시-처리-기준",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-주기",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#세부-지표-리더-평가-25",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#정의",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-산식",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-방법",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-주기-분기별",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#세부-지표-역량-실전-적용률-25",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#정의",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#평가-방법",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#5점-척도-기준",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-산식",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-주기-분기별",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-요소-종합",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-주기",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "docs/reference-source/교육팀_KPI_정의서.md#운영-규칙",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_KPI_정의서.md",
+      "to": "keyword:kpi",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/reference-source/교육팀_역량평가_설계노트.md",
+      "to": "docs/reference-source/교육팀_역량평가_설계노트.md#2026-교육팀-핵심-역량-평가-설계-노트",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_역량평가_설계노트.md",
+      "to": "docs/reference-source/교육팀_역량평가_설계노트.md#1-목적과-원칙",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_역량평가_설계노트.md",
+      "to": "docs/reference-source/교육팀_역량평가_설계노트.md#2-본부-정합성",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_역량평가_설계노트.md",
+      "to": "docs/reference-source/교육팀_역량평가_설계노트.md#2-1-최종-역량-점수-월간-raw의-kpi-연계용",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_역량평가_설계노트.md",
+      "to": "docs/reference-source/교육팀_역량평가_설계노트.md#2-2-허용-소수",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_역량평가_설계노트.md",
+      "to": "docs/reference-source/교육팀_역량평가_설계노트.md#3-직군-역할-정의",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_역량평가_설계노트.md",
+      "to": "docs/reference-source/교육팀_역량평가_설계노트.md#4-루브릭-시트-분리-방향-2",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_역량평가_설계노트.md",
+      "to": "docs/reference-source/교육팀_역량평가_설계노트.md#4-1-공통-축",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_역량평가_설계노트.md",
+      "to": "docs/reference-source/교육팀_역량평가_설계노트.md#4-2-시트-이름-안",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_역량평가_설계노트.md",
+      "to": "docs/reference-source/교육팀_역량평가_설계노트.md#5-소수-누적-우선순위-직군별-합의-필요",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_역량평가_설계노트.md",
+      "to": "docs/reference-source/교육팀_역량평가_설계노트.md#6-캡-cap-규칙-합의-필요",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_역량평가_설계노트.md",
+      "to": "docs/reference-source/교육팀_역량평가_설계노트.md#7-시트-수식-매핑-구현-체크리스트",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_역량평가_설계노트.md",
+      "to": "docs/reference-source/교육팀_역량평가_설계노트.md#8-운영-메모-성장-가이드",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_역량평가_설계노트.md",
+      "to": "docs/reference-source/교육팀_역량평가_설계노트.md#9-다음-액션",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/교육팀_역량평가_설계노트.md",
+      "to": "keyword:kpi",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "docs/sot-map.md#edu-tms-source-of-truth-map",
+      "type": "documents"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "docs/sot-map.md#purpose",
+      "type": "documents"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "docs/sot-map.md#golden-rules",
+      "type": "documents"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "docs/sot-map.md#primary-sot-documents",
+      "type": "documents"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "docs/sot-map.md#non-sot-copies-and-build-outputs",
+      "type": "documents"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "docs/sot-map.md#missing-but-recommended-documents",
+      "type": "documents"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "docs/sot-map.md#operational-safety-references",
+      "type": "documents"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "docs/sot-map.md#ai-codex-work-rules",
+      "type": "documents"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "docs/sot-map.md#obsidian-and-graph-notes",
+      "type": "documents"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "docs/sot-map.md#next-cleanup-candidates",
+      "type": "documents"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "keyword:blob",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "keyword:ledger",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "keyword:journal",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "keyword:localstorage",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "keyword:vercel",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "keyword:deploy",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "keyword:push",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "keyword:업무일지",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "keyword:kpi",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/workspace-guide.md",
+      "to": "docs/workspace-guide.md#워크스페이스-폴더-정리-가이드",
+      "type": "documents"
+    },
+    {
+      "from": "docs/workspace-guide.md",
+      "to": "docs/workspace-guide.md#1-일상-작업-repo-두-개만",
+      "type": "documents"
+    },
+    {
+      "from": "docs/workspace-guide.md",
+      "to": "docs/workspace-guide.md#tms-이-repo",
+      "type": "documents"
+    },
+    {
+      "from": "docs/workspace-guide.md",
+      "to": "docs/workspace-guide.md#cxr542-portal-별도-repo",
+      "type": "documents"
+    },
+    {
+      "from": "docs/workspace-guide.md",
+      "to": "docs/workspace-guide.md#2-okestro-app-monorepo-apps-폴더-감사-2026-06",
+      "type": "documents"
+    },
+    {
+      "from": "docs/workspace-guide.md",
+      "to": "docs/workspace-guide.md#삭제해도-무방-로컬-정리",
+      "type": "documents"
+    },
+    {
+      "from": "docs/workspace-guide.md",
+      "to": "docs/workspace-guide.md#지금은-안-써도-되지만-삭제-전-확인-권장",
+      "type": "documents"
+    },
+    {
+      "from": "docs/workspace-guide.md",
+      "to": "docs/workspace-guide.md#유지-권장-가끔-별도-용도",
+      "type": "documents"
+    },
+    {
+      "from": "docs/workspace-guide.md",
+      "to": "docs/workspace-guide.md#운영-중-삭제하지-말-것",
+      "type": "documents"
+    },
+    {
+      "from": "docs/workspace-guide.md",
+      "to": "docs/workspace-guide.md#3-헷갈릴-때-체크리스트",
+      "type": "documents"
+    },
+    {
+      "from": "docs/workspace-guide.md",
+      "to": "docs/workspace-guide.md#4-ci-cd-secrets-repo별",
+      "type": "documents"
+    },
+    {
+      "from": "docs/workspace-guide.md",
+      "to": "url:deployment-process.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/workspace-guide.md",
+      "to": "url:https://github.com/cxr542/edu-team-tms.git",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/workspace-guide.md",
+      "to": "url:https://github.com/cxr542/cxr542-portal.git",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/workspace-guide.md",
+      "to": "keyword:blob",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/workspace-guide.md",
+      "to": "keyword:ledger",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/workspace-guide.md",
+      "to": "keyword:vercel",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/workspace-guide.md",
+      "to": "keyword:deploy",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/workspace-guide.md",
+      "to": "keyword:kpi",
+      "type": "mentions"
+    },
+    {
+      "from": "README.md",
+      "to": "README.md#교육팀-tms-team-management-system-v1-0",
+      "type": "documents"
+    },
+    {
+      "from": "README.md",
+      "to": "README.md#환경",
+      "type": "documents"
+    },
+    {
+      "from": "README.md",
+      "to": "README.md#운영-url",
+      "type": "documents"
+    },
+    {
+      "from": "README.md",
+      "to": "README.md#로컬-실행-repo-단독",
+      "type": "documents"
+    },
+    {
+      "from": "README.md",
+      "to": "README.md#http-localhost-3000",
+      "type": "documents"
+    },
+    {
+      "from": "README.md",
+      "to": "README.md#참고문서-ppt-아카데미화-tms-repo-내부",
+      "type": "documents"
+    },
+    {
+      "from": "README.md",
+      "to": "README.md#빌드-배포",
+      "type": "documents"
+    },
+    {
+      "from": "README.md",
+      "to": "README.md#문서",
+      "type": "documents"
+    },
+    {
+      "from": "README.md",
+      "to": "README.md#버전",
+      "type": "documents"
+    },
+    {
+      "from": "README.md",
+      "to": "url:docs/workspace-guide.md",
+      "type": "links_to"
+    },
+    {
+      "from": "README.md",
+      "to": "url:docs/sot-map.md",
+      "type": "links_to"
+    },
+    {
+      "from": "README.md",
+      "to": "url:docs/deployment-process.md",
+      "type": "links_to"
+    },
+    {
+      "from": "README.md",
+      "to": "url:docs/ledger-live-sync.md",
+      "type": "links_to"
+    },
+    {
+      "from": "README.md",
+      "to": "url:docs/mobile-home-screen.md",
+      "type": "links_to"
+    },
+    {
+      "from": "README.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/",
+      "type": "links_to"
+    },
+    {
+      "from": "README.md",
+      "to": "url:http://localhost:3000/",
+      "type": "links_to"
+    },
+    {
+      "from": "README.md",
+      "to": "url:https://okestro-edu-team-tms.vercel.app/?mode=edit",
+      "type": "links_to"
+    },
+    {
+      "from": "README.md",
+      "to": "url:https://github.com/cxr542/edu-team-tms.git",
+      "type": "links_to"
+    },
+    {
+      "from": "README.md",
+      "to": "keyword:ledger",
+      "type": "mentions"
+    },
+    {
+      "from": "README.md",
+      "to": "keyword:journal",
+      "type": "mentions"
+    },
+    {
+      "from": "README.md",
+      "to": "keyword:localstorage",
+      "type": "mentions"
+    },
+    {
+      "from": "README.md",
+      "to": "keyword:vercel",
+      "type": "mentions"
+    },
+    {
+      "from": "README.md",
+      "to": "keyword:github-actions",
+      "type": "mentions"
+    },
+    {
+      "from": "README.md",
+      "to": "keyword:deploy",
+      "type": "mentions"
+    },
+    {
+      "from": "README.md",
+      "to": "keyword:업무일지",
+      "type": "mentions"
+    },
+    {
+      "from": "README.md",
+      "to": "keyword:kpi",
+      "type": "mentions"
+    },
+    {
+      "from": "README.md",
+      "to": "keyword:mode-edit",
+      "type": "mentions"
+    }
+  ],
+  "summary": {
+    "documentCount": 23,
+    "nodeCount": 346,
+    "edgeCount": 455
+  }
+}

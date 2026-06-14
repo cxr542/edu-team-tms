@@ -67,6 +67,7 @@ GitHub Actions (`edu-team-tms` repo):
 
 ## 문서
 
+- [docs/sot-map.md](docs/sot-map.md) — 기준 문서와 복제/산출물 구분
 - [docs/workspace-guide.md](docs/workspace-guide.md) — 맥(TMS) / 집(portal) 분리·폴더 정리
 - [docs/deployment-process.md](docs/deployment-process.md)
 - [docs/ledger-live-sync.md](docs/ledger-live-sync.md)
