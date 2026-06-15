@@ -141,3 +141,119 @@
 .member-kpi-approval__footer {
   margin: 0.85rem 0 0;
 }
+
+.member-kpi-approval--compact {
+  margin: 0.5rem 0 0.75rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.member-kpi-approval__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid rgba(0, 109, 255, 0.22);
+  background: rgba(0, 109, 255, 0.04);
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.member-kpi-approval__summary::-webkit-details-marker {
+  display: none;
+}
+
+.member-kpi-approval__summary-title {
+  color: var(--secondary, #1e293b);
+}
+
+.member-kpi-approval__summary-meta {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.member-kpi-approval--compact[open] .member-kpi-approval__summary {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: transparent;
+}
+
+.member-kpi-approval__hint--compact {
+  margin: 0.5rem 0 0.65rem;
+  font-size: 0.78rem;
+}
+
+.member-kpi-approval__cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.65rem;
+  padding: 0 0.1rem 0.25rem;
+}
+
+@media (min-width: 768px) {
+  .member-kpi-approval__cards {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.member-kpi-approval--compact .member-kpi-approval__card {
+  margin-bottom: 0;
+}
+
+.member-kpi-approval__meta--compact {
+  font-size: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.member-kpi-approval__empty {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.member-kpi-approval--compact .member-kpi-approval__footer {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+}
+
+.member-kpi-approval__compact-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.35rem 0.1rem 0.15rem;
+}
+
+.member-kpi-approval__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem 0.65rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border-soft, #e2e8f0);
+  background: var(--bg-primary, #fff);
+}
+
+.member-kpi-approval__row-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  min-width: 0;
+}
+
+.member-kpi-approval__row-main strong {
+  font-size: 0.8125rem;
+}
+
+.member-kpi-approval__idle {
+  margin: 0;
+  font-size: 0.78rem;
+}

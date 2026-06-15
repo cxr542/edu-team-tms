@@ -1,9 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import {
+  getMmAxisSelectValue,
+  getTaskMmAxis,
   getTaskLoggedHours,
   recalcDayMmFromHours,
   sumDayWorkHours,
 } from '../src/utils/journalMm.js';
+
+describe('journalMm axis', () => {
+  it('getTaskMmAxis — AI만 자동 향상, 그 외 업무', () => {
+    expect(getTaskMmAxis({ cat: 'ai', title: 'x' })).toBe('improve');
+    expect(getTaskMmAxis({ cat: 'etc', title: 'x' })).toBe('work');
+    expect(getTaskMmAxis({ cat: 'edu', mmAxis: 'improve', title: 'x' })).toBe('improve');
+  });
+
+  it('getMmAxisSelectValue — 미지정 시 AI는 향상, 그 외 업무', () => {
+    expect(getMmAxisSelectValue({ cat: 'etc', title: '행정' })).toBe('work');
+    expect(getMmAxisSelectValue({ cat: 'ai', title: '자동화' })).toBe('improve');
+    expect(getMmAxisSelectValue({ cat: 'ai', mmAxis: 'work', title: 'x' })).toBe('work');
+  });
+});
 
 describe('journalMm logged hours', () => {
   it('getTaskLoggedHours — 완료 건만 실작업 반환', () => {

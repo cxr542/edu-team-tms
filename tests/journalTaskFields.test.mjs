@@ -97,6 +97,15 @@ describe('journalTaskFields — KPI2 effect persist', () => {
     expect(saved.id).toBe('t1');
   });
 
+  it('taskFieldsFromEdit resolves mmAxis from category when unset', () => {
+    expect(taskFieldsFromEdit(editFromTask(baseTask({ mmAxis: undefined }), { cat: 'ai', mmAxis: undefined })).mmAxis).toBe(
+      'improve'
+    );
+    expect(taskFieldsFromEdit(editFromTask(baseTask({ mmAxis: undefined }), { cat: 'etc', mmAxis: undefined })).mmAxis).toBe(
+      'work'
+    );
+  });
+
   it('taskFieldsFromEdit omits kpi2Effect when disabled', () => {
     const fields = taskFieldsFromEdit(
       editFromTask(baseTask(), { kpi2Effect: { enabled: false, projectId: 'x', baselineHours: 1 } })

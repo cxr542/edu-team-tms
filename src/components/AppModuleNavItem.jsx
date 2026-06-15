@@ -15,6 +15,7 @@ export default function AppModuleNavItem({
   icon: Icon,
   isActive = false,
   isViewer = false,
+  badgeCount = 0,
   tooltipProps = {},
   onNavigate,
 }) {
@@ -34,6 +35,11 @@ export default function AppModuleNavItem({
       >
         <Icon size={18} className="nav-item__icon project-nav-item__icon" aria-hidden />
         <span className="nav-item__label project-nav-item__label">{label}</span>
+        {badgeCount > 0 ? (
+          <span className="project-nav-item__badge" aria-hidden>
+            {badgeCount > 99 ? '99+' : badgeCount}
+          </span>
+        ) : null}
       </a>
       <button
         type="button"

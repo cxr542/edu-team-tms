@@ -401,6 +401,16 @@
   margin: 1rem 0;
 }
 
+.kpi-approve-summary {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.kpi-approve-summary strong {
+  color: var(--secondary, #1e293b);
+}
+
 .team-kpi-approve-list {
   list-style: none;
   padding: 0;

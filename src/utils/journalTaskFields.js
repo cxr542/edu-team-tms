@@ -1,3 +1,4 @@
+import { getTaskMmAxis } from './journalMm';
 import { resolveTaskSlotField } from '../constants/journalTaskSlot';
 
 /** 업무 편집 폼 → 저장 필드 (KPI2 effect 포함) */
@@ -10,7 +11,7 @@ export function taskFieldsFromEdit(editTask) {
     plan: Number(editTask.plan) || 0,
     actual: Number(editTask.actual) || 0,
     done: editTask.done,
-    mmAxis: editTask.mmAxis || undefined,
+    mmAxis: getTaskMmAxis(editTask),
     slot: resolveTaskSlotField(editTask.slot),
   };
   if (editTask.kpi2Effect?.enabled) {

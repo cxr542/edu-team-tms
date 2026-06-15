@@ -1,6 +1,8 @@
 import { TEAM_KPI_MEMBERS } from '../constants/kpiMembers';
 import { KPI_STATUS } from '../constants/kpiStatuses';
-import { kpi2RowId, monthKey, quarterKey } from '../constants/kpiOperationalStore';
+import { kpi2RowId, monthKey, quarterKey, KPI_OPERATIONAL_STORAGE_KEY, normalizeKpiOperationalStore } from '../constants/kpiOperationalStore';
+import { loadImproveProjects } from '../constants/improveProjects';
+import { JOURNAL_STORAGE_KEY } from './journalSnapshot';
 import { COMPETENCY_USE_4060 } from '../constants/competencyConfig';
 import { monthlyFinalScore } from './competencyScore';
 import { buildKpi02EffectRows, computeTeamKpi } from './computeTeamKpi';
@@ -148,4 +150,63 @@ export function listPendingApprovals({
   });
 
   return items;
+}
+
+export function readJournalPeriodFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const now = new Date();
+  const y = parseInt(params.get('year'), 10);
+  const m = parseInt(params.get('month'), 10);
+  return {
+    year: Number.isFinite(y) ? y : now.getFullYear(),
+    monthIndex: Number.isFinite(m) && m >= 1 && m <= 12 ? m - 1 : now.getMonth(),
+  };
+}
+
+function loadJournalMemberDaysFromStorage() {
+  try {
+    const raw = localStorage.getItem(JOURNAL_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (parsed?.memberJournals && typeof parsed.memberJournals === 'object') {
+      return parsed.memberJournals;
+    }
+    if (parsed?.days) {
+      return { A: { days: parsed.days } };
+    }
+  } catch {
+    /* ignore */
+  }
+  return {};
+}
+
+function loadKpiOperationalFromStorage() {
+  try {
+    const raw = localStorage.getItem(KPI_OPERATIONAL_STORAGE_KEY);
+    if (!raw) return normalizeKpiOperationalStore({});
+    return normalizeKpiOperationalStore(JSON.parse(raw));
+  } catch {
+    return normalizeKpiOperationalStore({});
+  }
+}
+
+/** 팀장 알림 뱃지 — JournalProvider 밖에서 localStorage 기준 승인 대기 집계 */
+export function listPendingApprovalsFromBrowser(period = readJournalPeriodFromUrl()) {
+  const memberJournals = loadJournalMemberDaysFromStorage();
+  const kpiOperational = loadKpiOperationalFromStorage();
+  const improveProjects = loadImproveProjects();
+  const getMemberDays = (code) => memberJournals?.[code]?.days || {};
+  return listPendingApprovals({
+    year: period.year,
+    monthIndex: period.monthIndex,
+    getMemberDays,
+    kpiOperational,
+    improveProjects,
+  });
+}
+
+export function summarizePendingApprovals(items = []) {
+  const kpi1 = items.filter((item) => item.type === 'KPI1').length;
+  const kpi2 = items.filter((item) => item.type === 'KPI2').length;
+  return { total: items.length, kpi1, kpi2 };
 }

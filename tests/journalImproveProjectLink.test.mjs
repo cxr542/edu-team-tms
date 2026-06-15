@@ -6,7 +6,9 @@ import { mergeTaskFromEdit, taskFieldsFromEdit } from '../src/utils/journalTaskF
 import {
   buildImproveProjectRegistrationFromCandidate,
   buildManualImproveProjectRegistration,
+  describeImproveProjectsShareImport,
   filterImproveProjectsForMember,
+  filterImproveProjectsOwnedByMember,
   findRegisteredProjectForCandidate,
   formatCandidateMemberSummary,
   formatImproveProjectOwnerLine,
@@ -55,6 +57,33 @@ describe('improve project link utilities', () => {
     expect(reg.source).toBe(IMPROVE_PROJECT_SOURCE.MANUAL);
     expect(reg.sourceLabel).toBe('공통/수동 등록');
     expect(reg.ownerMemberId).toBeUndefined();
+  });
+
+  it('filters owned journal-candidate projects for member panel and share pull', () => {
+    expect(filterImproveProjectsOwnedByMember(IMPROVE_PROJECTS, 'B').map((p) => p.id)).toEqual([
+      'team-kpi',
+    ]);
+    expect(filterImproveProjectsOwnedByMember(IMPROVE_PROJECTS, 'C').map((p) => p.id)).toEqual(['tune']);
+    const manualOwned = [
+      {
+        id: 'x',
+        name: '수동',
+        ownerMemberId: 'B',
+        source: IMPROVE_PROJECT_SOURCE.MANUAL,
+      },
+    ];
+    expect(filterImproveProjectsOwnedByMember(manualOwned, 'B')).toHaveLength(0);
+  });
+
+  it('describes share import toast with member filter', () => {
+    expect(describeImproveProjectsShareImport(IMPROVE_PROJECTS, 'B')).toMatch(/연결 가능 2건/);
+    expect(describeImproveProjectsShareImport(IMPROVE_PROJECTS, 'B')).toMatch(/담당 타인 전용 1건/);
+    expect(describeImproveProjectsShareImport(IMPROVE_PROJECTS, 'B', { ownedOnly: true })).toBe(
+      '팀 공유 3건 병합 · 본인 담당 1건'
+    );
+    expect(describeImproveProjectsShareImport(IMPROVE_PROJECTS, 'A', { ownedOnly: true })).toBe(
+      '팀 공유 3건 병합 · 본인 담당 과제 없음'
+    );
   });
 
   it('filters member B to own and shared projects only', () => {
@@ -195,6 +224,35 @@ describe('journal improve project UI wiring', () => {
     );
   });
 
+  it('shows member KPI approval only on member-scoped journal URLs', () => {
+    expect(journalSource).toContain('showMemberKpiApproval');
+    expect(journalSource).toContain('isMemberJournalScope');
+    expect(journalSource).toMatch(/showMemberKpiApproval[\s\S]*MemberKpiApprovalPanel/);
+    expect(journalSource).toContain('memberCode === teamAccess.scopedMember');
+    expect(journalSource).toMatch(/journal-week-block[\s\S]*showMemberKpiApproval/);
+  });
+
+  it('shows leader approval bell in app shell toolbar', () => {
+    const shell = readFileSync(path.join(process.cwd(), 'src/components/AppShell.jsx'), 'utf8');
+    const bell = readFileSync(path.join(process.cwd(), 'src/components/LeaderKpiApprovalBell.jsx'), 'utf8');
+    expect(shell).toContain('LeaderKpiApprovalBell');
+    expect(shell).toContain('useLeaderKpiPendingBadge');
+    expect(bell).toContain('leader-kpi-approval-bell');
+  });
+
+  it('opens improve projects and KPI approval from member journal toolbar modals', () => {
+    expect(journalSource).toContain('showMemberImproveProjectsToolbar');
+    expect(journalSource).toContain('MemberImproveProjectsDialog');
+    expect(journalSource).toContain('improveProjectsModalOpen');
+    expect(journalSource).toContain('kpiApprovalModalOpen');
+    expect(journalSource).toContain('embedded');
+    expect(journalSource).toContain('dialogOpen={kpiApprovalModalOpen}');
+    expect(journalSource).toContain('journal-member-tool-btn');
+    expect(journalSource).toContain('filterImproveProjectsOwnedByMember');
+    expect(journalSource).toContain('memberOwnedImproveProjects');
+    expect(journalSource).not.toContain('journal-improve-projects-panel--collapsible');
+  });
+
   it('enables B/C journal team share upload and view-only cloud pull', () => {
     expect(sharingConfigSource).toContain('SHOW_BC_JOURNAL_TEAM_SHARE_UI = true');
     expect(journalSource).toContain('showMemberTeamSharePull');
@@ -232,7 +290,9 @@ describe('journal improve project UI wiring', () => {
   it('keeps auto cloud sync disabled and manual-only shared improve project methods', () => {
     expect(appSource).toContain('autoSyncCloud={false}');
     expect(hookSource).toContain('publishSharedProjects');
-    expect(hookSource).toContain('loadSharedProjects');
+    expect(hookSource).toContain('filterImproveProjectsOwnedByMember');
+    expect(hookSource).toContain('memberCode');
+    expect(hookSource).toContain('importedCount');
     expect(hookSource).toContain('downloadProjectsFile');
     expect(hookSource).toContain('importProjectsFromFile');
     const localPersistEffect = hookSource.match(

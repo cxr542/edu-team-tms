@@ -29,6 +29,12 @@ export function getTaskMmAxis(task) {
   return task.cat === 'ai' ? 'improve' : 'work';
 }
 
+/** 편집 패널 select — 미지정 시 AI→향상, 그 외→업무 */
+export function getMmAxisSelectValue(task) {
+  if (task?.mmAxis === 'work' || task?.mmAxis === 'improve') return task.mmAxis;
+  return task?.cat === 'ai' ? 'improve' : 'work';
+}
+
 export function sumDayWorkHours(data) {
   return data.tasks.reduce((sum, t) => sum + getTaskLoggedHours(t), 0);
 }

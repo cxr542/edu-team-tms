@@ -19,6 +19,22 @@
   box-shadow: var(--shadow-md);
 }
 
+.journal-prefs-modal--wide {
+  width: min(640px, 100%);
+}
+
+.journal-member-dialog__body {
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.journal-member-dialog__lead {
+  margin: 0 0 0.75rem;
+}
+
+.journal-member-dialog__actions {
+  margin-bottom: 0.85rem;
+}
+
 .journal-prefs-head {
   display: flex;
   align-items: flex-start;

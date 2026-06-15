@@ -24,6 +24,27 @@ export function downloadTeamSnapshot(payload) {
   URL.revokeObjectURL(url);
 }
 
+export function isLedgerSnapshotImportable(raw) {
+  return Boolean(raw && typeof raw === 'object' && Array.isArray(raw.transactions));
+}
+
+export function parseLedgerSnapshotForImport(raw) {
+  if (!isLedgerSnapshotImportable(raw)) {
+    throw new Error('장부 백업 형식이 올바르지 않습니다. (transactions 배열 필요)');
+  }
+  return {
+    publishedAt: raw.publishedAt || new Date().toISOString(),
+    categories: raw.categories,
+    transactions: raw.transactions,
+    viewerMenuVisibility: raw.viewerMenuVisibility,
+  };
+}
+
+export async function readLedgerSnapshotFile(file) {
+  const text = await file.text();
+  return parseLedgerSnapshotForImport(JSON.parse(text));
+}
+
 export const EMPTY_LEDGER_SNAPSHOT_TITLE = '아직 게시된 장부 조회 snapshot이 없습니다.';
 export const EMPTY_LEDGER_SNAPSHOT_DETAIL =
   '장부 데이터를 조회 화면에 반영하려면 팀장/편집 화면에서 수동으로 게시하거나 새로고침해 주세요. 브라우저 로컬 저장 데이터는 계속 사용할 수 있습니다.';

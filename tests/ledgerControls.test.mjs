@@ -39,6 +39,7 @@ describe('ledger control labels and export visibility', () => {
     expect(source).toContain('handleDownloadLedgerBackup');
     expect(source).toContain('지금 조회에 반영');
     expect(source).toContain('장부 JSON 백업 다운로드');
+    expect(source).toContain('장부 JSON 백업 가져오기');
     expect(publishHandler).not.toContain('downloadTeamSnapshot');
   });
 });

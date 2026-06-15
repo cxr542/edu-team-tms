@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Check, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useJournal } from '../context/JournalProvider';
 import { useJournalPeriod } from '../hooks/useJournalPeriod';
-import { listPendingApprovals } from '../utils/kpiReportData';
+import { listPendingApprovals, summarizePendingApprovals } from '../utils/kpiReportData';
 import { KPI1_NAME, KPI2_NAME, kpiTypeLabel } from '../constants/kpiDisplayNames';
 import { uiTooltip } from '../utils/uiTooltip';
 import './TeamKpiPage.css';
@@ -49,6 +49,7 @@ export default function KpiApprovePage({ readOnly = false }) {
       }),
     [year, month, getMemberDays, kpiOperational, improveProjects]
   );
+  const pendingSummary = useMemo(() => summarizePendingApprovals(pending), [pending]);
 
   const handleReject = () => {
     if (!rejecting) return;
@@ -93,14 +94,22 @@ export default function KpiApprovePage({ readOnly = false }) {
           </div>
         </div>
         <p className="team-kpi-banner">
-          구성원이 일지에서 보낸 <strong>승인 요청</strong>({KPI1_NAME} 월 확정 · {KPI2_NAME} 효과 건)을 처리합니다.
-          승인 시 집계·리포트에 반영됩니다.
+          구성원 일지에서 요청한 <strong>KPI1 월 확정</strong> · <strong>KPI2 효과 건</strong>을 이 화면에서 일괄 승인·반려합니다.
+        </p>
+        <p className="kpi-approve-summary" aria-live="polite">
+          승인 대기 <strong>{pendingSummary.total}</strong>건
+          {pendingSummary.total > 0 ? (
+            <>
+              {' '}
+              · KPI1 <strong>{pendingSummary.kpi1}</strong> · KPI2 <strong>{pendingSummary.kpi2}</strong>
+            </>
+          ) : null}
         </p>
       </header>
 
       <section className="team-kpi-section">
         {pending.length === 0 && (
-          <p className="team-kpi-hint">이 달 승인 대기 건이 없습니다. 구성원이 일지 「팀장 승인 요청」에서 요청하면 여기에 표시됩니다.</p>
+          <p className="team-kpi-hint">이 달 승인 대기 건이 없습니다. 구성원이 일지 하단 「KPI 승인 요청」에서 내면 여기에 모입니다.</p>
         )}
         <ul className="team-kpi-approve-list">
           {pending.map((item) => {

@@ -69,6 +69,7 @@ import {
   EMPTY_LEDGER_SNAPSHOT_TITLE,
   fetchPublicSnapshot,
   publishSnapshotToServer,
+  readLedgerSnapshotFile,
 } from './utils/publishSnapshot';
 import AppShell from './components/AppShell';
 import WeeklyJournalPage from './pages/WeeklyJournalPage';
@@ -344,6 +345,7 @@ export default function App() {
   const [alert, setAlert] = useState({ show: false, message: '', type: 'info' });
   const [importingProdLedger, setImportingProdLedger] = useState(false);
   const fileInputRef = useRef(null);
+  const ledgerImportInputRef = useRef(null);
   const ledgerToolbarSentinelRef = useRef(null);
   const ledgerToolbarRef = useRef(null);
   const [ledgerToolbarPinned, setLedgerToolbarPinned] = useState(false);
@@ -494,6 +496,38 @@ export default function App() {
     const payload = buildTeamSnapshot(transactions, categories, activeViewerMenuVisibility);
     downloadTeamSnapshot(payload);
     showAlert('장부 JSON 백업 파일(ledger-snapshot.json)을 다운로드했습니다.', 'info', 5000);
+  };
+
+  const handleImportLedgerBackup = async (file) => {
+    if (
+      !window.confirm(
+        '장부 백업 JSON을 현재 작성 장부에 반영합니다. 기존 작성 내용은 덮어써질 수 있습니다. 계속할까요?'
+      )
+    ) {
+      return;
+    }
+    try {
+      autoPublish.suppressNextPublish();
+      const snap = await readLedgerSnapshotFile(file);
+      const r = pullFromPublished(snap);
+      if (snap.categories?.length) {
+        setCategories(snap.categories);
+      }
+      if (snap.viewerMenuVisibility) {
+        applyViewerMenuVisibility(normalizeViewerMenuVisibility(snap.viewerMenuVisibility));
+      }
+      if (r.ok) {
+        showAlert(
+          `장부 백업 ${r.count}건을 반영했습니다. 「지금 조회에 반영」으로 팀원 조회에도 올릴 수 있습니다.`,
+          'success',
+          6500
+        );
+      } else {
+        showAlert('장부 백업에 거래 내역이 없습니다.', 'warning');
+      }
+    } catch (err) {
+      showAlert(`장부 백업 가져오기 실패: ${err.message}`, 'danger');
+    }
   };
 
   const ledgerPublishBlocked =
@@ -1261,6 +1295,27 @@ export default function App() {
               <Download size={16} />
               장부 JSON 백업 다운로드
             </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => ledgerImportInputRef.current?.click()}
+              title="ledger-snapshot.json 백업 파일을 작성 장부에 반영합니다"
+            >
+              <Upload size={16} />
+              장부 JSON 백업 가져오기
+            </button>
+            <input
+              ref={ledgerImportInputRef}
+              type="file"
+              accept="application/json,.json"
+              hidden
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                await handleImportLedgerBackup(file);
+                e.target.value = '';
+              }}
+            />
             <button
               type="button"
               className="btn btn-primary"

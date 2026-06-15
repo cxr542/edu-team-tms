@@ -66,7 +66,7 @@ export function isSharedImproveProject(project) {
   return !project.ownerMemberId || project.source === IMPROVE_PROJECT_SOURCE.MANUAL;
 }
 
-/** 구성원 일지 — 본인 전용 + 공통(수동/owner 없음) 과제만 */
+/** 구성원 일지 — 본인 전용 + 공통(수동/owner 없음) 과제만 (업무 편집 연결용) */
 export function filterImproveProjectsForMember(projects = [], memberCode) {
   if (!memberCode) {
     return projects.filter((p) => isSharedImproveProject(p));
@@ -74,6 +74,21 @@ export function filterImproveProjectsForMember(projects = [], memberCode) {
   return projects.filter(
     (p) => isSharedImproveProject(p) || p.ownerMemberId === memberCode
   );
+}
+
+/** 구성원 일지 — 일지 후보로 등록·팀장 운영 목록에 올라간 본인 담당 과제 */
+export function isMemberJournalImproveProject(project, memberCode) {
+  if (!project || !memberCode) return false;
+  return (
+    project.ownerMemberId === memberCode &&
+    project.source === IMPROVE_PROJECT_SOURCE.JOURNAL_CANDIDATE
+  );
+}
+
+/** 구성원 일지 패널 · 팀 공유 가져오기 — 위 조건과 동일 */
+export function filterImproveProjectsOwnedByMember(projects = [], memberCode) {
+  if (!memberCode) return [];
+  return projects.filter((p) => isMemberJournalImproveProject(p, memberCode));
 }
 
 export function formatImproveProjectOwnerLine(project, formatMemberCode = (code) => code) {
@@ -97,4 +112,28 @@ export function findRegisteredProjectForCandidate(candidate, projects = []) {
   if (!candidate?.title) return null;
   const key = improveProjectTitleKey(candidate.title);
   return projects.find((p) => improveProjectTitleKey(p.name) === key) || null;
+}
+
+/** 팀 공유 가져오기 토스트 */
+export function describeImproveProjectsShareImport(
+  mergedProjects = [],
+  memberCode,
+  { ownedOnly = false } = {}
+) {
+  const total = mergedProjects.length;
+  const visible = ownedOnly
+    ? filterImproveProjectsOwnedByMember(mergedProjects, memberCode)
+    : filterImproveProjectsForMember(mergedProjects, memberCode);
+  if (total === 0) return '팀 공유본이 비어 있습니다';
+  if (ownedOnly) {
+    if (visible.length === 0) {
+      return `팀 공유 ${total}건 병합 · 본인 담당 과제 없음`;
+    }
+    return `팀 공유 ${total}건 병합 · 본인 담당 ${visible.length}건`;
+  }
+  if (visible.length >= total) {
+    return `팀 공유 향상 과제 ${total}건을 반영했습니다`;
+  }
+  const hidden = total - visible.length;
+  return `팀 공유 ${total}건 병합 · 연결 가능 ${visible.length}건 (담당 타인 전용 ${hidden}건은 목록에서 제외)`;
 }

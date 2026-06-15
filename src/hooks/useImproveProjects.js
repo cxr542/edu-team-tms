@@ -12,6 +12,7 @@ import {
   mergeImproveProjects,
   publishSharedImproveProjectsSnapshot,
 } from '../utils/improveProjectsCloudSnapshot';
+import { filterImproveProjectsOwnedByMember } from '../utils/improveProjectLink';
 import {
   downloadImproveProjectsSnapshot,
   IMPROVE_PROJECTS_FILE_IMPORT_FAIL,
@@ -127,7 +128,7 @@ export function useImproveProjects({ readOnly = false } = {}) {
     }
   }, [projects, readOnly, sharedBusy]);
 
-  const loadSharedProjects = useCallback(async () => {
+  const loadSharedProjects = useCallback(async ({ memberCode } = {}) => {
     if (readOnly || sharedBusy) {
       return { ok: false, reason: readOnly ? 'read-only' : 'busy' };
     }
@@ -137,9 +138,19 @@ export function useImproveProjects({ readOnly = false } = {}) {
       if (!snapshot.projects?.length) {
         return { ok: false, reason: 'no-remote', source };
       }
+      const remoteProjects = memberCode
+        ? filterImproveProjectsOwnedByMember(snapshot.projects, memberCode)
+        : snapshot.projects;
+      if (!remoteProjects.length) {
+        return {
+          ok: false,
+          reason: memberCode ? 'no-member-projects' : 'no-remote',
+          source,
+        };
+      }
       let merged = projects;
       setProjects((prev) => {
-        merged = mergeImproveProjects(prev, snapshot.projects);
+        merged = mergeImproveProjects(prev, remoteProjects);
         return merged;
       });
       setSharedMeta((prev) => ({
@@ -147,7 +158,15 @@ export function useImproveProjects({ readOnly = false } = {}) {
         importedAt: new Date().toISOString(),
         remotePublishedAt: snapshot.publishedAt || null,
       }));
-      return { ok: true, snapshot, source, mergedCount: merged.length };
+      return {
+        ok: true,
+        snapshot,
+        source,
+        mergedCount: merged.length,
+        merged,
+        importedCount: remoteProjects.length,
+        imported: remoteProjects,
+      };
     } catch (e) {
       return {
         ok: false,

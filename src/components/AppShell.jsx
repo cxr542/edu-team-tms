@@ -19,6 +19,8 @@ import {
   UtensilsCrossed,
   MessageCircle,
 } from 'lucide-react';
+import LeaderKpiApprovalBell from './LeaderKpiApprovalBell';
+import { useLeaderKpiPendingBadge } from '../hooks/useLeaderKpiPendingBadge';
 import { formatKpiMemberLabel, findKpiMember } from '../constants/kpiMembers';
 import {
   NAV_GROUP_COMMON,
@@ -109,8 +111,10 @@ export default function AppShell({
   const showLeaderNav = !isViewer && (!teamAccess || teamAccess.isLeader);
   const showGeneralNav = !isViewer && (!teamAccess || teamAccess.isLeader);
   const showExperimentalNav = !isViewer && (!teamAccess || teamAccess.isLeader);
+  const showLeaderApprovalBadge = showLeaderNav && teamAccess?.isLeader && !teamAccess?.isMemberScope;
+  const leaderPending = useLeaderKpiPendingBadge(showLeaderApprovalBadge);
 
-  const navBtn = (module, Icon, { viewer = false } = {}) => {
+  const navBtn = (module, Icon, { viewer = false, badgeCount = 0 } = {}) => {
     const visible = viewer ? showInViewer(module) : canShowEditModule(module);
     if (!visible) return null;
     const label = navLabels[module];
@@ -122,6 +126,7 @@ export default function AppShell({
         icon={Icon}
         isActive={activeModule === module}
         isViewer={itemViewer}
+        badgeCount={badgeCount}
         tooltipProps={navTooltipProps(label)}
         onNavigate={(mod) => {
           onModuleChange(mod);
@@ -267,7 +272,7 @@ export default function AppShell({
                     <NavGroup title={NAV_GROUP_LEADER_WORK} className="project-nav-group--leader">
                       {navBtn('kpi', BarChart3)}
                       {navBtn('kpi-report', PieChart)}
-                      {navBtn('kpi-approve', CheckCircle)}
+                      {navBtn('kpi-approve', CheckCircle, { badgeCount: leaderPending.count })}
                     </NavGroup>
                   )}
                 </>
@@ -445,6 +450,13 @@ export default function AppShell({
                 <span className="project-toolbar__scope project-toolbar__scope--leader">팀장</span>
               )}
             </p>
+            {showLeaderApprovalBadge && (
+              <LeaderKpiApprovalBell
+                count={leaderPending.count}
+                summary={leaderPending.summary}
+                period={leaderPending.period}
+              />
+            )}
           </div>
           <div className="content project-content">{children}</div>
         </div>

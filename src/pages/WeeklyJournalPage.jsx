@@ -8,6 +8,8 @@ import {
   Import,
   Copy,
   Download,
+  Send,
+  Sparkles,
   Target,
   Upload,
 } from 'lucide-react';
@@ -22,6 +24,7 @@ import {
   getWeekMmStats,
   getWeeksInMonth,
   hoursToMm,
+  getMmAxisSelectValue,
   recalcDayMmFromHours,
 } from '../utils/journalMm';
 import { countKpi2EffectTasks } from '../utils/computeTeamKpi';
@@ -56,10 +59,13 @@ import { URL_ACCESS_LEADER } from '../constants/teamAccess';
 import { JournalEditKpiPreview, TaskKpiBadge } from '../components/JournalKpiLinkagePanel';
 import JournalCategoryLegend from '../components/JournalCategoryLegend';
 import JournalMemberPrefsModal from '../components/JournalMemberPrefsModal';
-import MemberKpiApprovalPanel from '../components/MemberKpiApprovalPanel';
+import MemberKpiApprovalPanel, { useMemberKpiApprovalToolbarState } from '../components/MemberKpiApprovalPanel';
+import MemberImproveProjectsDialog from '../components/MemberImproveProjectsDialog';
 import { isEditorMode } from '../utils/appMode';
 import {
   filterImproveProjectsForMember,
+  filterImproveProjectsOwnedByMember,
+  describeImproveProjectsShareImport,
   formatImproveProjectOwnerLine,
   IMPROVE_PROJECT_JOURNAL_SCOPE_NOTICE,
 } from '../utils/improveProjectLink';
@@ -198,6 +204,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const [toast, setToast] = useState('');
   const [collapsedWeeks, setCollapsedWeeks] = useState(() => loadCollapsedWeekKeys(year, month, memberCode));
   const [memberPrefsOpen, setMemberPrefsOpen] = useState(false);
+  const [improveProjectsModalOpen, setImproveProjectsModalOpen] = useState(false);
+  const [kpiApprovalModalOpen, setKpiApprovalModalOpen] = useState(false);
 
   const memberCategoryView = useMemo(
     () => resolveMemberCategories(journal.memberJournals?.[memberCode]?.prefs),
@@ -205,6 +213,12 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   );
   const isImproveProjectMember = MEMBER_IMPROVE_PROJECT_CODES.has(memberCode);
   const showImproveProjectPanel = !journalReadOnly && (teamAccess.isMemberScope || isImproveProjectMember);
+  const isMemberJournalScope = teamAccess.isMemberScope;
+  const showMemberKpiApproval =
+    isMemberJournalScope &&
+    memberCode === teamAccess.scopedMember &&
+    !journalReadOnly &&
+    isEditorMode();
   const showJournalTeamShareControls =
     !journalReadOnly && (SHOW_BC_JOURNAL_TEAM_SHARE_UI || !isImproveProjectMember);
   const showMemberTeamSharePull =
@@ -221,6 +235,13 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     () => filterImproveProjectsForMember(journal.improveProjects, memberCode),
     [journal.improveProjects, memberCode]
   );
+  const memberOwnedImproveProjects = useMemo(
+    () => filterImproveProjectsOwnedByMember(journal.improveProjects, memberCode),
+    [journal.improveProjects, memberCode]
+  );
+  const memberKpiApprovalToolbar = useMemberKpiApprovalToolbarState(year, month, memberCode);
+  const showMemberImproveProjectsToolbar =
+    isMemberJournalScope && showImproveProjectPanel && !journalReadOnly;
 
   useEffect(() => {
     setCollapsedWeeks(loadCollapsedWeekKeys(year, month, memberCode));
@@ -234,6 +255,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     setCopyOpen(false);
     setMoveOpen(false);
     setLeaveOpen(false);
+    setImproveProjectsModalOpen(false);
+    setKpiApprovalModalOpen(false);
     setLeaveDayKey(null);
     setSelectedDayKey(null);
   }, [memberCode]);
@@ -464,7 +487,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       plan: Number(editTask.plan) || 0,
       actual: 0,
       done: false,
-      mmAxis: editTask.mmAxis || undefined,
+      mmAxis: getMmAxisSelectValue(editTask),
       slot: resolveTaskSlotField(editTask.slot),
     };
 
@@ -556,6 +579,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       actual: 0,
       done: false,
       note: '',
+      mmAxis: addDraft.cat === 'ai' ? 'improve' : 'work',
       slot: resolveTaskSlotField(addDraft.slot),
     };
     const dayKey = addDayKey;
@@ -618,6 +642,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     setCopyOpen(false);
     setMoveOpen(false);
     setLeaveOpen(false);
+    setImproveProjectsModalOpen(false);
+    setKpiApprovalModalOpen(false);
     setEditTask(null);
   };
 
@@ -809,6 +835,36 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 <Target size={16} />
                 오늘로 이동
               </button>
+              {showMemberImproveProjectsToolbar && (
+                <button
+                  type="button"
+                  className="btn btn-secondary journal-member-tool-btn"
+                  onClick={() => setImproveProjectsModalOpen(true)}
+                  {...uiTooltip('본인 담당 생산성향상 과제 목록 · 팀 공유본 가져오기')}
+                >
+                  <Sparkles size={16} />
+                  향상 과제
+                  {memberOwnedImproveProjects.length > 0 && (
+                    <span className="journal-member-tool-badge">{memberOwnedImproveProjects.length}</span>
+                  )}
+                </button>
+              )}
+              {showMemberKpiApproval && (
+                <button
+                  type="button"
+                  className={`btn btn-secondary journal-member-tool-btn${
+                    memberKpiApprovalToolbar.needsAttention ? ' journal-member-tool-btn--attention' : ''
+                  }`}
+                  onClick={() => setKpiApprovalModalOpen(true)}
+                  {...uiTooltip('KPI1 월 확정 · KPI2 효과 승인 요청')}
+                >
+                  <Send size={16} />
+                  KPI 승인 요청
+                  {memberKpiApprovalToolbar.needsAttention && (
+                    <span className="journal-member-tool-badge journal-member-tool-badge--attention">!</span>
+                  )}
+                </button>
+              )}
               {(showMemberTeamSharePull || (!journalReadOnly && showJournalTeamShareControls)) && (
                 <button
                   type="button"
@@ -996,7 +1052,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             </details>
           )}
 
-          {showImproveProjectPanel && (
+          {showImproveProjectPanel && !isMemberJournalScope && (
             <section className="journal-improve-projects-panel" aria-label="운영 중인 생산성향상 과제">
               <h3 className="journal-improve-projects-panel__title">운영 중인 생산성향상 과제</h3>
               <p className="journal-field-help">
@@ -1021,8 +1077,11 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                     )}
                     onClick={async () => {
                       const r = await journal.improveProjectsApi.loadSharedProjects();
-                      if (r.ok) showToast(`팀 공유 향상 과제 ${r.snapshot?.projects?.length || 0}건을 병합했습니다`);
-                      else if (r.reason === 'no-remote') showToast('팀 공유본이 아직 없습니다');
+                      if (r.ok) {
+                        showToast(
+                          describeImproveProjectsShareImport(r.merged || [], memberCode)
+                        );
+                      } else if (r.reason === 'no-remote') showToast('팀 공유본이 아직 없습니다');
                       else showToast(r.message || '팀 공유본을 가져오지 못했습니다');
                     }}
                   >
@@ -1157,16 +1216,6 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             </div>
             </div>
           </div>
-
-          {!journalReadOnly && isEditorMode() && (
-            <MemberKpiApprovalPanel
-              year={year}
-              month={month}
-              memberCode={memberCode}
-              memberLabel={formatKpiMemberLabel(selectedMember)}
-              onToast={showToast}
-            />
-          )}
 
           <div className="journal-mm-panel">
             <div className="journal-mm-panel-head">
@@ -1383,6 +1432,19 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         })}
       </div>
 
+        {showMemberKpiApproval && (
+          <MemberKpiApprovalPanel
+            year={year}
+            month={month}
+            memberCode={memberCode}
+            memberLabel={formatKpiMemberLabel(selectedMember)}
+            onToast={showToast}
+            embedded
+            dialogOpen={kpiApprovalModalOpen}
+            onDialogClose={() => setKpiApprovalModalOpen(false)}
+          />
+        )}
+
       <div className={`journal-panel-overlay${panelOpen || addOpen || copyOpen || moveOpen || leaveOpen ? ' open' : ''}`} onClick={closeAll} role="presentation" />
 
       <aside className={`journal-side-panel${panelOpen ? ' open' : ''}`}>
@@ -1406,12 +1468,11 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 <label>{KPI1_NAME} M/M 구분</label>
                 <select
                   className="form-input"
-                  value={editTask.mmAxis || ''}
-                  onChange={(e) => setEditTask({ ...editTask, mmAxis: e.target.value || undefined })}
+                  value={getMmAxisSelectValue(editTask)}
+                  onChange={(e) => setEditTask({ ...editTask, mmAxis: e.target.value })}
                   disabled={journalReadOnly}
                   aria-describedby="journal-mm-axis-help"
                 >
-                  <option value="">자동 (AI→향상)</option>
                   <option value="work">업무 M/M</option>
                   <option value="improve">생산향상 M/M</option>
                 </select>
@@ -1777,6 +1838,29 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           showToast(`${formatKpiMemberLabel(selectedMember)} 범례·기본 양식 저장`);
         }}
       />
+
+      {showMemberImproveProjectsToolbar && (
+        <MemberImproveProjectsDialog
+          open={improveProjectsModalOpen}
+          onClose={() => setImproveProjectsModalOpen(false)}
+          projects={memberOwnedImproveProjects}
+          shareBusy={journal.improveProjectsApi.sharedBusy}
+          onPullShare={async () => {
+            const pullCode = teamAccess.scopedMember || memberCode;
+            const r = await journal.improveProjectsApi.loadSharedProjects({
+              memberCode: pullCode,
+            });
+            if (r.ok) {
+              showToast(`본인 향상 과제 ${r.importedCount}건을 반영했습니다`);
+            } else if (r.reason === 'no-member-projects') {
+              showToast(
+                '팀 공유본에 본인 담당 과제가 없습니다. 팀장 운영 목록 등록·공유 저장을 확인하세요.'
+              );
+            } else if (r.reason === 'no-remote') showToast('팀 공유본이 아직 없습니다');
+            else showToast(r.message || '팀 공유본을 가져오지 못했습니다');
+          }}
+        />
+      )}
     </main>
   );
 }
