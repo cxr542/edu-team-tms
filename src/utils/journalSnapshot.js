@@ -1,7 +1,7 @@
 import { isProductionEnvironment } from '../constants/appEnv';
 import { canAttemptCloudWrite, recordCloudFailure, recordCloudSuccess } from './cloudHealth';
 import { apply2026PublicHolidaysToDays } from './journalHoliday2026';
-import { mergeJournalSnapshotsByMember, normalizeJournalCloudSnapshot } from './journalCloudSnapshot';
+import { mergeJournalSnapshotsByMember, mergeJournalSnapshotsViewOnlyImport, normalizeJournalCloudSnapshot } from './journalCloudSnapshot';
 import { extractMemberKpiApprovalSlice } from './journalKpiApprovalSlice';
 import { recalcDayMmFromHours } from './journalMm';
 import { createEmptyMemberJournals } from './journalMemberStore';
@@ -192,6 +192,20 @@ export function applyJournalSnapshotImport(localStore, remoteSnapshot) {
     memberJournals: localStore?.memberJournals || createEmptyMemberJournals(),
   });
   const merged = mergeJournalSnapshotsByMember(localSnapshot, remoteSnapshot, { importRemote: true });
+  return {
+    memberJournals: merged.memberJournals,
+    meta: merged.meta,
+  };
+}
+
+/** 구성원 조회용 — 본인 슬라이스는 유지, 타인만 remote 병합 */
+export function applyJournalSnapshotViewOnlyImport(localStore, remoteSnapshot, ownMemberCode) {
+  const localSnapshot = normalizeJournalCloudSnapshot({
+    publishedAt: localStore?.meta?.updatedAt || null,
+    meta: localStore?.meta || {},
+    memberJournals: localStore?.memberJournals || createEmptyMemberJournals(),
+  });
+  const merged = mergeJournalSnapshotsViewOnlyImport(localSnapshot, remoteSnapshot, ownMemberCode);
   return {
     memberJournals: merged.memberJournals,
     meta: merged.meta,

@@ -176,6 +176,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const journal = useJournal();
   const { year, month, setPeriod, changeMonth } = useJournalPeriod();
   const importInputRef = useRef(null);
+  const viewOnlyImportInputRef = useRef(null);
   const improveProjectsFileInputRef = useRef(null);
   const journalMainRef = useRef(null);
   const scrollToDayRef = useRef(null);
@@ -187,6 +188,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const viewingOtherMember =
     teamAccess.memberLocked && memberCode !== teamAccess.scopedMember;
   const canImportJournalBackup = teamAccess.isLeader || memberCode === TEAM_LEADER_MEMBER_CODE;
+  const canImportViewOnlyJournalBackup = teamAccess.memberLocked && !readOnly;
 
   useEffect(() => {
     if (teamAccess.memberLocked) setMemberCode(teamAccess.scopedMember);
@@ -958,6 +960,42 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   />
                 </>
               )}
+              {canImportViewOnlyJournalBackup && (
+                <>
+                  <button
+                    type="button"
+                    className="btn btn-import-shared"
+                    onClick={() => viewOnlyImportInputRef.current?.click()}
+                    {...uiTooltip(
+                      '팀장이 보낸 백업 JSON에서 타인(A/C) 일지를 이 브라우저에 조회용으로 반영합니다. 본인 일지는 변경되지 않습니다.',
+                      undefined,
+                      { wrap: true }
+                    )}
+                  >
+                    <Import size={16} />
+                    조회용 JSON 가져오기
+                  </button>
+                  <input
+                    ref={viewOnlyImportInputRef}
+                    type="file"
+                    accept="application/json,.json"
+                    hidden
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        await journal.importJournalViewOnlyBackup(file, teamAccess.scopedMember);
+                        showToast(
+                          '조회용 JSON을 반영했습니다 — A/B/C 탭에서 타인 일지를 확인하세요. 본인 일지는 그대로입니다.'
+                        );
+                      } catch (err) {
+                        showToast(`가져오기 실패: ${err.message}`);
+                      }
+                      e.target.value = '';
+                    }}
+                  />
+                </>
+              )}
             </div>
           </header>
 
@@ -1132,8 +1170,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             <p className="journal-sync-hint journal-sync-hint--view-other">
               <strong>{formatKpiMemberLabel(selectedMember)}</strong> 일지는{' '}
               <strong>조회만</strong> 가능합니다. 작성·수정은 본인(
-              {teamAccess.scopedMember}) 탭에서 하세요. (팀장이 공유한 백업 JSON이 이 브라우저에
-              있어야 표시됩니다.)
+              {teamAccess.scopedMember}) 탭에서 하세요. 타인 일지가 비어 있으면 상단{' '}
+              <strong>「조회용 JSON 가져오기」</strong>로 팀장이 보낸 백업 파일을 불러오세요.
             </p>
           )}
 

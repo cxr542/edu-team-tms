@@ -42,6 +42,8 @@ describe('journal UX guidance', () => {
     expect(journalSource).toContain('journal-member-tabs');
     expect(journalSource).toContain('canEditMemberJournal');
     expect(journalSource).toContain('viewingOtherMember');
+    expect(journalSource).toContain('조회용 JSON 가져오기');
+    expect(journalSource).toContain('importJournalViewOnlyBackup');
   });
 
   it('styles status and help panels', () => {

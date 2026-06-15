@@ -18,6 +18,7 @@ import {
   formatKpiMemberLabel,
 } from '../constants/kpiMembers';
 import {
+  applyJournalSnapshotViewOnlyImport,
   downloadJournalSnapshot,
   fetchJournalSnapshot,
   JOURNAL_STORAGE_KEY,
@@ -104,6 +105,10 @@ function storeToSnapshot(store) {
 
 function mergeRemoteIntoStore(store, remote, options) {
   return toStore(mergeJournalSnapshotsByMember(storeToSnapshot(store), remote, options));
+}
+
+function mergeViewOnlyIntoStore(store, remote, ownMemberCode) {
+  return applyJournalSnapshotViewOnlyImport(store, remote, ownMemberCode);
 }
 
 function uniqueMembers(memberCodes) {
@@ -255,6 +260,31 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
       return snapshot;
     },
     [applyRemoteSnapshot]
+  );
+
+  const applyViewOnlySnapshot = useCallback(
+    (snapshot, ownMemberCode) => {
+      let merged;
+      let changed = false;
+      setStore((prev) => {
+        merged = cacheStore(mergeViewOnlyIntoStore(prev, snapshot, ownMemberCode));
+        changed = JSON.stringify(prev.memberJournals) !== JSON.stringify(merged.memberJournals);
+        return merged;
+      });
+      setSyncStatus('synced');
+      return { merged, changed };
+    },
+    [cacheStore]
+  );
+
+  const importViewOnlyFromFile = useCallback(
+    async (file, ownMemberCode) => {
+      const text = await file.text();
+      const snapshot = parseJournalSnapshotForImport(JSON.parse(text));
+      applyViewOnlySnapshot(snapshot, ownMemberCode);
+      return snapshot;
+    },
+    [applyViewOnlySnapshot]
   );
 
   const getMemberDays = useCallback(
@@ -517,6 +547,7 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
     pullFromCloud,
     saveMemberToCloud,
     importFromFile,
+    importViewOnlyFromFile,
     getStore: () => store,
   };
 }

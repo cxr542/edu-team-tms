@@ -160,6 +160,43 @@ export function mergeJournalSnapshotsByMember(
   });
 }
 
+/** 구성원 조회용 — ownMemberCode 슬라이스는 local 유지, 나머지만 remote 병합 */
+export function mergeJournalSnapshotsViewOnlyImport(localSnapshot, remoteSnapshot, ownMemberCode) {
+  if (!isValidMemberCode(ownMemberCode)) {
+    throw new Error('A/B/C 구성원 코드가 필요합니다.');
+  }
+  const local = normalizeJournalCloudSnapshot(localSnapshot);
+  const remote = normalizeJournalCloudSnapshot(remoteSnapshot);
+  const memberJournals = createEmptyMemberJournals();
+  const memberUpdatedAt = { ...local.meta.memberUpdatedAt };
+
+  JOURNAL_MEMBER_CODES.forEach((code) => {
+    if (code === ownMemberCode) {
+      memberJournals[code] = clone(local.memberJournals[code] || emptyMemberJournal());
+      return;
+    }
+    const localSlice = local.memberJournals[code] || emptyMemberJournal();
+    const remoteSlice = remote.memberJournals[code] || emptyMemberJournal();
+    const merged = mergeMemberJournalSlicesImport(localSlice, remoteSlice);
+    memberJournals[code] = merged;
+    if (!isMemberJournalEmpty(merged)) {
+      memberUpdatedAt[code] =
+        maxIso(memberTime(local, code), memberTime(remote, code)) || remote.publishedAt;
+    }
+  });
+
+  return normalizeJournalCloudSnapshot({
+    version: JOURNAL_CLOUD_SNAPSHOT_VERSION,
+    publishedAt: local.publishedAt,
+    meta: {
+      ...local.meta,
+      memberUpdatedAt,
+      viewOnlyImportedAt: remote.publishedAt,
+    },
+    memberJournals,
+  });
+}
+
 export function mergeMemberIntoJournalSnapshot(snapshot, memberCode, journal, { updatedAt = nowIso() } = {}) {
   if (!isValidMemberCode(memberCode)) {
     throw new Error('A/B/C 구성원 코드가 필요합니다.');

@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { mergeJournalSnapshotsByMember } from '../src/utils/journalCloudSnapshot.js';
+import { mergeJournalSnapshotsByMember, mergeJournalSnapshotsViewOnlyImport } from '../src/utils/journalCloudSnapshot.js';
 import {
   applyJournalSnapshotImport,
+  applyJournalSnapshotViewOnlyImport,
   isJournalSnapshotImportable,
   JOURNAL_STORAGE_KEY,
   parseJournalSnapshotForImport,
@@ -146,5 +147,78 @@ describe('journal snapshot import', () => {
     const ledgerModule = await import('../src/utils/publishSnapshot.js');
     expect(typeof ledgerModule.fetchPublicSnapshot).toBe('function');
     expect(typeof ledgerModule.mergeJournalSnapshotsByMember).toBe('undefined');
+  });
+
+  it('view-only import merges other members but preserves own slice', () => {
+    const local = {
+      memberJournals: {
+        A: { days: {} },
+        B: {
+          days: {
+            '2026-06-01': {
+              holiday: false,
+              mm: { work: 1, improve: 0, leave: 0 },
+              tasks: [{ id: 'b-own', cat: 'other', title: 'B 본인 작성', plan: 1, actual: 1, done: true }],
+            },
+          },
+        },
+        C: { days: {} },
+      },
+      meta: {
+        updatedAt: '2026-06-11T12:00:00.000Z',
+        memberUpdatedAt: { B: '2026-06-11T12:00:00.000Z' },
+      },
+    };
+
+    const teamBackup = {
+      version: 1,
+      publishedAt: '2026-06-10T08:00:00.000Z',
+      meta: {
+        updatedAt: '2026-06-10T08:00:00.000Z',
+        memberUpdatedAt: { A: '2026-06-10T08:00:00.000Z', B: '2026-06-10T08:00:00.000Z', C: '2026-06-10T08:00:00.000Z' },
+      },
+      memberJournals: {
+        A: {
+          days: {
+            '2026-06-03': {
+              holiday: false,
+              mm: { work: 1, improve: 0, leave: 0 },
+              tasks: [{ id: 'a-remote', cat: 'other', title: 'A 팀장 공유', plan: 1, actual: 1, done: true }],
+            },
+          },
+        },
+        B: {
+          days: {
+            '2026-06-08': {
+              holiday: false,
+              mm: { work: 1, improve: 0, leave: 0 },
+              tasks: [{ id: 'b-remote', cat: 'other', title: 'B 백업본', plan: 1, actual: 1, done: true }],
+            },
+          },
+        },
+        C: {
+          days: {
+            '2026-06-04': {
+              holiday: false,
+              mm: { work: 1, improve: 0, leave: 0 },
+              tasks: [{ id: 'c-remote', cat: 'other', title: 'C 팀장 공유', plan: 1, actual: 1, done: true }],
+            },
+          },
+        },
+      },
+    };
+
+    const merged = applyJournalSnapshotViewOnlyImport(local, teamBackup, 'B');
+
+    expect(merged.memberJournals.B.days['2026-06-01'].tasks[0].title).toBe('B 본인 작성');
+    expect(merged.memberJournals.B.days['2026-06-08']).toBeUndefined();
+    expect(merged.memberJournals.A.days['2026-06-03'].tasks[0].title).toBe('A 팀장 공유');
+    expect(merged.memberJournals.C.days['2026-06-04'].tasks[0].title).toBe('C 팀장 공유');
+  });
+
+  it('mergeJournalSnapshotsViewOnlyImport rejects invalid member code', () => {
+    expect(() =>
+      mergeJournalSnapshotsViewOnlyImport({ memberJournals: {} }, remoteSnapshot, 'X')
+    ).toThrow(/구성원 코드/);
   });
 });

@@ -41,6 +41,10 @@ export function JournalProvider({ children, readOnly = false, autoSyncCloud = fa
     return snapshot;
   };
 
+  const importJournalViewOnlyBackup = async (file, ownMemberCode) => {
+    return journal.importViewOnlyFromFile(file, ownMemberCode);
+  };
+
   const value = useMemo(
     () => ({
       ...journal,
@@ -49,6 +53,7 @@ export function JournalProvider({ children, readOnly = false, autoSyncCloud = fa
       improveProjects: improveProjectsApi.projects,
       improveProjectsApi,
       importJournalBackup,
+      importJournalViewOnlyBackup,
       downloadJournalBackup: () => journal.downloadJournalBackup(kpiApi.kpiOperational),
     }),
     [journal, kpiApi, improveProjectsApi, readOnly]
