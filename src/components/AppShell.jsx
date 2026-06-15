@@ -250,10 +250,11 @@ export default function AppShell({
             </nav>
           )}
 
-          {!viewerLedgerOnly && !isPublicViewerScope && (showGeneralNav || isViewer) && (
+          {!viewerLedgerOnly && !isPublicViewerScope && (showGeneralNav || showTeamCommonNav || isViewer) && (
             <nav className="sidebar-nav sidebar-nav--footer project-sidebar-nav-footer" aria-label="도구·참고">
               {showGeneralNav && navBtn('idea-bank', Lightbulb)}
-              {(showGeneralNav || isViewer) && navBtn('docs', BookOpen, isViewer ? { viewer: true } : undefined)}
+              {(canShowEditModule('docs') || (isViewer && showInViewer('docs'))) &&
+                navBtn('docs', BookOpen, isViewer ? { viewer: true } : undefined)}
             </nav>
           )}
 
@@ -346,7 +347,7 @@ export default function AppShell({
               ) : isViewer ? (
                 <>👀 교육팀 조회 · 팀 빌딩비 장부</>
               ) : teamAccess?.isMemberScope ? (
-                <>👤 팀원 · 일지·역량·팀 공통</>
+                <>👤 팀원 · 일지·역량·팀 공통·참고문서</>
               ) : (
                 <>✏️ 교육팀 총무 · 장부·일지 작성</>
               )}

@@ -7,8 +7,8 @@ export const URL_PARAM_MEMBER = 'member';
 /** 팀원이 쓰는 메뉴 */
 export const MEMBER_WORK_MODULES = new Set(['journal', 'competency']);
 
-/** 팀원·팀장 공통 (장부는 구성원 조회 전용) */
-export const TEAM_COMMON_MODULES = new Set(['ledger', 'lunch', 'idea-bank']);
+/** 팀원·팀장 공통 (장부·점심·이것도?·참고문서) */
+export const TEAM_COMMON_MODULES = new Set(['ledger', 'lunch', 'idea-bank', 'docs']);
 
 /** 실험·베타 메뉴 */
 export const EXPERIMENTAL_MODULES = new Set(['cloud-chatbot']);

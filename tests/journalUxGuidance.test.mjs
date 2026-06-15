@@ -24,7 +24,7 @@ describe('journal UX guidance', () => {
   it('clarifies local save vs team shared save/import buttons', () => {
     expect(journalSource).toContain('팀 공유본 가져오기');
     expect(journalSource).toContain('팀 공유 저장');
-    expect(journalSource).toContain('이 브라우저에 저장');
+    expect(journalSource).toContain('aria-label="저장"');
     expect(journalSource).toContain('저장은 이 브라우저에 먼저 반영됩니다.');
     expect(journalSource).toContain('자동 공유 저장은 사용하지 않습니다.');
   });

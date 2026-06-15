@@ -59,7 +59,7 @@ describe('competencyQuarters Phase 1', () => {
   it('readCompetencyQuarter — 기본 record', () => {
     const store = createEmptyKpiOperationalStore();
     const rec = readCompetencyQuarter(store, YQ, 'B');
-    expect(rec.roleId).toBe('default');
+    expect(rec.roleId).toBe('concurrent');
     expect(rec.self.dims.autonomy).toBe(DIM_UNMET);
     expect(rec.self.computed.proposed).toBeNull();
     expect(rec.selfLocked).toBe(false);

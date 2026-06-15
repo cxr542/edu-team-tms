@@ -118,7 +118,14 @@
 }
 
 .competency-dim-table {
-  max-width: 28rem;
+  max-width: 52rem;
+}
+
+.competency-dim-table td.competency-dim-observe {
+  font-size: 0.82rem;
+  color: var(--text-secondary, #475467);
+  line-height: 1.45;
+  min-width: 14rem;
 }
 
 .competency-score-summary {

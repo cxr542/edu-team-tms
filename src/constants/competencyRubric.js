@@ -13,6 +13,7 @@ export const COMPETENCY_DIM_IDS = COMPETENCY_DIMS.map((d) => d.id);
 export const COMPETENCY_ROLES = [
   { id: 'default', label: '기본' },
   { id: 'instructor', label: '전문강사' },
+  { id: 'concurrent', label: '겸업(강의+운영)' },
   { id: 'planner', label: '기획/운영' },
 ];
 
@@ -21,14 +22,34 @@ export function mapMemberRoleToCompetency(memberRole) {
   if (!memberRole) return 'default';
   if (memberRole.includes('강사')) return 'instructor';
   if (memberRole.includes('기획') || memberRole.includes('운영')) return 'planner';
-  if (memberRole.includes('겸업')) return 'default';
+  if (memberRole.includes('겸업')) return 'concurrent';
   return 'default';
+}
+
+/**
+ * 저장된 roleId가 default이면 구성원 직무에 맞는 직군으로 표시.
+ * memberView이면 kpiMembers.role을 우선(구성원 자체평가는 직무 고정).
+ */
+export function resolveEffectiveCompetencyRoleId(recordRoleId, memberRole, options = {}) {
+  const mapped = memberRole ? mapMemberRoleToCompetency(memberRole) : 'default';
+  if (options.memberView && memberRole) return mapped;
+  if (!recordRoleId || recordRoleId === 'default') return mapped;
+  return recordRoleId;
+}
+
+/** UI 표시·누적 순서(직군별) */
+export function orderedDimsForDisplay(roleId) {
+  const order = accumulationOrderForRole(roleId);
+  return order
+    .map((id) => COMPETENCY_DIMS.find((d) => d.id === id))
+    .filter(Boolean);
 }
 
 /** 직군별 소수 누적 우선순위 (설계노트 §5) */
 export const ACCUMULATION_ORDER_BY_ROLE = {
   default: ['autonomy', 'scope', 'collaboration', 'quality', 'expertise'],
   instructor: ['expertise', 'quality', 'collaboration', 'scope', 'autonomy'],
+  concurrent: ['collaboration', 'scope', 'quality', 'expertise', 'autonomy'],
   planner: ['collaboration', 'autonomy', 'scope', 'quality', 'expertise'],
 };
 

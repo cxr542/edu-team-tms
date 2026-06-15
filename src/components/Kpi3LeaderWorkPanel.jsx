@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import CompetencyRubricPanel from './CompetencyRubricPanel';
 import Kpi3ElementsPanel from './Kpi3ElementsPanel';
 import { KPI3_MEMO_TYPES } from '../constants/kpiRules';
+import { findKpiMember } from '../constants/kpiMembers';
 import { isEditorMode } from '../utils/appMode';
 
 const LEADER_SUBTABS = [
@@ -29,6 +30,7 @@ export default function Kpi3LeaderWorkPanel({
   const [memoText, setMemoText] = useState('');
   const canEdit = isEditorMode();
   const readOnly = journal.kpiOperationalReadOnly;
+  const memberRole = findKpiMember(memberCode)?.role;
 
   return (
     <div className="kpi3-leader-work">
@@ -55,6 +57,7 @@ export default function Kpi3LeaderWorkPanel({
           <CompetencyRubricPanel
             side="manager"
             record={competencyRec}
+            memberRole={memberRole}
             readOnly={readOnly || !canEdit}
             showPullButton
             onUpdate={(patch) => journal.updateCompetencyManager(year, month, memberCode, patch)}

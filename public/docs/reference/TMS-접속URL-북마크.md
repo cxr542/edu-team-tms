@@ -67,6 +67,7 @@
 | 팀 빌딩비 장부 (조회) | https://okestro-edu-team-tms.vercel.app/?mode=view&member=B&module=ledger&year=2026&month=6 |
 | 점심 뭐 먹지 | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=lunch |
 | 이것도? | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=idea-bank |
+| 참고문서 | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=docs |
 
 `module` 없이 `?mode=edit&member=B` 만 열면 **일지**로 들어갑니다.
 
@@ -85,6 +86,7 @@
 | 팀 빌딩비 장부 (조회) | https://okestro-edu-team-tms.vercel.app/?mode=view&member=C&module=ledger&year=2026&month=6 |
 | 점심 뭐 먹지 | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=lunch |
 | 이것도? | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=idea-bank |
+| 참고문서 | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=docs |
 
 **일지:** B와 동일 — **A/B/C 탭 조회**, **C 탭만** 편집.
 
@@ -99,7 +101,7 @@
 | 팀 구성원 업무 (일지·역량) | ✅ | ✅ (본인 작성 · 일지 A/B/C **조회**) |
 | **실험 버전** (클라우드 챗봇) | ✅ | ❌ |
 | 팀장 업무 (KPI·승인·리포트) | ✅ | ❌ |
-| 참고문서 | ✅ | — (팀원 URL) |
+| 참고문서 | ✅ | ✅ |
 
 ---
 

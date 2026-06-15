@@ -328,7 +328,7 @@ describe('competencyScore', () => {
   });
 
   it('역할별 accumulation order — collaboration 포함 5개', () => {
-    for (const roleId of ['default', 'instructor', 'planner']) {
+    for (const roleId of ['default', 'instructor', 'planner', 'concurrent']) {
       const order = ACCUMULATION_ORDER_BY_ROLE[roleId];
       expect(order).toHaveLength(5);
       expect(order).toContain('collaboration');

@@ -26,7 +26,6 @@ import {
   hoursToMm,
   recalcDayMmFromHours,
 } from '../utils/journalMm';
-import { exportKpiAnalysisWorkbook } from '../utils/kpiExcelExport';
 import { countKpi2EffectTasks } from '../utils/computeTeamKpi';
 import { formatPublishedAt } from '../utils/appMode';
 import { getCloudHealthUserMessage } from '../utils/cloudHealth';
@@ -428,7 +427,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       return next;
     });
     closeAll();
-    showToast('이 브라우저에 저장됨');
+    showToast('저장됨');
   };
 
   const deleteTask = () => {
@@ -817,30 +816,6 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   팀 KPI 관리 →
                 </AppModuleLink>
               )}
-              <button
-                type="button"
-                className="btn btn-primary"
-                {...uiTooltip('KPI 분석 Excel 저장')}
-                onClick={() => {
-                  try {
-                    const result = exportKpiAnalysisWorkbook({
-                      year,
-                      monthIndex: month,
-                      days: journal.getMemberDays(memberCode),
-                      kpiOperational: journal.kpiOperational,
-                      improveProjects: journal.improveProjects,
-                      memberCode,
-                      kpiWeekMemos: journal.getMemberKpiWeekMemos(memberCode),
-                    });
-                    showToast(`KPI 엑셀 저장 — ${result.rows01c}주 · ${result.rows02}건`);
-                  } catch (err) {
-                    showToast(`보내기 실패: ${err.message}`);
-                  }
-                }}
-              >
-                <Download size={16} />
-                KPI 엑셀보내기
-              </button>
               <button
                 type="button"
                 className="btn btn-secondary"
@@ -1656,10 +1631,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   <button
                     type="submit"
                     className="btn btn-primary"
-                    title="선택 항목을 이 브라우저 localStorage에 저장합니다"
-                    aria-label="이 브라우저에 저장"
+                    title="선택 항목을 저장합니다"
+                    aria-label="저장"
                   >
-                    이 브라우저에 저장
+                    저장
                   </button>
                 </div>
               </div>

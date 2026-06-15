@@ -3,11 +3,21 @@ import {
   COMPETENCY_DIMS,
   COMPETENCY_DIM_IDS,
   COMPETENCY_ROLES,
+  accumulationOrderForRole,
   DIM_MET,
   DIM_UNMET,
   defaultCompetencyDims,
+  orderedDimsForDisplay,
+  resolveEffectiveCompetencyRoleId,
 } from '../constants/competencyRubric';
-import { RUBRIC_ROWS, ROLE_RUBRIC_HINTS, INTEGER_LEVELS, integerLevelOptionLabel } from '../constants/competencyRubricText';
+import {
+  ROLE_ACCUMULATION_HINTS,
+  ROLE_RUBRIC_HINTS,
+  INTEGER_LEVELS,
+  integerLevelOptionLabel,
+  rubricObserveText,
+  rubricRowsOrderedForRole,
+} from '../constants/competencyRubricText';
 import { COMPETENCY_USE_4060 } from '../constants/competencyConfig';
 import {
   applyDimChange,
@@ -44,6 +54,8 @@ export default function CompetencyRubricPanel({
   showPullButton = false,
   /** 구성원 자체평가 — 직군 고정·산식 숨김 */
   memberView = false,
+  /** kpiMembers.role — 직군별 루브릭·누적 순서 표시 */
+  memberRole = null,
 }) {
   const [showIntLevelRef, setShowIntLevelRef] = useState(false);
   const [showDimRef, setShowDimRef] = useState(false);
@@ -58,7 +70,9 @@ export default function CompetencyRubricPanel({
     !managerLocked &&
     !readOnly &&
     typeof onUnlockSelf === 'function';
-  const roleId = record?.roleId || 'default';
+  const roleId = resolveEffectiveCompetencyRoleId(record?.roleId, memberRole, { memberView });
+  const displayDims = useMemo(() => orderedDimsForDisplay(roleId), [roleId]);
+  const rubricRows = useMemo(() => rubricRowsOrderedForRole(roleId), [roleId]);
   const liveEvalSide = useMemo(
     () => (evalSide ? normalizeCompetencyEvalSide(evalSide, roleId) : null),
     [evalSide, roleId]
@@ -91,6 +105,13 @@ export default function CompetencyRubricPanel({
     onUpdate({ roleId: v });
   };
 
+  const accumulationHint =
+    ROLE_ACCUMULATION_HINTS[roleId] ||
+    accumulationOrderForRole(roleId)
+      .map((id) => COMPETENCY_DIMS.find((d) => d.id === id)?.label)
+      .filter(Boolean)
+      .join(' → ');
+
   return (
     <div className={`competency-rubric-panel${memberView ? ' competency-rubric-panel--member' : ''}`}>
       <div className="competency-rubric-toolbar">
@@ -103,7 +124,7 @@ export default function CompetencyRubricPanel({
             직군
             <select
               className="form-input"
-              value={roleId}
+              value={record?.roleId || roleId}
               disabled={readOnly || locked}
               onChange={(e) => handleRole(e.target.value)}
             >
@@ -189,16 +210,24 @@ export default function CompetencyRubricPanel({
         <thead>
           <tr>
             <th>차원 ({COMPETENCY_DIM_IDS.length}개)</th>
+            {hasValidIntLevel ? (
+              <th>정수레벨 {liveEvalSide.intLevel} 관찰 문구</th>
+            ) : null}
             <th>충족 여부</th>
           </tr>
         </thead>
         <tbody>
-          {COMPETENCY_DIMS.map((dim) => (
+          {displayDims.map((dim) => (
             <tr key={dim.id}>
               <td>
                 {dim.label}
                 <span className="visually-hidden"> ({dim.id})</span>
               </td>
+              {hasValidIntLevel ? (
+                <td className="competency-dim-observe">
+                  {rubricObserveText(roleId, dim.id, liveEvalSide.intLevel)}
+                </td>
+              ) : null}
               <td>
                 <DimSelect
                   value={liveEvalSide?.dims?.[dim.id]}
@@ -211,7 +240,13 @@ export default function CompetencyRubricPanel({
         </tbody>
       </table>
 
-      {memberView && !locked && (
+      {memberView && !locked && !hasValidIntLevel && (
+        <p className="team-kpi-hint competency-dim-hint">
+          정수 레벨을 선택하면 각 차원의 관찰 문구(KPI 정의서 기준)가 표시됩니다.
+        </p>
+      )}
+
+      {memberView && !locked && hasValidIntLevel && (
         <p className="team-kpi-hint competency-dim-hint">
           연속 충족 {consecutiveMet}/{COMPETENCY_DIM_IDS.length}단계
           {' — '}
@@ -229,7 +264,11 @@ export default function CompetencyRubricPanel({
         <div className="competency-rubric-ref competency-rubric-ref--dims">
           <h4 className="competency-rubric-ref-title">5차원 관찰 지표 ({roleLabel})</h4>
           <p className="team-kpi-hint competency-rubric-ref-hint">
-            각 차원별로 정수레벨 1~5에 해당하는 관찰 문구입니다.
+            각 차원별로 정수레벨 1~5에 해당하는 관찰 문구입니다. 문구는{' '}
+            <strong>교육팀 KPI 정의서</strong> 강사·기획/운영 역량 수준 기준표와 동일합니다.
+            {ROLE_RUBRIC_HINTS[roleId] ? <> 직군 초점: {ROLE_RUBRIC_HINTS[roleId]}.</> : null}
+            {' '}
+            소수 누적 순서: <strong>{accumulationHint}</strong>
             {evalSide?.intLevel ? (
               <>
                 {' '}
@@ -257,7 +296,7 @@ export default function CompetencyRubricPanel({
                 </tr>
               </thead>
               <tbody>
-                {RUBRIC_ROWS.map((row) => (
+                {rubricRows.map((row) => (
                   <tr key={row.id}>
                     <td>{row.label}</td>
                     {row.levels.map((text, i) => (

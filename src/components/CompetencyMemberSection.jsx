@@ -104,6 +104,7 @@ export default function CompetencyMemberSection({
             <CompetencyRubricPanel
               side="self"
               record={competencyRec}
+              memberRole={member.role}
               readOnly={readOnly}
               memberView
               onUpdate={(patch) => journal.updateCompetencyQuarterSelf(yq, memberCode, patch)}

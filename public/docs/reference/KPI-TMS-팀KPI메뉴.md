@@ -21,7 +21,7 @@
 | 최우성(겸업) | `?mode=edit&member=B&module=journal` |
 | 신혜윤(기획/운영) | `?mode=edit&member=C&module=journal` |
 
-**팀원** URL: **팀 구성원 업무**(일지·역량) + **팀 공통**(장부 조회·점심·이것도?). **실험 버전·팀장 업무**는 `access=leader` 필요.
+**팀원** URL: **팀 구성원 업무**(일지·역량) + **팀 공통**(장부 조회·점심·이것도?·**참고문서**). **실험 버전·팀장 업무**는 `access=leader` 필요.
 
 **전체 URL 표:** [TMS 접속 URL · 북마크](./TMS-접속URL-북마크.md)
 
