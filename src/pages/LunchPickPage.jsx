@@ -743,8 +743,8 @@ export default function LunchPickPage() {
                 {customCount === 0 && (
                   <>
                     {' '}
-                    브라우저 주소가 바뀌면(예: :3000 → :3001) 등록한 단골은 포트마다 따로
-                    저장됩니다.
+                    개발 서버는 <strong>localhost:3000</strong> 고정입니다. 다른 포트로
+                    접속하면 등록한 단골은 origin마다 따로 저장됩니다.
                   </>
                 )}
               </p>

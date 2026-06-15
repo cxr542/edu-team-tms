@@ -32,7 +32,7 @@ git clone https://github.com/cxr542/edu-team-tms.git
 cd edu-team-tms
 npm install
 npm run dev
-# → http://localhost:3000/
+# → http://localhost:3000/ (포트 3000 고정 — 점유 중이면 기존 dev 프로세스 종료 후 재실행)
 ```
 
 프로덕션 빌드 미리보기:

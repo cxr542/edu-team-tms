@@ -15,8 +15,8 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    /** 3000이 사용 중이면 3001 등 다음 포트로 자동 이동 (터미널 Local URL 확인) */
-    strictPort: false,
+    /** 3000 고정 — 점유 중이면 dev 서버가 종료되므로 기존 프로세스를 종료하세요 */
+    strictPort: true,
     open: true,
     proxy: {
       '/ppt-academizer-api': {

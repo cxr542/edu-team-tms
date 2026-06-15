@@ -42,7 +42,7 @@ npm run dev   # 반드시 재시작
 cd "apps/TMS(Team Management System)"
 npm run dev
 # 기본 http://localhost:3000/?mode=edit&module=lunch
-# 3000 포트가 이미 쓰이면 Vite가 3001, 3002… 로 자동 변경 — 터미널에 뜨는 Local URL을 사용
+# 포트 3000 고정(strictPort) — 이미 사용 중이면 dev 서버가 시작되지 않습니다. 기존 프로세스 종료 후 재실행
 ```
 
 운영 API와 동일하게 테스트하려면 `npx vercel dev` 사용.
