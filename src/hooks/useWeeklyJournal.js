@@ -209,8 +209,23 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
     [cacheStore]
   );
 
+  const applyViewOnlySnapshot = useCallback(
+    (snapshot, ownMemberCode) => {
+      let merged;
+      let changed = false;
+      setStore((prev) => {
+        merged = cacheStore(mergeViewOnlyIntoStore(prev, snapshot, ownMemberCode));
+        changed = JSON.stringify(prev.memberJournals) !== JSON.stringify(merged.memberJournals);
+        return merged;
+      });
+      setSyncStatus('synced');
+      return { merged, changed };
+    },
+    [cacheStore]
+  );
+
   const pullFromCloud = useCallback(
-    async () => {
+    async ({ ownMemberCode } = {}) => {
       setSyncStatus('checking');
       try {
         const result = await fetchJournalSnapshot();
@@ -219,7 +234,9 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
           return { ok: false, reason: 'no-remote' };
         }
         const snapshot = parseJournalSnapshotForImport(result.snapshot);
-        const { changed } = applyRemoteSnapshot(snapshot, { importRemote: true });
+        const { changed } = ownMemberCode
+          ? applyViewOnlySnapshot(snapshot, ownMemberCode)
+          : applyRemoteSnapshot(snapshot, { importRemote: true });
         return {
           ok: true,
           changed,
@@ -231,7 +248,7 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
         throw e;
       }
     },
-    [applyRemoteSnapshot]
+    [applyRemoteSnapshot, applyViewOnlySnapshot]
   );
 
   useEffect(() => {
@@ -260,21 +277,6 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
       return snapshot;
     },
     [applyRemoteSnapshot]
-  );
-
-  const applyViewOnlySnapshot = useCallback(
-    (snapshot, ownMemberCode) => {
-      let merged;
-      let changed = false;
-      setStore((prev) => {
-        merged = cacheStore(mergeViewOnlyIntoStore(prev, snapshot, ownMemberCode));
-        changed = JSON.stringify(prev.memberJournals) !== JSON.stringify(merged.memberJournals);
-        return merged;
-      });
-      setSyncStatus('synced');
-      return { merged, changed };
-    },
-    [cacheStore]
   );
 
   const importViewOnlyFromFile = useCallback(

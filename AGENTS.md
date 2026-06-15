@@ -51,17 +51,17 @@ Never do the following without explicit approval:
 - Use `git restore .`
 - Use `git checkout -- .`
 
-## Blob and JSON Fallback Rules
-Blob sharing is currently suspended/disabled for improve-projects sharing.
+## Blob and Team Share Rules
+Production Blob store: **edu-team-tms-blob** on Vercel project **edu-team-tms-ten** (`https://edu-team-tms-ten.vercel.app`).
+
 Required behavior:
-- Keep `IMPROVE_PROJECT_BLOB_SHARE_ENABLED = false`
-- Keep Blob share buttons hidden
-- Do not add new Blob write paths
-- Do not add new POST/PUT/DELETE calls for Blob sharing
-- JSON fallback is allowed
-- Team leader flow should use JSON download/import
-- Member flow should use "팀장에게 받은 JSON 가져오기"
-- If Blob UI appears again, treat it as a regression unless explicitly approved
+- `IMPROVE_PROJECT_BLOB_SHARE_ENABLED = true` — leader publishes KPI2 improve-project list; members pull via 「팀 공유본 가져오기」
+- `SHOW_BC_JOURNAL_TEAM_SHARE_UI = true` — B/C can 「팀 공유 저장」 and pull peer journals (own slice preserved on pull)
+- No automatic cloud sync — manual save/pull only
+- JSON improve-project import is fallback when `IMPROVE_PROJECT_BLOB_SHARE_ENABLED` is false
+- Pilot rollout: stabilize on leader URL first; migrate B/C after team announcement (see TMS bookmark doc)
+
+Do not mutate production Blob/localStorage during investigation unless explicitly fixing an issue.
 
 ## Data Safety Rules
 Treat the following as operating data or sensitive state:

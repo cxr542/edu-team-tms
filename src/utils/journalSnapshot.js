@@ -1,4 +1,4 @@
-import { isProductionEnvironment } from '../constants/appEnv';
+import { isVercelDeployedEnvironment } from '../constants/appEnv';
 import { canAttemptCloudWrite, recordCloudFailure, recordCloudSuccess } from './cloudHealth';
 import { apply2026PublicHolidaysToDays } from './journalHoliday2026';
 import { mergeJournalSnapshotsByMember, mergeJournalSnapshotsViewOnlyImport, normalizeJournalCloudSnapshot } from './journalCloudSnapshot';
@@ -131,7 +131,7 @@ export async function fetchJournalSnapshot() {
 }
 
 export async function saveJournalMemberSnapshot(memberCode, journal, updatedAt) {
-  if (!isProductionEnvironment()) {
+  if (!isVercelDeployedEnvironment()) {
     throw new Error('개발 환경에서는 공유 저장이 차단됩니다.');
   }
   if (!canAttemptCloudWrite()) {

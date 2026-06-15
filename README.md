@@ -9,7 +9,7 @@
 
 | 환경 | URL | 용도 |
 |------|-----|------|
-| **운영** | https://okestro-edu-team-tms.vercel.app/ | 실제 장부·일지 |
+| **운영** | https://edu-team-tms-ten.vercel.app/ | 실제 장부·일지 (2026-06~ 새 Vercel·Blob) |
 | **검증(Preview)** | PR별 Vercel preview URL | 팀 검증/리뷰 |
 | **개발** | http://localhost:3000/ (`npm run dev`) | 기능 개발·테스트 |
 | **팀 KPI 관리** | `?mode=edit&module=kpi` | 일지 연동 KPI 미리보기 |
@@ -21,8 +21,8 @@
 
 | 용도 | URL |
 |------|-----|
-| 조회 | https://okestro-edu-team-tms.vercel.app/ |
-| 편집 | https://okestro-edu-team-tms.vercel.app/?mode=edit |
+| 조회 | https://edu-team-tms-ten.vercel.app/ |
+| 편집 | https://edu-team-tms-ten.vercel.app/?mode=edit |
 | 일지 편집 | `?mode=edit&module=journal` |
 
 ## 로컬 실행 (repo 단독)
@@ -80,8 +80,10 @@ GitHub Actions (`edu-team-tms` repo):
 - `docs/obsidian-graph-poc.md` — Obsidian/docs graph PoC 안내.
 
 ## Current Sharing Model
-Improve-project sharing currently uses the JSON fallback flow. Blob-based improve-project sharing UI is hidden/disabled, and `IMPROVE_PROJECT_BLOB_SHARE_ENABLED` remains `false`.
-Team leaders use JSON download/import. Members use the "팀장에게 받은 JSON 가져오기" flow.
+- **Journal:** manual 「팀 공유 저장」 / 「팀 공유본 가져오기」 → `journal/live-latest.json`
+- **Improve projects (KPI2):** `IMPROVE_PROJECT_BLOB_SHARE_ENABLED = true` — leader publish, members pull → `improve-projects/live-latest.json`
+- **Ledger:** manual 「지금 조회에 반영」 → `ledger/live-latest.json`
+- No automatic sync. Pilot: leader on `edu-team-tms-ten` first, then B/C migration.
 
 ## Source of Truth Note
 Source reference documents live under `docs/reference-source/*`. Published/static copies under `public/docs/*` are not the source of truth. Build output under `.vercel/output/static/*` is also not source documentation.

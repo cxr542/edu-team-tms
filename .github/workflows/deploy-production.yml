@@ -41,12 +41,12 @@ jobs:
           npx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
 
       - name: Smoke check root page
-        run: curl -fsS "https://okestro-edu-team-tms.vercel.app/" > /dev/null
+        run: curl -fsS "https://edu-team-tms-ten.vercel.app/" > /dev/null
 
       - name: Smoke check ledger snapshot API
         id: ledger_smoke
         run: |
-          PRODUCTION_URL="https://okestro-edu-team-tms.vercel.app"
+          PRODUCTION_URL="https://edu-team-tms-ten.vercel.app"
           LEDGER_URL="${PRODUCTION_URL}/api/ledger-snapshot"
           tmp_body="$(mktemp)"
           status="$(curl -sS -o "$tmp_body" -w "%{http_code}" --max-time 30 "$LEDGER_URL" || echo "000")"
@@ -75,8 +75,7 @@ jobs:
           echo "## Production Deployment" >> "$GITHUB_STEP_SUMMARY"
           echo "- Branch: ${{ github.ref_name }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Commit: ${{ github.sha }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- URL: https://okestro-edu-team-tms.vercel.app/" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Alias: https://edu-team-tms.vercel.app/ (동일 콘텐츠)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- URL: https://edu-team-tms-ten.vercel.app/" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "**Ledger snapshot smoke:** ${{ steps.ledger_smoke.outputs.result || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
           if [ -n "${{ steps.ledger_smoke.outputs.detail }}" ]; then

@@ -1,4 +1,4 @@
-import { isProductionEnvironment } from '../constants/appEnv';
+import { isVercelDeployedEnvironment } from '../constants/appEnv';
 import {
   canAttemptCloudWrite,
   recordCloudFailure,
@@ -70,7 +70,7 @@ export async function fetchSharedImproveProjectsSnapshot() {
 }
 
 export async function publishSharedImproveProjectsSnapshot(projects, { publishedBy = 'leader' } = {}) {
-  if (!isProductionEnvironment()) {
+  if (!isVercelDeployedEnvironment()) {
     const err = new Error('개발 환경에서는 팀 공유 저장이 차단됩니다.');
     err.reason = 'dev-blocked';
     throw err;

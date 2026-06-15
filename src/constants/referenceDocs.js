@@ -49,6 +49,14 @@ export const REFERENCE_DOCS = /** @type {ReferenceDocMeta[]} */ ([
     pinned: true,
   },
   {
+    id: 'tms-url-migration',
+    category: 'ops',
+    title: '운영 URL 이전 가이드',
+    file: 'TMS-운영URL-이전-가이드.md',
+    summary: 'edu-team-tms-ten 전환 · 북마크 · 일지 JSON 이전',
+    pinned: true,
+  },
+  {
     id: 'tms-blob-fallback-ops',
     category: 'ops',
     title: 'Blob 중단 — 장부·일지 운영',

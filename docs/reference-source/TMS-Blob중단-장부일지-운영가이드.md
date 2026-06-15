@@ -1,7 +1,11 @@
 # Blob 중단 기간 — 장부·일지 운영 가이드
 
-> **상황:** Vercel Blob 저장소가 **suspend(일시 중단)** 된 동안, TMS의 **클라우드 공유 저장·조회 즉시 반영**이 동작하지 않습니다.  
-> **운영 사이트:** https://okestro-edu-team-tms.vercel.app  
+> **⚠️ 역사 문서 (옛 계정 `okestro-edu-team-tms` 전용)**  
+> **현재 운영:** https://edu-team-tms-ten.vercel.app — Blob 정상. 이 페이지는 **2026-06 이전 Blob suspend** 당시 절차 보관용입니다.  
+> 새 환경: [접속 URL · 북마크](./TMS-접속URL-북마크.md), [운영 URL 이전 가이드](./TMS-운영URL-이전-가이드.md)
+
+> **상황 (당시):** Vercel Blob 저장소가 **suspend(일시 중단)** 된 동안, TMS의 **클라우드 공유 저장·조회 즉시 반영**이 동작하지 않습니다.  
+> **당시 운영 사이트:** https://okestro-edu-team-tms.vercel.app  
 > **마지막 갱신:** 2026-06-15
 
 이 문서는 Blob이 **복구되기 전까지** 팀장(A)과 팀원(B·C)이 **장부**와 **일일 업무일지**를 어떻게 운영해야 하는지 정리합니다.

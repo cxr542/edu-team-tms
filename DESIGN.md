@@ -113,7 +113,7 @@ KPI2는 특히 다음 흐름을 가진다.
 improve-project 공유는 현재 JSON fallback 중심이다.
 
 - Blob sharing UI는 숨김/비활성 상태다.
-- `IMPROVE_PROJECT_BLOB_SHARE_ENABLED = false`를 유지한다.
+- `IMPROVE_PROJECT_BLOB_SHARE_ENABLED = true` — KPI2 향상 과제는 Blob 팀 공유(수동 저장/가져오기).
 - leader 흐름은 JSON 다운로드와 가져오기를 사용한다.
 - member 흐름은 팀장에게 받은 JSON 가져오기를 사용한다.
 - journal task와 improve-project 간 연결은 유지하되, Blob 공유가 활성화된 것처럼 설명하지 않는다.

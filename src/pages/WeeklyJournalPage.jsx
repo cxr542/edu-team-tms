@@ -8,8 +8,6 @@ import {
   Import,
   Copy,
   Download,
-  RefreshCw,
-  RotateCcw,
   Target,
   Upload,
 } from 'lucide-react';
@@ -65,16 +63,8 @@ import {
   formatImproveProjectOwnerLine,
   IMPROVE_PROJECT_JOURNAL_SCOPE_NOTICE,
 } from '../utils/improveProjectLink';
-import {
-  IMPROVE_PROJECTS_FILE_IMPORT_FAIL,
-  IMPROVE_PROJECTS_FILE_IMPORT_SUCCESS,
-} from '../utils/improveProjectsFileSnapshot';
 import { SHOW_BC_JOURNAL_TEAM_SHARE_UI } from '../constants/improveProjectSharingConfig';
-import {
-  IMPROVE_PROJECT_BLOB_SHARE_ENABLED,
-  IMPROVE_PROJECTS_JSON_IMPORT_LABEL_MEMBER,
-  IMPROVE_PROJECTS_JSON_MEMBER_HINT,
-} from '../constants/improveProjectsShare';
+import { IMPROVE_PROJECT_BLOB_SHARE_ENABLED } from '../constants/improveProjectsShare';
 import './WeeklyJournalPage.css';
 
 const MEMBER_IMPROVE_PROJECT_CODES = new Set(['B', 'C']);
@@ -176,7 +166,6 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const { year, month, setPeriod, changeMonth } = useJournalPeriod();
   const importInputRef = useRef(null);
   const viewOnlyImportInputRef = useRef(null);
-  const improveProjectsFileInputRef = useRef(null);
   const journalMainRef = useRef(null);
   const scrollToDayRef = useRef(null);
   const pendingScrollToastRef = useRef(null);
@@ -218,6 +207,16 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const showImproveProjectPanel = !journalReadOnly && (teamAccess.isMemberScope || isImproveProjectMember);
   const showJournalTeamShareControls =
     !journalReadOnly && (SHOW_BC_JOURNAL_TEAM_SHARE_UI || !isImproveProjectMember);
+  const showMemberTeamSharePull =
+    SHOW_BC_JOURNAL_TEAM_SHARE_UI && teamAccess.isMemberScope && Boolean(teamAccess.scopedMember);
+  const memberTeamSharePullOpts =
+    teamAccess.isMemberScope && teamAccess.scopedMember
+      ? { ownMemberCode: teamAccess.scopedMember }
+      : {};
+  const showJournalLeaderToolbar = teamAccess.isLeader && !teamAccess.isMemberScope;
+  const showJournalBackupToolbar = showJournalLeaderToolbar && !journalReadOnly;
+  const showViewOnlyJsonImport =
+    canImportViewOnlyJournalBackup && !showMemberTeamSharePull;
   const linkableImproveProjects = useMemo(
     () => filterImproveProjectsForMember(journal.improveProjects, memberCode),
     [journal.improveProjects, memberCode]
@@ -787,22 +786,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               )}
             </div>
             <div className="journal-actions">
-              {(teamAccess.isLeader || memberCode === teamAccess.scopedMember) && (
-                <AppModuleLink
-                  className="btn btn-secondary"
-                  module="competency"
-                  mode="edit"
-                  member={teamAccess.isLeader && !teamAccess.isMemberScope ? memberCode : teamAccess.scopedMember || memberCode}
-                  access={teamAccess.isLeader && !teamAccess.isMemberScope ? URL_ACCESS_LEADER : undefined}
-                  year={year}
-                  month={month + 1}
-                  style={{ textDecoration: 'none' }}
-                  {...uiTooltip('역량 평가 — 해당 구성원 평가 페이지')}
-                >
-                  역량 평가 →
-                </AppModuleLink>
-              )}
-              {teamAccess.isLeader && (
+              {showJournalLeaderToolbar && (
                 <AppModuleLink
                   className="btn btn-secondary"
                   module="kpi"
@@ -825,43 +809,48 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 <Target size={16} />
                 오늘로 이동
               </button>
+              {(showMemberTeamSharePull || (!journalReadOnly && showJournalTeamShareControls)) && (
+                <button
+                  type="button"
+                  className="btn btn-import-shared"
+                  aria-label="팀 공유본 가져오기"
+                  {...uiTooltip(
+                    showMemberTeamSharePull
+                      ? '팀 공유 일지를 수동으로 가져옵니다. 본인 일지는 유지하고 타 구성원 일지만 갱신합니다.'
+                      : '팀 공유 일지를 수동으로 가져옵니다. 자동 동기화는 사용하지 않습니다.',
+                    undefined,
+                    { wrap: true }
+                  )}
+                  onClick={async () => {
+                    try {
+                      const r = await journal.pullFromCloud(memberTeamSharePullOpts);
+                      showToast(journalPullToastMessage(r));
+                    } catch (e) {
+                      showToast(e.message);
+                    }
+                  }}
+                >
+                  <Import size={16} />
+                  팀 공유본 가져오기
+                </button>
+              )}
               {!journalReadOnly && (
                 <>
                   {showJournalTeamShareControls && (
                     <>
                       <button
                         type="button"
-                        className="btn btn-import-shared"
-                        aria-label="팀 공유본 가져오기"
-                        {...uiTooltip(
-                          '팀 공유 일지를 수동으로 가져옵니다. 자동 동기화는 사용하지 않습니다.',
-                          undefined,
-                          { wrap: true }
-                        )}
-                        onClick={async () => {
-                          try {
-                            const r = await journal.pullFromCloud();
-                            showToast(journalPullToastMessage(r));
-                          } catch (e) {
-                            showToast(e.message);
-                          }
-                        }}
-                      >
-                        <Import size={16} />
-                        팀 공유본 가져오기
-                      </button>
-                      <button
-                        type="button"
                         className="btn btn-primary"
                         aria-label="팀 공유 저장"
                         {...uiTooltip(
-                          '현재 구성원 일지를 팀 공유 저장소에 수동 업로드합니다. 자동 저장은 사용하지 않습니다.',
+                          '본인 일지를 팀 공유 저장소에 수동 업로드합니다. 자동 저장은 사용하지 않습니다.',
                           undefined,
                           { wrap: true }
                         )}
                         onClick={async () => {
-                          const r = await journal.saveMemberToCloud(memberCode);
-                          if (r.ok) showToast(`${memberCode} 일지를 팀 공유 저장소에 저장했습니다`);
+                          const saveCode = teamAccess.scopedMember || memberCode;
+                          const r = await journal.saveMemberToCloud(saveCode);
+                          if (r.ok) showToast(`${saveCode} 일지를 팀 공유 저장소에 저장했습니다`);
                           else showToast(r.error?.message || '팀 공유 저장 실패 — 이 브라우저에는 임시 저장됨');
                         }}
                       >
@@ -870,52 +859,41 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                       </button>
                     </>
                   )}
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    {...uiTooltip('수동 복구·배포를 위한 백업 JSON 파일 생성')}
-                    onClick={() => {
-                      journal.downloadJournalBackup();
-                      showToast('백업용 JSON 파일을 다운로드했습니다.');
-                    }}
-                  >
-                    <Download size={16} />
-                    백업용 JSON 다운로드
-                  </button>
-                  {canImportJournalBackup && (
-                    <button
-                      type="button"
-                      className="btn btn-ghost"
-                      onClick={() => importInputRef.current?.click()}
-                      {...uiTooltip('일지 백업 JSON 가져오기')}
-                    >
-                      <Upload size={16} />
-                      백업 가져오기
-                    </button>
+                  {showJournalBackupToolbar && (
+                    <>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        {...uiTooltip('수동 복구·배포를 위한 백업 JSON 파일 생성')}
+                        onClick={() => {
+                          journal.downloadJournalBackup();
+                          showToast('백업용 JSON 파일을 다운로드했습니다.');
+                        }}
+                      >
+                        <Download size={16} />
+                        백업용 JSON 다운로드
+                      </button>
+                      {canImportJournalBackup && (
+                        <button
+                          type="button"
+                          className="btn btn-ghost"
+                          onClick={() => importInputRef.current?.click()}
+                          {...uiTooltip('일지 백업 JSON 가져오기')}
+                        >
+                          <Upload size={16} />
+                          백업 가져오기
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="btn btn-ghost"
+                        onClick={openPresetLeave}
+                        {...uiTooltip('휴일 프리셋 적용')}
+                      >
+                        휴일 프리셋
+                      </button>
+                    </>
                   )}
-                  <button
-                    type="button"
-                    className="btn btn-ghost"
-                    onClick={openPresetLeave}
-                    {...uiTooltip('휴일 프리셋 적용')}
-                  >
-                    휴일 프리셋
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-ghost journal-reset-seed"
-                    {...uiTooltip('5·6월 Academizer 샘플 (A·B·C)', undefined, { wrap: true })}
-                    onClick={() => {
-                      if (!journal.resetToSeed(memberCode)) return;
-                      journal.seedAcademizerDemo?.();
-                      setYear(2026);
-                      setMonth(5);
-                      showToast('샘플 로드됨 — 6월 일지·KPI2·KPI3 4요소');
-                    }}
-                  >
-                    <RotateCcw size={16} />
-                    샘플로 되돌리기
-                  </button>
                   <input
                     ref={importInputRef}
                     type="file"
@@ -935,7 +913,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   />
                 </>
               )}
-              {canImportViewOnlyJournalBackup && (
+              {showViewOnlyJsonImport && (
                 <>
                   <button
                     type="button"
@@ -1026,11 +1004,6 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 있습니다.
               </p>
               <p className="journal-sync-hint">{IMPROVE_PROJECT_JOURNAL_SCOPE_NOTICE}</p>
-              <p className="journal-field-help">
-                {IMPROVE_PROJECT_BLOB_SHARE_ENABLED
-                  ? '팀 공유가 필요하면 팀 공유본을 수동으로 가져오세요.'
-                  : IMPROVE_PROJECTS_JSON_MEMBER_HINT}
-              </p>
               {IMPROVE_PROJECT_BLOB_SHARE_ENABLED && cloudHealthMessage && (
                 <p className="journal-sync-hint journal-sync-hint--warn">{cloudHealthMessage}</p>
               )}
@@ -1040,8 +1013,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                     type="button"
                     className="btn btn-import-shared"
                     disabled={journal.improveProjectsApi.sharedBusy}
-                    aria-label="팀 공유본 가져오기"
-                    title="수동 — 팀장이 공유 저장한 향상 과제 운영 목록을 가져옵니다"
+                    aria-label="향상 과제 팀 공유본 가져오기"
                     {...uiTooltip(
                       '팀장이 공유 저장한 향상 과제 운영 목록을 수동으로 가져옵니다. 자동 동기화는 사용하지 않습니다.',
                       undefined,
@@ -1058,36 +1030,6 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                     팀 공유본 가져오기
                   </button>
                 )}
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  disabled={journal.improveProjectsApi.sharedBusy}
-                  aria-label={IMPROVE_PROJECTS_JSON_IMPORT_LABEL_MEMBER}
-                  title="팀장이 전달한 JSON 파일을 이 브라우저 운영 목록에 병합합니다"
-                  {...uiTooltip(
-                    '팀장에게 받은 JSON 파일을 수동으로 가져옵니다. 자동 동기화는 사용하지 않습니다.',
-                    undefined,
-                    { wrap: true }
-                  )}
-                  onClick={() => improveProjectsFileInputRef.current?.click()}
-                >
-                  <Import size={16} />
-                  {IMPROVE_PROJECTS_JSON_IMPORT_LABEL_MEMBER}
-                </button>
-                <input
-                  ref={improveProjectsFileInputRef}
-                  type="file"
-                  accept="application/json,.json"
-                  hidden
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    const r = await journal.improveProjectsApi.importProjectsFromFile(file);
-                    if (r.ok) showToast(IMPROVE_PROJECTS_FILE_IMPORT_SUCCESS);
-                    else showToast(r.message || IMPROVE_PROJECTS_FILE_IMPORT_FAIL);
-                    e.target.value = '';
-                  }}
-                />
               </div>
               {linkableImproveProjects.length === 0 ? (
                 <p className="journal-improve-projects-panel__empty">
@@ -1146,7 +1088,15 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               <strong>{formatKpiMemberLabel(selectedMember)}</strong> 일지는{' '}
               <strong>조회만</strong> 가능합니다. 작성·수정은 본인(
               {teamAccess.scopedMember}) 탭에서 하세요. 타인 일지가 비어 있으면 상단{' '}
-              <strong>「조회용 JSON 가져오기」</strong>로 팀장이 보낸 백업 파일을 불러오세요.
+              {SHOW_BC_JOURNAL_TEAM_SHARE_UI && teamAccess.isMemberScope ? (
+                <>
+                  <strong>「팀 공유본 가져오기」</strong>로 팀 공유 저장소에서 불러오세요.
+                </>
+              ) : (
+                <>
+                  <strong>「조회용 JSON 가져오기」</strong>로 팀장이 보낸 백업 파일을 불러오세요.
+                </>
+              )}
             </p>
           )}
 
@@ -1163,10 +1113,11 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           {!journalReadOnly && (
             <p className="journal-sync-hint">
               항목 저장·수정은 <strong>이 브라우저(localStorage)</strong>에 먼저 반영됩니다.
-              {IMPROVE_PROJECT_BLOB_SHARE_ENABLED ? (
+              {showJournalTeamShareControls ? (
                 <>
                   팀 공유가 필요할 때만 「팀 공유 저장」·「팀 공유본 가져오기」를 사용하세요.{' '}
-                  자동 공유 저장은 사용하지 않습니다.
+                  가져오기는 본인 일지는 유지하고 타 구성원 일지만 갱신합니다. 자동 공유 저장은 사용하지
+                  않습니다.
                 </>
               ) : (
                 <>

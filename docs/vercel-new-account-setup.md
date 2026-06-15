@@ -11,7 +11,7 @@
 - [ ] 환경 변수 복사 (`KAKAO_REST_API_KEY`, `LEDGER_PUBLISH_SECRET` 등)
 - [ ] (권장) `VITE_TMS_ORIGIN` = 새 운영 URL
 - [ ] 「지금 조회에 반영」 POST 테스트
-- [ ] 팀 북마크 URL 갱신 ([TMS 접속 URL](./reference-source/TMS-접속URL-북마크.md))
+- [ ] 팀 **파일럿**: 팀장만 새 URL → 안정화 후 B/C 안내 ([북마크](./reference-source/TMS-접속URL-북마크.md) §0)
 
 ---
 
@@ -64,7 +64,7 @@ npx vercel blob put ledger/live-latest.json ./ledger-live.json --pathname ledger
 | `KAKAO_REST_API_KEY` | ✅ | 점심 메뉴 API |
 | `LEDGER_PUBLISH_SECRET` | 권장 | 장부 POST 추가 인증 |
 | `VITE_LEDGER_PUBLISH_KEY` | 위와 동일 값 | 클라이언트 키 (설정 시) |
-| `VITE_TMS_ORIGIN` | 권장 | 새 운영 URL (`https://새도메인.vercel.app`) |
+| `VITE_TMS_ORIGIN` | 권장 | `https://edu-team-tms-ten.vercel.app` |
 | `TMS_PUBLISH_ALLOWED_ORIGINS` | 선택 | 커스텀 도메인 추가 시 |
 
 변경 후 **Redeploy** 필수.

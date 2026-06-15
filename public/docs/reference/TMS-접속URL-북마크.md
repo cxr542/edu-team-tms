@@ -1,10 +1,20 @@
 # TMS 접속 URL · 북마크 (운영)
 
-> **운영 사이트:** https://okestro-edu-team-tms.vercel.app  
-> (동일 콘텐츠: https://edu-team-tms.vercel.app)  
+> **운영 사이트 (2026-06-15~):** https://edu-team-tms-ten.vercel.app  
 > 로그인 없음 — **아래 URL을 그대로 북마크**하세요.  
-> 마지막 갱신: 2026-06-10  
-> **Vercel Blob 중단 중:** 장부·일지 할 일은 [Blob 중단 — 장부·일지 운영](./TMS-Blob중단-장부일지-운영가이드.md) 참고.
+> 마지막 갱신: 2026-06-15  
+> **이전 URL** (`okestro-edu-team-tms.vercel.app`) 은 **더 이상 쓰지 마세요.** 데이터는 자동 이전되지 않습니다 → [운영 URL 이전 가이드](./TMS-운영URL-이전-가이드.md)
+
+---
+
+## 0. 파일럿 단계 (안정화 전)
+
+| 단계 | 누가 | 할 일 |
+|------|------|--------|
+| **1 — 지금** | **팀장(A)만** | 아래 §2 팀장 URL로 장부·일지·KPI 운영. Blob **팀 공유 저장**으로 시드 |
+| **2 — 안정화 후** | **B/C** | 팀장 안내 후 §3·§4 URL로 전환 · 본인 일지 **팀 공유 저장** |
+
+구성원은 **팀장이 「이전 시작」을 알릴 때까지** 옛 URL·기존 북마크를 써도 됩니다. 팀장이 먼저 새 URL에서 일지·향상 과제·장부를 맞춰 두면, 구성원은 **팀 공유본 가져오기**만으로 동기화할 수 있습니다.
 
 ---
 
@@ -29,16 +39,16 @@
 
 | 용도 | URL |
 |------|-----|
-| **팀장 홈 (장부)** | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader |
-| 본인 일지 (A) | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=journal |
-| 본인 역량 평가 (A) | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=competency&member=A |
-| 팀 KPI 관리 | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=kpi |
-| KPI 승인 | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=kpi-approve |
-| KPI 리포트 | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=kpi-report |
-| 점심 뭐 먹지 | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=lunch |
-| PPT Academizer | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=academizer |
-| 클라우드 챗봇 (실험) | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=cloud-chatbot |
-| 참고문서 | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=docs |
+| **팀장 홈 (장부)** | https://edu-team-tms-ten.vercel.app/?mode=edit&access=leader |
+| 본인 일지 (A) | https://edu-team-tms-ten.vercel.app/?mode=edit&access=leader&module=journal |
+| 본인 역량 평가 (A) | https://edu-team-tms-ten.vercel.app/?mode=edit&access=leader&module=competency&member=A |
+| 팀 KPI 관리 | https://edu-team-tms-ten.vercel.app/?mode=edit&access=leader&module=kpi |
+| KPI 승인 | https://edu-team-tms-ten.vercel.app/?mode=edit&access=leader&module=kpi-approve |
+| KPI 리포트 | https://edu-team-tms-ten.vercel.app/?mode=edit&access=leader&module=kpi-report |
+| 점심 뭐 먹지 | https://edu-team-tms-ten.vercel.app/?mode=edit&access=leader&module=lunch |
+| PPT Academizer | https://edu-team-tms-ten.vercel.app/?mode=edit&access=leader&module=academizer |
+| 클라우드 챗봇 (실험) | https://edu-team-tms-ten.vercel.app/?mode=edit&access=leader&module=cloud-chatbot |
+| 참고문서 | https://edu-team-tms-ten.vercel.app/?mode=edit&access=leader&module=docs |
 
 **역량:** 팀장은 **본인(A) 자체평가 폼만 수정**합니다. B·C **팀장 평가·분기 확정**은 **팀 KPI 관리 → KPI3** 탭에서 진행합니다.
 
@@ -47,10 +57,12 @@
 
 | 용도 | URL |
 |------|-----|
-| B 일지 확인·대리 입력 (팀장) | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&member=B&module=journal |
-| C 일지 확인·대리 입력 (팀장) | https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&member=C&module=journal |
+| B 일지 확인·대리 입력 (팀장) | https://edu-team-tms-ten.vercel.app/?mode=edit&access=leader&member=B&module=journal |
+| C 일지 확인·대리 입력 (팀장) | https://edu-team-tms-ten.vercel.app/?mode=edit&access=leader&member=C&module=journal |
 
-**이 북마크 표**는 `?module=docs&doc=tms-bookmarks` 로 엽니다. `module=journal&doc=…` 는 일지 화면이라 표가 보이지 않습니다.
+**일지 팀 공유 (새 운영):** 작성 후 **「팀 공유 저장」** (구성원 탭마다). 팀원·다른 PC는 **「팀 공유본 가져오기」**. 자동 동기화는 없습니다.
+
+**이 북마크 표**는 `?module=docs&doc=tms-bookmarks` 로 엽니다.
 
 ---
 
@@ -58,22 +70,22 @@
 
 팀원 URL: `?mode=edit&member=B` — **본인 일지·역량 작성**. 장부·점심·이것도?는 **조회·참여** 가능.
 
-**일지:** 화면 상단 **A · B · C** 탭으로 팀원 일지를 **조회**할 수 있습니다. **본인(B) 탭만** 편집·승인 요청 가능하고, 다른 탭에는 **「조회」** 배지가 붙습니다. 타인 일지를 보려면 팀장이 보낸 JSON을 **「조회용 JSON 가져오기」**로 불러오세요 (본인 일지는 변경되지 않음).
+**일지:** 화면 상단 **A · B · C** 탭으로 팀원 일지를 **조회**할 수 있습니다. **본인(B) 탭만** 편집·승인 요청 가능하고, 다른 탭에는 **「조회」** 배지가 붙습니다.
 
 | 용도 | URL |
 |------|-----|
-| **★ 일지 (북마크 권장)** | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=journal |
-| 역량 평가 | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=competency |
-| 팀 빌딩비 장부 (조회) | https://okestro-edu-team-tms.vercel.app/?mode=view&member=B&module=ledger&year=2026&month=6 |
-| 점심 뭐 먹지 | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=lunch |
-| 이것도? | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=idea-bank |
-| 참고문서 | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=B&module=docs |
+| **★ 일지 (북마크 권장)** | https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=journal |
+| 역량 평가 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=competency |
+| 팀 빌딩비 장부 (조회) | https://edu-team-tms-ten.vercel.app/?mode=view&member=B&module=ledger&year=2026&month=6 |
+| 점심 뭐 먹지 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=lunch |
+| 이것도? | https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=idea-bank |
+| 참고문서 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=docs |
 
 `module` 없이 `?mode=edit&member=B` 만 열면 **일지**로 들어갑니다.
 
 **승인 요청:** 일지 상단 **「팀장 승인 요청」** → KPI1 월 확정·KPI2 효과 건을 팀장 승인 큐에 올립니다.
 
-**타인 일지 조회:** **「조회용 JSON 가져오기」** — 팀장이 보낸 백업 JSON에서 A/C 일지만 반영 (본인 B 일지는 유지).
+**팀 공유:** 본인(B) 탭에서 일지 작성 후 **「팀 공유 저장」**. 타인(A/C) 일지는 **A · C 탭**에서 **조회** — 비어 있으면 **「팀 공유본 가져오기」**(본인 일지는 유지, 타인만 갱신). JSON 백업·**「조회용 JSON 가져오기」**는 예비 수단입니다.
 
 ---
 
@@ -81,14 +93,14 @@
 
 | 용도 | URL |
 |------|-----|
-| **★ 일지 (북마크 권장)** | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=journal |
-| 역량 평가 | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=competency |
-| 팀 빌딩비 장부 (조회) | https://okestro-edu-team-tms.vercel.app/?mode=view&member=C&module=ledger&year=2026&month=6 |
-| 점심 뭐 먹지 | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=lunch |
-| 이것도? | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=idea-bank |
-| 참고문서 | https://okestro-edu-team-tms.vercel.app/?mode=edit&member=C&module=docs |
+| **★ 일지 (북마크 권장)** | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=journal |
+| 역량 평가 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=competency |
+| 팀 빌딩비 장부 (조회) | https://edu-team-tms-ten.vercel.app/?mode=view&member=C&module=ledger&year=2026&month=6 |
+| 점심 뭐 먹지 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=lunch |
+| 이것도? | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=idea-bank |
+| 참고문서 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=docs |
 
-**일지:** B와 동일 — **A/B/C 탭 조회**, **C 탭만** 편집.
+**일지:** B와 동일 — **A/B/C 탭 조회**, **C 탭만** 편집. 작성 후 **「팀 공유 저장」**, 타인 조회는 **「팀 공유본 가져오기」**.
 
 ---
 
@@ -114,12 +126,30 @@
 
 ## 7. 데이터 · 주의
 
-- 일지·KPI는 **브라우저 localStorage** + (선택) 클라우드 스냅샷. 기기·브라우저마다 다를 수 있습니다.
-- **구성원 일지 조회:** B/C도 A/B/C 탭 전환 가능. 타인 내용은 **「조회용 JSON 가져오기」**로 팀장 백업을 불러옵니다. **본인 탭** 데이터는 import 시 덮어쓰지 않습니다.
-- 장부 **조회**는 팀장이 「조회에 반영」한 공개 스냅샷 기준입니다.
-- 개발 URL(`localhost`)과 운영 URL 데이터는 **분리**됩니다.
+- **URL마다 데이터가 분리**됩니다. `okestro-edu-team-tms` 에 쓴 일지는 `edu-team-tms-ten` 에 **자동으로 안 넘어옵니다.**
+- 일지·KPI는 **브라우저 localStorage** + (운영) **클라우드 팀 공유**. 기기·브라우저마다 다를 수 있습니다.
+- **구성원 일지 조회:** B/C도 A/B/C 탭 전환 가능. 타인 내용은 **「팀 공유본 가져오기」**로 갱신(본인 슬라이스 유지). 팀장·팀원 모두 **「팀 공유 저장」**으로 각자 일지를 올립니다.
+- 장부 **조회**는 팀장이 **「지금 조회에 반영」** 한 공개 스냅샷 기준입니다.
+- `localhost` 개발 URL과 운영 URL 데이터는 **분리**됩니다.
+
+---
+
+## 8. 이전 URL에서 일지 가져오기
+
+요약만 적습니다. 상세는 [운영 URL 이전 가이드](./TMS-운영URL-이전-가이드.md).
+
+| 누가 | 어디서 | 어떻게 |
+|------|--------|--------|
+| **팀장** | **옛 URL** 일지 화면 | **백업용 JSON 다운로드** → **새 URL**에서 **백업 가져오기** → A/B/C 각각 **팀 공유 저장** |
+| **팀원 B/C** | **본인이 쓰던 브라우저·옛 URL** | JSON 다운로드 → **새 URL** **백업 가져오기** → 이후 **본인 탭**에서 **팀 공유 저장** |
+| 팀원 (일상 공유) | **새 URL** | 본인 **팀 공유 저장** · 타인 조회 **팀 공유본 가져오기** |
 
 ## 관련 문서
 
+- [운영 URL 이전 가이드](./TMS-운영URL-이전-가이드.md)
 - [팀 KPI 메뉴·URL](./KPI-TMS-팀KPI메뉴.md)
 - [일지 ↔ TMS 연계 가이드](./KPI-일지-TMS-연계-가이드.md)
+
+## TMS에서 열기
+
+`?mode=edit&access=leader&module=docs&doc=tms-bookmarks`

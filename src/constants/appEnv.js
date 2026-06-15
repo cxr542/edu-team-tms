@@ -71,6 +71,12 @@ export function isProductionEnvironment() {
   return getAppEnvironment() === 'production';
 }
 
+/** Vercel preview/production 빌드 — API·Blob 수동 공유 저장 허용 (localhost 제외) */
+export function isVercelDeployedEnvironment() {
+  const env = import.meta.env.VITE_VERCEL_ENV;
+  return env === 'production' || env === 'preview';
+}
+
 export function getEnvironmentLabel() {
   return isProductionEnvironment() ? '운영' : '개발';
 }

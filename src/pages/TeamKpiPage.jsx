@@ -40,7 +40,6 @@ import {
   IMPROVE_PROJECT_LOCAL_SCOPE_NOTICE,
 } from '../utils/improveProjectLink';
 import {
-  IMPROVE_PROJECTS_BLOB_FALLBACK_HINT,
   IMPROVE_PROJECTS_FILE_IMPORT_FAIL,
   IMPROVE_PROJECTS_FILE_IMPORT_SUCCESS,
 } from '../utils/improveProjectsFileSnapshot';
@@ -701,11 +700,8 @@ export default function TeamKpiPage() {
                 <p className="team-kpi-hint team-kpi-improve-share__warn">{cloudHealthMessage}</p>
               )}
               {IMPROVE_PROJECT_BLOB_SHARE_ENABLED && (
-                <>
-                  <p className="team-kpi-hint team-kpi-improve-share__warn">{IMPROVE_PROJECTS_BLOB_FALLBACK_HINT}</p>
-                  <div className="team-kpi-improve-share__group">
-                    <p className="team-kpi-hint team-kpi-improve-share__group-label">Blob 팀 공유</p>
-                    <div className="team-kpi-improve-share__actions">
+                <div className="team-kpi-improve-share__group">
+                  <div className="team-kpi-improve-share__actions">
                       <button
                         type="button"
                         className="btn btn-primary"
@@ -749,8 +745,8 @@ export default function TeamKpiPage() {
                       </button>
                     </div>
                   </div>
-                </>
               )}
+              {!IMPROVE_PROJECT_BLOB_SHARE_ENABLED && (
               <div className="team-kpi-improve-file">
                 <h4 className="team-kpi-improve-file__title">{IMPROVE_PROJECTS_JSON_SHARE_SECTION_TITLE}</h4>
                 <p className="team-kpi-hint team-kpi-improve-file__hint">{IMPROVE_PROJECTS_JSON_SHARE_LEAD}</p>
@@ -809,6 +805,7 @@ export default function TeamKpiPage() {
                   />
                 </div>
               </div>
+              )}
               {(improveProjectsApi.sharedMeta?.importedAt ||
                 (IMPROVE_PROJECT_BLOB_SHARE_ENABLED && improveProjectsApi.sharedMeta?.publishedAt)) && (
                 <p className="team-kpi-hint team-kpi-improve-share__meta">

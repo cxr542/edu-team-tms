@@ -1084,14 +1084,14 @@ export default function App() {
               <p style={{ fontSize: '0.85rem' }}>
                 {livePublishBlockReason === 'quota-exceeded' ? (
                   <>
-                    Vercel Blob 저장 용량(1GB)이 가득 차 조회 URL에 저장되지 않습니다. 대시보드 →{' '}
-                    <strong>okestro-edu-team-tms</strong> → Storage → Blob에서 오래된{' '}
+                    Vercel Blob 저장 용량(1GB)이 가득 차 조회 URL에 저장되지 않습니다. Vercel 대시보드 → 프로젝트{' '}
+                    <strong>edu-team-tms-ten</strong> → Storage → Blob에서 오래된{' '}
                     <code>ledger/live-</code> 파일을 삭제한 뒤 「지금 조회에 반영」을 다시 누르세요.
                     (작성 내용은 이 브라우저에만 있습니다.)
                   </>
                 ) : (
                   <>
-                    Vercel 대시보드 → 프로젝트 <strong>okestro-edu-team-tms</strong> → Storage →{' '}
+                    Vercel 대시보드 → 프로젝트 <strong>edu-team-tms-ten</strong> → Storage →{' '}
                     <strong>Blob 연결</strong> 후 재배포하세요. 연결 전에는 「지금 조회에 반영」으로 JSON
                     백업·수동 배포가 필요합니다.
                   </>

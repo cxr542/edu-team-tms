@@ -1,4 +1,4 @@
-export const IMPROVE_PROJECT_BLOB_SHARE_ENABLED = false;
+export const IMPROVE_PROJECT_BLOB_SHARE_ENABLED = true;
 
 export const IMPROVE_PROJECTS_JSON_SHARE_SECTION_TITLE = 'JSON 파일 공유';
 export const IMPROVE_PROJECTS_JSON_SHARE_LEAD =
@@ -12,4 +12,4 @@ export const IMPROVE_PROJECTS_JSON_IMPORT_LABEL_MEMBER = '팀장에게 받은 JS
 export const IMPROVE_PROJECTS_JSON_MEMBER_HINT =
   '팀장에게 받은 JSON 파일을 이 브라우저로 가져옵니다. 자동 동기화는 사용하지 않습니다.';
 export const IMPROVE_PROJECTS_FILE_ONLY_NOTICE =
-  'Blob 공유는 일시 중단되어 있습니다. 현재는 JSON 파일 다운로드/가져오기로만 운영 목록을 전달합니다.';
+  '팀 공유가 꺼져 있습니다. JSON 파일 다운로드/가져오기로만 운영 목록을 전달합니다.';

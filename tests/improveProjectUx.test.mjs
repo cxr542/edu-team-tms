@@ -10,6 +10,10 @@ describe('improve project management UX', () => {
     path.join(process.cwd(), 'src/constants/improveProjectSharingConfig.js'),
     'utf8'
   );
+  const improveProjectsShareSource = readFileSync(
+    path.join(process.cwd(), 'src/constants/improveProjectsShare.js'),
+    'utf8'
+  );
   const candidatesSource = readFileSync(
     path.join(process.cwd(), 'src/utils/improveProjectCandidates.js'),
     'utf8'
@@ -38,19 +42,19 @@ describe('improve project management UX', () => {
     expect(kpiPage).toContain('buildManualImproveProjectRegistration');
   });
 
-  it('keeps manual shared improve project controls behind a disabled Blob UI flag', () => {
+  it('enables Blob team share for improve projects on KPI2 and journal panels', () => {
     expect(kpiPage).toContain('team-kpi-improve-share');
-    expect(sharingConfigSource).toContain('SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI = false');
-    expect(kpiPage).toContain('IMPROVE_PROJECT_BLOB_SHARE_ENABLED');
-    expect(kpiPage).toContain('IMPROVE_PROJECTS_FILE_ONLY_NOTICE');
+    expect(sharingConfigSource).toContain('SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI = true');
+    expect(improveProjectsShareSource).toContain('IMPROVE_PROJECT_BLOB_SHARE_ENABLED = true');
     expect(kpiPage).toContain('팀 공유 저장');
     expect(kpiPage).toContain('팀 공유본 가져오기');
     expect(kpiPage).toContain('publishSharedProjects');
     expect(kpiPage).toContain('loadSharedProjects');
-    expect(kpiPage).toContain('자동 동기화는 사용하지 않습니다');
+    expect(kpiPage).toContain('!IMPROVE_PROJECT_BLOB_SHARE_ENABLED &&');
+    expect(kpiPage).toContain('team-kpi-improve-file');
   });
 
-  it('shows JSON file sharing controls on KPI2 tab', () => {
+  it('keeps JSON file sharing as fallback when Blob sharing is disabled', () => {
     expect(kpiPage).toContain('team-kpi-improve-file');
     expect(kpiPage).toContain('IMPROVE_PROJECTS_JSON_SHARE_SECTION_TITLE');
     expect(kpiPage).toContain('IMPROVE_PROJECTS_JSON_SHARE_LEAD');

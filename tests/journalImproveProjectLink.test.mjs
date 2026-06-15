@@ -182,20 +182,36 @@ describe('journal improve project UI wiring', () => {
     expect(journalSource).toContain('생산성향상 M/M 또는 KPI2 효과 업무라면');
   });
 
-  it('keeps manual shared improve project import behind a disabled Blob UI flag', () => {
+  it('uses Blob team share on member journal improve panel without JSON import', () => {
     expect(journalSource).toContain('journal-improve-projects-panel__actions');
-    expect(sharingConfigSource).toContain('SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI = false');
+    expect(sharingConfigSource).toContain('SHOW_BLOB_IMPROVE_PROJECT_SHARING_UI = true');
     expect(journalSource).toContain('IMPROVE_PROJECT_BLOB_SHARE_ENABLED');
-    expect(journalSource).toContain('IMPROVE_PROJECTS_JSON_MEMBER_HINT');
+    expect(journalSource).toContain('IMPROVE_PROJECT_JOURNAL_SCOPE_NOTICE');
     expect(journalSource).toContain('loadSharedProjects');
+    expect(journalSource).not.toContain('IMPROVE_PROJECTS_JSON_IMPORT_LABEL_MEMBER');
+    expect(journalSource).not.toContain('importProjectsFromFile');
     expect(journalSource).not.toMatch(
       /journal-improve-projects-panel[\s\S]*publishSharedProjects/
     );
   });
 
-  it('shows JSON import fallback on member journal without download button', () => {
-    expect(journalSource).toContain('IMPROVE_PROJECTS_JSON_IMPORT_LABEL_MEMBER');
-    expect(journalSource).toContain('importProjectsFromFile');
+  it('enables B/C journal team share upload and view-only cloud pull', () => {
+    expect(sharingConfigSource).toContain('SHOW_BC_JOURNAL_TEAM_SHARE_UI = true');
+    expect(journalSource).toContain('showMemberTeamSharePull');
+    expect(journalSource).toContain('memberTeamSharePullOpts');
+    expect(journalSource).toContain('ownMemberCode: teamAccess.scopedMember');
+  });
+
+  it('simplifies member journal toolbar — team share only, no competency backup or sample reset', () => {
+    expect(journalSource).toContain('showJournalLeaderToolbar');
+    expect(journalSource).toContain('showJournalBackupToolbar');
+    expect(journalSource).toContain('showViewOnlyJsonImport');
+    expect(journalSource).not.toContain('역량 평가 →');
+    expect(journalSource).not.toContain('샘플로 되돌리기');
+    expect(journalSource).not.toContain('journal-reset-seed');
+  });
+
+  it('shows improve project list on member journal without JSON download', () => {
     expect(journalSource).toContain('IMPROVE_PROJECT_JOURNAL_SCOPE_NOTICE');
     expect(journalSource).not.toContain('IMPROVE_PROJECTS_JSON_DOWNLOAD_LABEL');
     expect(journalSource).not.toContain('구성원 전달용 JSON 다운로드');
