@@ -4,15 +4,13 @@
  */
 import { readFile } from 'fs/promises';
 import path from 'path';
+import { isAllowedPublishOrigin } from './utils/publishOrigin.js';
+import {
+  assertBlobConfigured,
+  getBlobSdkOptions,
+} from './utils/blobClient.js';
 
 const LIVE_LATEST_PATH = 'ledger/live-latest.json';
-
-const ALLOWED_HOST_RE =
-  /^(https?:\/\/)?([^/]*\.)?(edu-team-tms|okestro-edu-team-tms)\.vercel\.app|localhost(:\d+)?/i;
-
-function getBlobToken() {
-  return process.env.BLOB_READ_WRITE_TOKEN || process.env.tms_ledger_READ_WRITE_TOKEN;
-}
 
 function canPublish(req) {
   const secret = process.env.LEDGER_PUBLISH_SECRET;
@@ -20,7 +18,7 @@ function canPublish(req) {
   if (secret && key && key === secret) return true;
 
   const referer = req.headers.referer || req.headers.origin || '';
-  return ALLOWED_HOST_RE.test(referer);
+  return isAllowedPublishOrigin(referer);
 }
 
 async function readStaticFromDisk() {
@@ -48,12 +46,12 @@ async function fetchBlobJson(url) {
 }
 
 async function readLiveLatestBlob() {
-  const token = getBlobToken();
-  if (!token) return null;
+  const blobOpts = getBlobSdkOptions();
+  if (!blobOpts) return null;
 
   try {
     const { head } = await import('@vercel/blob');
-    const meta = await head(LIVE_LATEST_PATH, { token });
+    const meta = await head(LIVE_LATEST_PATH, blobOpts);
     return fetchBlobJson(meta.downloadUrl || meta.url);
   } catch {
     return null;
@@ -61,17 +59,13 @@ async function readLiveLatestBlob() {
 }
 
 async function writeLiveBlob(payload) {
-  const token = getBlobToken();
-  if (!token) {
-    const err = new Error('BLOB_READ_WRITE_TOKEN not set');
-    err.code = 'NOT_CONFIGURED';
-    throw err;
-  }
+  assertBlobConfigured();
+  const blobOpts = getBlobSdkOptions();
 
   const { put } = await import('@vercel/blob');
   await put(LIVE_LATEST_PATH, JSON.stringify(payload), {
     access: 'public',
-    token,
+    ...blobOpts,
     addRandomSuffix: false,
     allowOverwrite: true,
     contentType: 'application/json',

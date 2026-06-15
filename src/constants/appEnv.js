@@ -4,13 +4,27 @@ import { URL_ACCESS_LEADER } from './teamAccess';
 /** package.json과 vite define에서 주입 (기본 1.0.0) */
 export const APP_VERSION = import.meta.env.VITE_APP_VERSION || '1.0.0';
 
+function hostFromOrigin(origin) {
+  try {
+    return new URL(origin).hostname;
+  } catch {
+    return '';
+  }
+}
+
 const PROD_HOSTS = new Set([
+  hostFromOrigin(TMS_ORIGIN),
+  hostFromOrigin(TMS_ALT_ORIGIN),
   'okestro-edu-team-tms.vercel.app',
   'edu-team-tms.vercel.app',
   'cxr542.github.io',
-]);
+].filter(Boolean));
 
-const PROD_ORIGINS = new Set([TMS_ORIGIN, TMS_ALT_ORIGIN, 'https://cxr542.github.io']);
+const PROD_ORIGINS = new Set([
+  TMS_ORIGIN,
+  TMS_ALT_ORIGIN,
+  'https://cxr542.github.io',
+].filter(Boolean));
 
 /** UI·문서용 짧은 버전 (1.0.0 → v1.0) */
 export function formatAppVersion(version = APP_VERSION) {

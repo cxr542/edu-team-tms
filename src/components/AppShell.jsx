@@ -5,6 +5,7 @@ import {
   BookOpen,
   Calendar,
   ChevronDown,
+  ExternalLink,
   Presentation,
   CheckCircle,
   Eye,
@@ -44,6 +45,9 @@ import { useProjectSidebar } from '../hooks/useProjectSidebar';
 import { uiTooltip } from '../utils/uiTooltip';
 import NavLabelsModal from './NavLabelsModal';
 import MobileHomeGuideModal from './MobileHomeGuideModal';
+import AppModuleNavItem from './AppModuleNavItem';
+import { buildAppModuleUrl } from '../hooks/useAppModule';
+import { openAppModuleInNewTab } from '../utils/appModuleNavigation';
 
 export default function AppShell({
   activeModule,
@@ -110,21 +114,26 @@ export default function AppShell({
     const visible = viewer ? showInViewer(module) : canShowEditModule(module);
     if (!visible) return null;
     const label = navLabels[module];
+    const itemViewer = viewer || isViewer;
     return (
-      <button
-        type="button"
-        className={`nav-item project-nav-item${activeModule === module ? ' is-active' : ''}`}
-        onClick={() => {
-          onModuleChange(module);
+      <AppModuleNavItem
+        module={module}
+        label={label}
+        icon={Icon}
+        isActive={activeModule === module}
+        isViewer={itemViewer}
+        tooltipProps={navTooltipProps(label)}
+        onNavigate={(mod) => {
+          onModuleChange(mod);
           onNavSelect();
         }}
-        {...navTooltipProps(label)}
-      >
-        <Icon size={18} className="nav-item__icon project-nav-item__icon" aria-hidden />
-        <span className="nav-item__label project-nav-item__label">{label}</span>
-      </button>
+      />
     );
   };
+
+  const currentScreenHref = buildAppModuleUrl(activeModule, {
+    mode: isViewer ? 'view' : undefined,
+  });
 
   const NavGroup = ({ title, children, className = '' }) => {
     const items = React.Children.toArray(children).filter(Boolean);
@@ -195,6 +204,22 @@ export default function AppShell({
                 교육팀 관리 · {versionLabel}
               </p>
             </div>
+            <button
+              type="button"
+              className="sidebar-rail project-sidebar-rail"
+              id="sidebar-toggle"
+              aria-expanded={!collapsed}
+              aria-controls="sidebar"
+              aria-label={railTitle}
+              data-ui-tooltip={railTitle}
+              title={railTitle}
+              onClick={toggleSidebar}
+            >
+              <span className="sidebar-rail__icon project-sidebar-rail__icon" aria-hidden="true">
+                ‹
+              </span>
+              <span className="sidebar-rail__label project-sidebar-rail__label">{railLabel}</span>
+            </button>
           </div>
 
           {!viewerLedgerOnly && !isPublicViewerScope && (
@@ -311,6 +336,18 @@ export default function AppShell({
                     className="project-settings-popover__item"
                     onClick={() => {
                       setSettingsOpen(false);
+                      openAppModuleInNewTab(currentScreenHref);
+                      onNavSelect();
+                    }}
+                  >
+                    <ExternalLink size={14} aria-hidden />
+                    현재 화면 새 탭에서 열기
+                  </button>
+                  <button
+                    type="button"
+                    className="project-settings-popover__item"
+                    onClick={() => {
+                      setSettingsOpen(false);
                       setMobileGuideOpen(true);
                       onNavSelect();
                     }}
@@ -361,23 +398,6 @@ export default function AppShell({
 
             {sidebarFooter}
           </div>
-
-          <button
-            type="button"
-            className="sidebar-rail project-sidebar-rail"
-            id="sidebar-toggle"
-            aria-expanded={!collapsed}
-            aria-controls="sidebar"
-            aria-label={railTitle}
-            data-ui-tooltip={railTitle}
-            title={railTitle}
-            onClick={toggleSidebar}
-          >
-            <span className="sidebar-rail__label project-sidebar-rail__label">{railLabel}</span>
-            <span className="sidebar-rail__icon project-sidebar-rail__icon" aria-hidden="true">
-              ‹
-            </span>
-          </button>
         </aside>
 
         <div className="main project-main">

@@ -209,9 +209,25 @@ html.project-sidebar-collapsed-boot .project-app.theme-tms {
 .project-shell {
   display: grid;
   grid-template-columns: var(--shell-sidebar-current) 1fr;
+  align-items: start;
   flex: 1;
-  min-height: calc(100vh - var(--shell-banner-h));
+  position: relative;
+  z-index: 1;
   transition: grid-template-columns 0.22s ease;
+}
+
+/* 사이드바 배경만 뷰포트 높이 — 본문 길이에 따라 문서가 늘어나지 않음 */
+.project-shell::before {
+  content: '';
+  position: fixed;
+  top: var(--shell-banner-h);
+  left: 0;
+  width: var(--shell-sidebar-current);
+  height: calc(100vh - var(--shell-banner-h));
+  background: var(--shell-sidebar);
+  border-right: 1px solid rgba(var(--app-accent-rgb), 0.15);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .project-shell.is-sidebar-collapsed {
@@ -224,15 +240,16 @@ html.project-sidebar-collapsed-boot .project-shell {
 
 .project-sidebar {
   position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   padding: 0.75rem 0.5rem;
   padding-right: 0.65rem;
-  background: var(--shell-sidebar);
-  border-right: 1px solid rgba(var(--app-accent-rgb), 0.15);
+  background: transparent;
   overflow: visible;
   color: var(--shell-text);
   flex-shrink: 0;
+  align-self: start;
 }
 
 .project-sidebar__head {
@@ -242,6 +259,11 @@ html.project-sidebar-collapsed-boot .project-shell {
   gap: 0.35rem;
   margin-bottom: 0.5rem;
   padding: 0 0.25rem;
+}
+
+.project-logo {
+  flex: 1;
+  min-width: 0;
 }
 
 .project-logo h1 {
@@ -392,6 +414,50 @@ html.project-sidebar-collapsed-boot .project-nav-group + .project-nav-group {
 
 .project-nav-item.is-active .project-nav-item__icon {
   color: var(--app-accent);
+}
+
+.project-nav-item-wrap {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.project-nav-item-wrap .project-nav-item {
+  flex: 1;
+  min-width: 0;
+}
+
+.project-nav-item__new-tab {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.65rem;
+  margin: 0.25rem 0.2rem 0.25rem 0;
+  padding: 0;
+  color: var(--shell-muted);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.project-nav-item-wrap:hover .project-nav-item__new-tab,
+.project-nav-item-wrap:focus-within .project-nav-item__new-tab {
+  opacity: 1;
+}
+
+.project-nav-item__new-tab:hover {
+  color: var(--shell-text);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.project-shell.is-sidebar-collapsed .project-nav-item__new-tab,
+html.project-sidebar-collapsed-boot .project-nav-item__new-tab {
+  display: none;
 }
 
 a.project-nav-item.project-nav-item--hub {
@@ -638,29 +704,28 @@ a.project-nav-item.project-nav-item--hub:hover {
 }
 
 .project-sidebar-rail {
-  position: absolute;
-  top: 50%;
-  right: 0;
-  z-index: 20;
-  display: flex;
-  flex-direction: column;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 0.2rem;
+  display: inline-flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 0.15rem;
-  width: 1.35rem;
-  padding: 0.5rem 0.15rem;
-  margin: 0;
+  gap: 0.2rem;
+  width: auto;
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  margin-inline: 0;
   font: inherit;
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
   line-height: 1.1;
   color: var(--shell-text);
-  background: var(--shell-sidebar);
+  background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(var(--app-accent-rgb), 0.45);
-  border-right: none;
-  border-radius: 8px 0 0 8px;
-  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.35);
+  border-radius: 6px;
+  box-shadow: none;
   cursor: pointer;
-  transform: translate(100%, -50%);
+  transform: none;
 }
 
 .project-sidebar-rail:hover {
@@ -669,16 +734,19 @@ a.project-nav-item.project-nav-item--hub:hover {
 }
 
 .project-sidebar-rail__label {
-  writing-mode: vertical-rl;
+  writing-mode: horizontal-tb;
   text-orientation: mixed;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   color: var(--app-accent);
+  white-space: nowrap;
 }
 
 .project-sidebar-rail__icon {
-  font-size: 1rem;
+  flex-shrink: 0;
+  font-size: 0.95rem;
   line-height: 1;
+  color: var(--app-accent);
   transition: transform 0.22s ease;
 }
 
@@ -692,6 +760,8 @@ html.project-sidebar-collapsed-boot .project-sidebar-rail__icon {
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  align-self: start;
+  width: 100%;
   background: var(--shell-bg);
 }
 
@@ -740,7 +810,7 @@ html.project-sidebar-collapsed-boot .project-sidebar-rail__icon {
 }
 
 .project-content {
-  flex: 1;
+  flex: 0 1 auto;
   min-height: 0;
   overflow: visible;
   display: flex;
@@ -757,7 +827,8 @@ html.project-sidebar-collapsed-boot .project-sidebar-rail__icon {
 .project-content > .cloud-chatbot-embed-main,
 .project-content > .lunch-pick-main,
 .project-content > .idea-bank-page {
-  flex: 1;
+  flex: 0 1 auto;
+  width: 100%;
   min-height: 0;
 }
 
@@ -815,6 +886,14 @@ html.project-sidebar-collapsed-boot .project-settings-popover {
 html.project-sidebar-collapsed-boot .project-sidebar__head {
   flex-direction: column;
   align-items: center;
+  gap: 0.35rem;
+}
+
+.project-shell.is-sidebar-collapsed .project-sidebar-rail,
+html.project-sidebar-collapsed-boot .project-sidebar-rail {
+  align-self: center;
+  margin-top: 0;
+  padding: 0.35rem;
 }
 
 .project-shell.is-sidebar-collapsed .project-logo h1,
@@ -890,6 +969,8 @@ html.project-sidebar-collapsed-boot .project-logo h1 {
     left: 0;
     bottom: 0;
     width: min(88vw, 17.5rem);
+    background: var(--shell-sidebar);
+    border-right: 1px solid rgba(var(--app-accent-rgb), 0.15);
     transform: translateX(-105%);
     transition: transform 0.22s ease;
     pointer-events: none;

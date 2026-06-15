@@ -27,6 +27,23 @@ function touchLocalMeta(partial = {}) {
   return next;
 }
 
+export function shouldAdoptPublishedSnapshot({
+  readOnly,
+  storedTransactions,
+  publishedSnapshot,
+  ledgerMeta,
+}) {
+  if (readOnly || !publishedSnapshot?.transactions?.length) return false;
+  if (!storedTransactions?.length) return true;
+  if (!ledgerMeta?.updatedAt) return true;
+  const syncStatus = getLedgerSyncStatus({
+    publishedAt: publishedSnapshot.publishedAt,
+    localUpdatedAt: ledgerMeta?.updatedAt,
+    syncedPublishedAt: ledgerMeta?.syncedPublishedAt,
+  });
+  return syncStatus === 'remote-ahead';
+}
+
 export function useTransactionLedger(categories, options = {}) {
   const { readOnly = false, seedTransactions = null, publishedSnapshot = null } = options;
 
@@ -64,13 +81,19 @@ export function useTransactionLedger(categories, options = {}) {
     [categories]
   );
 
-  // 작성 모드: 로컬이 비어 있으면 조회용 스냅샷을 초기값으로 (번들 JSON과 분리 방지)
   useEffect(() => {
-    if (readOnly || !publishedSnapshot?.transactions?.length) return;
-    const stored = loadStoredTransactions();
-    if (stored?.length) return;
+    if (
+      !shouldAdoptPublishedSnapshot({
+        readOnly,
+        storedTransactions: loadStoredTransactions(),
+        publishedSnapshot,
+        ledgerMeta: meta,
+      })
+    ) {
+      return;
+    }
     applyPublished(publishedSnapshot);
-  }, [readOnly, publishedSnapshot, applyPublished]);
+  }, [readOnly, publishedSnapshot, applyPublished, meta]);
 
   const pullFromPublished = useCallback(
     (snap = publishedSnapshot) => {

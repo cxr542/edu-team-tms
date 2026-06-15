@@ -368,16 +368,13 @@ export default function App() {
   useEffect(() => {
     if (ledgerReadOnly) return undefined;
     updateLedgerToolbarPin();
-    const main = document.querySelector('.main-content');
     const onScroll = () => requestAnimationFrame(updateLedgerToolbarPin);
-    main?.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll);
     const toolbar = ledgerToolbarRef.current;
     const ro = toolbar ? new ResizeObserver(onScroll) : null;
     if (toolbar && ro) ro.observe(toolbar);
     return () => {
-      main?.removeEventListener('scroll', onScroll);
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
       ro?.disconnect();
@@ -406,11 +403,10 @@ export default function App() {
       const next = !open;
       if (next) {
         requestAnimationFrame(() => {
-          const main = document.querySelector('.main-content');
           const target = viewerDetailsRef.current;
-          if (main && target) {
-            const top = target.offsetTop - 16;
-            main.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+          if (target) {
+            const top = window.scrollY + target.getBoundingClientRect().top - 16;
+            window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
           }
         });
       }

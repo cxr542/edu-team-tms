@@ -1,5 +1,6 @@
 import React from 'react';
 import { buildAppModuleUrl, navigateAppModule } from '../hooks/useAppModule';
+import { shouldAllowNativeModuleNavigation } from '../utils/appModuleNavigation';
 
 /**
  * 모듈 간 이동 링크 — pathname(base) 유지 + SPA 전환
@@ -26,6 +27,7 @@ export default function AppModuleLink({
       className={className}
       style={style}
       onClick={(e) => {
+        if (shouldAllowNativeModuleNavigation(e)) return;
         e.preventDefault();
         navigateAppModule(module, { mode, year, month, quarter, member, access });
         onNavigate?.();

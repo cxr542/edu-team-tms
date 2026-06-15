@@ -5,21 +5,16 @@ import {
   normalizeImproveProjectsSnapshot,
   validateImproveProjectsPayload,
 } from './utils/improveProjectsSnapshotCore.js';
-
-const ALLOWED_HOST_RE =
-  /^(https?:\/\/)?([^/]*\.)?(edu-team-tms|okestro-edu-team-tms)\.vercel\.app|localhost(:\d+)?/i;
-
-function getBlobToken() {
-  return (
-    process.env.BLOB_READ_WRITE_TOKEN ||
-    process.env.tms_journal_READ_WRITE_TOKEN ||
-    process.env.tms_ledger_READ_WRITE_TOKEN
-  );
-}
+import { isAllowedPublishOrigin } from './utils/publishOrigin.js';
+import {
+  assertBlobConfigured,
+  getBlobSdkOptions,
+  isBlobConfigured,
+} from './utils/blobClient.js';
 
 function canUse(req) {
   const referer = req.headers.referer || req.headers.origin || '';
-  return ALLOWED_HOST_RE.test(referer);
+  return isAllowedPublishOrigin(referer);
 }
 
 function json(res, status, body, headers = {}) {
@@ -43,12 +38,12 @@ async function fetchBlobJson(url) {
 }
 
 async function readLiveLatestBlob() {
-  const token = getBlobToken();
-  if (!token) return null;
+  const blobOpts = getBlobSdkOptions();
+  if (!blobOpts) return null;
 
   try {
     const { head } = await import('@vercel/blob');
-    const meta = await head(IMPROVE_PROJECTS_BLOB_KEY, { token });
+    const meta = await head(IMPROVE_PROJECTS_BLOB_KEY, blobOpts);
     const raw = await fetchBlobJson(meta.downloadUrl || meta.url);
     if (!raw) return null;
     return normalizeImproveProjectsSnapshot(raw);
@@ -58,17 +53,13 @@ async function readLiveLatestBlob() {
 }
 
 async function writeLiveBlob(payload) {
-  const token = getBlobToken();
-  if (!token) {
-    const err = new Error('BLOB_READ_WRITE_TOKEN not set');
-    err.code = 'NOT_CONFIGURED';
-    throw err;
-  }
+  assertBlobConfigured();
+  const blobOpts = getBlobSdkOptions();
 
   const { put } = await import('@vercel/blob');
   await put(IMPROVE_PROJECTS_BLOB_KEY, JSON.stringify(payload), {
     access: 'public',
-    token,
+    ...blobOpts,
     addRandomSuffix: false,
     allowOverwrite: true,
     contentType: 'application/json',
@@ -120,8 +111,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const token = getBlobToken();
-      if (!token) {
+      if (!isBlobConfigured()) {
         const empty = createEmptyImproveProjectsSnapshot();
         return json(res, 200, empty, {
           'Cache-Control': 'no-store',

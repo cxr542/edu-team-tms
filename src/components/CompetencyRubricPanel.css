@@ -52,11 +52,6 @@
   flex-direction: column;
   gap: 0.75rem;
   margin: 0;
-  max-height: min(60vh, 28rem);
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
   padding: 0.75rem;
   border: 1px solid var(--border-color, #d0d5dd);
   border-radius: 10px;
@@ -111,10 +106,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-}
-
-.competency-rubric-ref--dims {
-  max-height: min(55vh, 26rem);
 }
 
 .competency-dim-table {

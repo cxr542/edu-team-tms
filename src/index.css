@@ -71,13 +71,9 @@
 
 html {
   font-size: calc(16px * var(--tms-font-scale, 1));
-}
-
-html,
-body {
-  min-height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
+  min-height: 100%;
 }
 
 body {
@@ -87,10 +83,11 @@ body {
   /* 보통(1.0) ≈ 17px — rem·em은 html 배율을 따름 */
   font-size: 1.0625rem;
   font-weight: 400;
-  min-height: 100vh;
   line-height: 1.47;
   letter-spacing: -0.022em;
   -webkit-font-smoothing: antialiased;
+  /* 한 축 hidden + 다른 축 visible 조합은 스펙상 y가 auto로 계산되어 이중 스크롤 유발 */
+  overflow: visible;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -402,18 +399,14 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-muted-on-dark);
 }
 
-/* Main Content Area */
+/* Main Content Area — 세로 스크롤은 document(html) 단일, 높이는 콘텐츠 기준 */
 .main-content {
-  flex: 1;
-  min-height: 0;
   min-width: 0;
   padding: 2.5rem 3rem;
-  padding-bottom: 6rem;
+  padding-bottom: 2.5rem;
   position: relative;
   z-index: 1;
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: visible;
 }
 
 /* 조회·구성원 장부: 메인 패널 세로 스크롤 (거래 목록 하단까지) */
@@ -1376,7 +1369,7 @@ h1, h2, h3, h4, h5, h6 {
 @media (max-width: 768px) {
   .main-content {
     padding: 1.5rem;
-    padding-bottom: 5rem;
+    padding-bottom: 2rem;
   }
   .ledger-table-toolbar.is-pinned {
     left: 0;

@@ -48,6 +48,7 @@ describe('improve-projects-snapshot API', () => {
     headMock.mockReset();
     putMock.mockReset();
     process.env.BLOB_READ_WRITE_TOKEN = 'test-token';
+    delete process.env.BLOB_STORE_ID;
     global.fetch = vi.fn(async () => ({
       ok: true,
       json: async () => ({
@@ -87,8 +88,9 @@ describe('improve-projects-snapshot API', () => {
     expect(body.meta.publishedBy).toBeNull();
   });
 
-  it('GET returns disabled snapshot when blob token is missing', async () => {
+  it('GET returns disabled snapshot when blob is not configured', async () => {
     delete process.env.BLOB_READ_WRITE_TOKEN;
+    delete process.env.BLOB_STORE_ID;
     const handler = await loadHandler();
     const req = { method: 'GET', headers: { referer: 'http://localhost:4173/' } };
     const res = createRes();

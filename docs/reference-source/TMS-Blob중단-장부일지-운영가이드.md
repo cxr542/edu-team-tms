@@ -198,7 +198,7 @@ Blob 공유 UI는 꺼져 있습니다. **JSON 파일**만 사용합니다.
 
 ### Q. Blob은 언제 풀리나요?
 
-**A.** Vercel Dashboard → Storage → Blob 상태 확인. Hobby는 한도 리셋·Pro 업그레이드·지원 문의가 필요할 수 있습니다. **풀리기 전까지는 이 문서 방식을 유지**합니다.
+**A.** Vercel Dashboard → Storage → Blob 상태 확인. Hobby는 한도 리셋·**[Vercel 새 계정 연결](../vercel-new-account-setup.md)**·Pro 업그레이드·지원 문의가 필요할 수 있습니다. **풀리기 전까지는 이 문서 방식을 유지**합니다.
 
 ### Q. Blob이 복구되면?
 
