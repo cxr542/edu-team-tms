@@ -1,4 +1,5 @@
-import { TMS_ALT_ORIGIN, TMS_ORIGIN } from './appUrls';
+import { TMS_ALT_ORIGIN, TMS_DEV_ORIGIN, TMS_ORIGIN } from './appUrls';
+import { URL_ACCESS_LEADER } from './teamAccess';
 
 /** package.json과 vite define에서 주입 (기본 1.0.0) */
 export const APP_VERSION = import.meta.env.VITE_APP_VERSION || '1.0.0';
@@ -54,6 +55,41 @@ export function getEnvironmentLabel() {
 
 export function getProductionAppUrl(mode = 'edit') {
   return mode === 'view' ? `${TMS_ORIGIN}/` : `${TMS_ORIGIN}/?mode=edit`;
+}
+
+const DEV_URL_PARAMS = ['module', 'member', 'year', 'month', 'quarter', 'doc'];
+
+/** 운영 → 로컬 dev (`npm run dev`) 팀장 화면 URL. 현재 module·기간 등은 유지 */
+export function getDevelopmentAppUrl(currentHref) {
+  const href = currentHref || (typeof window !== 'undefined' ? window.location.href : '');
+  const baseOrigin =
+    !isProductionEnvironment() && typeof window !== 'undefined'
+      ? window.location.origin
+      : TMS_DEV_ORIGIN;
+  const dev = new URL(`${baseOrigin}/`);
+  dev.searchParams.set('mode', 'edit');
+  dev.searchParams.set('access', URL_ACCESS_LEADER);
+
+  if (href) {
+    const cur = new URL(href);
+    DEV_URL_PARAMS.forEach((key) => {
+      const value = cur.searchParams.get(key);
+      if (value) dev.searchParams.set(key, value);
+    });
+  }
+
+  return `${dev.origin}${dev.pathname}${dev.search}`;
+}
+
+/** 팀장 편집 툴바 — 운영·로컬 dev 모두 dev URL 링크 표시 (구성원·조회 제외) */
+export function canShowLeaderDevUrlLink({
+  isViewer = false,
+  isPublicViewerScope = false,
+  teamAccess = null,
+} = {}) {
+  if (isViewer || isPublicViewerScope) return false;
+  if (!teamAccess?.isLeader || teamAccess?.isMemberScope) return false;
+  return true;
 }
 
 export function getEnvironmentBannerMeta({ isViewer }) {

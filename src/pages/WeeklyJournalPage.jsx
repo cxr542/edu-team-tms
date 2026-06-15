@@ -27,10 +27,11 @@ import {
 } from '../utils/journalMm';
 import { exportKpiAnalysisWorkbook } from '../utils/kpiExcelExport';
 import { downloadJournalSnapshot } from '../utils/journalSnapshot';
+import { formatPublishedAt } from '../utils/appMode';
 import { getCloudHealthUserMessage } from '../utils/cloudHealth';
 import { resolveJournalDay } from '../utils/journalHoliday2026';
 import { applyLeavePresetToDay, LEAVE_MEMO_TASK_RE, LEAVE_PRESET_BUTTONS } from '../utils/journalLeavePresets';
-import { scheduleScrollJournalDay } from '../utils/journalScroll';
+import { findWeekKeyForDayKey, resolveJournalScrollDayKey, scheduleScrollJournalDay } from '../utils/journalScroll';
 import { mergeTaskFromEdit, taskFieldsFromEdit } from '../utils/journalTaskFields';
 import { loadCollapsedWeekKeys, saveCollapsedWeekKeys } from '../utils/journalWeekVisibility';
 import { KPI1_NAME, KPI2_NAME } from '../constants/kpiDisplayNames';
@@ -86,13 +87,33 @@ function formatDayLabel(key) {
   return `${y}년 ${m}월 ${d}일 (${DAY_NAMES[dt.getDay()]})`;
 }
 
+function journalPullToastMessage(result) {
+  if (!result.ok) {
+    if (result.reason === 'no-remote') {
+      return '팀 공유본을 불러오지 못했습니다. 공유 저장소가 비어 있거나 개발 서버에서는 public/journal-snapshot.json만 사용할 수 있습니다.';
+    }
+    return '팀 공유본을 가져오지 못했습니다';
+  }
+  const when = formatPublishedAt(result.publishedAt);
+  const sourceLabel =
+    result.source === 'blob' ? '클라우드' : result.source === 'static' ? '백업 파일' : '공유 저장소';
+  if (!result.changed) {
+    return when
+      ? `가져온 공유본(${sourceLabel}, ${when})과 이 브라우저 내용이 같습니다`
+      : '가져온 공유본과 이 브라우저 내용이 같습니다';
+  }
+  return when
+    ? `팀 공유본을 병합했습니다 (${sourceLabel}, ${when})`
+    : '팀 공유본을 이 브라우저에 병합했습니다';
+}
+
 const DEFAULT_ADD_DRAFT = { cat: 'edu', title: '', plan: 4, actual: 0, done: false, slot: '' };
 
-function navigateToDayKey(dayKey, { year, month, setYear, setMonth, setSelectedDayKey, scrollToDayRef, setScrollTick }) {
+function navigateToDayKey(dayKey, { year, month, setPeriod, setSelectedDayKey, scrollToDayRef, setScrollTick }) {
   const [y, m] = dayKey.split('-').map(Number);
-  if (y !== year || m - 1 !== month) {
-    setYear(y);
-    setMonth(m - 1);
+  const monthIndex = m - 1;
+  if (y !== year || monthIndex !== month) {
+    setPeriod(y, monthIndex);
   }
   scrollToDayRef.current = dayKey;
   setScrollTick((t) => t + 1);
@@ -153,7 +174,7 @@ function describeFocusDayTasks(tasks) {
 
 export default function WeeklyJournalPage({ readOnly = false }) {
   const journal = useJournal();
-  const { year, month, setYear, setMonth, changeMonth } = useJournalPeriod();
+  const { year, month, setPeriod, changeMonth } = useJournalPeriod();
   const importInputRef = useRef(null);
   const improveProjectsFileInputRef = useRef(null);
   const journalMainRef = useRef(null);
@@ -324,25 +345,49 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const [scrollTick, setScrollTick] = useState(0);
 
   const goToToday = useCallback(() => {
-    const { year: y, month: m, key } = getTodayParts();
-    scrollToDayRef.current = key;
-    setYear(y);
-    setMonth(m);
-    setSelectedDayKey(key);
-    setScrollTick((t) => t + 1);
-    showToast(`${formatDayLabel(key)} — 오늘 입력 셀로 이동`);
-  }, []);
+    const { key } = getTodayParts();
+    const scrollKey = resolveJournalScrollDayKey(key);
+    navigateToDayKey(scrollKey, {
+      year,
+      month,
+      setPeriod,
+      setSelectedDayKey,
+      scrollToDayRef,
+      setScrollTick,
+    });
+    const label =
+      scrollKey !== key
+        ? `${formatDayLabel(scrollKey)} (주말 → 해당 주 금요일)`
+        : formatDayLabel(key);
+    showToast(`${label} — 입력 셀로 이동`);
+  }, [year, month, setPeriod]);
 
   useEffect(() => {
     const key = scrollToDayRef.current;
     if (!key) return;
+
+    const [y, m] = key.split('-').map(Number);
+    const monthIndex = m - 1;
+    const targetWeeks = getWeeksInMonth(y, monthIndex);
+    const weekKey = findWeekKeyForDayKey(targetWeeks, key);
+
+    if (weekKey && collapsedWeeks.has(weekKey)) {
+      setCollapsedWeeks((prev) => {
+        if (!prev.has(weekKey)) return prev;
+        const next = new Set(prev);
+        next.delete(weekKey);
+        saveCollapsedWeekKeys(y, monthIndex, next, memberCode);
+        return next;
+      });
+      return undefined;
+    }
 
     return scheduleScrollJournalDay(key, journalMainRef.current, {
       onSuccess: () => {
         scrollToDayRef.current = null;
       },
     });
-  }, [scrollTick]);
+  }, [scrollTick, year, month, collapsedWeeks, memberCode]);
 
   const openEdit = (taskId, dayKey) => {
     const day = getDay(dayKey);
@@ -424,8 +469,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     navigateToDayKey(copyTargetDayKey, {
       year,
       month,
-      setYear,
-      setMonth,
+      setPeriod,
       setSelectedDayKey,
       scrollToDayRef,
       setScrollTick,
@@ -460,8 +504,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     navigateToDayKey(moveTargetDayKey, {
       year,
       month,
-      setYear,
-      setMonth,
+      setPeriod,
       setSelectedDayKey,
       scrollToDayRef,
       setScrollTick,
@@ -802,8 +845,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                         onClick={async () => {
                           try {
                             const r = await journal.pullFromCloud();
-                            if (r.ok) showToast('팀 공유본을 이 브라우저에 병합했습니다');
-                            else if (r.reason === 'no-remote') showToast('팀 공유본이 아직 없습니다');
+                            showToast(journalPullToastMessage(r));
                           } catch (e) {
                             showToast(e.message);
                           }
@@ -1074,13 +1116,13 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               항목 저장·수정은 <strong>이 브라우저(localStorage)</strong>에 먼저 반영됩니다.
               {IMPROVE_PROJECT_BLOB_SHARE_ENABLED ? (
                 <>
-                  팀 공유가 필요할 때만 「팀 공유 저장」·「팀 공유본 가져오기」를 사용하세요. 자동 공유 저장은
-                  사용하지 않습니다.
+                  팀 공유가 필요할 때만 「팀 공유 저장」·「팀 공유본 가져오기」를 사용하세요.{' '}
+                  자동 공유 저장은 사용하지 않습니다.
                 </>
               ) : (
                 <>
-                  향상 과제 공유는 「팀장에게 받은 JSON 가져오기」를 사용하세요. 자동 공유 저장은 사용하지
-                  않습니다.
+                  향상 과제 공유는 「팀장에게 받은 JSON 가져오기」를 사용하세요.{' '}
+                  자동 공유 저장은 사용하지 않습니다.
                 </>
               )}
             </p>

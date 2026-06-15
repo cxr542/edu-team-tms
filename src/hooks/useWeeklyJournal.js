@@ -191,12 +191,14 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
   const applyRemoteSnapshot = useCallback(
     (snapshot, options = {}) => {
       let merged;
+      let changed = false;
       setStore((prev) => {
         merged = cacheStore(mergeRemoteIntoStore(prev, snapshot, options));
+        changed = JSON.stringify(prev.memberJournals) !== JSON.stringify(merged.memberJournals);
         return merged;
       });
       setSyncStatus('synced');
-      return merged;
+      return { merged, changed };
     },
     [cacheStore]
   );
@@ -205,14 +207,19 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
     async () => {
       setSyncStatus('checking');
       try {
-        const remote = await fetchJournalSnapshot();
-        if (!remote) {
+        const result = await fetchJournalSnapshot();
+        if (!result?.snapshot) {
           setSyncStatus('idle');
           return { ok: false, reason: 'no-remote' };
         }
-        const snapshot = parseJournalSnapshotForImport(remote);
-        applyRemoteSnapshot(snapshot, { importRemote: true });
-        return { ok: true, remote: snapshot };
+        const snapshot = parseJournalSnapshotForImport(result.snapshot);
+        const { changed } = applyRemoteSnapshot(snapshot, { importRemote: true });
+        return {
+          ok: true,
+          changed,
+          source: result.source,
+          publishedAt: snapshot.publishedAt,
+        };
       } catch (e) {
         setSyncStatus('error');
         throw e;
@@ -226,9 +233,9 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
     let cancelled = false;
     (async () => {
       try {
-        const remote = await fetchJournalSnapshot();
-        if (cancelled || !remote) return;
-        applyRemoteSnapshot(remote);
+        const result = await fetchJournalSnapshot();
+        if (cancelled || !result?.snapshot) return;
+        applyRemoteSnapshot(result.snapshot);
       } catch {
         setSyncStatus('idle');
       }

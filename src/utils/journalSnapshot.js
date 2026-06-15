@@ -65,10 +65,37 @@ export function downloadJournalSnapshot(store) {
   return payload;
 }
 
+export function isJsonSnapshotResponse(res) {
+  const ct = res.headers.get('content-type') || '';
+  return /application\/(?:[\w.+-]*\+)?json/i.test(ct);
+}
+
+function inferSnapshotSource(path, headerSource) {
+  if (headerSource === 'blob' || headerSource === 'static' || headerSource === 'empty') {
+    return headerSource;
+  }
+  return path.startsWith('/api/') ? 'api' : 'static';
+}
+
 async function fetchSnapshotFrom(path) {
   const res = await fetch(`${path}?t=${Date.now()}`, { cache: 'no-store' });
   if (res.status === 404) return null;
-  const body = await res.json().catch(() => ({}));
+  if (!isJsonSnapshotResponse(res)) return null;
+
+  const body = await res.json().catch(() => null);
+  if (!body || !isJournalSnapshotImportable(body)) {
+    if (!res.ok) {
+      recordCloudFailure(res.status, body || {});
+      const err = new Error(
+        body?.message || body?.error || `공유 일지를 불러오지 못했습니다 (${res.status})`
+      );
+      err.status = res.status;
+      err.body = body;
+      throw err;
+    }
+    return null;
+  }
+
   if (!res.ok) {
     recordCloudFailure(res.status, body);
     const err = new Error(body.message || body.error || `공유 일지를 불러오지 못했습니다 (${res.status})`);
@@ -76,16 +103,22 @@ async function fetchSnapshotFrom(path) {
     err.body = body;
     throw err;
   }
+
   recordCloudSuccess();
-  return normalizeJournalSnapshot(body);
+  const source = inferSnapshotSource(path, res.headers.get('x-journal-source'));
+  return {
+    snapshot: normalizeJournalSnapshot(body),
+    source,
+  };
 }
 
+/** @returns {Promise<{ snapshot: object, source: string } | null>} */
 export async function fetchJournalSnapshot() {
   try {
     const api = await fetchSnapshotFrom(JOURNAL_API_PATH);
     if (api) return api;
   } catch {
-    return fetchSnapshotFrom(JOURNAL_SNAPSHOT_PATH);
+    // API 오류 시 public 백업 JSON으로 폴백
   }
   return fetchSnapshotFrom(JOURNAL_SNAPSHOT_PATH);
 }

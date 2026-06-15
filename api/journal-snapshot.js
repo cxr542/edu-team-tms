@@ -67,7 +67,11 @@ async function readLiveLatestBlob() {
 }
 
 async function readLatestSnapshot() {
-  return (await readLiveLatestBlob()) || (await readStaticFromDisk());
+  const blob = await readLiveLatestBlob();
+  if (blob) return { snapshot: blob, source: 'blob' };
+  const disk = await readStaticFromDisk();
+  if (disk) return { snapshot: disk, source: 'static' };
+  return { snapshot: null, source: 'empty' };
 }
 
 async function writeLiveBlob(payload) {
@@ -101,9 +105,10 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const snapshot = await readLatestSnapshot();
+      const { snapshot, source } = await readLatestSnapshot();
       if (!snapshot) return json(res, 404, { error: 'snapshot not found' });
       res.setHeader('Cache-Control', 'no-store');
+      res.setHeader('x-journal-source', source);
       return json(res, 200, snapshot);
     } catch (e) {
       return json(res, 500, { error: e.message || String(e) });
@@ -117,7 +122,8 @@ export default async function handler(req, res) {
         return json(res, 400, { error: 'memberCode와 journal이 필요합니다.' });
       }
 
-      const current = (await readLatestSnapshot()) || normalizeJournalCloudSnapshot({});
+      const { snapshot: currentSnapshot } = await readLatestSnapshot();
+      const current = currentSnapshot || normalizeJournalCloudSnapshot({});
       const updatedAt =
         typeof body.updatedAt === 'string' ? body.updatedAt : new Date().toISOString();
       const next = mergeMemberIntoJournalSnapshot(current, body.memberCode, body.journal, {

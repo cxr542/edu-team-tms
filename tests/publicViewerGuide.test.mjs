@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { isPublicViewerScope } from '../src/utils/ledgerAccess.js';
+import { PUBLIC_VIEWER_ROLE_PORTALS } from '../src/constants/publicViewerPortal.js';
 
 describe('public viewer scope policy', () => {
   it('treats member-less view mode as public viewer landing', () => {
@@ -30,15 +31,22 @@ describe('public viewer landing UI', () => {
     );
   });
 
-  it('shows static guidance copy without ledger fetch on public viewer', () => {
-    expect(guideSource).toContain('공개 조회 화면은 더 이상 사용하지 않습니다.');
-    expect(guideSource).toContain('팀장 또는 구성원 전용 URL로 접속해 주세요.');
-    expect(guideSource).toContain('구성원 B · 장부 조회');
-    expect(guideSource).toContain("mode: 'view'");
+  it('shows role portal cards without ledger fetch on public viewer', () => {
+    expect(guideSource).toContain('교육팀 TMS 접속 안내');
+    expect(guideSource).toContain('PUBLIC_VIEWER_ROLE_PORTALS');
+    expect(guideSource).toContain('전체 북마크 URL 목록 보기');
     expect(accessSource).toContain('if (isPublicViewerScope({ isViewer, isMemberScope })) return false');
   });
 
-  it('hides viewer nav and viewer menu settings on public viewer scope', () => {
+  it('defines leader and member entry links including member ledger view mode', () => {
+    const memberB = PUBLIC_VIEWER_ROLE_PORTALS.find((p) => p.id === 'member-b');
+    const ledgerLink = memberB.links.find((l) => l.label === '장부 조회');
+    expect(ledgerLink.mode).toBe('view');
+    expect(ledgerLink.member).toBe('B');
+    expect(PUBLIC_VIEWER_ROLE_PORTALS[0].primary.access).toBeTruthy();
+  });
+
+  it('hides viewer nav and sidebar on public viewer scope', () => {
     expect(shellSource).toContain('isPublicViewerScope');
     expect(shellSource).toContain('!isPublicViewerScope && (');
     expect(shellSource).toContain('canEditNav && !isPublicViewerScope');

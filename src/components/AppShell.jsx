@@ -31,9 +31,11 @@ import {
 import { isModuleVisibleInViewer } from '../constants/viewerMenu';
 import {
   formatAppVersion,
+  getDevelopmentAppUrl,
   getEnvironmentBannerMeta,
   getEnvironmentLabel,
   getProductionAppUrl,
+  canShowLeaderDevUrlLink,
   isProductionEnvironment,
 } from '../constants/appEnv';
 import { isEditorMode } from '../utils/appMode';
@@ -66,6 +68,14 @@ export default function AppShell({
   const { collapsed, drawerOpen, toggleSidebar, closeDrawer, onNavSelect } = useProjectSidebar();
 
   const isProd = isProductionEnvironment();
+  const showLeaderDevUrlLink = canShowLeaderDevUrlLink({
+    isViewer,
+    isPublicViewerScope,
+    teamAccess,
+  });
+  const devUrlTooltip = isProd
+    ? '로컬 개발 URL 새 탭 (localhost:3000)'
+    : '팀장 dev URL (배포 후 운영 화면 툴바에도 표시)';
   const envLabel = getEnvironmentLabel();
   const versionLabel = formatAppVersion();
   const banner = useMemo(() => getEnvironmentBannerMeta({ isViewer }), [isViewer]);
@@ -332,7 +342,7 @@ export default function AppShell({
 
             <p className="sidebar-note project-sidebar-note">
               {isPublicViewerScope ? (
-                <>ℹ️ 공개 조회 중단 · 역할별 URL 안내</>
+                <>📌 역할별 접속 안내 · 북마크 URL 선택</>
               ) : isViewer ? (
                 <>👀 교육팀 조회 · 팀 빌딩비 장부</>
               ) : teamAccess?.isMemberScope ? (
@@ -389,6 +399,17 @@ export default function AppShell({
                 {...uiTooltip('운영 URL 새 탭', 'below')}
               >
                 운영 URL
+              </a>
+            )}
+            {showLeaderDevUrlLink && (
+              <a
+                className="btn btn--dev-link"
+                href={getDevelopmentAppUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                {...uiTooltip(devUrlTooltip, 'below')}
+              >
+                개발 URL
               </a>
             )}
             <p className="project-toolbar__title">

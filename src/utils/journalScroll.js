@@ -1,7 +1,36 @@
+import { dateKey } from './journalMm.js';
+
 /**
  * 일일 업무일지 — 오늘 셀로 스크롤
  * (.journal-main 세로 + .journal-week-table-wrap 가로, sticky 헤더 보정)
  */
+
+/** 주말이면 표에 있는 가장 가까운 금요일로 보정 (월~금만 표시) */
+export function resolveJournalScrollDayKey(dayKey) {
+  const parts = dayKey.split('-').map(Number);
+  if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) return dayKey;
+  const [y, m, d] = parts;
+  const dt = new Date(y, m - 1, d);
+  const dow = dt.getDay();
+  if (dow === 6) dt.setDate(dt.getDate() - 1);
+  else if (dow === 0) dt.setDate(dt.getDate() - 2);
+  return dateKey(dt.getFullYear(), dt.getMonth(), dt.getDate());
+}
+
+/** @param {Array<{ key: string, days: Date[] }>} weeks */
+export function findWeekKeyForDayKey(weeks, dayKey) {
+  if (!dayKey || !Array.isArray(weeks)) return null;
+  const parts = dayKey.split('-').map(Number);
+  if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) return null;
+  const [y, m, d] = parts;
+  const week = weeks.find((w) =>
+    w.days.some(
+      (dt) => dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d
+    )
+  );
+  return week?.key ?? null;
+}
+
 export function scrollJournalDayIntoView(dayKey, journalMainEl) {
   if (!dayKey) return false;
 
@@ -34,7 +63,7 @@ export function scrollJournalDayIntoView(dayKey, journalMainEl) {
 }
 
 /** DOM 반영 후 재시도 (월 전환 직후). 취소 함수 반환 */
-export function scheduleScrollJournalDay(dayKey, journalMainEl, { maxAttempts = 24, onSuccess } = {}) {
+export function scheduleScrollJournalDay(dayKey, journalMainEl, { maxAttempts = 48, onSuccess } = {}) {
   let cancelled = false;
   let attempts = 0;
 
