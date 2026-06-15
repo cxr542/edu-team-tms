@@ -49,6 +49,14 @@ export const REFERENCE_DOCS = /** @type {ReferenceDocMeta[]} */ ([
     pinned: true,
   },
   {
+    id: 'tms-blob-fallback-ops',
+    category: 'ops',
+    title: 'Blob 중단 — 장부·일지 운영',
+    file: 'TMS-Blob중단-장부일지-운영가이드.md',
+    summary: 'Blob suspend 기간 팀장·팀원 할 일 (JSON·배포)',
+    pinned: true,
+  },
+  {
     id: 'tms-kpi-menu',
     category: 'ops',
     title: '팀 KPI 메뉴·URL',
@@ -98,7 +106,12 @@ export const REFERENCE_DOCS = /** @type {ReferenceDocMeta[]} */ ([
 export const DEFAULT_REFERENCE_DOC_ID = 'kpi-definition';
 
 /** 왼쪽 문서 메뉴에 표시할 항목 */
-export const REFERENCE_DOCS_NAV_IDS = ['tms-bookmarks', 'kpi-definition', 'tms-release'];
+export const REFERENCE_DOCS_NAV_IDS = [
+  'tms-bookmarks',
+  'tms-blob-fallback-ops',
+  'kpi-definition',
+  'tms-release',
+];
 
 export const REFERENCE_DOCS_NAV = REFERENCE_DOCS_NAV_IDS.map(
   (id) => REFERENCE_DOCS.find((d) => d.id === id)

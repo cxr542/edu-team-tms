@@ -3,7 +3,8 @@
 > **운영 사이트:** https://okestro-edu-team-tms.vercel.app  
 > (동일 콘텐츠: https://edu-team-tms.vercel.app)  
 > 로그인 없음 — **아래 URL을 그대로 북마크**하세요.  
-> 마지막 갱신: 2026-06-12
+> 마지막 갱신: 2026-06-12  
+> **Vercel Blob 중단 중:** 장부·일지 할 일은 [Blob 중단 — 장부·일지 운영](./TMS-Blob중단-장부일지-운영가이드.md) 참고.
 
 ---
 
