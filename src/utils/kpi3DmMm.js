@@ -9,8 +9,7 @@ import {
 
 export { DM_WEIGHT_MODE_JOURNAL, DM_WEIGHT_MODE_MANUAL } from '../constants/kpi3DmProfile';
 import { quarterMonthKeys } from './competencyScore';
-import { getWeeksInMonth, dateKey } from './journalMm';
-import { LEAVE_MEMO_TASK_RE } from './journalLeavePresets';
+import { getTaskLoggedHours, getWeeksInMonth, dateKey } from './journalMm';
 
 /** 일지 카테고리 → 다면 강의 축 M/M */
 export const DM_LECTURE_JOURNAL_CATS = new Set(['edu', 'prep']);
@@ -52,8 +51,7 @@ export function computeQuarterDmActivityWeights(getDayData, year, monthIndex, me
         const data = getDayData(key, memberCode);
         if (!data?.tasks?.length) return;
         data.tasks.forEach((t) => {
-          if (LEAVE_MEMO_TASK_RE.test(t.title || '')) return;
-          const h = Number(t.actual) || 0;
+          const h = getTaskLoggedHours(t);
           if (h <= 0) return;
           const cat = t.cat || 'other';
           if (DM_LECTURE_JOURNAL_CATS.has(cat)) lectureH += h;

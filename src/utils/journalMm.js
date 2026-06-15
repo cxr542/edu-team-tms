@@ -12,16 +12,25 @@ export function hoursToMm(hours) {
   return roundMm((Number(hours) || 0) / WORK_DAY_HOURS);
 }
 
+/** M/M·실작업 집계 대상 — 완료 체크 + 휴일 메모 제외 */
+export function isTaskMmLogged(task) {
+  if (LEAVE_MEMO_TASK_RE.test(task?.title || '')) return false;
+  return Boolean(task?.done);
+}
+
+/** 완료된 업무의 실작업(h)만 M/M·KPI1·일일 합계에 반영 */
+export function getTaskLoggedHours(task) {
+  if (!isTaskMmLogged(task)) return 0;
+  return Number(task?.actual) || 0;
+}
+
 export function getTaskMmAxis(task) {
   if (task.mmAxis === 'work' || task.mmAxis === 'improve') return task.mmAxis;
   return task.cat === 'ai' ? 'improve' : 'work';
 }
 
 export function sumDayWorkHours(data) {
-  return data.tasks.reduce((sum, t) => {
-    if (LEAVE_MEMO_TASK_RE.test(t.title)) return sum;
-    return sum + (Number(t.actual) || 0);
-  }, 0);
+  return data.tasks.reduce((sum, t) => sum + getTaskLoggedHours(t), 0);
 }
 
 export function sumDayPlanHours(data) {
@@ -73,8 +82,8 @@ export function recalcDayMmFromHours(data) {
   let workH = 0;
   let improveH = 0;
   data.tasks.forEach((t) => {
-    if (LEAVE_MEMO_TASK_RE.test(t.title)) return;
-    const h = Number(t.actual) || 0;
+    const h = getTaskLoggedHours(t);
+    if (h <= 0) return;
     if (getTaskMmAxis(t) === 'improve') improveH += h;
     else workH += h;
   });

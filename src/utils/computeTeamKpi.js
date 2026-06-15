@@ -5,7 +5,14 @@ import { kpi2RowId } from '../constants/kpiOperationalStore';
 import { getTaskSlotLabel } from '../constants/journalTaskSlot';
 import { LEAVE_MEMO_TASK_RE } from './journalLeavePresets';
 import { isMonthly01ContentUnset } from './kpiMonthlyClose';
-import { getDayAvailableMm, getTaskMmAxis, getWeeksInMonth, pad, roundMm } from './journalMm';
+import {
+  getDayAvailableMm,
+  getTaskLoggedHours,
+  getTaskMmAxis,
+  getWeeksInMonth,
+  pad,
+  roundMm,
+} from './journalMm';
 
 function quarterFromMonth(month1to12) {
   if (month1to12 <= 3) return '1Q';
@@ -85,7 +92,7 @@ function JOURNAL_CAT_LABEL(cat) {
 
 function buildEffectComment(task, projectName) {
   const baseline = getKpi2BaselineHours(task);
-  const actual = Number(task.actual) || 0;
+  const actual = getTaskLoggedHours(task);
   const saved = baseline > 0 && actual > 0 ? round4(baseline - actual) : 0;
   return [
     projectName ? `향상과제:${projectName}` : '',
@@ -123,7 +130,7 @@ export function buildKpi02EffectRows(
       if (!isKpi2EffectTask(task)) return;
 
       const baseline = getKpi2BaselineHours(task);
-      const actual = Number(task.actual) || 0;
+      const actual = getTaskLoggedHours(task);
       if (baseline === 0 && actual === 0) return;
 
       const project = projectById[task.kpi2Effect?.projectId];

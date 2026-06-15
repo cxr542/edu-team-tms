@@ -129,6 +129,31 @@ describe('computeTeamKpi june', () => {
     expect(kpi2[0]['생산성%']).toBeCloseTo(1.6, 2);
   });
 
+  it('buildKpi02EffectRows — 미완료 실작업은 KPI2 행 실작업 0', () => {
+    const days = {
+      '2026-06-20': {
+        holiday: false,
+        mm: { work: 0, improve: 0, leave: 0 },
+        tasks: [
+          {
+            id: 'draft',
+            cat: 'prep',
+            title: 'PPT (미완료)',
+            plan: 8,
+            actual: 5,
+            done: false,
+            kpi2Effect: { enabled: true, projectId: 'ppt-academizer', baselineHours: 8 },
+          },
+        ],
+      },
+    };
+    recalcDayMmFromHours(days['2026-06-20']);
+    expect(days['2026-06-20'].mm.work).toBe(0);
+    const rows = buildKpi02EffectRows(2026, 5, days, IMPROVE_PROJECTS);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].실작업시간).toBe(0);
+  });
+
   it('computeTeamKpi — KPI2 요약 (승인 건만 집계)', () => {
     const task = juneDays['2026-06-01'].tasks[2];
     const rowId = `2026-06-01|${task.id}`;

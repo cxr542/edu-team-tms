@@ -19,6 +19,7 @@ import { useJournalPeriod } from '../hooks/useJournalPeriod';
 import {
   dateKey,
   getDayHoursInfo,
+  getTaskLoggedHours,
   getTaskMmAxis,
   getWeekMmStats,
   getWeeksInMonth,
@@ -143,8 +144,7 @@ function formatDayHoursBadge(info) {
 }
 
 function TaskMmPill({ task }) {
-  if (LEAVE_MEMO_TASK_RE.test(task.title)) return null;
-  const h = Number(task.actual) || 0;
+  const h = getTaskLoggedHours(task);
   if (h <= 0) return null;
   const axis = getTaskMmAxis(task);
   const label = axis === 'improve' ? '향상' : '업무';
@@ -988,7 +988,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   <strong>{KPI2_NAME} 효과</strong>: 개선 효과로 제출할 항목만 체크합니다.
                 </li>
                 <li>
-                  <strong>완료 체크</strong>: 업무 마감 또는 제출 상태 표시이며, M/M 집계와는 별개입니다.
+                  <strong>완료 체크</strong>: 체크한 업무의 실작업(h)만 M/M·가동률·일일 실작업 합계에 반영됩니다.
                 </li>
               </ul>
             </details>
@@ -1566,7 +1566,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               <label>
                 <input type="checkbox" checked={editTask.done} onChange={(e) => setEditTask({ ...editTask, done: e.target.checked })} disabled={readOnly} /> 완료
               </label>
-              <p className="journal-field-help">완료 체크는 마감·제출 상태이며 M/M 집계와는 별개입니다.</p>
+              <p className="journal-field-help">완료 체크한 업무의 실작업(h)만 M/M·가동률에 반영됩니다.</p>
             </div>
             {!readOnly && (
               <div className="modal-actions journal-edit-actions">

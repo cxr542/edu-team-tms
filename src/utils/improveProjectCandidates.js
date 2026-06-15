@@ -1,5 +1,5 @@
 import { LEAVE_MEMO_TASK_RE } from './journalLeavePresets';
-import { getTaskMmAxis } from './journalMm';
+import { getTaskLoggedHours, getTaskMmAxis } from './journalMm';
 import {
   improveProjectTitleKey,
   isImproveProjectTitleRegistered,
@@ -53,7 +53,7 @@ export function collectImproveMmCandidates({
           byKey.set(key, entry);
         }
 
-        const actual = Number(task.actual) || 0;
+        const actual = getTaskLoggedHours(task);
         entry.occurrenceCount += 1;
         entry.totalActual = round4(entry.totalActual + actual);
         if (actual > 0) entry.withActualCount += 1;

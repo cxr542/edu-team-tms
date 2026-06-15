@@ -1,6 +1,6 @@
 import { KPI_JOURNAL_MEMBER, KPI_SHEET_01C, KPI_SHEET_02, KPI_01C_HEADERS, KPI_02_HEADERS } from './kpiSchema';
 import { JOURNAL_CATS } from './journalCategories';
-import { getTaskMmAxis, hoursToMm } from '../utils/journalMm';
+import { getTaskLoggedHours, getTaskMmAxis, hoursToMm } from '../utils/journalMm';
 import { LEAVE_MEMO_TASK_RE } from '../utils/journalLeavePresets';
 import { getTaskSlotLabel } from './journalTaskSlot';
 import { findImproveProject } from './improveProjects';
@@ -17,7 +17,7 @@ export const KPI_LINKAGE_ROWS = [
     journal: '일별 업무 (실작업 h, M/M 구분)',
     kpi: `${KPI1_NAME} — 업무MM / 생산향상MM`,
     sheet: KPI_SHEET_01C,
-    note: '실작업÷8, AI·수동「향상」→ 생산향상MM',
+    note: '실작업÷8 · 완료 건 · AI·수동「향상」→ 생산향상MM',
   },
   {
     journal: 'KPI 탭 — 주간메모 (별도 입력)',
@@ -29,7 +29,7 @@ export const KPI_LINKAGE_ROWS = [
     journal: `${KPI2_NAME} 효과 건 (기준h·실작업·향상과제)`,
     kpi: `${KPI2_NAME} — 도구 활용 단축 효과`,
     sheet: KPI_SHEET_02,
-    note: 'kpi2Effect.enabled 건만 · 생산성=기준÷실작업',
+    note: 'kpi2Effect.enabled · 완료 건 · 생산성=기준÷실작업',
   },
   {
     journal: '휴일 M/M · 휴일 메모',
@@ -54,24 +54,33 @@ export function describeTaskKpiLinkage(task, dayKey, improveProjects = []) {
   if (!task || LEAVE_MEMO_TASK_RE.test(task.title || '')) return null;
 
   const axis = getTaskMmAxis(task);
-  const actual = Number(task.actual) || 0;
+  const enteredActual = Number(task.actual) || 0;
+  const logged = getTaskLoggedHours(task);
   const plan = Number(task.plan) || 0;
-  const mm = hoursToMm(actual);
+  const mm = hoursToMm(logged);
   const axisLabel = axis === 'improve' ? '생산향상' : '업무';
   const catLabel = JOURNAL_CATS[task.cat]?.label || task.cat;
 
   const kpi1 =
-    actual > 0
-      ? `${axisLabel}MM +${mm.toFixed(2)} (${actual}h÷8)`
-      : plan > 0
-        ? `${axisLabel}MM — 계획 ${plan}h (실작업 입력 시 반영)`
-        : null;
+    logged > 0
+      ? `${axisLabel}MM +${mm.toFixed(2)} (${logged}h÷8)`
+      : enteredActual > 0 && !task.done
+        ? `${axisLabel}MM — ${enteredActual}h 입력됨 (완료 체크 시 반영)`
+        : plan > 0
+          ? `${axisLabel}MM — 계획 ${plan}h (완료·실작업 입력 시 반영)`
+          : null;
 
   let kpi2 = null;
   if (isKpi2EffectTask(task)) {
     const baseline = getKpi2BaselineHours(task);
     const project = findImproveProject(improveProjects, task.kpi2Effect?.projectId);
-    kpi2 = `효과건 · 기준${baseline}h→${actual}h${project ? ` · ${project.name}` : ''}`;
+    const effectActual =
+      logged > 0
+        ? `${logged}h`
+        : enteredActual > 0 && !task.done
+          ? `${enteredActual}h(미완료)`
+          : '0h';
+    kpi2 = `효과건 · 기준${baseline}h→${effectActual}${project ? ` · ${project.name}` : ''}`;
   } else if (axis === 'improve') {
     kpi2 = `향상 투자 — ${KPI2_NAME} 효과 건 아님 (과제 개발·개선)`;
   }

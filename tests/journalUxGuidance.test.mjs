@@ -29,12 +29,12 @@ describe('journal UX guidance', () => {
     expect(journalSource).toContain('자동 공유 저장은 사용하지 않습니다.');
   });
 
-  it('documents M/M and KPI2 meaning without changing done-based MM logic', () => {
+  it('documents M/M and KPI2 meaning with done-gated MM logic', () => {
     expect(journalSource).toContain('journal-kpi-help');
     expect(journalSource).toContain('일반 업무 M/M');
     expect(journalSource).toContain('생산성향상 M/M');
     expect(journalSource).toContain('개선 효과로 제출할 항목만 체크합니다.');
-    expect(journalSource).toContain('완료 체크는 마감·제출 상태이며 M/M 집계와는 별개입니다.');
+    expect(journalSource).toContain('완료 체크한 업무의 실작업(h)만 M/M·가동률');
     expect(journalSource).toContain('doneTasks');
   });
 
