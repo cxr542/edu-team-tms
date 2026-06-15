@@ -3,6 +3,7 @@ import { getWeeksInMonth } from '../src/utils/journalMm.js';
 import {
   findWeekKeyForDayKey,
   resolveJournalScrollDayKey,
+  resolveVerticalScrollElement,
 } from '../src/utils/journalScroll.js';
 
 describe('journalScroll helpers', () => {
@@ -21,5 +22,9 @@ describe('journalScroll helpers', () => {
     expect(resolveJournalScrollDayKey('2026-06-13')).toBe('2026-06-12');
     expect(resolveJournalScrollDayKey('2026-06-14')).toBe('2026-06-12');
     expect(resolveJournalScrollDayKey('2026-06-10')).toBe('2026-06-10');
+  });
+
+  it('resolveVerticalScrollElement returns null without DOM', () => {
+    expect(resolveVerticalScrollElement(null)).toBeNull();
   });
 });

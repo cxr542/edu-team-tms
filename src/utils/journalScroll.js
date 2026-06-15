@@ -2,7 +2,7 @@ import { dateKey } from './journalMm.js';
 
 /**
  * 일일 업무일지 — 오늘 셀로 스크롤
- * (.journal-main 세로 + .journal-week-table-wrap 가로, sticky 헤더 보정)
+ * (document/body 세로 + .journal-week-table-wrap 가로, sticky 헤더 보정)
  */
 
 /** 주말이면 표에 있는 가장 가까운 금요일로 보정 (월~금만 표시) */
@@ -31,39 +31,65 @@ export function findWeekKeyForDayKey(weeks, dayKey) {
   return week?.key ?? null;
 }
 
+/** 셀 기준 실제 세로 스크롤 컨테이너 (journal-main은 overflow:visible → body) */
+export function resolveVerticalScrollElement(fromEl) {
+  if (typeof window === 'undefined' || !fromEl) {
+    return null;
+  }
+  let node = fromEl.parentElement;
+  while (node && node !== document.body) {
+    const { overflowY } = window.getComputedStyle(node);
+    if (/(auto|scroll|overlay)/.test(overflowY) && node.scrollHeight > node.clientHeight + 1) {
+      return node;
+    }
+    node = node.parentElement;
+  }
+  return document.scrollingElement || document.documentElement;
+}
+
+function scrollHorizontallyToCell(cell) {
+  const tableWrap = cell.closest('.journal-week-table-wrap');
+  if (!tableWrap) return;
+  const wrapRect = tableWrap.getBoundingClientRect();
+  const cellRect = cell.getBoundingClientRect();
+  const nextLeft =
+    tableWrap.scrollLeft + (cellRect.left - wrapRect.left) - wrapRect.width / 2 + cellRect.width / 2;
+  tableWrap.scrollTo({ left: Math.max(0, nextLeft), behavior: 'smooth' });
+}
+
+function scrollVerticallyToCell(cell, journalMainEl) {
+  const scrollEl = resolveVerticalScrollElement(cell);
+  const sticky = (journalMainEl || document.querySelector('.journal-main'))?.querySelector(
+    '.journal-sticky-top'
+  );
+  const stickyH = sticky?.getBoundingClientRect().height ?? 0;
+  const offset = stickyH + 16;
+  const cellRect = cell.getBoundingClientRect();
+
+  if (!scrollEl || scrollEl === document.documentElement || scrollEl === document.body) {
+    const top = window.scrollY + cellRect.top - offset;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    return;
+  }
+
+  const containerRect = scrollEl.getBoundingClientRect();
+  const top = scrollEl.scrollTop + (cellRect.top - containerRect.top) - offset;
+  scrollEl.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+}
+
 export function scrollJournalDayIntoView(dayKey, journalMainEl) {
-  if (!dayKey) return false;
+  if (!dayKey || typeof document === 'undefined') return false;
 
   const cell = document.querySelector(`td.journal-day-cell[data-day="${dayKey}"]`);
   if (!cell) return false;
 
-  const main = journalMainEl || document.querySelector('.journal-main');
-  const tableWrap = cell.closest('.journal-week-table-wrap');
-
-  if (tableWrap) {
-    const wrapRect = tableWrap.getBoundingClientRect();
-    const cellRect = cell.getBoundingClientRect();
-    const nextLeft =
-      tableWrap.scrollLeft + (cellRect.left - wrapRect.left) - wrapRect.width / 2 + cellRect.width / 2;
-    tableWrap.scrollTo({ left: Math.max(0, nextLeft), behavior: 'smooth' });
-  }
-
-  if (main) {
-    const sticky = main.querySelector('.journal-sticky-top');
-    const stickyH = sticky?.getBoundingClientRect().height ?? 0;
-    const mainRect = main.getBoundingClientRect();
-    const cellRect = cell.getBoundingClientRect();
-    const top = main.scrollTop + (cellRect.top - mainRect.top) - stickyH - 20;
-    main.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-  } else {
-    cell.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-  }
-
+  scrollHorizontallyToCell(cell);
+  scrollVerticallyToCell(cell, journalMainEl);
   return true;
 }
 
-/** DOM 반영 후 재시도 (월 전환 직후). 취소 함수 반환 */
-export function scheduleScrollJournalDay(dayKey, journalMainEl, { maxAttempts = 48, onSuccess } = {}) {
+/** DOM 반영 후 재시도 (월 전환·주차 펼치기 직후). 취소 함수 반환 */
+export function scheduleScrollJournalDay(dayKey, journalMainEl, { maxAttempts = 72, onSuccess, onFailure } = {}) {
   let cancelled = false;
   let attempts = 0;
 
@@ -74,7 +100,11 @@ export function scheduleScrollJournalDay(dayKey, journalMainEl, { maxAttempts = 
       return;
     }
     attempts += 1;
-    if (attempts < maxAttempts) requestAnimationFrame(tick);
+    if (attempts < maxAttempts) {
+      requestAnimationFrame(tick);
+    } else {
+      onFailure?.();
+    }
   };
 
   requestAnimationFrame(tick);

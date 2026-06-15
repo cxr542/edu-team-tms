@@ -179,6 +179,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const improveProjectsFileInputRef = useRef(null);
   const journalMainRef = useRef(null);
   const scrollToDayRef = useRef(null);
+  const pendingScrollToastRef = useRef(null);
   const teamAccess = useTeamAccess();
   const [memberCode, setMemberCode] = useState(teamAccess.defaultMemberCode);
   const selectedMember = useMemo(() => findKpiMember(memberCode) || TEAM_KPI_MEMBERS[0], [memberCode]);
@@ -347,6 +348,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const goToToday = useCallback(() => {
     const { key } = getTodayParts();
     const scrollKey = resolveJournalScrollDayKey(key);
+    pendingScrollToastRef.current =
+      scrollKey !== key
+        ? `${formatDayLabel(scrollKey)} (주말 → 해당 주 금요일)`
+        : formatDayLabel(key);
     navigateToDayKey(scrollKey, {
       year,
       month,
@@ -355,16 +360,11 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       scrollToDayRef,
       setScrollTick,
     });
-    const label =
-      scrollKey !== key
-        ? `${formatDayLabel(scrollKey)} (주말 → 해당 주 금요일)`
-        : formatDayLabel(key);
-    showToast(`${label} — 입력 셀로 이동`);
   }, [year, month, setPeriod]);
 
   useEffect(() => {
     const key = scrollToDayRef.current;
-    if (!key) return;
+    if (!key) return undefined;
 
     const [y, m] = key.split('-').map(Number);
     const monthIndex = m - 1;
@@ -385,6 +385,14 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     return scheduleScrollJournalDay(key, journalMainRef.current, {
       onSuccess: () => {
         scrollToDayRef.current = null;
+        if (pendingScrollToastRef.current) {
+          showToast(`${pendingScrollToastRef.current} — 입력 셀로 이동`);
+          pendingScrollToastRef.current = null;
+        }
+      },
+      onFailure: () => {
+        showToast('오늘 날짜 셀을 찾지 못했습니다. 주차 표를 펼친 뒤 다시 시도해 주세요.');
+        pendingScrollToastRef.current = null;
       },
     });
   }, [scrollTick, year, month, collapsedWeeks, memberCode]);
