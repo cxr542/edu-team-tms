@@ -15,14 +15,17 @@ function hostFromOrigin(origin) {
 const PROD_HOSTS = new Set([
   hostFromOrigin(TMS_ORIGIN),
   hostFromOrigin(TMS_ALT_ORIGIN),
+  hostFromOrigin(import.meta.env.VITE_DEPLOY_ORIGIN || ''),
   'okestro-edu-team-tms.vercel.app',
   'edu-team-tms.vercel.app',
+  'edu-team-tms-ten.vercel.app',
   'cxr542.github.io',
 ].filter(Boolean));
 
 const PROD_ORIGINS = new Set([
   TMS_ORIGIN,
   TMS_ALT_ORIGIN,
+  import.meta.env.VITE_DEPLOY_ORIGIN,
   'https://cxr542.github.io',
 ].filter(Boolean));
 
@@ -40,6 +43,11 @@ export function formatAppVersion(version = APP_VERSION) {
  */
 export function getAppEnvironment() {
   if (typeof window === 'undefined') return 'development';
+
+  // Vercel Production 배포 빌드 — preview·localhost 제외
+  if (import.meta.env.VITE_VERCEL_ENV === 'production') {
+    return 'production';
+  }
 
   const { hostname, protocol, pathname, origin } = window.location;
   if (protocol === 'file:') return 'development';

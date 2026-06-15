@@ -12,6 +12,14 @@ export default defineConfig({
   plugins: [react(), prodSnapshotReadProxyPlugin(), kakaoApiDevPlugin()],
   define: {
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(pkg.version),
+    'import.meta.env.VITE_VERCEL_ENV': JSON.stringify(process.env.VERCEL_ENV || ''),
+    'import.meta.env.VITE_DEPLOY_ORIGIN': JSON.stringify(
+      process.env.VERCEL_PROJECT_PRODUCTION_URL
+        ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+        : process.env.VERCEL_URL
+          ? `https://${process.env.VERCEL_URL}`
+          : '',
+    ),
   },
   server: {
     port: 3000,
