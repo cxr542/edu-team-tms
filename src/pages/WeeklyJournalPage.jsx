@@ -27,7 +27,7 @@ import {
   recalcDayMmFromHours,
 } from '../utils/journalMm';
 import { exportKpiAnalysisWorkbook } from '../utils/kpiExcelExport';
-import { downloadJournalSnapshot } from '../utils/journalSnapshot';
+import { countKpi2EffectTasks } from '../utils/computeTeamKpi';
 import { formatPublishedAt } from '../utils/appMode';
 import { getCloudHealthUserMessage } from '../utils/cloudHealth';
 import { resolveJournalDay } from '../utils/journalHoliday2026';
@@ -326,8 +326,14 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         if (info.show && info.isShort) shortDays += 1;
       });
     });
-    return { work, improve, leave, shortDays, doneTasks };
-  }, [weeks, getDay]);
+    return {
+      work,
+      improve,
+      leave,
+      shortDays,
+      kpi2EffectDone: countKpi2EffectTasks(journal.getMemberDays(memberCode), year, month),
+    };
+  }, [weeks, getDay, year, month, journal, memberCode]);
 
   const todayKey = useMemo(() => getTodayParts().key, []);
   const focusDayKey = selectedDayKey || todayKey;
@@ -818,6 +824,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                       days: journal.getMemberDays(memberCode),
                       kpiOperational: journal.kpiOperational,
                       improveProjects: journal.improveProjects,
+                      memberCode,
+                      kpiWeekMemos: journal.getMemberKpiWeekMemos(memberCode),
                     });
                     showToast(`KPI 엑셀 저장 — ${result.rows01c}주 · ${result.rows02}건`);
                   } catch (err) {
@@ -887,7 +895,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                     className="btn btn-secondary"
                     {...uiTooltip('수동 복구·배포를 위한 백업 JSON 파일 생성')}
                     onClick={() => {
-                      downloadJournalSnapshot(journal.getStore());
+                      journal.downloadJournalBackup();
                       showToast('백업용 JSON 파일을 다운로드했습니다.');
                     }}
                   >
@@ -937,7 +945,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                       const file = e.target.files?.[0];
                       if (!file) return;
                       try {
-                        await journal.importFromFile(file);
+                        await journal.importJournalBackup(file);
                         showToast('백업 파일을 반영했습니다');
                       } catch (err) {
                         showToast(`가져오기 실패: ${err.message}`);
@@ -1156,8 +1164,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               <strong>{kpiMonth.leave.toFixed(2)}</strong>
             </div>
             <div>
-              {KPI2_NAME} 완료 업무
-              <strong>{kpiMonth.doneTasks}건</strong>
+              {KPI2_NAME} 효과 (완료)
+              <strong>{kpiMonth.kpi2EffectDone}건</strong>
             </div>
             <div>
               8h 미만 근무일

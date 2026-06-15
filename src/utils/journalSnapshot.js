@@ -2,6 +2,7 @@ import { isProductionEnvironment } from '../constants/appEnv';
 import { canAttemptCloudWrite, recordCloudFailure, recordCloudSuccess } from './cloudHealth';
 import { apply2026PublicHolidaysToDays } from './journalHoliday2026';
 import { mergeJournalSnapshotsByMember, normalizeJournalCloudSnapshot } from './journalCloudSnapshot';
+import { extractMemberKpiApprovalSlice } from './journalKpiApprovalSlice';
 import { recalcDayMmFromHours } from './journalMm';
 import { createEmptyMemberJournals } from './journalMemberStore';
 
@@ -15,7 +16,7 @@ function recalcMemberDays(days) {
   return next;
 }
 
-export function buildJournalSnapshot(store) {
+export function buildJournalSnapshot(store, kpiOperational = null) {
   const memberJournals = store.memberJournals || createEmptyMemberJournals();
   const normalized = {};
   Object.entries(memberJournals).forEach(([code, slice]) => {
@@ -26,6 +27,12 @@ export function buildJournalSnapshot(store) {
       kpiWeekMemos: slice.kpiWeekMemos || {},
       prefs: slice.prefs || null,
     };
+    if (kpiOperational) {
+      const approval = extractMemberKpiApprovalSlice(kpiOperational, code, slice.days || {});
+      if (Object.keys(approval.months).length || Object.keys(approval.kpi2RowStatus).length) {
+        normalized[code].kpiApproval = approval;
+      }
+    }
   });
 
   return normalizeJournalCloudSnapshot({
@@ -52,8 +59,8 @@ export function normalizeJournalSnapshot(raw) {
   };
 }
 
-export function downloadJournalSnapshot(store) {
-  const payload = buildJournalSnapshot(store);
+export function downloadJournalSnapshot(store, kpiOperational = null) {
+  const payload = buildJournalSnapshot(store, kpiOperational);
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

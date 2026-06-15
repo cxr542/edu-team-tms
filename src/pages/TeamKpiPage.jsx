@@ -225,6 +225,8 @@ export default function TeamKpiPage() {
         days: getMemberDays(memberCode),
         kpiOperational,
         improveProjects,
+        memberCode,
+        kpiWeekMemos: journal.getMemberKpiWeekMemos(memberCode),
       });
       showToast(`분석 Excel 저장 — ${result.filename}`);
     } catch (e) {
@@ -320,6 +322,7 @@ export default function TeamKpiPage() {
         month={month}
         yq={yq}
         getMemberDays={getMemberDays}
+        getMemberKpiWeekMemos={journal.getMemberKpiWeekMemos}
         kpiOperational={kpiOperational}
         improveProjects={improveProjects}
         selectedMemberCode={memberCode}
@@ -528,8 +531,8 @@ export default function TeamKpiPage() {
                         <input
                           type="text"
                           className="team-kpi-memo-input"
-                          value={journal.getKpiWeekMemo(row.weekKey)}
-                          onChange={(e) => journal.setKpiWeekMemo(row.weekKey, e.target.value)}
+                          value={journal.getKpiWeekMemo(row.weekKey, memberCode)}
+                          onChange={(e) => journal.setKpiWeekMemo(row.weekKey, e.target.value, memberCode)}
                           placeholder="한두 줄 (선택)"
                           maxLength={240}
                         />
@@ -875,8 +878,8 @@ export default function TeamKpiPage() {
           <div className="team-kpi-kpi2-effects">
             <h3 className="team-kpi-kpi2-effects__title">{KPI2_NAME} 효과 제출 관리</h3>
             <p className="team-kpi-hint team-kpi-kpi2-effects__hint">
-              아래 목록은 일지에서 <strong>KPI2 효과</strong>로 체크한 항목만 표시됩니다. 완료(상태)는 업무
-              마감/제출 의미이며, 실제 투입 M/M 집계와는 별개입니다.
+              아래 목록은 일지에서 <strong>KPI2 효과</strong>로 체크한 항목만 표시됩니다. 실작업 M/M은 일지에서{' '}
+              <strong>완료 체크한 업무</strong>만 반영됩니다. 승인 큐에는 「승인 요청」을 누른 건만 올라갑니다.
             </p>
           </div>
           <div className="team-kpi-table-wrap">

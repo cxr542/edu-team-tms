@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { KPI_STATUS } from '../constants/kpiStatuses';
+import { mergeJournalKpiApprovalImport } from '../utils/journalKpiApprovalSlice';
 import {
   KPI_OPERATIONAL_STORAGE_KEY,
   createEmptyKpiOperationalStore,
@@ -866,6 +867,14 @@ export function useKpiOperational({ readOnly = false } = {}) {
     [readOnly, persist, getCompetencyMonth]
   );
 
+  const mergeJournalKpiApproval = useCallback(
+    (snapshot) => {
+      if (readOnly) return;
+      setStore((prev) => persist(mergeJournalKpiApprovalImport(prev, snapshot)));
+    },
+    [readOnly, persist]
+  );
+
   return {
     kpiOperational: store,
     kpiWeekMemos: store.kpiWeekMemos,
@@ -903,6 +912,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
     importStore,
     seedAcademizerDemo,
     seedKpi3AcademizerDemo,
+    mergeJournalKpiApproval,
     getStore,
     pullCompetencyCloudSnapshot,
     saveCompetencyMemberCloudSnapshot,

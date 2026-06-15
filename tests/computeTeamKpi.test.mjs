@@ -64,7 +64,7 @@ describe('computeTeamKpi june', () => {
     expect(rows[0].업무명).toBe('PPT 신규 작성 (Academizer)');
     expect(rows[0].계획시간).toBe(8);
     expect(rows[0].실작업시간).toBe(5);
-    expect(rows[0]['생산성%']).toBeGreaterThan(1.5);
+    expect(rows[0]['생산성%']).toBeGreaterThan(150);
   });
 
   it('buildKpi02EffectRows — 행정·KPI 개발 제외', () => {
@@ -126,7 +126,31 @@ describe('computeTeamKpi june', () => {
     const kpi2 = buildKpi02EffectRows(2026, 5, days, IMPROVE_PROJECTS);
     expect(kpi2.some((r) => r.업무명.includes('개발'))).toBe(false);
     expect(kpi2.length).toBe(1);
-    expect(kpi2[0]['생산성%']).toBeCloseTo(1.6, 2);
+    expect(kpi2[0]['생산성%']).toBeCloseTo(160, 0);
+  });
+
+  it('buildKpi02EffectRows — 완료만 해도 기본 상태는 작성중', () => {
+    const days = {
+      '2026-06-20': {
+        holiday: false,
+        mm: { work: 0.625, improve: 0, leave: 0 },
+        tasks: [
+          {
+            id: 'done-only',
+            cat: 'prep',
+            title: 'PPT (완료만)',
+            plan: 8,
+            actual: 5,
+            done: true,
+            kpi2Effect: { enabled: true, projectId: 'ppt-academizer', baselineHours: 8 },
+          },
+        ],
+      },
+    };
+    const rows = buildKpi02EffectRows(2026, 5, days, IMPROVE_PROJECTS);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].상태).toBe('작성중');
+    expect(rows[0].실작업시간).toBe(5);
   });
 
   it('buildKpi02EffectRows — 미완료 실작업은 KPI2 행 실작업 0', () => {

@@ -18,6 +18,7 @@ import {
   formatKpiMemberLabel,
 } from '../constants/kpiMembers';
 import {
+  downloadJournalSnapshot,
   fetchJournalSnapshot,
   JOURNAL_STORAGE_KEY,
   normalizeJournalSnapshot,
@@ -395,6 +396,17 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
     [store.memberJournals]
   );
 
+  const getMemberKpiWeekMemos = useCallback(
+    (memberCode = JOURNAL_LINKED_MEMBER_CODE) =>
+      getMemberJournal(store, memberCode).kpiWeekMemos || {},
+    [store.memberJournals]
+  );
+
+  const downloadJournalBackup = useCallback(
+    (kpiOperational = null) => downloadJournalSnapshot(store, kpiOperational),
+    [store]
+  );
+
   const resetToSeed = useCallback(
     (memberCode = JOURNAL_LINKED_MEMBER_CODE) => {
       if (readOnly) return false;
@@ -499,6 +511,8 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
     setMemberPrefs,
     setKpiWeekMemo,
     getKpiWeekMemo,
+    getMemberKpiWeekMemos,
+    downloadJournalBackup,
     resetToSeed,
     pullFromCloud,
     saveMemberToCloud,

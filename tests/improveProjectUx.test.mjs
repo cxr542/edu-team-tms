@@ -69,8 +69,9 @@ describe('improve project management UX', () => {
     expect(kpiPage).toContain('로 체크한 항목만 표시');
   });
 
-  it('documents completion status separate from MM aggregation', () => {
-    expect(kpiPage).toContain('M/M 집계와는 별개입니다');
+  it('documents completion status gates MM and explicit KPI2 submit', () => {
+    expect(kpiPage).toContain('완료 체크한 업무');
+    expect(kpiPage).toContain('승인 요청');
   });
 
   it('supports includeRegistered for display without changing default candidate filter', () => {

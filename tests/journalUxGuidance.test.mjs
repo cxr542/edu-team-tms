@@ -35,7 +35,7 @@ describe('journal UX guidance', () => {
     expect(journalSource).toContain('생산성향상 M/M');
     expect(journalSource).toContain('개선 효과로 제출할 항목만 체크합니다.');
     expect(journalSource).toContain('완료 체크한 업무의 실작업(h)만 M/M·가동률');
-    expect(journalSource).toContain('doneTasks');
+    expect(journalSource).toContain('kpi2EffectDone');
   });
 
   it('styles status and help panels', () => {

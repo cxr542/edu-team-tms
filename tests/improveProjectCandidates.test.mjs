@@ -41,7 +41,27 @@ describe('collectImproveMmCandidates', () => {
     expect(rows[0].totalActual).toBe(3);
   });
 
-  it('includes mmAxis:improve tasks', () => {
+  it('includes mmAxis:improve tasks when done', () => {
+    const rows = collect({
+      '2026-06-11': {
+        tasks: [
+          {
+            id: 't2',
+            cat: 'prep',
+            mmAxis: 'improve',
+            title: '팀 KPI 관리시스템',
+            plan: 4,
+            actual: 2,
+            done: true,
+          },
+        ],
+      },
+    });
+    expect(rows).toHaveLength(1);
+    expect(rows[0].title).toBe('팀 KPI 관리시스템');
+  });
+
+  it('excludes mmAxis:improve tasks when not done', () => {
     const rows = collect({
       '2026-06-11': {
         tasks: [
@@ -57,8 +77,7 @@ describe('collectImproveMmCandidates', () => {
         ],
       },
     });
-    expect(rows).toHaveLength(1);
-    expect(rows[0].title).toBe('팀 KPI 관리시스템');
+    expect(rows).toHaveLength(0);
   });
 
   it('excludes mmAxis:work tasks', () => {

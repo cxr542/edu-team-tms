@@ -134,12 +134,11 @@ export function buildKpi02EffectRows(
       if (baseline === 0 && actual === 0) return;
 
       const project = projectById[task.kpi2Effect?.projectId];
-      const productivity = actual > 0 && baseline > 0 ? round4(baseline / actual) : '';
+      const productivity =
+        actual > 0 && baseline > 0 ? round4((baseline / actual) * 100) : '';
       const rowId = kpi2RowId(key, task.id);
       const opStatus = kpi2RowStatus[rowId];
-      const status =
-        opStatus?.status ||
-        (task.done ? KPI_STATUS.SUBMITTED : KPI_STATUS.DRAFT);
+      const status = opStatus?.status || KPI_STATUS.DRAFT;
 
       rows.push({
         dayKey: key,
@@ -293,7 +292,7 @@ export function countKpi2EffectTasks(days, year, monthIndex) {
   Object.entries(days).forEach(([key, day]) => {
     if (!key.startsWith(prefix)) return;
     (day.tasks || []).forEach((task) => {
-      if (isKpi2EffectTask(task)) count += 1;
+      if (isKpi2EffectTask(task) && task.done) count += 1;
     });
   });
   return count;

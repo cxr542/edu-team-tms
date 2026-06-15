@@ -12,15 +12,18 @@ export function buildTeamMonthlyReport({
   year,
   monthIndex,
   getMemberDays,
+  getMemberKpiWeekMemos,
   kpiOperational,
   improveProjects,
 }) {
   const ym = monthKey(year, monthIndex);
-  const memos = kpiOperational.kpiWeekMemos || {};
   const kpi2RowStatus = kpiOperational.kpi2RowStatus || {};
 
   return TEAM_KPI_MEMBERS.map((member) => {
     const memberDays = getMemberDays(member.code);
+    const memos = getMemberKpiWeekMemos
+      ? getMemberKpiWeekMemos(member.code)
+      : kpiOperational.kpiWeekMemos || {};
     const monthly01 = kpiOperational.months?.[ym]?.[member.code]?.monthly01;
     const metrics = computeTeamKpi({
       year,

@@ -4,6 +4,7 @@ import { useImproveProjects } from '../hooks/useImproveProjects';
 import { useKpiOperational } from '../hooks/useKpiOperational';
 import { computeTeamKpi } from '../utils/computeTeamKpi';
 import { JOURNAL_LINKED_MEMBER_CODE } from '../constants/kpiMembers';
+import { mergeJournalKpiApprovalImport } from '../utils/journalKpiApprovalSlice';
 
 const JournalContext = createContext(null);
 
@@ -11,33 +12,44 @@ export function JournalProvider({ children, readOnly = false, autoSyncCloud = fa
   const journal = useWeeklyJournal({ readOnly, autoSyncCloud });
   const kpiApi = useKpiOperational({ readOnly });
   const improveProjectsApi = useImproveProjects({ readOnly });
-  const migrated = useRef(false);
+  const migratedMemos = useRef(false);
 
+  /** legacy: global operational 주간메모 → A 구성원 일지 슬라이스로 1회 이전 */
   useEffect(() => {
-    if (readOnly || migrated.current) return;
-    const legacy = journal.kpiWeekMemos;
-    if (!legacy || !Object.keys(legacy).length) return;
-    const current = kpiApi.kpiWeekMemos || {};
-    if (Object.keys(current).length > 0) {
-      migrated.current = true;
+    if (readOnly || migratedMemos.current) return;
+    const globalMemos = kpiApi.kpiWeekMemos || {};
+    if (!Object.keys(globalMemos).length) {
+      migratedMemos.current = true;
       return;
     }
-    Object.entries(legacy).forEach(([key, text]) => {
-      kpiApi.setKpiWeekMemo(key, text);
+    const aMemos = journal.getMemberKpiWeekMemos(JOURNAL_LINKED_MEMBER_CODE);
+    if (Object.keys(aMemos).length > 0) {
+      migratedMemos.current = true;
+      return;
+    }
+    Object.entries(globalMemos).forEach(([key, text]) => {
+      journal.setKpiWeekMemo(key, text, JOURNAL_LINKED_MEMBER_CODE);
     });
-    migrated.current = true;
-  }, [readOnly, journal.kpiWeekMemos, kpiApi]);
+    migratedMemos.current = true;
+  }, [readOnly, journal, kpiApi.kpiWeekMemos]);
+
+  const importJournalBackup = async (file) => {
+    const snapshot = await journal.importFromFile(file);
+    if (!readOnly) {
+      kpiApi.mergeJournalKpiApproval(snapshot);
+    }
+    return snapshot;
+  };
 
   const value = useMemo(
     () => ({
       ...journal,
       ...kpiApi,
       kpiOperationalReadOnly: readOnly,
-      kpiWeekMemos: kpiApi.kpiWeekMemos,
-      getKpiWeekMemo: kpiApi.getKpiWeekMemo,
-      setKpiWeekMemo: kpiApi.setKpiWeekMemo,
       improveProjects: improveProjectsApi.projects,
       improveProjectsApi,
+      importJournalBackup,
+      downloadJournalBackup: () => journal.downloadJournalBackup(kpiApi.kpiOperational),
     }),
     [journal, kpiApi, improveProjectsApi, readOnly]
   );
@@ -54,9 +66,11 @@ export function useJournal() {
 }
 
 export function useTeamKpiMetrics(year, monthIndex, memberCode = JOURNAL_LINKED_MEMBER_CODE) {
-  const { getMemberDays, kpiWeekMemos, improveProjects, kpiOperational, getMonthly01 } = useJournal();
+  const { getMemberDays, getMemberKpiWeekMemos, improveProjects, kpiOperational, getMonthly01 } =
+    useJournal();
   const monthly01 = getMonthly01(year, monthIndex, memberCode);
   const days = getMemberDays(memberCode);
+  const kpiWeekMemos = getMemberKpiWeekMemos(memberCode);
   return useMemo(
     () =>
       computeTeamKpi({

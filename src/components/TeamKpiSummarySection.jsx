@@ -18,6 +18,7 @@ export default function TeamKpiSummarySection({
   month,
   yq,
   getMemberDays,
+  getMemberKpiWeekMemos,
   kpiOperational,
   improveProjects,
   selectedMemberCode,
@@ -29,10 +30,11 @@ export default function TeamKpiSummarySection({
         year,
         monthIndex: month,
         getMemberDays,
+        getMemberKpiWeekMemos,
         kpiOperational,
         improveProjects,
       }),
-    [year, month, getMemberDays, kpiOperational, improveProjects]
+    [year, month, getMemberDays, getMemberKpiWeekMemos, kpiOperational, improveProjects]
   );
 
   const quarterly = useMemo(

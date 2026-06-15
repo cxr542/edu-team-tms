@@ -86,19 +86,21 @@ export function exportKpiAnalysisWorkbook({
   kpiOperational,
   improveProjects = [],
   filename,
+  memberCode = JOURNAL_LINKED_MEMBER_CODE,
+  kpiWeekMemos = null,
 }) {
-  const memos = kpiOperational?.kpiWeekMemos || {};
+  const memos = kpiWeekMemos ?? kpiOperational?.kpiWeekMemos ?? {};
   const kpi2RowStatus = kpiOperational?.kpi2RowStatus || {};
   const ym = monthKey(year, monthIndex);
   const yq = quarterKey(year, monthIndex);
 
-  const rows01c = buildKpi01cRows(year, monthIndex, days, memos, JOURNAL_LINKED_MEMBER_CODE);
+  const rows01c = buildKpi01cRows(year, monthIndex, days, memos, memberCode);
   const rows02 = buildKpi02EffectRows(
     year,
     monthIndex,
     days,
     improveProjects,
-    JOURNAL_LINKED_MEMBER_CODE,
+    memberCode,
     kpi2RowStatus
   );
 

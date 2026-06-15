@@ -21,7 +21,7 @@ const MONTH_LABELS = Array.from({ length: 12 }, (_, i) => `${i + 1}월`);
 
 export default function KpiReportPage() {
   const { year, month, changeMonth, setPeriod } = useJournalPeriod();
-  const { getMemberDays, improveProjects, kpiOperational } = useJournal();
+  const { getMemberDays, getMemberKpiWeekMemos, improveProjects, kpiOperational } = useJournal();
 
   const monthly = useMemo(
     () =>
@@ -29,10 +29,11 @@ export default function KpiReportPage() {
         year,
         monthIndex: month,
         getMemberDays,
+        getMemberKpiWeekMemos,
         kpiOperational,
         improveProjects,
       }),
-    [year, month, getMemberDays, kpiOperational, improveProjects]
+    [year, month, getMemberDays, getMemberKpiWeekMemos, kpiOperational, improveProjects]
   );
 
   const quarterly = useMemo(

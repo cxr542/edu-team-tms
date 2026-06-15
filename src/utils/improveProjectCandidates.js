@@ -34,6 +34,7 @@ export function collectImproveMmCandidates({
         if (!task) return;
         if (LEAVE_MEMO_TASK_RE.test(task.title || '')) return;
         if (getTaskMmAxis(task) !== 'improve') return;
+        if (!task.done) return;
 
         const title = normalizeImproveProjectTitle(task.title);
         if (!title) return;
