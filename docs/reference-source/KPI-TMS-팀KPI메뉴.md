@@ -6,7 +6,7 @@
 
 | 화면 | URL | 역할 |
 |------|-----|------|
-| 일일 업무일지 | `module=journal` | 구성원별 매일 입력 |
+| 일일 업무일지 | `module=journal` | 구성원별 매일 입력 · **A/B/C 탭 조회**(타인 read-only) |
 | 역량 평가 (KPI3) | `module=competency` | **4요소**(레벨·다면·리더·실전)·자체/팀장 루브릭·분기 확정 |
 | 팀 KPI 관리 | `module=kpi` | **팀장** · KPI1·2·월마감·보내기 |
 | KPI 승인 | `module=kpi-approve` | **팀장** 승인·반려 |

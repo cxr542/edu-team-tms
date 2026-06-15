@@ -38,6 +38,12 @@ describe('journal UX guidance', () => {
     expect(journalSource).toContain('kpi2EffectDone');
   });
 
+  it('shows member journal tabs for all roles including locked members', () => {
+    expect(journalSource).toContain('journal-member-tabs');
+    expect(journalSource).toContain('canEditMemberJournal');
+    expect(journalSource).toContain('viewingOtherMember');
+  });
+
   it('styles status and help panels', () => {
     expect(cssSource).toContain('.journal-status-panel');
     expect(cssSource).toContain('.journal-kpi-help');

@@ -41,6 +41,25 @@
   border-color: #006dff;
 }
 
+.journal-member-tab.is-view-only:not(.is-active) {
+  opacity: 0.85;
+}
+
+.journal-member-tab__badge {
+  margin-left: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.journal-sync-hint--view-other {
+  margin-top: 0.35rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
 .journal-member-tab.is-active {
   background: #006dff;
   border-color: #006dff;

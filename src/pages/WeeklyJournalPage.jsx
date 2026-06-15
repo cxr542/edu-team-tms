@@ -54,7 +54,7 @@ import {
 import AppModuleLink from '../components/AppModuleLink';
 import JournalWeekColumnTextarea from '../components/JournalWeekColumnTextarea';
 import { uiTooltip } from '../utils/uiTooltip';
-import { applyLeaderJournalMemberToUrl, useTeamAccess } from '../hooks/useTeamAccess';
+import { applyLeaderJournalMemberToUrl, canEditMemberJournal, useTeamAccess } from '../hooks/useTeamAccess';
 import { URL_ACCESS_LEADER } from '../constants/teamAccess';
 import { JournalEditKpiPreview, TaskKpiBadge } from '../components/JournalKpiLinkagePanel';
 import JournalCategoryLegend from '../components/JournalCategoryLegend';
@@ -183,6 +183,9 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const teamAccess = useTeamAccess();
   const [memberCode, setMemberCode] = useState(teamAccess.defaultMemberCode);
   const selectedMember = useMemo(() => findKpiMember(memberCode) || TEAM_KPI_MEMBERS[0], [memberCode]);
+  const journalReadOnly = readOnly || !canEditMemberJournal(teamAccess, memberCode);
+  const viewingOtherMember =
+    teamAccess.memberLocked && memberCode !== teamAccess.scopedMember;
   const canImportJournalBackup = teamAccess.isLeader || memberCode === TEAM_LEADER_MEMBER_CODE;
 
   useEffect(() => {
@@ -211,9 +214,9 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     [journal.memberJournals, memberCode]
   );
   const isImproveProjectMember = MEMBER_IMPROVE_PROJECT_CODES.has(memberCode);
-  const showImproveProjectPanel = !readOnly && (teamAccess.isMemberScope || isImproveProjectMember);
+  const showImproveProjectPanel = !journalReadOnly && (teamAccess.isMemberScope || isImproveProjectMember);
   const showJournalTeamShareControls =
-    !readOnly && (SHOW_BC_JOURNAL_TEAM_SHARE_UI || !isImproveProjectMember);
+    !journalReadOnly && (SHOW_BC_JOURNAL_TEAM_SHARE_UI || !isImproveProjectMember);
   const linkableImproveProjects = useMemo(
     () => filterImproveProjectsForMember(journal.improveProjects, memberCode),
     [journal.improveProjects, memberCode]
@@ -413,7 +416,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
 
   const saveEdit = (e) => {
     e.preventDefault();
-    if (!editTask || readOnly) return;
+    if (!editTask || journalReadOnly) return;
     patchDay(editTask.dayKey, (day) => {
       const tasks = day.tasks.map((t) =>
         t.id === editTask.id ? mergeTaskFromEdit(t, editTask) : t
@@ -427,7 +430,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   };
 
   const deleteTask = () => {
-    if (!editTask || readOnly) return;
+    if (!editTask || journalReadOnly) return;
     patchDay(editTask.dayKey, (day) => {
       const next = { ...day, tasks: day.tasks.filter((t) => t.id !== editTask.id) };
       recalcDayMmFromHours(next);
@@ -438,19 +441,19 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   };
 
   const openCopyModal = () => {
-    if (!editTask || readOnly) return;
+    if (!editTask || journalReadOnly) return;
     setCopyTargetDayKey(editTask.dayKey);
     setCopyOpen(true);
   };
 
   const openMoveModal = () => {
-    if (!editTask || readOnly) return;
+    if (!editTask || journalReadOnly) return;
     setMoveTargetDayKey(editTask.dayKey);
     setMoveOpen(true);
   };
 
   const confirmCopy = () => {
-    if (!editTask || readOnly || !copyTargetDayKey) return;
+    if (!editTask || journalReadOnly || !copyTargetDayKey) return;
     const sourceDayKey = editTask.dayKey;
     const sourceId = editTask.id;
     const copy = {
@@ -495,7 +498,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   };
 
   const confirmMove = () => {
-    if (!editTask || readOnly || !moveTargetDayKey) return;
+    if (!editTask || journalReadOnly || !moveTargetDayKey) return;
     const sourceDayKey = editTask.dayKey;
     if (moveTargetDayKey === sourceDayKey) {
       showToast('이동할 날짜가 현재와 같습니다');
@@ -538,7 +541,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   };
 
   const confirmAdd = () => {
-    if (!addDayKey || readOnly) return;
+    if (!addDayKey || journalReadOnly) return;
     if (!addDraft.title.trim()) {
       showToast('업무명을 입력하세요');
       return;
@@ -581,7 +584,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   };
 
   const applyLeavePreset = (preset) => {
-    if (!leaveDayKey || readOnly) return;
+    if (!leaveDayKey || journalReadOnly) return;
     patchDay(leaveDayKey, (day) => {
       const next = applyLeavePresetToDay(day, preset);
       if (!next) return day;
@@ -595,7 +598,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   };
 
   const saveLeave = () => {
-    if (!leaveDayKey || readOnly) return;
+    if (!leaveDayKey || journalReadOnly) return;
     const leave = Number(leaveLeave) || 0;
     patchDay(leaveDayKey, (day) => {
       if (leave >= 1) {
@@ -636,7 +639,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     const label = `${DAY_NAMES[date.getDay()]} ${m + 1}/${d}`;
     const hoursInfo = getDayHoursInfo(data);
     const isToday = key === dateKey(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
-    const readOnlyCls = readOnly ? ' journal-readonly' : '';
+    const journalReadOnlyCls = journalReadOnly ? ' journal-readonly' : '';
 
     if (!inMonth) {
       return (
@@ -651,7 +654,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       <td
         key={key}
         data-day={key}
-        className={`journal-day-cell${selectedDayKey === key ? ' is-selected' : ''}${isToday ? ' is-today' : ''}${hoursInfo.show && hoursInfo.isShort ? ' is-hours-short' : ''}${readOnlyCls}`}
+        className={`journal-day-cell${selectedDayKey === key ? ' is-selected' : ''}${isToday ? ' is-today' : ''}${hoursInfo.show && hoursInfo.isShort ? ' is-hours-short' : ''}${journalReadOnlyCls}`}
         onClick={() => setSelectedDayKey(key)}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
@@ -686,7 +689,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               className={`journal-task-item${editTask?.id === t.id ? ' selected' : ''}${hoursLine && !(Number(t.actual) > 0) ? ' is-planned' : ''}${slotLabel ? ` slot-${normalizeTaskSlot(t.slot)}` : ''}`}
               onClick={(e) => {
                 e.stopPropagation();
-                if (!readOnly) openEdit(t.id, key);
+                if (!journalReadOnly) openEdit(t.id, key);
               }}
             >
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: memberCategoryView.cats[t.cat]?.color, flexShrink: 0, marginTop: 5 }} />
@@ -712,17 +715,17 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           })}
         </ul>
         <div className="journal-mm-row">
-          <button type="button" className={`journal-mm-chip${data.mm.leave > 0 ? ' leave-active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!readOnly) openLeave(key); }}>
+          <button type="button" className={`journal-mm-chip${data.mm.leave > 0 ? ' leave-active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!journalReadOnly) openLeave(key); }}>
             업무 {data.mm.work}
           </button>
-          <button type="button" className="journal-mm-chip" onClick={(e) => { e.stopPropagation(); if (!readOnly) openLeave(key); }}>
+          <button type="button" className="journal-mm-chip" onClick={(e) => { e.stopPropagation(); if (!journalReadOnly) openLeave(key); }}>
             향상 {data.mm.improve}
           </button>
-          <button type="button" className={`journal-mm-chip${data.mm.leave > 0 ? ' leave-active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!readOnly) openLeave(key); }}>
+          <button type="button" className={`journal-mm-chip${data.mm.leave > 0 ? ' leave-active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!journalReadOnly) openLeave(key); }}>
             휴일 {data.mm.leave}
           </button>
         </div>
-        {!readOnly && (
+        {!journalReadOnly && (
           <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
             <button type="button" className="btn btn-secondary" style={{ fontSize: '0.72rem', padding: '0.25rem 0.4rem' }} onClick={(e) => { e.stopPropagation(); openAdd(key); }}>
               + 항목
@@ -771,24 +774,24 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 <>
                   구성원 <strong>{memberCode}</strong> 업무일지 ·{' '}
                   <strong>{selectedMember.displayName}</strong>{' '}
-                  <span>({formatKpiMemberRoleLine(selectedMember)}){readOnly ? ' · 조회' : ''}</span>
+                  <span>({formatKpiMemberRoleLine(selectedMember)}){journalReadOnly ? ' · 조회' : ''}</span>
                 </>
               ) : (
                 <>
                   작성자 <strong>{selectedMember.displayName}</strong>{' '}
                   <span>
-                    ({formatKpiMemberRoleLine(selectedMember)}){readOnly ? ' · 조회' : ''}
+                    ({formatKpiMemberRoleLine(selectedMember)}){journalReadOnly ? ' · 조회' : ''}
                   </span>
                 </>
               )}
             </div>
             <div className="journal-actions">
-              {(teamAccess.isMemberScope || memberCode === TEAM_LEADER_MEMBER_CODE || teamAccess.isLeader) && (
+              {(teamAccess.isLeader || memberCode === teamAccess.scopedMember) && (
                 <AppModuleLink
                   className="btn btn-secondary"
                   module="competency"
                   mode="edit"
-                  member={teamAccess.isMemberScope || teamAccess.isLeader ? memberCode : undefined}
+                  member={teamAccess.isLeader && !teamAccess.isMemberScope ? memberCode : teamAccess.scopedMember || memberCode}
                   access={teamAccess.isLeader && !teamAccess.isMemberScope ? URL_ACCESS_LEADER : undefined}
                   year={year}
                   month={month + 1}
@@ -845,7 +848,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 <Target size={16} />
                 오늘로 이동
               </button>
-              {!readOnly && (
+              {!journalReadOnly && (
                 <>
                   {showJournalTeamShareControls && (
                     <>
@@ -958,7 +961,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             </div>
           </header>
 
-          {!readOnly && (
+          {!journalReadOnly && (
             <section className="journal-status-panel" aria-label="선택 날짜 및 저장 상태">
               <h2 className="journal-status-panel__title">{formatJournalDayHeading(focusDayKey)}</h2>
               <p className="journal-status-panel__meta">
@@ -982,7 +985,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             </section>
           )}
 
-          {!readOnly && (
+          {!journalReadOnly && (
             <details className="journal-kpi-help">
               <summary>M/M · KPI2 효과 안내</summary>
               <ul>
@@ -1096,38 +1099,55 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             </section>
           )}
 
-          {!teamAccess.memberLocked && (
-            <nav className="journal-member-tabs" aria-label="구성원">
-              {TEAM_KPI_MEMBERS.map((m) => (
+          <nav className="journal-member-tabs" aria-label="구성원 일지">
+            {TEAM_KPI_MEMBERS.map((m) => {
+              const tabViewOnly = !canEditMemberJournal(teamAccess, m.code);
+              return (
                 <button
                   key={m.code}
                   type="button"
-                  className={`journal-member-tab${memberCode === m.code ? ' is-active' : ''}`}
+                  className={`journal-member-tab${memberCode === m.code ? ' is-active' : ''}${tabViewOnly && teamAccess.memberLocked ? ' is-view-only' : ''}`}
                   onClick={() => {
                     setMemberCode(m.code);
                     if (teamAccess.isLeader && !teamAccess.memberLocked) {
                       applyLeaderJournalMemberToUrl(m.code);
                     }
                   }}
-                  {...uiTooltip(`${formatKpiMemberLabel(m)} · ${formatKpiMemberRoleLine(m)}`)}
+                  {...uiTooltip(
+                    tabViewOnly && teamAccess.memberLocked
+                      ? `${formatKpiMemberLabel(m)} · 조회 전용`
+                      : `${formatKpiMemberLabel(m)} · ${formatKpiMemberRoleLine(m)}`
+                  )}
                 >
                   {formatKpiMemberLabel(m)}
+                  {tabViewOnly && teamAccess.memberLocked && m.code !== teamAccess.scopedMember ? (
+                    <span className="journal-member-tab__badge">조회</span>
+                  ) : null}
                 </button>
-              ))}
-            </nav>
+              );
+            })}
+          </nav>
+
+          {viewingOtherMember && (
+            <p className="journal-sync-hint journal-sync-hint--view-other">
+              <strong>{formatKpiMemberLabel(selectedMember)}</strong> 일지는{' '}
+              <strong>조회만</strong> 가능합니다. 작성·수정은 본인(
+              {teamAccess.scopedMember}) 탭에서 하세요. (팀장이 공유한 백업 JSON이 이 브라우저에
+              있어야 표시됩니다.)
+            </p>
           )}
 
-          {!readOnly && journal.meta?.updatedAt && (
+          {!journalReadOnly && journal.meta?.updatedAt && (
             <p className="journal-sync-hint">
               이 기기 저장: {new Date(journal.meta.updatedAt).toLocaleString('ko-KR')}
               {journal.syncStatus === 'synced' && ' · 공유 일지 병합됨'}
               {sharedSaveText}
             </p>
           )}
-          {!readOnly && cloudHealthMessage && (
+          {!journalReadOnly && cloudHealthMessage && (
             <p className="journal-sync-hint journal-sync-hint--warn">{cloudHealthMessage}</p>
           )}
-          {!readOnly && (
+          {!journalReadOnly && (
             <p className="journal-sync-hint">
               항목 저장·수정은 <strong>이 브라우저(localStorage)</strong>에 먼저 반영됩니다.
               {IMPROVE_PROJECT_BLOB_SHARE_ENABLED ? (
@@ -1174,7 +1194,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             </div>
           </div>
 
-          {!readOnly && isEditorMode() && (
+          {!journalReadOnly && isEditorMode() && (
             <MemberKpiApprovalPanel
               year={year}
               month={month}
@@ -1222,7 +1242,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               categories={memberCategoryView.cats}
               order={memberCategoryView.order}
             />
-            {!readOnly && (
+            {!journalReadOnly && (
               <button
                 type="button"
                 className="btn btn-secondary journal-member-prefs-btn"
@@ -1343,7 +1363,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                         <div className="journal-week-notes-inner">
                           <div className="journal-week-notes-head">
                             <span className="journal-week-notes-tag">금주(요약)</span>
-                            {!readOnly && (
+                            {!journalReadOnly && (
                               <button
                                 type="button"
                                 className="journal-summary-draft-btn"
@@ -1357,10 +1377,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                             )}
                           </div>
                           <JournalWeekColumnTextarea
-                            readOnly={readOnly}
+                            readOnly={journalReadOnly}
                             value={journal.getWeekSummaryContent(week.key, memberCode)}
                             onChange={(text) => journal.setWeekSummary(week.key, text, memberCode)}
-                            placeholder={readOnly ? '' : '• 카테고리 아래에서 Enter → └ 하위 항목'}
+                            placeholder={journalReadOnly ? '' : '• 카테고리 아래에서 Enter → └ 하위 항목'}
                           />
                         </div>
                       </td>
@@ -1368,7 +1388,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                         <div className="journal-week-notes-inner">
                           <div className="journal-week-notes-head">
                             <span className="journal-week-notes-tag">차주(예정)</span>
-                            {!readOnly && (
+                            {!journalReadOnly && (
                               <button
                                 type="button"
                                 className="journal-summary-draft-btn"
@@ -1382,10 +1402,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                             )}
                           </div>
                           <JournalWeekColumnTextarea
-                            readOnly={readOnly}
+                            readOnly={journalReadOnly}
                             value={journal.getNextWeekContent(week.key, memberCode)}
                             onChange={(text) => journal.setNextWeekPlan(week.key, text, memberCode)}
-                            placeholder={readOnly ? '' : '• 카테고리 아래에서 Enter → └ 하위 항목'}
+                            placeholder={journalReadOnly ? '' : '• 카테고리 아래에서 Enter → └ 하위 항목'}
                           />
                         </div>
                       </td>
@@ -1410,7 +1430,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             <div style={{ padding: '1rem', flex: 1, overflowY: 'auto' }}>
               <div className="form-group">
                 <label>카테고리</label>
-                <select className="form-input" value={editTask.cat} onChange={(e) => setEditTask({ ...editTask, cat: e.target.value })} disabled={readOnly}>
+                <select className="form-input" value={editTask.cat} onChange={(e) => setEditTask({ ...editTask, cat: e.target.value })} disabled={journalReadOnly}>
                   {memberCategoryView.order.map((k) => (
                     <option key={k} value={k}>
                       {memberCategoryView.cats[k]?.label ?? k}
@@ -1424,7 +1444,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   className="form-input"
                   value={editTask.mmAxis || ''}
                   onChange={(e) => setEditTask({ ...editTask, mmAxis: e.target.value || undefined })}
-                  disabled={readOnly}
+                  disabled={journalReadOnly}
                   aria-describedby="journal-mm-axis-help"
                 >
                   <option value="">자동 (AI→향상)</option>
@@ -1461,7 +1481,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                         improveProjectTitle: project?.name || '',
                       });
                     }}
-                    disabled={readOnly}
+                    disabled={journalReadOnly}
                     aria-describedby="journal-improve-project-link-help"
                   >
                     <option value="">선택 안 함</option>
@@ -1487,7 +1507,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                         value={value}
                         checked={normalizeTaskSlot(editTask.slot) === value}
                         onChange={() => setEditTask({ ...editTask, slot: value || undefined })}
-                        disabled={readOnly}
+                        disabled={journalReadOnly}
                       />
                       {label}
                     </label>
@@ -1496,7 +1516,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               </div>
               <div className="form-group">
                 <label>업무명</label>
-                <input className="form-input" value={editTask.title} onChange={(e) => setEditTask({ ...editTask, title: e.target.value })} readOnly={readOnly} />
+                <input className="form-input" value={editTask.title} onChange={(e) => setEditTask({ ...editTask, title: e.target.value })} readOnly={journalReadOnly} />
               </div>
               <JournalEditKpiPreview task={editTask} dayKey={editTask.dayKey} improveProjects={journal.improveProjects} />
               <div className="form-group">
@@ -1516,7 +1536,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                           : undefined,
                       })
                     }
-                    disabled={readOnly}
+                    disabled={journalReadOnly}
                   />{' '}
                   {KPI2_NAME} 효과 건 (도구 활용·시간 단축)
                 </label>
@@ -1535,7 +1555,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                           kpi2Effect: { ...editTask.kpi2Effect, projectId: e.target.value },
                         })
                       }
-                      disabled={readOnly}
+                      disabled={journalReadOnly}
                     >
                       <option value="">선택</option>
                       {journal.improveProjects.map((p) => (
@@ -1558,25 +1578,25 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                           kpi2Effect: { ...editTask.kpi2Effect, baselineHours: e.target.value },
                         })
                       }
-                      readOnly={readOnly}
+                      readOnly={journalReadOnly}
                     />
                   </div>
                 </>
               )}
               <div className="form-group">
                 <label>계획 (h)</label>
-                <input type="number" step="0.5" className="form-input" value={editTask.plan} onChange={(e) => setEditTask({ ...editTask, plan: e.target.value })} readOnly={readOnly} />
+                <input type="number" step="0.5" className="form-input" value={editTask.plan} onChange={(e) => setEditTask({ ...editTask, plan: e.target.value })} readOnly={journalReadOnly} />
               </div>
               <div className="form-group">
                 <label>실작업 (h)</label>
-                <input type="number" step="0.5" className="form-input" value={editTask.actual} onChange={(e) => setEditTask({ ...editTask, actual: e.target.value })} readOnly={readOnly} />
+                <input type="number" step="0.5" className="form-input" value={editTask.actual} onChange={(e) => setEditTask({ ...editTask, actual: e.target.value })} readOnly={journalReadOnly} />
               </div>
               <label>
-                <input type="checkbox" checked={editTask.done} onChange={(e) => setEditTask({ ...editTask, done: e.target.checked })} disabled={readOnly} /> 완료
+                <input type="checkbox" checked={editTask.done} onChange={(e) => setEditTask({ ...editTask, done: e.target.checked })} disabled={journalReadOnly} /> 완료
               </label>
               <p className="journal-field-help">완료 체크한 업무의 실작업(h)만 M/M·가동률에 반영됩니다.</p>
             </div>
-            {!readOnly && (
+            {!journalReadOnly && (
               <div className="modal-actions journal-edit-actions">
                 <div className="journal-edit-actions-danger">
                   <button type="button" className="btn btn-secondary" onClick={deleteTask}>
@@ -1754,7 +1774,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               type="button"
               className={`btn btn-secondary journal-leave-preset-btn${p.group === 'clear' ? ' is-clear' : ''}`}
               onClick={() => applyLeavePreset(p.id)}
-              disabled={readOnly}
+              disabled={journalReadOnly}
             >
               {p.label}
             </button>
@@ -1765,13 +1785,13 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         </p>
         <div className="form-group" style={{ padding: '0 1rem' }}>
           <label>휴일 M/M</label>
-          <input type="number" step="0.25" className="form-input" value={leaveLeave} onChange={(e) => setLeaveLeave(e.target.value)} readOnly={readOnly} />
+          <input type="number" step="0.25" className="form-input" value={leaveLeave} onChange={(e) => setLeaveLeave(e.target.value)} readOnly={journalReadOnly} />
         </div>
         <div className="modal-actions">
           <button type="button" className="btn btn-secondary" onClick={closeAll}>
             취소
           </button>
-          <button type="button" className="btn btn-primary" onClick={saveLeave} disabled={readOnly}>
+          <button type="button" className="btn btn-primary" onClick={saveLeave} disabled={journalReadOnly}>
             적용
           </button>
         </div>

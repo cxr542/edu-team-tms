@@ -37,6 +37,14 @@ export function getTeamAccessFromSearchParams(searchParams) {
   };
 }
 
+/** 일지에서 해당 구성원 데이터를 편집할 수 있는지 (조회는 memberLocked와 무관하게 탭 전환 가능) */
+export function canEditMemberJournal(access, memberCode) {
+  if (!memberCode) return false;
+  if (access.isLeader && !access.isMemberScope) return true;
+  if (access.memberLocked) return memberCode === access.scopedMember;
+  return memberCode === (access.scopedMember || access.leaderMemberCode);
+}
+
 function readTeamAccess() {
   if (typeof window === 'undefined') {
     return getTeamAccessFromSearchParams(new URLSearchParams());
