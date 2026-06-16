@@ -16,7 +16,7 @@ try {
   cachedApiKey = process.env.KAKAO_REST_API_KEY?.trim() || '';
 }
 
-const PROD_TMS_ORIGIN = 'https://edu-team-tms-ten.vercel.app';
+const PROD_TMS_ORIGIN = 'https://okestro-edu-tms-v2.vercel.app';
 const PROD_SNAPSHOT_API_PATHS = new Set([
   '/api/journal-snapshot',
   '/api/ledger-snapshot',

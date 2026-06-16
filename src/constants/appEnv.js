@@ -19,6 +19,7 @@ const PROD_HOSTS = new Set([
   hostFromOrigin(import.meta.env.VITE_DEPLOY_ORIGIN || ''),
   'okestro-edu-team-tms.vercel.app',
   'edu-team-tms.vercel.app',
+  'okestro-edu-tms-v2.vercel.app',
   'edu-team-tms-ten.vercel.app',
   'cxr542.github.io',
 ].filter(Boolean));
