@@ -18,6 +18,7 @@ import {
   Lightbulb,
   UtensilsCrossed,
   MessageCircle,
+  Sparkles,
 } from 'lucide-react';
 import LeaderKpiApprovalBell from './LeaderKpiApprovalBell';
 import { useLeaderKpiPendingBadge } from '../hooks/useLeaderKpiPendingBadge';
@@ -50,6 +51,7 @@ import MobileHomeGuideModal from './MobileHomeGuideModal';
 import AppModuleNavItem from './AppModuleNavItem';
 import { buildAppModuleUrl } from '../hooks/useAppModule';
 import { openAppModuleInNewTab } from '../utils/appModuleNavigation';
+import { withAppBase } from '../utils/appRoute';
 
 export default function AppShell({
   activeModule,
@@ -102,16 +104,19 @@ export default function AppShell({
 
   const canShowEditModule = (module) => {
     if (isViewer) return showInViewer(module);
-    if (!teamAccess) return true;
+    if (!teamAccess) return false;
     return teamAccess.canAccessModule(module);
   };
 
-  const showMemberWorkNav = !isViewer && (!teamAccess || teamAccess.isLeader || teamAccess.isMemberScope);
-  const showTeamCommonNav = !isViewer && teamAccess?.isMemberScope;
-  const showLeaderNav = !isViewer && (!teamAccess || teamAccess.isLeader);
-  const showGeneralNav = !isViewer && (!teamAccess || teamAccess.isLeader);
-  const showExperimentalNav = !isViewer && (!teamAccess || teamAccess.isLeader);
-  const showLeaderApprovalBadge = showLeaderNav && teamAccess?.isLeader && !teamAccess?.isMemberScope;
+  const isAdminShell = Boolean(teamAccess?.isAdmin && !teamAccess?.isMemberScope);
+  const isMemberShell = Boolean(teamAccess?.isMemberScope);
+
+  const showMemberWorkNav = !isViewer && (isMemberShell || isAdminShell);
+  const showTeamCommonNav = !isViewer && isMemberShell;
+  const showLeaderNav = !isViewer && isAdminShell;
+  const showGeneralNav = !isViewer && isAdminShell;
+  const showExperimentalNav = !isViewer && isAdminShell;
+  const showLeaderApprovalBadge = showLeaderNav && teamAccess?.isAdmin && !teamAccess?.isMemberScope;
   const leaderPending = useLeaderKpiPendingBadge(showLeaderApprovalBadge);
 
   const navBtn = (module, Icon, { viewer = false, badgeCount = 0 } = {}) => {
@@ -280,8 +285,19 @@ export default function AppShell({
             </nav>
           )}
 
-          {!viewerLedgerOnly && !isPublicViewerScope && (showGeneralNav || showTeamCommonNav || isViewer) && (
+          {!viewerLedgerOnly && !isPublicViewerScope && (showGeneralNav || showTeamCommonNav || isMemberShell || isViewer) && (
             <nav className="sidebar-nav sidebar-nav--footer project-sidebar-nav-footer" aria-label="도구·참고">
+              {isAdminShell && (
+                <a
+                  className="nav-item project-nav-item project-nav-item--hub"
+                  href={withAppBase('/')}
+                  onClick={onNavSelect}
+                  {...navTooltipProps('접속 안내')}
+                >
+                  <Sparkles size={16} className="nav-item__icon project-nav-item__icon" aria-hidden />
+                  <span className="nav-item__label project-nav-item__label">접속 안내</span>
+                </a>
+              )}
               {showGeneralNav && navBtn('idea-bank', Lightbulb)}
               {(canShowEditModule('docs') || (isViewer && showInViewer('docs'))) &&
                 navBtn('docs', BookOpen, isViewer ? { viewer: true } : undefined)}
@@ -308,7 +324,7 @@ export default function AppShell({
               </button>
               {settingsOpen && (
                 <div className="project-settings-popover" role="menu" aria-label="설정 메뉴">
-                  {canEditNav && !isPublicViewerScope && (
+                  {canEditNav && isAdminShell && !isPublicViewerScope && (
                     <>
                       <button
                         type="button"
@@ -389,9 +405,9 @@ export default function AppShell({
               ) : isViewer ? (
                 <>👀 교육팀 조회 · 팀 빌딩비 장부</>
               ) : teamAccess?.isMemberScope ? (
-                <>👤 팀원 · 일지·역량·팀 공통·참고문서</>
+                <>👤 사용자 · 일지·역량·팀 공통·참고문서</>
               ) : (
-                <>✏️ 교육팀 총무 · 장부·일지 작성</>
+                <>⚙️ 관리자 · 장부·KPI·팀 일지</>
               )}
               {!isProd && (
                 <>
@@ -446,8 +462,8 @@ export default function AppShell({
                   {formatKpiMemberLabel(findKpiMember(teamAccess.scopedMember))}
                 </span>
               )}
-              {teamAccess?.isLeader && !teamAccess.isMemberScope && (
-                <span className="project-toolbar__scope project-toolbar__scope--leader">팀장</span>
+              {teamAccess?.isAdmin && !teamAccess.isMemberScope && (
+                <span className="project-toolbar__scope project-toolbar__scope--leader">관리자</span>
               )}
             </p>
             {showLeaderApprovalBadge && (

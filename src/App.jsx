@@ -52,12 +52,14 @@ import {
   transactionDedupeKey,
 } from './utils/ledgerCopy';
 import { isViewerMode, formatPublishedAt } from './utils/appMode';
-import { URL_ACCESS_LEADER } from './constants/teamAccess';
+import { isAdminAccessParam, URL_ACCESS_ADMIN } from './constants/teamAccess';
+import { isAdminGateUnlocked } from './constants/adminGate';
+import { parseAppRoute } from './utils/appRoute';
+import AdminGatePage from './components/AdminGatePage';
 import {
   canEditLedger,
   isLedgerReadOnly,
   isMemberLedgerScope,
-  isPublicViewerScope,
   usesPublishedLedgerData as resolveUsesPublishedLedgerData,
 } from './utils/ledgerAccess';
 import { canAttemptCloudWrite, getCloudHealthUserMessage } from './utils/cloudHealth';
@@ -152,13 +154,24 @@ export default function App() {
   const isViewer = isViewerMode();
   const { module, setModule } = useAppModule();
   const teamAccess = useTeamAccess();
-  const accessParam =
-    typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('access') : null;
+  const [routeRevision, setRouteRevision] = useState(0);
+
+  useEffect(() => {
+    const sync = () => setRouteRevision((r) => r + 1);
+    window.addEventListener('popstate', sync);
+    return () => window.removeEventListener('popstate', sync);
+  }, []);
+
+  const appRoute = useMemo(() => {
+    void routeRevision;
+    if (typeof window === 'undefined') return { scope: 'public' };
+    return parseAppRoute(window.location);
+  }, [routeRevision]);
+
+  const isPublicViewer = appRoute.scope === 'public';
+  const needsAdminGate = appRoute.scope === 'admin' && !isAdminGateUnlocked();
+  const accessParam = teamAccess.isAdmin && !teamAccess.isMemberScope ? URL_ACCESS_ADMIN : null;
   const isMemberLedger = isMemberLedgerScope({ module, isMemberScope: teamAccess.isMemberScope });
-  const isPublicViewer = isPublicViewerScope({
-    isViewer,
-    isMemberScope: teamAccess.isMemberScope,
-  });
   /** 공개 조회·구성원 장부 — mode와 무관하게 read-only */
   const ledgerReadOnly = isLedgerReadOnly({
     isViewer,
@@ -178,9 +191,9 @@ export default function App() {
   });
   /** 공개 조회(?mode=view)만 상세 접기 — 구성원 B/C 장부는 거래 목록 항상 표시 */
   const ledgerDetailsCollapsible = isViewer && !teamAccess.isMemberScope;
-  const isLeaderEditAccess = accessParam === URL_ACCESS_LEADER;
-  /** 팀장 편집(?mode=edit&access=leader) 장부에서만 엑셀 내보내기 */
-  const canExportLedgerExcel = !isViewer && isLeaderEditAccess;
+  const isAdminEditAccess = teamAccess.isAdmin && !teamAccess.isMemberScope;
+  /** 관리자(/admin) 장부에서만 엑셀보내기 */
+  const canExportLedgerExcel = !isViewer && isAdminEditAccess;
   const {
     visibility: viewerMenuVisibility,
     applyVisibility: applyViewerMenuVisibility,
@@ -989,6 +1002,14 @@ export default function App() {
 
   const publishedLabel = formatPublishedAt(snapshot?.publishedAt);
 
+  if (needsAdminGate) {
+    return (
+      <div className="project-app theme-tms is-admin-gate">
+        <AdminGatePage onUnlocked={() => setRouteRevision((r) => r + 1)} />
+      </div>
+    );
+  }
+
   return (
     <>
       <AppShell
@@ -1002,7 +1023,7 @@ export default function App() {
         isPublicViewerScope={isPublicViewer}
         viewerMenuVisibility={activeViewerMenuVisibility}
         onOpenViewerMenuSettings={() => setViewerMenuSettingsOpen(true)}
-        teamAccess={isViewer ? null : teamAccess}
+        teamAccess={isPublicViewer || (isViewer && !teamAccess.isMemberScope) ? null : teamAccess}
         sidebarFooter={
           ledgerReadOnly && displayModule === 'ledger' ? (
             <UsageStandardsPanel categories={categories} variant="sidebar" />
@@ -1209,8 +1230,8 @@ export default function App() {
             <p>
               {ledgerReadOnly
                 ? isMemberLedger
-                  ? '구성원 장부는 조회 전용입니다. 거래 추가·수정·삭제는 팀장 화면에서만 가능합니다.'
-                  : '교육팀 팀 빌딩 지출·잔액을 조회합니다. (작성·수정은 팀장만 가능)'
+                  ? '사용자 장부는 조회 전용입니다. 거래 추가·수정·삭제는 관리자 화면에서만 가능합니다.'
+                  : '교육팀 팀 빌딩 지출·잔액을 조회합니다. (작성·수정은 관리자만 가능)'
                 : '매월 150,000원씩 배정되는 교육팀의 팀 빌딩 지출 및 잔액 흐름을 꼼꼼하게 관리합니다.'}
             </p>
             {isMemberLedger && !isViewer && (

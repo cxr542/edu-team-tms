@@ -11,7 +11,7 @@ import {
   formatKpiMemberLabel,
   formatKpiMemberRoleLine,
 } from '../constants/kpiMembers';
-import { URL_ACCESS_LEADER } from '../constants/teamAccess';
+import { URL_ACCESS_ADMIN } from '../constants/teamAccess';
 import { useTeamAccess } from '../hooks/useTeamAccess';
 import { isEditorMode } from '../utils/appMode';
 import { uiTooltip } from '../utils/uiTooltip';
@@ -270,7 +270,7 @@ export default function TeamKpiPage() {
   if (!teamAccess.isLeader) {
     return (
       <main className="team-kpi-main">
-        <p className="team-kpi-hint">팀 KPI 관리·승인·리포트는 팀장 전용입니다.</p>
+        <p className="team-kpi-hint">팀 KPI 관리·승인·리포트는 관리자 전용입니다.</p>
         <AppModuleLink module="journal" mode="edit" member={teamAccess.scopedMember || undefined}>
           일지로 이동
         </AppModuleLink>
@@ -306,11 +306,11 @@ export default function TeamKpiPage() {
         </div>
         <p className="team-kpi-banner">
           공식 기록 = <strong>TMS</strong> · 엑셀은 <strong>분석·백업</strong> 추출만 (
-          <AppModuleLink module="kpi-report" mode="edit" access={URL_ACCESS_LEADER} year={year} month={month + 1}>
+          <AppModuleLink module="kpi-report" mode="edit" access={URL_ACCESS_ADMIN} year={year} month={month + 1}>
             리포트
           </AppModuleLink>{' '}
           ·{' '}
-          <AppModuleLink module="kpi-approve" mode="edit" access={URL_ACCESS_LEADER} year={year} month={month + 1}>
+          <AppModuleLink module="kpi-approve" mode="edit" access={URL_ACCESS_ADMIN} year={year} month={month + 1}>
             승인
           </AppModuleLink>)
         </p>

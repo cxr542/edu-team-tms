@@ -218,7 +218,7 @@ function MemberKpiApprovalBody({
       </div>
       {embedded && memberLabel && (
         <p className="team-kpi-hint member-kpi-approval__footer">
-          {memberLabel} · 승인 결과는 팀장 「KPI 승인」 및 KPI 리포트에 반영됩니다.
+          {memberLabel} · 승인 결과는 관리자 「KPI 승인」 및 KPI 리포트에 반영됩니다.
         </p>
       )}
     </>

@@ -22,9 +22,9 @@ describe('ledger control labels and export visibility', () => {
     expect(readonlyHeader).not.toContain('엑셀로 내보내기');
   });
 
-  it('limits excel export to leader edit access', () => {
-    expect(source).toContain('accessParam === URL_ACCESS_LEADER');
-    expect(source).toContain('const canExportLedgerExcel = !isViewer && isLeaderEditAccess');
+  it('limits excel export to admin edit access', () => {
+    expect(source).toContain('teamAccess.isAdmin && !teamAccess.isMemberScope');
+    expect(source).toContain('const canExportLedgerExcel = !isViewer && isAdminEditAccess');
     expect(source).toContain('{canExportLedgerExcel ? (');
     expect(source).toContain('onClick={handleExcelExport}');
   });

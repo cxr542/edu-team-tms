@@ -13,7 +13,7 @@ import {
   formatKpiMemberLabel,
   formatKpiMemberRoleLine,
 } from '../constants/kpiMembers';
-import { URL_ACCESS_LEADER } from '../constants/teamAccess';
+import { URL_ACCESS_ADMIN } from '../constants/teamAccess';
 import { useJournal } from '../context/JournalProvider';
 import { useCompetencyPeriod } from '../hooks/useCompetencyPeriod';
 import { useTeamAccess } from '../hooks/useTeamAccess';
@@ -120,12 +120,11 @@ export default function CompetencyPage() {
         )}
         {isLeaderOwnSelf && selectedMember && (
           <p className="competency-page-leader-note">
-            팀장은 본인({formatKpiMemberLabel(findKpiMember(TEAM_LEADER_MEMBER_CODE))}) 폼만 수정하세요.
-            다른 구성원 <strong>팀장 평가</strong>·분기 확정은{' '}
+            관리자 모드에서는 본인 역량 폼만 수정하세요. 다른 구성원 <strong>팀장 평가</strong>·분기 확정은{' '}
             <AppModuleLink
               module="kpi"
               mode="edit"
-              access={URL_ACCESS_LEADER}
+              access={URL_ACCESS_ADMIN}
               year={year}
               month={monthIndex + 1}
               style={{ fontWeight: 600 }}
@@ -141,7 +140,7 @@ export default function CompetencyPage() {
               module="competency"
               mode="edit"
               member={null}
-              access={URL_ACCESS_LEADER}
+              access={URL_ACCESS_ADMIN}
               year={year}
               quarter={quarter}
             >

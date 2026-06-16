@@ -15,7 +15,7 @@ describe('member ledger read-only enforcement', () => {
   });
 
   it('shows member ledger read-only guidance copy', () => {
-    expect(appSource).toContain('구성원 장부는 조회 전용입니다. 거래 추가·수정·삭제는 팀장 화면에서만 가능합니다.');
+    expect(appSource).toContain('관리자 화면에서만 가능');
     expect(appSource).toContain('?mode=view&amp;module=ledger&amp;member=');
   });
 

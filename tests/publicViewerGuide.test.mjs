@@ -2,13 +2,38 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { isPublicViewerScope } from '../src/utils/ledgerAccess.js';
-import { PUBLIC_VIEWER_ROLE_PORTALS } from '../src/constants/publicViewerPortal.js';
+import {
+  PUBLIC_VIEWER_ADMIN_PORTAL,
+  PUBLIC_VIEWER_USER_PORTALS,
+} from '../src/constants/publicViewerPortal.js';
+import { getTeamAccessFromSearchParams } from '../src/hooks/useTeamAccess.js';
 
 describe('public viewer scope policy', () => {
   it('treats member-less view mode as public viewer landing', () => {
     expect(isPublicViewerScope({ isViewer: true, isMemberScope: false })).toBe(true);
     expect(isPublicViewerScope({ isViewer: true, isMemberScope: true })).toBe(false);
     expect(isPublicViewerScope({ isViewer: false, isMemberScope: false })).toBe(false);
+  });
+
+  it('treats `/` path as public landing even in dev edit mode', () => {
+    expect(
+      isPublicViewerScope({
+        isViewer: false,
+        isMemberScope: false,
+        location: { pathname: '/', search: '' },
+      })
+    ).toBe(true);
+  });
+});
+
+describe('public landing team access', () => {
+  it('does not treat root `/` as admin scope', () => {
+    const access = getTeamAccessFromSearchParams(new URLSearchParams(''), {
+      pathname: '/',
+      search: '',
+    });
+    expect(access.isAdmin).toBe(false);
+    expect(access.isMemberScope).toBe(false);
   });
 });
 
@@ -21,36 +46,54 @@ describe('public viewer landing UI', () => {
   );
   const accessSource = readFileSync(path.join(process.cwd(), 'src/utils/ledgerAccess.js'), 'utf8');
 
-  it('derives isPublicViewer from ledgerAccess and short-circuits module UI', () => {
-    expect(appSource).toContain('isPublicViewerScope');
-    expect(appSource).toContain('const isPublicViewer = isPublicViewerScope({');
+  it('derives isPublicViewer from route scope and short-circuits module UI', () => {
+    expect(appSource).toContain("appRoute.scope === 'public'");
     expect(appSource).toContain('{isPublicViewer ? (');
     expect(appSource).toContain('<PublicViewerGuidePage />');
     expect(appSource).toContain(
-      'const ledgerSnapshotEnabled = !isPublicViewer && provisionalDisplayModule === \'ledger\''
+      "const ledgerSnapshotEnabled = !isPublicViewer && provisionalDisplayModule === 'ledger'"
     );
   });
 
-  it('shows role portal cards without ledger fetch on public viewer', () => {
-    expect(guideSource).toContain('교육팀 TMS 접속 안내');
-    expect(guideSource).toContain('PUBLIC_VIEWER_ROLE_PORTALS');
-    expect(guideSource).toContain('전체 북마크 URL 목록 보기');
-    expect(accessSource).toContain('if (isPublicViewerScope({ isViewer, isMemberScope })) return false');
+  it('shows user portal cards first and admin section separately', () => {
+    expect(guideSource).toContain('업무 화면으로');
+    expect(guideSource).toContain('PUBLIC_VIEWER_USER_PORTALS');
+    expect(guideSource).toContain('PUBLIC_VIEWER_ADMIN_PORTAL');
+    expect(guideSource).toContain('public-viewer-portal__section');
+    expect(guideSource).toContain('public-viewer-portal__grid--users');
+    expect(guideSource).toContain('전체 북마크 URL 목록 (관리자)');
+    expect(accessSource).toContain("parseAppRoute(location).scope === 'public'");
   });
 
-  it('defines leader and member entry links including member ledger view mode', () => {
-    const memberB = PUBLIC_VIEWER_ROLE_PORTALS.find((p) => p.id === 'member-b');
+  it('defines admin href and user entry links including member ledger view mode', () => {
+    expect(PUBLIC_VIEWER_ADMIN_PORTAL.primary.href).toContain('/admin');
+    const memberA = PUBLIC_VIEWER_USER_PORTALS.find((p) => p.id === 'user-a');
+    const memberB = PUBLIC_VIEWER_USER_PORTALS.find((p) => p.id === 'user-b');
+    expect(memberA.badge).toBe('A');
+    expect(memberA.primary.member).toBe('A');
     const ledgerLink = memberB.links.find((l) => l.label === '장부 조회');
     expect(ledgerLink.mode).toBe('view');
     expect(ledgerLink.member).toBe('B');
-    expect(PUBLIC_VIEWER_ROLE_PORTALS[0].primary.access).toBeTruthy();
+  });
+
+  it('gates /admin behind password screen', () => {
+    expect(appSource).toContain('needsAdminGate');
+    expect(appSource).toContain('<AdminGatePage');
+    expect(appSource).toContain('isAdminGateUnlocked');
   });
 
   it('hides viewer nav and sidebar on public viewer scope', () => {
     expect(shellSource).toContain('isPublicViewerScope');
     expect(shellSource).toContain('!isPublicViewerScope && (');
-    expect(shellSource).toContain('canEditNav && !isPublicViewerScope');
+    expect(shellSource).toContain('canEditNav && isAdminShell && !isPublicViewerScope');
     expect(shellSource).toContain('is-public-viewer-guide');
+  });
+
+  it('links admin shell sidebar to public landing', () => {
+    expect(shellSource).toContain('isAdminShell &&');
+    expect(shellSource).toContain('project-nav-item--hub');
+    expect(shellSource).toContain("href={withAppBase('/')}");
+    expect(shellSource).toContain('접속 안내');
   });
 
   it('keeps member ledger view and leader edit routes outside public viewer branch', () => {

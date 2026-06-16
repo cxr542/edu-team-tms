@@ -1,12 +1,12 @@
 import React from 'react';
 import { Bell } from 'lucide-react';
-import { URL_ACCESS_LEADER } from '../constants/teamAccess';
+import { URL_ACCESS_ADMIN } from '../constants/teamAccess';
 import { buildAppModuleUrl } from '../hooks/useAppModule';
 import { uiTooltip } from '../utils/uiTooltip';
 
 export default function LeaderKpiApprovalBell({ count = 0, summary, period, className = '' }) {
   const href = buildAppModuleUrl('kpi-approve', {
-    access: URL_ACCESS_LEADER,
+    access: URL_ACCESS_ADMIN,
     year: period?.year,
     month: (period?.monthIndex ?? 0) + 1,
   });

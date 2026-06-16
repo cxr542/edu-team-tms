@@ -2,7 +2,7 @@ import React from 'react';
 import { ChevronRight } from 'lucide-react';
 import AppModuleLink from './AppModuleLink';
 import { COMPETENCY_PAGE_HINT } from '../constants/competencyTabs';
-import { URL_ACCESS_LEADER } from '../constants/teamAccess';
+import { URL_ACCESS_ADMIN } from '../constants/teamAccess';
 import {
   TEAM_KPI_MEMBERS,
   formatKpiMemberLabel,
@@ -34,7 +34,7 @@ export default function CompetencyMemberHub({ year, quarter, yq, canEditByCode }
                 module="competency"
                 mode="edit"
                 member={member.code}
-                access={URL_ACCESS_LEADER}
+                access={URL_ACCESS_ADMIN}
                 year={year}
                 quarter={quarter}
                 className={`competency-member-hub__card${canEdit ? ' is-editable' : ''}`}

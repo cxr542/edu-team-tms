@@ -55,7 +55,7 @@ import AppModuleLink from '../components/AppModuleLink';
 import JournalWeekColumnTextarea from '../components/JournalWeekColumnTextarea';
 import { uiTooltip } from '../utils/uiTooltip';
 import { applyLeaderJournalMemberToUrl, canEditMemberJournal, useTeamAccess } from '../hooks/useTeamAccess';
-import { URL_ACCESS_LEADER } from '../constants/teamAccess';
+import { URL_ACCESS_ADMIN } from '../constants/teamAccess';
 import { JournalEditKpiPreview, TaskKpiBadge } from '../components/JournalKpiLinkagePanel';
 import JournalCategoryLegend from '../components/JournalCategoryLegend';
 import JournalMemberPrefsModal from '../components/JournalMemberPrefsModal';
@@ -817,11 +817,11 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   className="btn btn-secondary"
                   module="kpi"
                   mode="edit"
-                  access={URL_ACCESS_LEADER}
+                  access={URL_ACCESS_ADMIN}
                   year={year}
                   month={month + 1}
                   style={{ textDecoration: 'none' }}
-                  {...uiTooltip('팀 KPI 관리 (팀장)')}
+                  {...uiTooltip('팀 KPI 관리 (관리자)')}
                 >
                   팀 KPI 관리 →
                 </AppModuleLink>

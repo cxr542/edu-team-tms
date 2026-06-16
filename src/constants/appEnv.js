@@ -1,5 +1,6 @@
 import { TMS_ALT_ORIGIN, TMS_DEV_ORIGIN, TMS_ORIGIN } from './appUrls';
-import { URL_ACCESS_LEADER } from './teamAccess';
+import { URL_ACCESS_ADMIN } from './teamAccess';
+import { adminRoutePath } from '../utils/appRoute';
 
 /** package.json과 vite define에서 주입 (기본 1.0.0) */
 export const APP_VERSION = import.meta.env.VITE_APP_VERSION || '1.0.0';
@@ -94,9 +95,7 @@ export function getDevelopmentAppUrl(currentHref) {
     !isProductionEnvironment() && typeof window !== 'undefined'
       ? window.location.origin
       : TMS_DEV_ORIGIN;
-  const dev = new URL(`${baseOrigin}/`);
-  dev.searchParams.set('mode', 'edit');
-  dev.searchParams.set('access', URL_ACCESS_LEADER);
+  const dev = new URL(`${baseOrigin}${adminRoutePath()}`);
 
   if (href) {
     const cur = new URL(href);

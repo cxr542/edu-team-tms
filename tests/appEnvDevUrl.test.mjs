@@ -3,7 +3,7 @@ import {
   canShowLeaderDevUrlLink,
   getDevelopmentAppUrl,
 } from '../src/constants/appEnv.js';
-import { URL_ACCESS_LEADER } from '../src/constants/teamAccess.js';
+import { URL_ACCESS_ADMIN, URL_ACCESS_LEADER } from '../src/constants/teamAccess.js';
 
 describe('leader dev URL link', () => {
   it('builds localhost leader URL and preserves module context', () => {
@@ -11,8 +11,8 @@ describe('leader dev URL link', () => {
       'https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=kpi&year=2026&month=6&member=B';
     const url = new URL(getDevelopmentAppUrl(href));
     expect(url.origin).toBe('http://localhost:3000');
-    expect(url.searchParams.get('mode')).toBe('edit');
-    expect(url.searchParams.get('access')).toBe(URL_ACCESS_LEADER);
+    expect(url.searchParams.get('mode')).toBeNull();
+    expect(url.searchParams.get('access')).toBeNull();
     expect(url.searchParams.get('module')).toBe('kpi');
     expect(url.searchParams.get('year')).toBe('2026');
     expect(url.searchParams.get('month')).toBe('6');
@@ -66,9 +66,10 @@ describe('leader dev URL link', () => {
     ).toBe(false);
   });
 
-  it('uses access=leader in generated dev URL', () => {
+  it('uses /admin path in generated dev URL', () => {
     const url = new URL(getDevelopmentAppUrl('https://example.com/?mode=edit'));
-    expect(url.searchParams.get('access')).toBe(URL_ACCESS_LEADER);
-    expect(url.searchParams.get('mode')).toBe('edit');
+    expect(url.pathname).toBe('/admin');
+    expect(url.searchParams.get('access')).toBeNull();
+    expect(url.searchParams.get('mode')).toBeNull();
   });
 });

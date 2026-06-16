@@ -6,7 +6,7 @@ import {
   resolveMemberLedgerViewMode,
   usesPublishedLedgerData,
 } from '../src/utils/ledgerAccess.js';
-import { URL_ACCESS_LEADER } from '../src/constants/teamAccess.js';
+import { URL_ACCESS_ADMIN, URL_ACCESS_LEADER } from '../src/constants/teamAccess.js';
 
 describe('ledgerAccess policy', () => {
   it('treats member ledger as read-only regardless of mode', () => {
@@ -20,7 +20,16 @@ describe('ledgerAccess policy', () => {
     expect(isMemberLedgerScope({ module: 'journal', isMemberScope: true })).toBe(false);
   });
 
-  it('allows leader ledger edit with access=leader or legacy leader scope', () => {
+  it('allows admin ledger edit with access=admin or legacy access=leader', () => {
+    expect(
+      canEditLedger({
+        isViewer: false,
+        module: 'ledger',
+        isMemberScope: false,
+        isAdmin: true,
+        accessParam: URL_ACCESS_ADMIN,
+      })
+    ).toBe(true);
     expect(
       canEditLedger({
         isViewer: false,
@@ -35,7 +44,7 @@ describe('ledgerAccess policy', () => {
         isViewer: false,
         module: 'ledger',
         isMemberScope: false,
-        isLeader: true,
+        isAdmin: true,
         accessParam: null,
       })
     ).toBe(true);
@@ -74,7 +83,7 @@ describe('ledgerAccess policy', () => {
       resolveMemberLedgerViewMode({ module: 'ledger', member: 'B', access: null })
     ).toBe('view');
     expect(
-      resolveMemberLedgerViewMode({ module: 'ledger', member: 'B', access: URL_ACCESS_LEADER })
+      resolveMemberLedgerViewMode({ module: 'ledger', member: 'B', access: URL_ACCESS_ADMIN })
     ).toBe(null);
     expect(resolveMemberLedgerViewMode({ module: 'journal', member: 'B', access: null })).toBe(null);
   });
