@@ -12,19 +12,33 @@ export function emptyMemberJournal() {
   };
 }
 
+function normalizeKpiApprovalSlice(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const months = raw.months && typeof raw.months === 'object' ? JSON.parse(JSON.stringify(raw.months)) : {};
+  const kpi2RowStatus =
+    raw.kpi2RowStatus && typeof raw.kpi2RowStatus === 'object'
+      ? JSON.parse(JSON.stringify(raw.kpi2RowStatus))
+      : {};
+  if (!Object.keys(months).length && !Object.keys(kpi2RowStatus).length) return null;
+  return { months, kpi2RowStatus };
+}
+
 export function createEmptyMemberJournals() {
   return Object.fromEntries(TEAM_KPI_MEMBERS.map((m) => [m.code, emptyMemberJournal()]));
 }
 
 export function normalizeMemberJournalSlice(raw) {
   if (!raw || typeof raw !== 'object') return emptyMemberJournal();
-  return {
+  const normalized = {
     days: raw.days && typeof raw.days === 'object' ? { ...raw.days } : {},
     weekSummaries: stripLegacyWeekColumnEntries(raw.weekSummaries),
     nextWeekPlans: stripLegacyWeekColumnEntries(raw.nextWeekPlans),
     kpiWeekMemos: raw.kpiWeekMemos && typeof raw.kpiWeekMemos === 'object' ? { ...raw.kpiWeekMemos } : {},
     prefs: raw.prefs ? normalizeMemberPrefs(raw.prefs) : null,
   };
+  const kpiApproval = normalizeKpiApprovalSlice(raw.kpiApproval);
+  if (kpiApproval) normalized.kpiApproval = kpiApproval;
+  return normalized;
 }
 
 /** legacy flat store → memberJournals */

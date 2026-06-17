@@ -4,6 +4,7 @@ import {
   monthKey,
   quarterKey,
   KPI_OPERATIONAL_STORAGE_KEY,
+  migrateLegacyKpi2RowStatus,
   normalizeKpiOperationalStore,
   readKpi2RowStatus,
 } from '../constants/kpiOperationalStore';
@@ -186,11 +187,27 @@ function loadJournalMemberDaysFromStorage() {
   return {};
 }
 
-function loadKpiOperationalFromStorage() {
+function resolveLegacyKpi2Member(memberJournals, dayKey, taskId) {
+  const matched = [];
+  Object.entries(memberJournals || {}).forEach(([memberCode, slice]) => {
+    const day = slice?.days?.[dayKey];
+    if (!day) return;
+    const found = (day.tasks || []).some(
+      (task) => task?.id === taskId && task?.kpi2Effect?.enabled
+    );
+    if (found) matched.push(memberCode);
+  });
+  return matched.length === 1 ? matched[0] : null;
+}
+
+function loadKpiOperationalFromStorage(memberJournals = {}) {
   try {
     const raw = localStorage.getItem(KPI_OPERATIONAL_STORAGE_KEY);
     if (!raw) return normalizeKpiOperationalStore({});
-    return normalizeKpiOperationalStore(JSON.parse(raw));
+    const normalized = normalizeKpiOperationalStore(JSON.parse(raw));
+    return migrateLegacyKpi2RowStatus(normalized, (dayKey, taskId) =>
+      resolveLegacyKpi2Member(memberJournals, dayKey, taskId)
+    );
   } catch {
     return normalizeKpiOperationalStore({});
   }
@@ -199,7 +216,7 @@ function loadKpiOperationalFromStorage() {
 /** 팀장 알림 뱃지 — JournalProvider 밖에서 localStorage 기준 승인 대기 집계 */
 export function listPendingApprovalsFromBrowser(period = readJournalPeriodFromUrl()) {
   const memberJournals = loadJournalMemberDaysFromStorage();
-  const kpiOperational = loadKpiOperationalFromStorage();
+  const kpiOperational = loadKpiOperationalFromStorage(memberJournals);
   const improveProjects = loadImproveProjects();
   const getMemberDays = (code) => memberJournals?.[code]?.days || {};
   return listPendingApprovals({

@@ -3,11 +3,18 @@ import { mergeJournalSnapshotsByMember, mergeJournalSnapshotsViewOnlyImport } fr
 import {
   applyJournalSnapshotImport,
   applyJournalSnapshotViewOnlyImport,
+  buildJournalSnapshot,
   isJournalSnapshotImportable,
   JOURNAL_STORAGE_KEY,
   parseJournalSnapshotForImport,
   persistJournalStoreToLocalStorage,
 } from '../src/utils/journalSnapshot.js';
+import { KPI_STATUS } from '../src/constants/kpiStatuses.js';
+import {
+  createEmptyKpiOperationalStore,
+  kpi2RowId,
+} from '../src/constants/kpiOperationalStore.js';
+import { mergeJournalKpiApprovalImport } from '../src/utils/journalKpiApprovalSlice.js';
 
 const remoteBWeek = {
   '2026-06-08': {
@@ -122,6 +129,60 @@ describe('journal snapshot import', () => {
     expect(isJournalSnapshotImportable(null)).toBe(false);
     expect(isJournalSnapshotImportable({ version: 1 })).toBe(false);
     expect(() => parseJournalSnapshotForImport({ version: 1 })).toThrow(/형식/);
+  });
+
+  it('round-trips KPI approval state through journal backup export and import parsing', () => {
+    const store = {
+      memberJournals: {
+        A: { days: {} },
+        B: {
+          days: {
+            '2026-06-16': {
+              holiday: false,
+              mm: { work: 1, improve: 0, leave: 0 },
+              tasks: [
+                {
+                  id: 'b-kpi2',
+                  cat: 'other',
+                  title: 'B KPI2 effect',
+                  plan: 4,
+                  actual: 2,
+                  done: true,
+                  kpi2Effect: { enabled: true, projectId: 'team-kpi-system', baselineHours: 4 },
+                },
+              ],
+            },
+          },
+        },
+        C: { days: {} },
+      },
+      meta: { updatedAt: '2026-06-20T00:00:00.000Z' },
+    };
+    const operational = createEmptyKpiOperationalStore();
+    operational.months['2026-06'] = {
+      B: {
+        monthly01: {
+          work: 1,
+          improve: 0,
+          leave: 0,
+          available: 1,
+          status: KPI_STATUS.SUBMITTED,
+          submittedAt: '2026-06-20T10:00:00.000Z',
+        },
+      },
+    };
+    operational.kpi2RowStatus[kpi2RowId('B', '2026-06-16', 'b-kpi2')] = {
+      status: KPI_STATUS.SUBMITTED,
+      submittedAt: '2026-06-20T11:00:00.000Z',
+    };
+
+    const backup = buildJournalSnapshot(store, operational);
+    const parsed = parseJournalSnapshotForImport(JSON.parse(JSON.stringify(backup)));
+    const restored = mergeJournalKpiApprovalImport(createEmptyKpiOperationalStore(), parsed);
+
+    expect(parsed.memberJournals.B.kpiApproval.months['2026-06'].monthly01.status).toBe(KPI_STATUS.SUBMITTED);
+    expect(restored.months['2026-06'].B.monthly01.status).toBe(KPI_STATUS.SUBMITTED);
+    expect(restored.kpi2RowStatus[kpi2RowId('B', '2026-06-16', 'b-kpi2')].status).toBe(KPI_STATUS.SUBMITTED);
   });
 
   it('persists merged store to localStorage', () => {
