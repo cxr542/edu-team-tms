@@ -212,6 +212,42 @@ export function applyJournalSnapshotViewOnlyImport(localStore, remoteSnapshot, o
   };
 }
 
+function isIsoAfter(left, right) {
+  if (!left) return false;
+  if (!right) return true;
+  return new Date(left).getTime() > new Date(right).getTime();
+}
+
+function maxIso(left, right) {
+  return isIsoAfter(left, right) ? left : right || left || null;
+}
+
+export function applySavedJournalMemberSnapshot(localStore, remoteSnapshot, memberCode) {
+  const localSnapshot = normalizeJournalCloudSnapshot({
+    publishedAt: localStore?.meta?.updatedAt || null,
+    meta: localStore?.meta || {},
+    memberJournals: localStore?.memberJournals || createEmptyMemberJournals(),
+  });
+  const remote = normalizeJournalCloudSnapshot(remoteSnapshot);
+  const remoteUpdatedAt =
+    remote.meta.memberUpdatedAt?.[memberCode] || remote.meta.updatedAt || remote.publishedAt || null;
+  const memberUpdatedAt = { ...(localSnapshot.meta.memberUpdatedAt || {}) };
+  if (remoteUpdatedAt) memberUpdatedAt[memberCode] = remoteUpdatedAt;
+  const updatedAt = maxIso(localSnapshot.meta.updatedAt || localSnapshot.publishedAt, remote.publishedAt);
+
+  return {
+    memberJournals: {
+      ...localSnapshot.memberJournals,
+      [memberCode]: remote.memberJournals[memberCode],
+    },
+    meta: {
+      ...localSnapshot.meta,
+      updatedAt,
+      memberUpdatedAt,
+    },
+  };
+}
+
 export function persistJournalStoreToLocalStorage(store, storageKey = JOURNAL_STORAGE_KEY) {
   localStorage.setItem(storageKey, JSON.stringify(store));
 }

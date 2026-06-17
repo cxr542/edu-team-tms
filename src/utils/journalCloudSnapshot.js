@@ -197,6 +197,14 @@ export function mergeJournalSnapshotsViewOnlyImport(localSnapshot, remoteSnapsho
   });
 }
 
+export function isJournalMemberUpdateStale(snapshot, memberCode, updatedAt) {
+  if (!isValidMemberCode(memberCode)) {
+    throw new Error('A/B/C 구성원 코드가 필요합니다.');
+  }
+  const current = normalizeJournalCloudSnapshot(snapshot);
+  return isNewer(memberTime(current, memberCode), updatedAt);
+}
+
 export function mergeMemberIntoJournalSnapshot(snapshot, memberCode, journal, { updatedAt = nowIso() } = {}) {
   if (!isValidMemberCode(memberCode)) {
     throw new Error('A/B/C 구성원 코드가 필요합니다.');

@@ -1,6 +1,7 @@
 import { readFile } from 'fs/promises';
 import path from 'path';
 import {
+  isJournalMemberUpdateStale,
   mergeMemberIntoJournalSnapshot,
   normalizeJournalCloudSnapshot,
 } from '../src/utils/journalCloudSnapshot.js';
@@ -116,6 +117,14 @@ export default async function handler(req, res) {
       const current = currentSnapshot || normalizeJournalCloudSnapshot({});
       const updatedAt =
         typeof body.updatedAt === 'string' ? body.updatedAt : new Date().toISOString();
+      if (isJournalMemberUpdateStale(current, body.memberCode, updatedAt)) {
+        const currentUpdatedAt = current.meta?.memberUpdatedAt?.[body.memberCode] || current.meta?.updatedAt;
+        return json(res, 409, {
+          error: 'stale-member-snapshot',
+          message: '이미 더 최신 공유 일지가 있습니다. 팀 공유본을 먼저 확인한 뒤 다시 저장하세요.',
+          currentUpdatedAt,
+        });
+      }
       const next = mergeMemberIntoJournalSnapshot(current, body.memberCode, body.journal, {
         updatedAt,
       });

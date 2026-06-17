@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  isJournalMemberUpdateStale,
   isMemberJournalEmpty,
   mergeJournalSnapshotsByMember,
   mergeMemberIntoJournalSnapshot,
@@ -44,6 +45,19 @@ describe('journalCloudSnapshot', () => {
     expect(next.memberJournals.A.days['2026-06-09'].tasks[0].title).toBe('A keep');
     expect(next.memberJournals.B.days['2026-06-09'].tasks[0].title).toBe('B update');
     expect(next.memberJournals.C.days['2026-06-09'].tasks[0].title).toBe('C keep');
+  });
+
+  it('detects stale same-member saves before they can replace newer shared data', () => {
+    const current = normalizeJournalCloudSnapshot({
+      publishedAt: '2026-06-09T10:00:00.000Z',
+      meta: { memberUpdatedAt: { B: '2026-06-09T10:00:00.000Z' } },
+      memberJournals: {
+        B: { days: day('B newer remote') },
+      },
+    });
+
+    expect(isJournalMemberUpdateStale(current, 'B', '2026-06-09T09:00:00.000Z')).toBe(true);
+    expect(isJournalMemberUpdateStale(current, 'B', '2026-06-09T11:00:00.000Z')).toBe(false);
   });
 
   it('preserves local-only member data when merging a newer remote snapshot', () => {
