@@ -1480,47 +1480,6 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   업무 M/M은 실제 투입 시간, 생산향상 M/M은 개선·자동화 업무 시간입니다.
                 </p>
               </div>
-              {showImproveProjectPanel && (
-                <div className="form-group">
-                  <label htmlFor="edit-improve-project-link">관련 향상 과제</label>
-                  <select
-                    id="edit-improve-project-link"
-                    className="form-input"
-                    value={editTask.improveProjectId || ''}
-                    onChange={(e) => {
-                      const id = e.target.value;
-                      if (!id) {
-                        setEditTask({
-                          ...editTask,
-                          improveProjectId: undefined,
-                          improveProjectTitle: undefined,
-                        });
-                        return;
-                      }
-                      const project =
-                        linkableImproveProjects.find((p) => p.id === id) ||
-                        journal.improveProjects.find((p) => p.id === id);
-                      setEditTask({
-                        ...editTask,
-                        improveProjectId: id,
-                        improveProjectTitle: project?.name || '',
-                      });
-                    }}
-                    disabled={journalReadOnly}
-                    aria-describedby="journal-improve-project-link-help"
-                  >
-                    <option value="">선택 안 함</option>
-                    {linkableImproveProjects.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
-                  <p id="journal-improve-project-link-help" className="journal-field-help">
-                    생산성향상 M/M 또는 KPI2 효과 업무라면 관련 향상 과제를 선택하세요.
-                  </p>
-                </div>
-              )}
               <div className="form-group">
                 <label>시간대</label>
                 <div className="journal-slot-options" role="group" aria-label="시간대">

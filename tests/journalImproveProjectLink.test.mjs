@@ -205,10 +205,10 @@ describe('journal improve project UI wiring', () => {
     expect(journalSource).toContain('filterImproveProjectsForMember');
   });
 
-  it('shows related improve project select in task edit panel', () => {
-    expect(journalSource).toContain('관련 향상 과제');
-    expect(journalSource).toContain('선택 안 함');
-    expect(journalSource).toContain('생산성향상 M/M 또는 KPI2 효과 업무라면');
+  it('does not show improve project select in task edit panel', () => {
+    expect(journalSource).not.toContain('edit-improve-project-link');
+    expect(journalSource).not.toContain('관련 향상 과제');
+    expect(journalSource).not.toContain('개발·개선 투자 과제');
   });
 
   it('uses Blob team share on member journal improve panel without JSON import', () => {
@@ -273,8 +273,7 @@ describe('journal improve project UI wiring', () => {
     expect(journalSource).toContain('IMPROVE_PROJECT_JOURNAL_SCOPE_NOTICE');
     expect(journalSource).not.toContain('IMPROVE_PROJECTS_JSON_DOWNLOAD_LABEL');
     expect(journalSource).not.toContain('구성원 전달용 JSON 다운로드');
-    expect(journalSource).toContain('관련 향상 과제');
-    expect(journalSource).toContain('선택 안 함');
+    expect(journalSource).not.toContain('edit-improve-project-link');
   });
 
   it('registers candidates with owner metadata on KPI2 tab', () => {
