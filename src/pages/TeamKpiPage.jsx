@@ -907,7 +907,7 @@ export default function TeamKpiPage() {
                             type="button"
                             className="btn btn-ghost btn-sm"
                             onClick={() => {
-                              journal.submitKpi2Row(row.dayKey, row.taskId);
+                              journal.submitKpi2Row(memberCode, row.dayKey, row.taskId);
                               showToast(`${KPI2_NAME} 제출`);
                             }}
                           >

@@ -13,9 +13,12 @@ import {
   ensureMonthMember,
   ensureQuarterMember,
   kpi2RowId,
+  kpi2LegacyRowId,
   monthKey,
+  migrateLegacyKpi2RowStatus,
   normalizeKpiOperationalStore,
   quarterKey,
+  readKpi2RowStatus,
 } from '../constants/kpiOperationalStore';
 import { KPI3_MEMO_TYPES } from '../constants/kpiRules';
 import { COMPETENCY_USE_4060 } from '../constants/competencyConfig';
@@ -41,6 +44,7 @@ import {
   isValidCompetencyMemberCode,
   mergeCompetencyMonthsIntoKpiStore,
 } from '../utils/kpiOperationalCloudSnapshot';
+import { JOURNAL_STORAGE_KEY } from '../utils/journalSnapshot';
 
 const KPI_OPERATIONAL_SNAPSHOT_API = '/api/kpi-operational-snapshot';
 
@@ -216,11 +220,39 @@ export function patchUnlockCompetencyQuarterSelf(store, yq, memberCode) {
   return { store: next, ok: true };
 }
 
+function resolveLegacyKpi2Member(dayKey, taskId) {
+  try {
+    const raw = localStorage.getItem(JOURNAL_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const memberJournals =
+      parsed?.memberJournals && typeof parsed.memberJournals === 'object'
+        ? parsed.memberJournals
+        : parsed?.days
+          ? { A: { days: parsed.days } }
+          : {};
+    const matched = [];
+    Object.entries(memberJournals).forEach(([memberCode, slice]) => {
+      const day = slice?.days?.[dayKey];
+      if (!day) return;
+      const found = (day.tasks || []).some(
+        (task) => task?.id === taskId && task?.kpi2Effect?.enabled
+      );
+      if (found) matched.push(memberCode);
+    });
+    return matched.length === 1 ? matched[0] : null;
+  } catch {
+    return null;
+  }
+}
+
 function loadStore() {
   try {
     const raw = localStorage.getItem(KPI_OPERATIONAL_STORAGE_KEY);
     if (!raw) return createEmptyKpiOperationalStore();
-    return sanitizeCompetencyInStore(normalizeKpiOperationalStore(JSON.parse(raw)));
+    const normalized = normalizeKpiOperationalStore(JSON.parse(raw));
+    const migrated = migrateLegacyKpi2RowStatus(normalized, resolveLegacyKpi2Member);
+    return sanitizeCompetencyInStore(migrated);
   } catch {
     return createEmptyKpiOperationalStore();
   }
@@ -330,37 +362,43 @@ export function useKpiOperational({ readOnly = false } = {}) {
   );
 
   const getKpi2RowStatus = useCallback(
-    (dayKey, taskId) => {
-      const id = kpi2RowId(dayKey, taskId);
-      const row = store.kpi2RowStatus[id];
+    (memberCode, dayKey, taskId) => {
+      const row = readKpi2RowStatus(store.kpi2RowStatus, memberCode, dayKey, taskId).value;
       return row ? { ...row } : { status: KPI_STATUS.DRAFT, rejectReason: '', approver: '', approvedAt: null };
     },
     [store.kpi2RowStatus]
   );
 
   const setKpi2RowStatus = useCallback(
-    (dayKey, taskId, patch) => {
+    (memberCode, dayKey, taskId, patch) => {
       if (readOnly) return;
-      const id = kpi2RowId(dayKey, taskId);
+      const id = kpi2RowId(memberCode, dayKey, taskId);
+      const legacyId = kpi2LegacyRowId(dayKey, taskId);
       setStore((prev) => {
-        const current = prev.kpi2RowStatus[id] || {
+        const current = readKpi2RowStatus(prev.kpi2RowStatus, memberCode, dayKey, taskId).value || {
           status: KPI_STATUS.DRAFT,
           rejectReason: '',
           approver: '',
           approvedAt: null,
         };
-        return persist({
+        const next = {
           ...prev,
-          kpi2RowStatus: { ...prev.kpi2RowStatus, [id]: { ...current, ...patch } },
-        });
+          kpi2RowStatus: {
+            ...prev.kpi2RowStatus,
+            [id]: { ...current, ...patch },
+            [legacyId]: undefined,
+          },
+        };
+        delete next.kpi2RowStatus[legacyId];
+        return persist(next);
       });
     },
     [readOnly, persist]
   );
 
   const submitKpi2Row = useCallback(
-    (dayKey, taskId) => {
-      setKpi2RowStatus(dayKey, taskId, {
+    (memberCode, dayKey, taskId) => {
+      setKpi2RowStatus(memberCode, dayKey, taskId, {
         status: KPI_STATUS.SUBMITTED,
         submittedAt: new Date().toISOString(),
         rejectReason: '',
@@ -396,9 +434,9 @@ export function useKpiOperational({ readOnly = false } = {}) {
   );
 
   const approveKpi2Row = useCallback(
-    (dayKey, taskId, approver = '팀장') => {
+    (memberCode, dayKey, taskId, approver = '팀장') => {
       if (readOnly) return;
-      setKpi2RowStatus(dayKey, taskId, {
+      setKpi2RowStatus(memberCode, dayKey, taskId, {
         status: KPI_STATUS.APPROVED,
         approver,
         approvedAt: new Date().toISOString(),
@@ -409,9 +447,9 @@ export function useKpiOperational({ readOnly = false } = {}) {
   );
 
   const rejectKpi2Row = useCallback(
-    (dayKey, taskId, reason, approver = '팀장') => {
+    (memberCode, dayKey, taskId, reason, approver = '팀장') => {
       if (readOnly) return;
-      setKpi2RowStatus(dayKey, taskId, {
+      setKpi2RowStatus(memberCode, dayKey, taskId, {
         status: KPI_STATUS.REJECTED,
         rejectReason: reason || '반려',
         approver,
@@ -787,8 +825,8 @@ export function useKpiOperational({ readOnly = false } = {}) {
     const now = new Date().toISOString();
     setStore((prev) => {
       const kpi2RowStatus = { ...prev.kpi2RowStatus };
-      ACADEMIZER_DEMO_KPI2_APPROVALS.forEach(({ dayKey, taskId }) => {
-        const id = kpi2RowId(dayKey, taskId);
+      ACADEMIZER_DEMO_KPI2_APPROVALS.forEach(({ memberCode, dayKey, taskId }) => {
+        const id = kpi2RowId(memberCode, dayKey, taskId);
         kpi2RowStatus[id] = {
           status: KPI_STATUS.APPROVED,
           submittedAt: now,

@@ -4,6 +4,10 @@ import {
   KPI_WEEK_MEMOS_ACADEMIZER_SCENARIO,
 } from '../src/data/journalSeedAcademizerScenario.js';
 import {
+  kpi2LegacyRowId,
+  kpi2RowId,
+} from '../src/constants/kpiOperationalStore.js';
+import {
   buildKpi01cRows,
   buildKpi02EffectRows,
   computeTeamKpi,
@@ -180,17 +184,64 @@ describe('computeTeamKpi june', () => {
 
   it('computeTeamKpi — KPI2 요약 (승인 건만 집계)', () => {
     const task = juneDays['2026-06-01'].tasks[2];
-    const rowId = `2026-06-01|${task.id}`;
+    const rowId = kpi2RowId('A', '2026-06-01', task.id);
     const m = computeTeamKpi({
       year: 2026,
       monthIndex: 5,
       days: juneDays,
       kpiWeekMemos: {},
       improveProjects: IMPROVE_PROJECTS,
+      memberCode: 'A',
       kpi2RowStatus: { [rowId]: { status: '승인' } },
     });
     expect(m.kpi2.effectCount).toBe(1);
     expect(m.kpi2.submittedCount).toBe(1);
     expect(m.kpi2.productivityPct).toBeGreaterThan(100);
+  });
+
+  it('computeTeamKpi — member 스코프 키가 겹침 없이 분리된다', () => {
+    const memberDays = {
+      '2026-06-10': {
+        holiday: false,
+        mm: { work: 0.5, improve: 0, leave: 0 },
+        tasks: [
+          {
+            id: 'same-task',
+            cat: 'prep',
+            title: '공통 task id',
+            plan: 8,
+            actual: 4,
+            done: true,
+            kpi2Effect: { enabled: true, projectId: 'ppt-academizer', baselineHours: 8 },
+          },
+        ],
+      },
+    };
+    const scoped = computeTeamKpi({
+      year: 2026,
+      monthIndex: 5,
+      days: memberDays,
+      improveProjects: IMPROVE_PROJECTS,
+      memberCode: 'B',
+      kpi2RowStatus: {
+        [kpi2RowId('A', '2026-06-10', 'same-task')]: { status: '반려' },
+        [kpi2RowId('B', '2026-06-10', 'same-task')]: { status: '승인' },
+      },
+    });
+    expect(scoped.rows02Effect[0].상태).toBe('승인');
+  });
+
+  it('computeTeamKpi — legacy KPI2 row id는 직접 조회하지 않는다', () => {
+    const m = computeTeamKpi({
+      year: 2026,
+      monthIndex: 5,
+      days: juneDays,
+      improveProjects: IMPROVE_PROJECTS,
+      memberCode: 'A',
+      kpi2RowStatus: {
+        [kpi2LegacyRowId('2026-06-01', 'a3')]: { status: '제출' },
+      },
+    });
+    expect(m.rows02Effect[0].상태).toBe('작성중');
   });
 });

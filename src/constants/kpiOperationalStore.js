@@ -202,9 +202,55 @@ export function normalizeKpiOperationalStore(raw) {
   };
 }
 
-/** @param {string} dayKey @param {string} taskId */
-export function kpi2RowId(dayKey, taskId) {
+/** @param {string} memberCode @param {string} dayKey @param {string} taskId */
+export function kpi2RowId(memberCode, dayKey, taskId) {
+  return `${memberCode}|${dayKey}|${taskId}`;
+}
+
+/** legacy row id (before member scoping) */
+export function kpi2LegacyRowId(dayKey, taskId) {
   return `${dayKey}|${taskId}`;
+}
+
+/** member-scoped lookup only (legacy fallback disabled) */
+export function readKpi2RowStatus(kpi2RowStatus, memberCode, dayKey, taskId) {
+  const scopedId = kpi2RowId(memberCode, dayKey, taskId);
+  if (kpi2RowStatus?.[scopedId]) return { id: scopedId, value: kpi2RowStatus[scopedId] };
+  return { id: scopedId, value: null };
+}
+
+/**
+ * Legacy KPI2 row id( dayKey|taskId )를 member 스코프 키로 1회 승격.
+ * - resolver가 단일 memberCode를 반환할 때만 승격
+ * - ambiguous/unresolved legacy key는 제거(교차 오염 방지)
+ */
+export function migrateLegacyKpi2RowStatus(store, resolveMemberCodeForLegacyRow) {
+  const src = store?.kpi2RowStatus;
+  if (!src || typeof src !== 'object') return store;
+
+  const next = {};
+  const chooseLatest = (prev, candidate) => {
+    if (!prev) return candidate;
+    const prevTs = prev?.submittedAt ? new Date(prev.submittedAt).getTime() : -Infinity;
+    const candTs = candidate?.submittedAt ? new Date(candidate.submittedAt).getTime() : -Infinity;
+    return candTs >= prevTs ? candidate : prev;
+  };
+
+  Object.entries(src).forEach(([id, meta]) => {
+    const parts = String(id).split('|');
+    if (parts.length === 3) {
+      next[id] = chooseLatest(next[id], { ...meta });
+      return;
+    }
+    if (parts.length !== 2) return;
+    const [dayKey, taskId] = parts;
+    const memberCode = resolveMemberCodeForLegacyRow?.(dayKey, taskId);
+    if (!memberCode) return;
+    const scopedId = kpi2RowId(memberCode, dayKey, taskId);
+    next[scopedId] = chooseLatest(next[scopedId], { ...meta });
+  });
+
+  return { ...store, kpi2RowStatus: next };
 }
 
 export function listMemberCodes() {

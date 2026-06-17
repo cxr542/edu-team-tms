@@ -65,4 +65,6 @@ export const KPI_WEEK_MEMOS_ACADEMIZER_SCENARIO = {
 };
 
 /** 샘플 되돌리기 시 KPI2 개요·집계에 반영할 데모 승인 (6/16 활용 건) */
-export const ACADEMIZER_DEMO_KPI2_APPROVALS = [{ dayKey: '2026-06-16', taskId: 'acad-use-tue' }];
+export const ACADEMIZER_DEMO_KPI2_APPROVALS = [
+  { memberCode: 'A', dayKey: '2026-06-16', taskId: 'acad-use-tue' },
+];

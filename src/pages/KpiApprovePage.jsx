@@ -58,7 +58,7 @@ export default function KpiApprovePage({ readOnly = false }) {
       rejectKpi1(year, month, rejecting.member.code, reason);
       showToast(`${rejecting.member.displayName} ${KPI1_NAME} 반려`);
     } else {
-      rejectKpi2Row(rejecting.dayKey, rejecting.taskId, reason);
+      rejectKpi2Row(rejecting.member.code, rejecting.dayKey, rejecting.taskId, reason);
       showToast(`${KPI2_NAME} 효과 건 반려`);
     }
     setRejecting(null);
@@ -118,7 +118,7 @@ export default function KpiApprovePage({ readOnly = false }) {
               <li
                 key={
                   item.type === 'KPI2'
-                    ? `kpi2-${item.dayKey}-${item.taskId}`
+                    ? `kpi2-${item.member.code}-${item.dayKey}-${item.taskId}`
                     : `kpi1-${item.member.code}`
                 }
                 className="team-kpi-approve-item"
@@ -140,7 +140,7 @@ export default function KpiApprovePage({ readOnly = false }) {
                           approveKpi1(year, month, item.member.code);
                           showToast(`${item.member.displayName} ${KPI1_NAME} 승인`);
                         } else {
-                          approveKpi2Row(item.dayKey, item.taskId);
+                          approveKpi2Row(item.member.code, item.dayKey, item.taskId);
                           showToast(`${KPI2_NAME} 승인`);
                         }
                       }}

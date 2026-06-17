@@ -1,7 +1,7 @@
 import { JOURNAL_LINKED_MEMBER_CODE } from '../constants/kpiMembers';
 import { findKpiMember } from '../constants/kpiSchema';
 import { KPI_STATUS } from '../constants/kpiStatuses';
-import { kpi2RowId } from '../constants/kpiOperationalStore';
+import { readKpi2RowStatus } from '../constants/kpiOperationalStore';
 import { getTaskSlotLabel } from '../constants/journalTaskSlot';
 import { LEAVE_MEMO_TASK_RE } from './journalLeavePresets';
 import { isMonthly01ContentUnset } from './kpiMonthlyClose';
@@ -136,8 +136,7 @@ export function buildKpi02EffectRows(
       const project = projectById[task.kpi2Effect?.projectId];
       const productivity =
         actual > 0 && baseline > 0 ? round4((baseline / actual) * 100) : '';
-      const rowId = kpi2RowId(key, task.id);
-      const opStatus = kpi2RowStatus[rowId];
+      const opStatus = readKpi2RowStatus(kpi2RowStatus, member.code, key, task.id).value;
       const status = opStatus?.status || KPI_STATUS.DRAFT;
 
       rows.push({

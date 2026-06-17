@@ -1,4 +1,4 @@
-import { kpi2RowId } from '../constants/kpiOperationalStore';
+import { kpi2LegacyRowId, kpi2RowId } from '../constants/kpiOperationalStore';
 import { isKpi2EffectTask } from './computeTeamKpi';
 
 /** 구성원 일지 백업 JSON에 포함할 KPI1/KPI2 승인 상태 */
@@ -19,7 +19,8 @@ export function extractMemberKpiApprovalSlice(kpiOperational, memberCode, days =
   Object.entries(days || {}).forEach(([dayKey, day]) => {
     (day.tasks || []).forEach((task) => {
       if (!task?.id || !isKpi2EffectTask(task)) return;
-      memberRowIds.add(kpi2RowId(dayKey, task.id));
+      memberRowIds.add(kpi2RowId(memberCode, dayKey, task.id));
+      memberRowIds.add(kpi2LegacyRowId(dayKey, task.id));
     });
   });
 
@@ -62,13 +63,15 @@ export function mergeMemberKpiApprovalIntoStore(store, memberCode, slice) {
   if (Object.keys(statusIn).length) {
     const kpi2RowStatus = { ...next.kpi2RowStatus };
     Object.entries(statusIn).forEach(([id, meta]) => {
-      const existing = kpi2RowStatus[id];
+      const [part1, part2, part3] = String(id).split('|');
+      const scopedId = part3 ? id : kpi2RowId(memberCode, part1, part2);
+      const existing = kpi2RowStatus[scopedId];
       const useIncoming =
         !existing?.submittedAt ||
         (meta.submittedAt &&
           new Date(meta.submittedAt).getTime() >= new Date(existing.submittedAt).getTime());
       if (!existing || useIncoming) {
-        kpi2RowStatus[id] = { ...meta };
+        kpi2RowStatus[scopedId] = { ...meta };
       }
     });
     next = { ...next, kpi2RowStatus };

@@ -1,6 +1,12 @@
 import { TEAM_KPI_MEMBERS } from '../constants/kpiMembers';
 import { KPI_STATUS } from '../constants/kpiStatuses';
-import { kpi2RowId, monthKey, quarterKey, KPI_OPERATIONAL_STORAGE_KEY, normalizeKpiOperationalStore } from '../constants/kpiOperationalStore';
+import {
+  monthKey,
+  quarterKey,
+  KPI_OPERATIONAL_STORAGE_KEY,
+  normalizeKpiOperationalStore,
+  readKpi2RowStatus,
+} from '../constants/kpiOperationalStore';
 import { loadImproveProjects } from '../constants/improveProjects';
 import { JOURNAL_STORAGE_KEY } from './journalSnapshot';
 import { COMPETENCY_USE_4060 } from '../constants/competencyConfig';
@@ -135,7 +141,7 @@ export function listPendingApprovals({
     );
     rows02.forEach((row) => {
       if (row.상태 === KPI_STATUS.SUBMITTED) {
-        const rowMeta = kpi2RowStatus[kpi2RowId(row.dayKey, row.taskId)];
+        const rowMeta = readKpi2RowStatus(kpi2RowStatus, member.code, row.dayKey, row.taskId).value;
         items.push({
           type: 'KPI2',
           member,

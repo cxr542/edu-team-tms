@@ -5,7 +5,11 @@ import {
   mergeJournalKpiApprovalImport,
   mergeMemberKpiApprovalIntoStore,
 } from '../src/utils/journalKpiApprovalSlice.js';
-import { createEmptyKpiOperationalStore } from '../src/constants/kpiOperationalStore.js';
+import {
+  createEmptyKpiOperationalStore,
+  kpi2LegacyRowId,
+  kpi2RowId,
+} from '../src/constants/kpiOperationalStore.js';
 
 describe('journalKpiApprovalSlice', () => {
   it('extractMemberKpiApprovalSlice — months and kpi2 rows for member', () => {
@@ -27,14 +31,14 @@ describe('journalKpiApprovalSlice', () => {
         },
       },
     };
-    operational.kpi2RowStatus['2026-06-16|t1'] = {
+    operational.kpi2RowStatus[kpi2RowId('B', '2026-06-16', 't1')] = {
       status: KPI_STATUS.SUBMITTED,
       submittedAt: '2026-06-20T11:00:00.000Z',
     };
 
     const slice = extractMemberKpiApprovalSlice(operational, 'B', days);
     expect(slice.months['2026-06'].monthly01.status).toBe(KPI_STATUS.SUBMITTED);
-    expect(slice.kpi2RowStatus['2026-06-16|t1'].status).toBe(KPI_STATUS.SUBMITTED);
+    expect(slice.kpi2RowStatus[kpi2RowId('B', '2026-06-16', 't1')].status).toBe(KPI_STATUS.SUBMITTED);
   });
 
   it('mergeJournalKpiApprovalImport — restores member approval from snapshot', () => {
@@ -68,7 +72,7 @@ describe('journalKpiApprovalSlice', () => {
 
     const merged = mergeJournalKpiApprovalImport(store, snapshot);
     expect(merged.months['2026-06'].B.monthly01.status).toBe(KPI_STATUS.SUBMITTED);
-    expect(merged.kpi2RowStatus['2026-06-16|t1'].status).toBe(KPI_STATUS.SUBMITTED);
+    expect(merged.kpi2RowStatus[kpi2RowId('B', '2026-06-16', 't1')].status).toBe(KPI_STATUS.SUBMITTED);
   });
 
   it('mergeMemberKpiApprovalIntoStore — keeps newer submittedAt', () => {
@@ -97,5 +101,20 @@ describe('journalKpiApprovalSlice', () => {
     const merged = mergeMemberKpiApprovalIntoStore(store, 'B', incoming);
     expect(merged.months['2026-06'].B.monthly01.work).toBe(1);
     expect(merged.months['2026-06'].B.monthly01.status).toBe(KPI_STATUS.SUBMITTED);
+  });
+
+  it('extractMemberKpiApprovalSlice — legacy row id도 포함', () => {
+    const days = {
+      '2026-06-16': {
+        tasks: [{ id: 't1', kpi2Effect: { enabled: true }, done: true }],
+      },
+    };
+    const operational = createEmptyKpiOperationalStore();
+    operational.kpi2RowStatus[kpi2LegacyRowId('2026-06-16', 't1')] = {
+      status: KPI_STATUS.SUBMITTED,
+      submittedAt: '2026-06-20T11:00:00.000Z',
+    };
+    const slice = extractMemberKpiApprovalSlice(operational, 'B', days);
+    expect(slice.kpi2RowStatus[kpi2LegacyRowId('2026-06-16', 't1')].status).toBe(KPI_STATUS.SUBMITTED);
   });
 });

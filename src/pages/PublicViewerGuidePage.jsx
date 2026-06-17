@@ -25,32 +25,45 @@ const MEMBER_ICONS = {
   C: User,
 };
 
+const CARD_DECOR = {
+  admin: { emoji: '🔐', label: 'Admin' },
+  A: { emoji: '✍️', label: 'Write' },
+  B: { emoji: '📊', label: 'Check' },
+  C: { emoji: '🗂️', label: 'Ops' },
+};
+
 function RolePortalCard({ portal, variant = 'default' }) {
-  const { primary, links, member, badge, summary, accent, title, kind } = portal;
+  const { primary, links, member, badge, summary, title, kind } = portal;
   const { label: primaryLabel, href, ...primaryNav } = primary;
   const isAdmin = kind === 'admin';
   const isCompact = variant === 'compact';
   const MemberIcon = member ? MEMBER_ICONS[member.code] || User : Shield;
+  const decor = isAdmin ? CARD_DECOR.admin : CARD_DECOR[member?.code] || CARD_DECOR.C;
+  const toneClass = isAdmin
+    ? 'portal-card--tone-admin'
+    : member
+      ? `portal-card--tone-${member.code.toLowerCase()}`
+      : '';
 
   return (
     <article
-      className={`portal-card portal-card--${accent}${
-        isCompact ? ' portal-card--compact' : ''
-      }${isAdmin ? ' portal-card--gated' : ''}`}
+      className={`portal-card ${toneClass}${isCompact ? ' portal-card--compact' : ''}${
+        isAdmin ? ' portal-card--gated' : ''
+      }`}
     >
-      <div className="portal-card__glow" aria-hidden />
-
       <div className="portal-card__top">
         <div className="portal-card__icon" aria-hidden>
           {isAdmin ? <Lock size={22} /> : <MemberIcon size={22} />}
         </div>
-        <div className="portal-card__label">
-          {isAdmin ? 'TEAM ADMIN' : `USER · ${badge}`}
+        <div className="portal-card__meta">
+          <span className="portal-card__label">
+            {isAdmin ? 'TEAM ADMIN' : `USER · ${badge}`}
+          </span>
+          <h2 className="portal-card__title">
+            {isAdmin ? title : formatKpiMemberLabel(member)}
+          </h2>
+          <p className="portal-card__summary">{summary}</p>
         </div>
-        <h2 className="portal-card__title">
-          {isAdmin ? title : formatKpiMemberLabel(member)}
-        </h2>
-        <p className="portal-card__summary">{summary}</p>
       </div>
 
       {links.length > 0 && (
@@ -67,22 +80,31 @@ function RolePortalCard({ portal, variant = 'default' }) {
       )}
 
       <div className="portal-card__bottom">
-        {href ? (
-          <a className="portal-card__cta" href={href}>
-            {primaryLabel}
-            <ArrowRight size={16} aria-hidden />
-          </a>
-        ) : (
-          <AppModuleLink className="portal-card__cta portal-card__cta--primary" {...primaryNav}>
-            {primaryLabel}
-            <ArrowRight size={16} aria-hidden />
-          </AppModuleLink>
-        )}
-        {!isAdmin && member && (
-          <span className="portal-card__slug">/{MEMBER_ROUTE_SLUG[member.code]}</span>
-        )}
-        {isAdmin && <span className="portal-card__slug">/admin</span>}
+        <div className="portal-card__actions">
+          {href ? (
+            <a className="portal-card__cta portal-card__open" href={href}>
+              {primaryLabel}
+              <ArrowRight size={16} aria-hidden />
+            </a>
+          ) : (
+            <AppModuleLink
+              className="portal-card__cta portal-card__open portal-card__cta--primary"
+              {...primaryNav}
+            >
+              {primaryLabel}
+              <ArrowRight size={16} aria-hidden />
+            </AppModuleLink>
+          )}
+          {!isAdmin && member && (
+            <span className="portal-card__slug">/{MEMBER_ROUTE_SLUG[member.code]}</span>
+          )}
+          {isAdmin && <span className="portal-card__slug">/admin</span>}
+        </div>
       </div>
+      <span className="portal-card__corner-emoji" aria-hidden>
+        <span className="portal-card__corner-symbol">{decor.emoji}</span>
+        <span className="portal-card__corner-label">{decor.label}</span>
+      </span>
     </article>
   );
 }
@@ -92,16 +114,25 @@ export default function PublicViewerGuidePage() {
     <main className="main-content public-viewer-portal">
       <section className="public-viewer-portal__hero-grid">
         <div className="public-viewer-portal__hero-copy">
-          <p className="public-viewer-portal__eyebrow">EDU Team TMS</p>
+          <div className="public-viewer-portal__intro-row">
+            <p className="public-viewer-portal__eyebrow">EDU Team TMS</p>
+            <span className="public-viewer-portal__hero-badge">Role-based access</span>
+          </div>
           <h1 className="public-viewer-portal__title">
             업무 화면으로
             <br />
             바로 연결.
           </h1>
           <p className="public-viewer-portal__lead">
-            본인 카드에서 일지 작성으로 들어가세요. 북마크해 두면 다음부터 바로 열립니다. 팀
-            관리(장부·KPI)는 하단 관리자 화면에서 비밀번호 입력 후 이용합니다.
+            본인 카드에서 일지 작성 화면으로 바로 이동하세요.
           </p>
+          <div className="public-viewer-portal__workflow" aria-label="사용 순서">
+            <span>이름 선택</span>
+            <ChevronRight size={14} aria-hidden />
+            <span>업무 화면 이동</span>
+            <ChevronRight size={14} aria-hidden />
+            <span>북마크 저장</span>
+          </div>
         </div>
 
         <aside className="public-viewer-portal__status" aria-label="접속 안내 요약">
@@ -129,7 +160,7 @@ export default function PublicViewerGuidePage() {
         </aside>
       </section>
 
-      <section className="public-viewer-portal__section" aria-labelledby="portal-users-heading">
+      <section className="public-viewer-portal__section public-viewer-portal__section--users" aria-labelledby="portal-users-heading">
         <header className="public-viewer-portal__section-head">
           <div>
             <p className="public-viewer-portal__section-kicker">Team Access</p>
@@ -146,14 +177,16 @@ export default function PublicViewerGuidePage() {
           </span>
         </header>
 
-        <div className="public-viewer-portal__grid public-viewer-portal__grid--users">
-          {PUBLIC_VIEWER_USER_PORTALS.map((portal) => (
-            <RolePortalCard key={portal.id} portal={portal} />
-          ))}
+        <div className="public-viewer-portal__section-surface">
+          <div className="public-viewer-portal__grid public-viewer-portal__grid--users">
+            {PUBLIC_VIEWER_USER_PORTALS.map((portal) => (
+              <RolePortalCard key={portal.id} portal={portal} />
+            ))}
+          </div>
         </div>
       </section>
 
-      <section className="public-viewer-portal__section" aria-labelledby="portal-admin-heading">
+      <section className="public-viewer-portal__section public-viewer-portal__section--admin" aria-labelledby="portal-admin-heading">
         <header className="public-viewer-portal__section-head">
           <div>
             <p className="public-viewer-portal__section-kicker">Team Admin</p>
@@ -166,8 +199,10 @@ export default function PublicViewerGuidePage() {
           </div>
         </header>
 
-        <div className="public-viewer-portal__grid public-viewer-portal__grid--admin">
-          <RolePortalCard portal={PUBLIC_VIEWER_ADMIN_PORTAL} variant="compact" />
+        <div className="public-viewer-portal__section-surface public-viewer-portal__section-surface--admin">
+          <div className="public-viewer-portal__grid public-viewer-portal__grid--admin">
+            <RolePortalCard portal={PUBLIC_VIEWER_ADMIN_PORTAL} variant="compact" />
+          </div>
         </div>
       </section>
 

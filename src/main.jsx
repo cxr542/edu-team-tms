@@ -17,6 +17,15 @@ if (typeof window !== 'undefined') {
 }
 import './styles/projectShell.css'
 import './styles/uiTooltip.css'
+import './pages/PublicViewerGuidePage.css'
+
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((error) => {
+      console.warn('TMS service worker registration failed', error)
+    })
+  })
+}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

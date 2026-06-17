@@ -117,7 +117,7 @@ function MemberKpiApprovalBody({
 
   const requestKpi2Approval = (row) => {
     if (!row.taskId) return;
-    journal.submitKpi2Row(row.dayKey, row.taskId);
+    journal.submitKpi2Row(memberCode, row.dayKey, row.taskId);
     onToast?.(`「${row.업무명}」 ${KPI2_NAME} 승인 요청`);
   };
 
@@ -200,7 +200,7 @@ function MemberKpiApprovalBody({
                     type="button"
                     className="btn btn-secondary btn-sm"
                     onClick={() => {
-                      journal.setKpi2RowStatus(row.dayKey, row.taskId, {
+                      journal.setKpi2RowStatus(memberCode, row.dayKey, row.taskId, {
                         status: KPI_STATUS.DRAFT,
                         submittedAt: null,
                         rejectReason: '',
