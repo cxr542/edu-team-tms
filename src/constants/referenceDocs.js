@@ -53,7 +53,7 @@ export const REFERENCE_DOCS = /** @type {ReferenceDocMeta[]} */ ([
     category: 'ops',
     title: '운영 URL 이전 가이드',
     file: 'TMS-운영URL-이전-가이드.md',
-    summary: 'edu-team-tms-ten 전환 · 북마크 · 일지 JSON 이전',
+    summary: 'ten 전환 · localStorage·Blob · 파일럿·B/C 이전',
     pinned: true,
   },
   {

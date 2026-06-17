@@ -5,6 +5,11 @@
 
 ---
 
+## 2026-06-17 — ten 파일럿·이전 가이드 보강
+
+- [운영 URL 이전 가이드](./TMS-운영URL-이전-가이드.md) 전면 갱신: localStorage vs Blob, A 파일럿 단계, Safari 검증(`/admin`), Blob 덮어쓰기·용량, B/C 역할(관리자 백업 가져오기)
+- [접속 URL · 북마크](./TMS-접속URL-북마크.md) §9 요약 표 정리
+
 ## 2026-06-17 — 북마크·기본 origin (`edu-team-tms-ten` 확정)
 
 - **운영 URL 확정:** https://edu-team-tms-ten.vercel.app — §2~§5 북마크·`TMS_ORIGIN` 기본값 정리
