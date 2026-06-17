@@ -437,7 +437,10 @@ export default function AppShell({
             {!isProd && (
               <a
                 className="btn btn--prod-link"
-                href={getProductionAppUrl(isViewer ? 'view' : 'edit')}
+                href={getProductionAppUrl(
+                  isViewer ? 'view' : 'edit',
+                  typeof window !== 'undefined' ? window.location.href : undefined
+                )}
                 {...uiTooltip('운영 URL 새 탭', 'below')}
               >
                 운영 URL

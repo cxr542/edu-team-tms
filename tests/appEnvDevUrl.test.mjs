@@ -2,7 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   canShowLeaderDevUrlLink,
   getDevelopmentAppUrl,
+  getProductionAppUrl,
 } from '../src/constants/appEnv.js';
+import { TMS_ORIGIN } from '../src/constants/appUrls.js';
 import { URL_ACCESS_ADMIN, URL_ACCESS_LEADER } from '../src/constants/teamAccess.js';
 
 describe('leader dev URL link', () => {
@@ -71,5 +73,29 @@ describe('leader dev URL link', () => {
     expect(url.pathname).toBe('/admin');
     expect(url.searchParams.get('access')).toBeNull();
     expect(url.searchParams.get('mode')).toBeNull();
+  });
+});
+
+describe('production URL link', () => {
+  it('maps local /admin journal context to ten /admin with query', () => {
+    const href = 'http://localhost:3000/admin?module=journal&member=A&year=2026&month=6';
+    const url = new URL(getProductionAppUrl('edit', href));
+    expect(url.origin).toBe(TMS_ORIGIN);
+    expect(url.pathname).toBe('/admin');
+    expect(url.searchParams.get('mode')).toBeNull();
+    expect(url.searchParams.get('module')).toBe('journal');
+    expect(url.searchParams.get('member')).toBe('A');
+    expect(url.searchParams.get('year')).toBe('2026');
+    expect(url.searchParams.get('month')).toBe('6');
+  });
+
+  it('maps local member journal to ten /yhkim', () => {
+    const href = 'http://localhost:3000/yhkim?year=2026&month=6';
+    const url = new URL(getProductionAppUrl('edit', href));
+    expect(url.origin).toBe(TMS_ORIGIN);
+    expect(url.pathname).toBe('/yhkim');
+    expect(url.searchParams.get('module')).toBeNull();
+    expect(url.searchParams.get('year')).toBe('2026');
+    expect(url.searchParams.get('month')).toBe('6');
   });
 });

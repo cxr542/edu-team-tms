@@ -1,6 +1,11 @@
 import { TMS_ALT_ORIGIN, TMS_DEV_ORIGIN, TMS_ORIGIN } from './appUrls';
 import { URL_ACCESS_ADMIN } from './teamAccess';
-import { adminRoutePath } from '../utils/appRoute';
+import {
+  adminRoutePath,
+  memberRoutePath,
+  parseAppRoute,
+  pruneDefaultScopedQuery,
+} from '../utils/appRoute';
 
 /** package.json과 vite define에서 주입 (기본 1.0.0) */
 export const APP_VERSION = import.meta.env.VITE_APP_VERSION || '1.0.0';
@@ -83,11 +88,45 @@ export function getEnvironmentLabel() {
   return isProductionEnvironment() ? '운영' : '개발';
 }
 
-export function getProductionAppUrl(mode = 'edit') {
-  return mode === 'view' ? `${TMS_ORIGIN}/` : `${TMS_ORIGIN}/?mode=edit`;
+const SCOPED_URL_PARAMS = ['module', 'member', 'year', 'month', 'quarter', 'doc'];
+
+/** 로컬 dev 툴바 「운영 URL」— 현재 /admin · /yhkim 맥락을 ten 경로 URL로 변환 */
+export function getProductionAppUrl(mode = 'edit', currentHref) {
+  const href = currentHref || (typeof window !== 'undefined' ? window.location.href : '');
+  if (!href) {
+    return mode === 'view' ? `${TMS_ORIGIN}/` : `${TMS_ORIGIN}${adminRoutePath()}`;
+  }
+
+  const cur = new URL(href);
+  const route = parseAppRoute(cur);
+  const prod = new URL(TMS_ORIGIN);
+
+  if (route.scope === 'user' && route.memberCode) {
+    prod.pathname = memberRoutePath(route.memberCode);
+  } else if (route.scope === 'admin') {
+    prod.pathname = adminRoutePath();
+  } else if (mode === 'view') {
+    prod.pathname = '/';
+  } else {
+    prod.pathname = adminRoutePath();
+  }
+
+  SCOPED_URL_PARAMS.forEach((key) => {
+    const value = cur.searchParams.get(key);
+    if (value) prod.searchParams.set(key, value);
+  });
+
+  if (mode === 'view' && (route.scope === 'public' || !route.scope)) {
+    prod.searchParams.set('mode', 'view');
+  } else if (mode === 'view') {
+    prod.searchParams.set('mode', 'view');
+  }
+
+  pruneDefaultScopedQuery(prod);
+  return `${prod.origin}${prod.pathname}${prod.search}`;
 }
 
-const DEV_URL_PARAMS = ['module', 'member', 'year', 'month', 'quarter', 'doc'];
+const DEV_URL_PARAMS = SCOPED_URL_PARAMS;
 
 /** 운영 → 로컬 dev (`npm run dev`) 팀장 화면 URL. 현재 module·기간 등은 유지 */
 export function getDevelopmentAppUrl(currentHref) {
