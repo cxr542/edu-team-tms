@@ -5,6 +5,12 @@
 
 ---
 
+## 2026-06-17 — 북마크·기본 origin (`edu-team-tms-ten` 확정)
+
+- **운영 URL 확정:** https://edu-team-tms-ten.vercel.app — §2~§5 북마크·`TMS_ORIGIN` 기본값 정리
+- **예비 v2 hostname** `okestro-edu-tms-v2.vercel.app` — 도메인 claim 보류 · 문서에서 미사용 표기
+- 참고문서 **「TMS 접속 URL · 북마크」** 전면 갱신
+
 ## 2026-06-15 — 새 Vercel·Blob (`edu-team-tms-ten`)
 
 - **운영 URL:** https://edu-team-tms-ten.vercel.app (옛 `okestro-edu-team-tms` 사용 중단)

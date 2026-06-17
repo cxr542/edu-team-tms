@@ -1,22 +1,24 @@
 # TMS 접속 URL · 북마크 (운영)
 
-> **v2 (다음 주 전환 예정):** https://okestro-edu-tms-v2.vercel.app — 경로 URL(`/admin`, `/yhkim` …), 접속 안내 랜딩, 관리자 비밀번호 게이트  
-> **v1 (이번 주):** https://edu-team-tms-ten.vercel.app — 기존 `?access=…&module=…` 북마크 유지  
-> 로그인 없음 — **아래 v2 URL을 그대로 북마크**하세요 (전환 시).  
-> 마지막 갱신: 2026-06-16  
-> **옛 URL** (`okestro-edu-team-tms.vercel.app`, `edu-team-tms.vercel.app`) 은 v2 alias로만 연결될 수 있으며, **v1·v2와 데이터는 origin별로 분리**됩니다.
+> **운영 URL:** https://edu-team-tms-ten.vercel.app — 경로 URL(`/admin`, `/yhkim` …), 접속 안내 랜딩, 관리자 비밀번호 게이트, Blob 팀 공유  
+> 로그인 없음 — **아래 §2~§5 URL을 그대로 북마크**하세요.  
+> 마지막 갱신: 2026-06-17  
+> **옛 URL** (`okestro-edu-team-tms.vercel.app`, `edu-team-tms.vercel.app`) 은 **데이터 origin이 분리**됩니다. 일지 이전은 §9 참고.  
+> **예비 hostname** `okestro-edu-tms-v2.vercel.app` — Vercel 도메인 확보 전까지 **미사용**.
 
 ---
 
-## 0. v1 → v2 전환 (2026-06)
+## 0. 운영 URL (2026-06)
 
-| 단계 | 기간 | URL | 할 일 |
-|------|------|-----|--------|
-| **v1** | **이번 주** | `edu-team-tms-ten.vercel.app` | 구성원 기존 북마크로 작업 |
-| **v2** | **다음 주~** | `okestro-edu-tms-v2.vercel.app` | §2~§5 URL로 북마크 교체 |
-| **대표 URL 확정** | 전원 v2 이후 | TBD | launcher·문서·`VITE_TMS_ORIGIN` 정리 |
+| 구분 | URL | 비고 |
+|------|-----|------|
+| **현재 운영** | `edu-team-tms-ten.vercel.app` | §2~§5 북마크 · Blob 정상 |
+| **옛 URL** | `okestro-edu-team-tms.vercel.app` | Blob suspend · JSON 이전만 |
+| **예비 v2** | `okestro-edu-tms-v2.vercel.app` | 도메인 claim 보류 · 미사용 |
 
-관리자는 v2에서 미리 점검(`/admin` 비밀번호, `/yhkim`, 접속 안내). 사용자 전환 전 **「팀 공유 저장」**으로 일지 동기화를 맞춰 두세요.
+전원 **ten URL**로 북마크를 맞추세요. 옛 URL에서 온 데이터는 §9 이전 절차를 따릅니다.
+
+관리자는 `/admin` 비밀번호·`/yhkim`·접속 안내를 미리 점검하세요. 사용자 전환 전 **「팀 공유 저장」**으로 일지 동기화를 맞춰 두세요.
 
 ---
 
@@ -41,23 +43,23 @@
 
 | 용도 | URL |
 |------|-----|
-| **관리자 홈 (장부)** | https://okestro-edu-tms-v2.vercel.app/admin |
-| 팀 일지 | https://okestro-edu-tms-v2.vercel.app/admin?module=journal |
-| KPI 승인 | https://okestro-edu-tms-v2.vercel.app/admin?module=kpi-approve |
-| KPI 리포트 | https://okestro-edu-tms-v2.vercel.app/?mode=edit&access=admin&module=kpi-report |
-| 점심 뭐 먹지 | https://okestro-edu-tms-v2.vercel.app/?mode=edit&access=admin&module=lunch |
-| PPT Academizer | https://okestro-edu-tms-v2.vercel.app/?mode=edit&access=admin&module=academizer |
-| 클라우드 챗봇 (실험) | https://okestro-edu-tms-v2.vercel.app/?mode=edit&access=admin&module=cloud-chatbot |
-| 참고문서 | https://okestro-edu-tms-v2.vercel.app/?mode=edit&access=admin&module=docs |
+| **관리자 홈 (장부)** | https://edu-team-tms-ten.vercel.app/admin |
+| 팀 일지 | https://edu-team-tms-ten.vercel.app/admin?module=journal |
+| KPI 승인 | https://edu-team-tms-ten.vercel.app/admin?module=kpi-approve |
+| KPI 리포트 | https://edu-team-tms-ten.vercel.app/?mode=edit&access=admin&module=kpi-report |
+| 점심 뭐 먹지 | https://edu-team-tms-ten.vercel.app/?mode=edit&access=admin&module=lunch |
+| PPT Academizer | https://edu-team-tms-ten.vercel.app/?mode=edit&access=admin&module=academizer |
+| 클라우드 챗봇 (실험) | https://edu-team-tms-ten.vercel.app/?mode=edit&access=admin&module=cloud-chatbot |
+| 참고문서 | https://edu-team-tms-ten.vercel.app/?mode=edit&access=admin&module=docs |
 
 **일지:** 관리자 화면에서 A/B/C 탭 전환·대리 입력 가능. **본인 업무 일지는 `/yhkim` 등 사용자 URL** 을 북마크하는 것을 권장합니다.
 
 | 용도 | URL |
 |------|-----|
-| B 일지 확인·대리 입력 | https://okestro-edu-tms-v2.vercel.app/?mode=edit&access=admin&member=B&module=journal |
-| C 일지 확인·대리 입력 | https://okestro-edu-tms-v2.vercel.app/?mode=edit&access=admin&member=C&module=journal |
+| B 일지 확인·대리 입력 | https://edu-team-tms-ten.vercel.app/?mode=edit&access=admin&member=B&module=journal |
+| C 일지 확인·대리 입력 | https://edu-team-tms-ten.vercel.app/?mode=edit&access=admin&member=C&module=journal |
 
-**이 북마크 표**는 `?module=docs&doc=tms-bookmarks` 로 엽니다.
+**이 북마크 표**는 `/admin?module=docs&doc=tms-bookmarks` 로 엽니다.
 
 ---
 
@@ -65,12 +67,12 @@
 
 | 용도 | URL |
 |------|-----|
-| **★ 일지 (북마크 권장)** | https://okestro-edu-tms-v2.vercel.app/yhkim |
-| 역량 평가 | https://okestro-edu-tms-v2.vercel.app/yhkim?module=competency |
-| 팀 빌딩비 장부 (조회) | https://okestro-edu-tms-v2.vercel.app/yhkim?mode=view&module=ledger&year=2026&month=6 |
-| 점심 뭐 먹지 | https://okestro-edu-tms-v2.vercel.app/?mode=edit&member=A&module=lunch |
-| 이것도? | https://okestro-edu-tms-v2.vercel.app/?mode=edit&member=A&module=idea-bank |
-| 참고문서 | https://okestro-edu-tms-v2.vercel.app/?mode=edit&member=A&module=docs |
+| **★ 일지 (북마크 권장)** | https://edu-team-tms-ten.vercel.app/yhkim |
+| 역량 평가 | https://edu-team-tms-ten.vercel.app/yhkim?module=competency |
+| 팀 빌딩비 장부 (조회) | https://edu-team-tms-ten.vercel.app/yhkim?mode=view&module=ledger&year=2026&month=6 |
+| 점심 뭐 먹지 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=A&module=lunch |
+| 이것도? | https://edu-team-tms-ten.vercel.app/?mode=edit&member=A&module=idea-bank |
+| 참고문서 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=A&module=docs |
 
 B/C와 **동일한 사용자 UI**입니다. KPI 승인 요청·향상 과제는 일지 상단 버튼을 사용합니다.
 
@@ -82,12 +84,12 @@ B/C와 **동일한 사용자 UI**입니다. KPI 승인 요청·향상 과제는 
 
 | 용도 | URL |
 |------|-----|
-| **★ 일지 (북마크 권장)** | https://okestro-edu-tms-v2.vercel.app/wschoi |
-| 역량 평가 | https://okestro-edu-tms-v2.vercel.app/?mode=edit&member=B&module=competency |
-| 팀 빌딩비 장부 (조회) | https://okestro-edu-tms-v2.vercel.app/?mode=view&member=B&module=ledger&year=2026&month=6 |
-| 점심 뭐 먹지 | https://okestro-edu-tms-v2.vercel.app/?mode=edit&member=B&module=lunch |
-| 이것도? | https://okestro-edu-tms-v2.vercel.app/?mode=edit&member=B&module=idea-bank |
-| 참고문서 | https://okestro-edu-tms-v2.vercel.app/?mode=edit&member=B&module=docs |
+| **★ 일지 (북마크 권장)** | https://edu-team-tms-ten.vercel.app/wschoi |
+| 역량 평가 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=competency |
+| 팀 빌딩비 장부 (조회) | https://edu-team-tms-ten.vercel.app/?mode=view&member=B&module=ledger&year=2026&month=6 |
+| 점심 뭐 먹지 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=lunch |
+| 이것도? | https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=idea-bank |
+| 참고문서 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=docs |
 
 `module` 없이 `?mode=edit&member=B` 만 열면 **일지**로 들어갑니다.
 
@@ -101,12 +103,12 @@ B/C와 **동일한 사용자 UI**입니다. KPI 승인 요청·향상 과제는 
 
 | 용도 | URL |
 |------|-----|
-| **★ 일지 (북마크 권장)** | https://okestro-edu-tms-v2.vercel.app/hwshin |
-| 역량 평가 | https://okestro-edu-tms-v2.vercel.app/?mode=edit&member=C&module=competency |
-| 팀 빌딩비 장부 (조회) | https://okestro-edu-tms-v2.vercel.app/?mode=view&member=C&module=ledger&year=2026&month=6 |
-| 점심 뭐 먹지 | https://okestro-edu-tms-v2.vercel.app/?mode=edit&member=C&module=lunch |
-| 이것도? | https://okestro-edu-tms-v2.vercel.app/?mode=edit&member=C&module=idea-bank |
-| 참고문서 | https://okestro-edu-tms-v2.vercel.app/?mode=edit&member=C&module=docs |
+| **★ 일지 (북마크 권장)** | https://edu-team-tms-ten.vercel.app/hwshin |
+| 역량 평가 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=competency |
+| 팀 빌딩비 장부 (조회) | https://edu-team-tms-ten.vercel.app/?mode=view&member=C&module=ledger&year=2026&month=6 |
+| 점심 뭐 먹지 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=lunch |
+| 이것도? | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=idea-bank |
+| 참고문서 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=docs |
 
 **일지:** B와 동일 — **A/B/C 탭 조회**, **C 탭만** 편집. 작성 후 **「팀 공유 저장」**, 타인 조회는 **「팀 공유본 가져오기」**.
 

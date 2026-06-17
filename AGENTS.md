@@ -9,9 +9,9 @@ Before changing URLs, access rules, ledger/journal behavior, Blob behavior, KPI 
 ## Project Context
 EDU-TMS is an operational team management system for the OKESTRO education team.
 Important production URLs:
-- Production: `https://okestro-edu-team-tms.vercel.app`
-- Leader mode: `https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader`
-- Journal example: `https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader&module=journal&year=2026&month=6`
+- Production: `https://edu-team-tms-ten.vercel.app`
+- Admin mode: `https://edu-team-tms-ten.vercel.app/admin`
+- Journal example: `https://edu-team-tms-ten.vercel.app/yhkim?year=2026&month=6`
 
 ## Documentation Source of Truth
 Read `docs/sot-map.md` first when working on documentation, URLs, access rules, deployment, ledger, journal, Blob, KPI, or improve-projects.
@@ -150,11 +150,11 @@ node --check scripts/docs-graph-core.mjs
 
 Production URL:
 
-`https://okestro-edu-team-tms.vercel.app`
+`https://edu-team-tms-ten.vercel.app`
 
-Leader URL:
+Admin URL:
 
-`https://okestro-edu-team-tms.vercel.app/?mode=edit&access=leader`
+`https://edu-team-tms-ten.vercel.app/admin`
 
 ## Investigation vs Modification
 

@@ -55,7 +55,7 @@ export default function ViewerMenuSettingsModal({
         <form onSubmit={handleSubmit}>
           <div className="modal-body-stack">
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.55 }}>
-              <strong>https://okestro-edu-team-tms.vercel.app/</strong> (조회 URL)에 보일 메뉴를
+              <strong>https://edu-team-tms-ten.vercel.app/</strong> (조회 URL)에 보일 메뉴를
               고릅니다. 작성(<code>?mode=edit</code>) 화면 메뉴는 그대로입니다.
             </p>
             <ul className="viewer-menu-settings-list">
