@@ -246,12 +246,26 @@ function resolveLegacyKpi2Member(dayKey, taskId) {
   }
 }
 
+function migrateStoreLegacyKpi2Rows(store) {
+  const unresolved = [];
+  const migrated = migrateLegacyKpi2RowStatus(store, resolveLegacyKpi2Member, {
+    onUnresolvedLegacyRow: (row) => unresolved.push(row),
+  });
+  if (unresolved.length > 0) {
+    console.warn(
+      `[kpiOperational] unresolved legacy KPI2 rows dropped: ${unresolved.length}`,
+      unresolved.map((r) => r.id)
+    );
+  }
+  return migrated;
+}
+
 function loadStore() {
   try {
     const raw = localStorage.getItem(KPI_OPERATIONAL_STORAGE_KEY);
     if (!raw) return createEmptyKpiOperationalStore();
     const normalized = normalizeKpiOperationalStore(JSON.parse(raw));
-    const migrated = migrateLegacyKpi2RowStatus(normalized, resolveLegacyKpi2Member);
+    const migrated = migrateStoreLegacyKpi2Rows(normalized);
     return sanitizeCompetencyInStore(migrated);
   } catch {
     return createEmptyKpiOperationalStore();
@@ -784,7 +798,9 @@ export function useKpiOperational({ readOnly = false } = {}) {
 
   const importStore = useCallback(
     (snapshot) => {
-      const next = persist(sanitizeCompetencyInStore(normalizeKpiOperationalStore(snapshot)));
+      const normalized = normalizeKpiOperationalStore(snapshot);
+      const migrated = migrateStoreLegacyKpi2Rows(normalized);
+      const next = persist(sanitizeCompetencyInStore(migrated));
       setStore(next);
       return next;
     },

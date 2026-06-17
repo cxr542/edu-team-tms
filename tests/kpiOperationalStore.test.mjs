@@ -37,4 +37,16 @@ describe('kpiOperationalStore kpi2 row id migration', () => {
     const migrated = migrateLegacyKpi2RowStatus(store, () => null);
     expect(Object.keys(migrated.kpi2RowStatus)).toHaveLength(0);
   });
+
+  it('migrateLegacyKpi2RowStatus - 미해결 legacy 키 콜백 수집', () => {
+    const store = createEmptyKpiOperationalStore();
+    store.kpi2RowStatus = {
+      [kpi2LegacyRowId('2026-06-01', 't1')]: { status: '제출' },
+    };
+    const unresolved = [];
+    migrateLegacyKpi2RowStatus(store, () => null, {
+      onUnresolvedLegacyRow: (row) => unresolved.push(row.id),
+    });
+    expect(unresolved).toEqual([kpi2LegacyRowId('2026-06-01', 't1')]);
+  });
 });

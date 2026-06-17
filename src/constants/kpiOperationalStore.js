@@ -224,7 +224,11 @@ export function readKpi2RowStatus(kpi2RowStatus, memberCode, dayKey, taskId) {
  * - resolver가 단일 memberCode를 반환할 때만 승격
  * - ambiguous/unresolved legacy key는 제거(교차 오염 방지)
  */
-export function migrateLegacyKpi2RowStatus(store, resolveMemberCodeForLegacyRow) {
+export function migrateLegacyKpi2RowStatus(
+  store,
+  resolveMemberCodeForLegacyRow,
+  { onUnresolvedLegacyRow } = {}
+) {
   const src = store?.kpi2RowStatus;
   if (!src || typeof src !== 'object') return store;
 
@@ -245,7 +249,10 @@ export function migrateLegacyKpi2RowStatus(store, resolveMemberCodeForLegacyRow)
     if (parts.length !== 2) return;
     const [dayKey, taskId] = parts;
     const memberCode = resolveMemberCodeForLegacyRow?.(dayKey, taskId);
-    if (!memberCode) return;
+    if (!memberCode) {
+      onUnresolvedLegacyRow?.({ id, dayKey, taskId, meta: { ...meta } });
+      return;
+    }
     const scopedId = kpi2RowId(memberCode, dayKey, taskId);
     next[scopedId] = chooseLatest(next[scopedId], { ...meta });
   });
