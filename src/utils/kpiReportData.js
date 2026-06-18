@@ -8,13 +8,16 @@ import {
   readKpi2RowStatus,
 } from '../constants/kpiOperationalStore';
 import { loadImproveProjects } from '../constants/improveProjects';
-import { JOURNAL_STORAGE_KEY } from './journalSnapshot';
 import { COMPETENCY_USE_4060 } from '../constants/competencyConfig';
 import { monthlyFinalScore } from './competencyScore';
 import { buildKpi02EffectRows, computeTeamKpi } from './computeTeamKpi';
 import { resolveKpi2Display } from './kpi2Display';
 import { gradeKpi1, gradeKpi2, gradeKpi3 } from './kpiGrades';
 import { KPI1_NAME, KPI2_NAME } from '../constants/kpiDisplayNames';
+import {
+  loadMemberJournalsFromStorage,
+  migrateKpiOperationalStoreReadonly,
+} from './kpi2LegacyMigration';
 
 export function buildTeamMonthlyReport({
   year,
@@ -117,10 +120,14 @@ export function listPendingApprovals({
 }) {
   const ym = monthKey(year, monthIndex);
   const items = [];
-  const kpi2RowStatus = kpiOperational.kpi2RowStatus || {};
+  const memberJournals = Object.fromEntries(
+    TEAM_KPI_MEMBERS.map((member) => [member.code, { days: getMemberDays(member.code) }])
+  );
+  const migratedOperational = migrateKpiOperationalStoreReadonly(kpiOperational, memberJournals);
+  const kpi2RowStatus = migratedOperational.kpi2RowStatus || {};
 
   TEAM_KPI_MEMBERS.forEach((member) => {
-    const m01 = kpiOperational.months?.[ym]?.[member.code]?.monthly01;
+    const m01 = migratedOperational.months?.[ym]?.[member.code]?.monthly01;
     if (m01?.status === KPI_STATUS.SUBMITTED) {
       items.push({
         type: 'KPI1',
@@ -170,27 +177,16 @@ export function readJournalPeriodFromUrl() {
 }
 
 function loadJournalMemberDaysFromStorage() {
-  try {
-    const raw = localStorage.getItem(JOURNAL_STORAGE_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    if (parsed?.memberJournals && typeof parsed.memberJournals === 'object') {
-      return parsed.memberJournals;
-    }
-    if (parsed?.days) {
-      return { A: { days: parsed.days } };
-    }
-  } catch {
-    /* ignore */
-  }
-  return {};
+  const memberJournals = loadMemberJournalsFromStorage();
+  return memberJournals;
 }
 
 function loadKpiOperationalFromStorage() {
   try {
     const raw = localStorage.getItem(KPI_OPERATIONAL_STORAGE_KEY);
     if (!raw) return normalizeKpiOperationalStore({});
-    return normalizeKpiOperationalStore(JSON.parse(raw));
+    const parsed = normalizeKpiOperationalStore(JSON.parse(raw));
+    return migrateKpiOperationalStoreReadonly(parsed, loadMemberJournalsFromStorage());
   } catch {
     return normalizeKpiOperationalStore({});
   }

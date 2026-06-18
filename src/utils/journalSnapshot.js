@@ -147,7 +147,14 @@ export async function saveJournalMemberSnapshot(memberCode, journal, updatedAt) 
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     recordCloudFailure(res.status, body);
-    throw new Error(body.message || body.error || `공유 일지 저장 실패 (${res.status})`);
+    const err = new Error(body.message || body.error || `공유 일지 저장 실패 (${res.status})`);
+    err.status = res.status;
+    err.body = body;
+    if (res.status === 409) {
+      err.reason = 'conflict';
+      err.snapshot = body.snapshot ? normalizeJournalSnapshot(body.snapshot) : null;
+    }
+    throw err;
   }
   recordCloudSuccess();
   return normalizeJournalSnapshot(body.snapshot);
@@ -209,6 +216,42 @@ export function applyJournalSnapshotViewOnlyImport(localStore, remoteSnapshot, o
   return {
     memberJournals: merged.memberJournals,
     meta: merged.meta,
+  };
+}
+
+function isIsoAfter(left, right) {
+  if (!left) return false;
+  if (!right) return true;
+  return new Date(left).getTime() > new Date(right).getTime();
+}
+
+function maxIso(left, right) {
+  return isIsoAfter(left, right) ? left : right || left || null;
+}
+
+export function applySavedJournalMemberSnapshot(localStore, remoteSnapshot, memberCode) {
+  const localSnapshot = normalizeJournalCloudSnapshot({
+    publishedAt: localStore?.meta?.updatedAt || null,
+    meta: localStore?.meta || {},
+    memberJournals: localStore?.memberJournals || createEmptyMemberJournals(),
+  });
+  const remote = normalizeJournalCloudSnapshot(remoteSnapshot);
+  const remoteUpdatedAt =
+    remote.meta.memberUpdatedAt?.[memberCode] || remote.meta.updatedAt || remote.publishedAt || null;
+  const memberUpdatedAt = { ...(localSnapshot.meta.memberUpdatedAt || {}) };
+  if (remoteUpdatedAt) memberUpdatedAt[memberCode] = remoteUpdatedAt;
+  const updatedAt = maxIso(localSnapshot.meta.updatedAt || localSnapshot.publishedAt, remote.publishedAt);
+
+  return {
+    memberJournals: {
+      ...localSnapshot.memberJournals,
+      [memberCode]: remote.memberJournals[memberCode],
+    },
+    meta: {
+      ...localSnapshot.meta,
+      updatedAt,
+      memberUpdatedAt,
+    },
   };
 }
 

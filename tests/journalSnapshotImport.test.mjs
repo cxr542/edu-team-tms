@@ -3,6 +3,7 @@ import { mergeJournalSnapshotsByMember, mergeJournalSnapshotsViewOnlyImport } fr
 import {
   applyJournalSnapshotImport,
   applyJournalSnapshotViewOnlyImport,
+  applySavedJournalMemberSnapshot,
   isJournalSnapshotImportable,
   JOURNAL_STORAGE_KEY,
   parseJournalSnapshotForImport,
@@ -214,6 +215,76 @@ describe('journal snapshot import', () => {
     expect(merged.memberJournals.B.days['2026-06-08']).toBeUndefined();
     expect(merged.memberJournals.A.days['2026-06-03'].tasks[0].title).toBe('A 팀장 공유');
     expect(merged.memberJournals.C.days['2026-06-04'].tasks[0].title).toBe('C 팀장 공유');
+  });
+
+  it('saving one member keeps unrelated local member slices even if remote has newer copies', () => {
+    const local = {
+      memberJournals: {
+        A: { days: {} },
+        B: {
+          days: {
+            '2026-06-02': {
+              holiday: false,
+              mm: { work: 1, improve: 0, leave: 0 },
+              tasks: [{ id: 'b-local', cat: 'other', title: 'B 저장 전', plan: 1, actual: 1, done: true }],
+            },
+          },
+        },
+        C: {
+          days: {
+            '2026-06-03': {
+              holiday: false,
+              mm: { work: 1, improve: 0, leave: 0 },
+              tasks: [{ id: 'c-local', cat: 'other', title: 'C 로컬 작성', plan: 1, actual: 1, done: true }],
+            },
+          },
+        },
+      },
+      meta: {
+        updatedAt: '2026-06-11T09:00:00.000Z',
+        memberUpdatedAt: {
+          B: '2026-06-11T09:00:00.000Z',
+          C: '2026-06-11T09:00:00.000Z',
+        },
+      },
+    };
+    const remoteAfterSavingB = {
+      version: 1,
+      publishedAt: '2026-06-11T10:00:00.000Z',
+      meta: {
+        updatedAt: '2026-06-11T10:00:00.000Z',
+        memberUpdatedAt: {
+          B: '2026-06-11T10:00:00.000Z',
+          C: '2026-06-11T10:00:00.000Z',
+        },
+      },
+      memberJournals: {
+        B: {
+          days: {
+            '2026-06-02': {
+              holiday: false,
+              mm: { work: 1, improve: 0, leave: 0 },
+              tasks: [{ id: 'b-saved', cat: 'other', title: 'B 공유 저장됨', plan: 1, actual: 1, done: true }],
+            },
+          },
+        },
+        C: {
+          days: {
+            '2026-06-04': {
+              holiday: false,
+              mm: { work: 1, improve: 0, leave: 0 },
+              tasks: [{ id: 'c-remote', cat: 'other', title: 'C 원격 최신', plan: 1, actual: 1, done: true }],
+            },
+          },
+        },
+      },
+    };
+
+    const merged = applySavedJournalMemberSnapshot(local, remoteAfterSavingB, 'B');
+
+    expect(merged.memberJournals.B.days['2026-06-02'].tasks[0].title).toBe('B 공유 저장됨');
+    expect(merged.memberJournals.C.days['2026-06-03'].tasks[0].title).toBe('C 로컬 작성');
+    expect(merged.memberJournals.C.days['2026-06-04']).toBeUndefined();
   });
 
   it('mergeJournalSnapshotsViewOnlyImport rejects invalid member code', () => {

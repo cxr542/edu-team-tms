@@ -1,6 +1,7 @@
 import { readFile } from 'fs/promises';
 import path from 'path';
 import {
+  isMemberJournalWriteStale,
   mergeMemberIntoJournalSnapshot,
   normalizeJournalCloudSnapshot,
 } from '../src/utils/journalCloudSnapshot.js';
@@ -114,6 +115,16 @@ export default async function handler(req, res) {
 
       const { snapshot: currentSnapshot } = await readLatestSnapshot();
       const current = currentSnapshot || normalizeJournalCloudSnapshot({});
+      const clientUpdatedAt =
+        typeof body.updatedAt === 'string' ? body.updatedAt : null;
+      if (isMemberJournalWriteStale(current, body.memberCode, clientUpdatedAt)) {
+        return json(res, 409, {
+          error: 'journal-write-conflict',
+          message:
+            '이 저널은 다른 곳에서 더 최신 내용으로 업데이트되었습니다. 최신 내용을 불러오거나 변경 내용을 확인한 뒤 다시 저장해 주세요.',
+          snapshot: current,
+        });
+      }
       const updatedAt =
         typeof body.updatedAt === 'string' ? body.updatedAt : new Date().toISOString();
       const next = mergeMemberIntoJournalSnapshot(current, body.memberCode, body.journal, {

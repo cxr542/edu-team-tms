@@ -36,8 +36,44 @@ export function isMemberJournalEmpty(slice) {
     Object.keys(normalized.weekSummaries || {}).length === 0 &&
     Object.keys(normalized.nextWeekPlans || {}).length === 0 &&
     Object.keys(normalized.kpiWeekMemos || {}).length === 0 &&
-    !normalized.prefs
+    !normalized.prefs &&
+    !normalized.kpiApproval
   );
+}
+
+/** 클라이언트 updatedAt이 서버 member slice보다 오래되었는지 */
+export function isMemberJournalWriteStale(snapshot, memberCode, clientUpdatedAt) {
+  if (!clientUpdatedAt || !isValidMemberCode(memberCode)) return false;
+  const current = normalizeJournalCloudSnapshot(snapshot);
+  const serverAt = current.meta.memberUpdatedAt?.[memberCode] || null;
+  if (!serverAt) return false;
+  return new Date(clientUpdatedAt).getTime() < new Date(serverAt).getTime();
+}
+
+/** 단일 멤버 cloud 저장 응답을 로컬 store에 반영 — 다른 멤버 slice/meta는 유지 */
+export function applyRemoteMemberJournalSave(localStore, remoteSnapshot, memberCode) {
+  if (!isValidMemberCode(memberCode)) {
+    throw new Error('A/B/C 구성원 코드가 필요합니다.');
+  }
+  const remote = normalizeJournalCloudSnapshot(remoteSnapshot);
+  const remoteSlice = remote.memberJournals[memberCode];
+  const memberJournals = {
+    ...(localStore?.memberJournals || createEmptyMemberJournals()),
+    [memberCode]: clone(remoteSlice || emptyMemberJournal()),
+  };
+  const remoteMemberAt = remote.meta.memberUpdatedAt?.[memberCode] || remote.meta.updatedAt || null;
+  return {
+    ...localStore,
+    memberJournals,
+    meta: {
+      ...(localStore?.meta || {}),
+      updatedAt: remote.meta.updatedAt || localStore?.meta?.updatedAt || null,
+      memberUpdatedAt: {
+        ...(localStore?.meta?.memberUpdatedAt || {}),
+        ...(remoteMemberAt ? { [memberCode]: remoteMemberAt } : {}),
+      },
+    },
+  };
 }
 
 export function normalizeJournalCloudSnapshot(raw, { publishedAt = nowIso() } = {}) {
@@ -107,13 +143,19 @@ export function mergeMemberJournalSlicesImport(localSlice, remoteSlice) {
   if (isMemberJournalEmpty(remote)) {
     return clone(local);
   }
-  return clone({
+  const merged = {
     days: { ...local.days, ...remote.days },
     weekSummaries: { ...local.weekSummaries, ...remote.weekSummaries },
     nextWeekPlans: { ...local.nextWeekPlans, ...remote.nextWeekPlans },
     kpiWeekMemos: { ...local.kpiWeekMemos, ...remote.kpiWeekMemos },
     prefs: remote.prefs ?? local.prefs,
-  });
+  };
+  if (remote.kpiApproval) {
+    merged.kpiApproval = clone(remote.kpiApproval);
+  } else if (local.kpiApproval) {
+    merged.kpiApproval = clone(local.kpiApproval);
+  }
+  return clone(merged);
 }
 
 export function mergeJournalSnapshotsByMember(
@@ -195,6 +237,14 @@ export function mergeJournalSnapshotsViewOnlyImport(localSnapshot, remoteSnapsho
     },
     memberJournals,
   });
+}
+
+export function isJournalMemberUpdateStale(snapshot, memberCode, updatedAt) {
+  if (!isValidMemberCode(memberCode)) {
+    throw new Error('A/B/C 구성원 코드가 필요합니다.');
+  }
+  const current = normalizeJournalCloudSnapshot(snapshot);
+  return isNewer(memberTime(current, memberCode), updatedAt);
 }
 
 export function mergeMemberIntoJournalSnapshot(snapshot, memberCode, journal, { updatedAt = nowIso() } = {}) {
