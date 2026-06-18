@@ -268,6 +268,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const sharedSaveText = {
     saving: ' · 공유 저장 중',
     saved: ' · 공유 저장 완료',
+    conflict:
+      ' · 공유 저장 충돌 — 최신 내용을 불러오거나 확인한 뒤 다시 저장해 주세요',
     error: ' · 공유 저장 실패 — 이 브라우저에는 임시 저장됨',
   }[journal.cloudSaveStatus] || '';
   const cloudHealthMessage = getCloudHealthUserMessage();
@@ -907,7 +909,13 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                           const saveCode = teamAccess.scopedMember || memberCode;
                           const r = await journal.saveMemberToCloud(saveCode);
                           if (r.ok) showToast(`${saveCode} 일지를 팀 공유 저장소에 저장했습니다`);
-                          else showToast(r.error?.message || '팀 공유 저장 실패 — 이 브라우저에는 임시 저장됨');
+                          else if (r.reason === 'conflict') {
+                            showToast(
+                              '이 저널은 다른 곳에서 더 최신 내용으로 업데이트되었습니다. 최신 내용을 불러오거나 변경 내용을 확인한 뒤 다시 저장해 주세요.'
+                            );
+                          } else {
+                            showToast(r.error?.message || '팀 공유 저장 실패 — 이 브라우저에는 임시 저장됨');
+                          }
                         }}
                       >
                         <Upload size={16} />

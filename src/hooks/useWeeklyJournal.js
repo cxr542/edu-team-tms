@@ -18,7 +18,6 @@ import {
   formatKpiMemberLabel,
 } from '../constants/kpiMembers';
 import {
-  applySavedJournalMemberSnapshot,
   applyJournalSnapshotViewOnlyImport,
   downloadJournalSnapshot,
   fetchJournalSnapshot,
@@ -28,6 +27,7 @@ import {
   saveJournalMemberSnapshot,
 } from '../utils/journalSnapshot';
 import {
+  applyRemoteMemberJournalSave,
   mergeJournalSnapshotsByMember,
   normalizeJournalCloudSnapshot,
 } from '../utils/journalCloudSnapshot';
@@ -195,6 +195,19 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readOnly]);
 
+  const applyMemberCloudSave = useCallback(
+    (memberCode, snapshot) => {
+      let merged;
+      setStore((prev) => {
+        merged = cacheStore(applyRemoteMemberJournalSave(prev, snapshot, memberCode));
+        return merged;
+      });
+      setSyncStatus('synced');
+      return merged;
+    },
+    [cacheStore]
+  );
+
   const applyRemoteSnapshot = useCallback(
     (snapshot, options = {}) => {
       let merged;
@@ -221,19 +234,6 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
       });
       setSyncStatus('synced');
       return { merged, changed };
-    },
-    [cacheStore]
-  );
-
-  const applySavedMemberSnapshot = useCallback(
-    (snapshot, memberCode) => {
-      let merged;
-      setStore((prev) => {
-        merged = cacheStore(applySavedJournalMemberSnapshot(prev, snapshot, memberCode));
-        return merged;
-      });
-      setSyncStatus('synced');
-      return { merged };
     },
     [cacheStore]
   );
@@ -495,16 +495,21 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
           getMemberJournal(store, memberCode),
           store.meta?.memberUpdatedAt?.[memberCode] || store.meta?.updatedAt
         );
-        applySavedMemberSnapshot(latest, memberCode);
+        applyMemberCloudSave(memberCode, latest);
         setCloudSaveStatus('saved');
         setPendingCloudMembers((prev) => prev.filter((code) => code !== memberCode));
         return { ok: true, remote: latest };
       } catch (e) {
-        setCloudSaveStatus('error');
-        return { ok: false, reason: 'error', error: e };
+        setCloudSaveStatus(e.reason === 'conflict' ? 'conflict' : 'error');
+        return {
+          ok: false,
+          reason: e.reason || 'error',
+          error: e,
+          conflictSnapshot: e.snapshot || null,
+        };
       }
     },
-    [applyRemoteSnapshot, readOnly, store]
+    [applyMemberCloudSave, readOnly, store]
   );
 
   useEffect(() => {
@@ -513,22 +518,31 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
       const members = pendingCloudMembers;
       setPendingCloudMembers((prev) => prev.filter((code) => !members.includes(code)));
       setCloudSaveStatus('saving');
+      let hadConflict = false;
       try {
         for (const memberCode of members) {
-          const latest = await saveJournalMemberSnapshot(
-            memberCode,
-            getMemberJournal(store, memberCode),
-            store.meta?.memberUpdatedAt?.[memberCode] || store.meta?.updatedAt
-          );
-          applySavedMemberSnapshot(latest, memberCode);
+          try {
+            const latest = await saveJournalMemberSnapshot(
+              memberCode,
+              getMemberJournal(store, memberCode),
+              store.meta?.memberUpdatedAt?.[memberCode] || store.meta?.updatedAt
+            );
+            applyMemberCloudSave(memberCode, latest);
+          } catch (e) {
+            if (e.reason === 'conflict') {
+              hadConflict = true;
+            } else {
+              throw e;
+            }
+          }
         }
-        setCloudSaveStatus('saved');
+        setCloudSaveStatus(hadConflict ? 'conflict' : 'saved');
       } catch {
         setCloudSaveStatus('error');
       }
     }, 1200);
     return () => window.clearTimeout(timer);
-  }, [applySavedMemberSnapshot, autoSyncCloud, pendingCloudMembers, readOnly, store]);
+  }, [applyMemberCloudSave, autoSyncCloud, pendingCloudMembers, readOnly, store]);
 
   const linkedDays = useMemo(
     () => getMemberDays(JOURNAL_LINKED_MEMBER_CODE),

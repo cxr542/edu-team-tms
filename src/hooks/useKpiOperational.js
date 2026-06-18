@@ -44,7 +44,10 @@ import {
   isValidCompetencyMemberCode,
   mergeCompetencyMonthsIntoKpiStore,
 } from '../utils/kpiOperationalCloudSnapshot';
-import { JOURNAL_STORAGE_KEY } from '../utils/journalSnapshot';
+import {
+  loadMemberJournalsFromStorage,
+  resolveLegacyKpi2Member,
+} from '../utils/kpi2LegacyMigration';
 
 const KPI_OPERATIONAL_SNAPSHOT_API = '/api/kpi-operational-snapshot';
 
@@ -220,37 +223,16 @@ export function patchUnlockCompetencyQuarterSelf(store, yq, memberCode) {
   return { store: next, ok: true };
 }
 
-function resolveLegacyKpi2Member(dayKey, taskId) {
-  try {
-    const raw = localStorage.getItem(JOURNAL_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    const memberJournals =
-      parsed?.memberJournals && typeof parsed.memberJournals === 'object'
-        ? parsed.memberJournals
-        : parsed?.days
-          ? { A: { days: parsed.days } }
-          : {};
-    const matched = [];
-    Object.entries(memberJournals).forEach(([memberCode, slice]) => {
-      const day = slice?.days?.[dayKey];
-      if (!day) return;
-      const found = (day.tasks || []).some(
-        (task) => task?.id === taskId && task?.kpi2Effect?.enabled
-      );
-      if (found) matched.push(memberCode);
-    });
-    return matched.length === 1 ? matched[0] : null;
-  } catch {
-    return null;
-  }
-}
-
 function migrateStoreLegacyKpi2Rows(store) {
   const unresolved = [];
-  const migrated = migrateLegacyKpi2RowStatus(store, resolveLegacyKpi2Member, {
-    onUnresolvedLegacyRow: (row) => unresolved.push(row),
-  });
+  const memberJournals = loadMemberJournalsFromStorage();
+  const migrated = migrateLegacyKpi2RowStatus(
+    store,
+    (dayKey, taskId) => resolveLegacyKpi2Member(memberJournals, dayKey, taskId),
+    {
+      onUnresolvedLegacyRow: (row) => unresolved.push(row),
+    }
+  );
   if (unresolved.length > 0) {
     console.warn(
       `[kpiOperational] unresolved legacy KPI2 rows dropped: ${unresolved.length}`,

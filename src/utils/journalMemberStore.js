@@ -18,13 +18,17 @@ export function createEmptyMemberJournals() {
 
 export function normalizeMemberJournalSlice(raw) {
   if (!raw || typeof raw !== 'object') return emptyMemberJournal();
-  return {
+  const slice = {
     days: raw.days && typeof raw.days === 'object' ? { ...raw.days } : {},
     weekSummaries: stripLegacyWeekColumnEntries(raw.weekSummaries),
     nextWeekPlans: stripLegacyWeekColumnEntries(raw.nextWeekPlans),
     kpiWeekMemos: raw.kpiWeekMemos && typeof raw.kpiWeekMemos === 'object' ? { ...raw.kpiWeekMemos } : {},
     prefs: raw.prefs ? normalizeMemberPrefs(raw.prefs) : null,
   };
+  if (raw.kpiApproval && typeof raw.kpiApproval === 'object') {
+    slice.kpiApproval = JSON.parse(JSON.stringify(raw.kpiApproval));
+  }
+  return slice;
 }
 
 /** legacy flat store → memberJournals */

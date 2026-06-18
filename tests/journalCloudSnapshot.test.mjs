@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  applyRemoteMemberJournalSave,
   isJournalMemberUpdateStale,
   isMemberJournalEmpty,
+  isMemberJournalWriteStale,
   mergeJournalSnapshotsByMember,
   mergeMemberIntoJournalSnapshot,
   normalizeJournalCloudSnapshot,
@@ -80,5 +82,53 @@ describe('journalCloudSnapshot', () => {
 
     expect(merged.memberJournals.A.days['2026-06-09'].tasks[0].title).toBe('A remote');
     expect(merged.memberJournals.B.days['2026-06-09'].tasks[0].title).toBe('B local');
+  });
+
+  it('isMemberJournalWriteStale rejects older client updatedAt', () => {
+    const current = normalizeJournalCloudSnapshot({
+      publishedAt: '2026-06-11T08:00:00.000Z',
+      meta: { memberUpdatedAt: { B: '2026-06-11T08:00:00.000Z' } },
+      memberJournals: { B: { days: day('B server') } },
+    });
+    expect(isMemberJournalWriteStale(current, 'B', '2026-06-10T08:00:00.000Z')).toBe(true);
+    expect(isMemberJournalWriteStale(current, 'B', '2026-06-12T08:00:00.000Z')).toBe(false);
+    expect(isMemberJournalWriteStale(current, 'B', null)).toBe(false);
+  });
+
+  it('sequential saves from two members preserve both latest slices', () => {
+    let snapshot = normalizeJournalCloudSnapshot({
+      publishedAt: '2026-06-09T00:00:00.000Z',
+      memberJournals: {},
+    });
+    snapshot = mergeMemberIntoJournalSnapshot(snapshot, 'A', { days: day('A first') }, {
+      updatedAt: '2026-06-09T01:00:00.000Z',
+    });
+    snapshot = mergeMemberIntoJournalSnapshot(snapshot, 'B', { days: day('B first') }, {
+      updatedAt: '2026-06-09T02:00:00.000Z',
+    });
+    expect(snapshot.memberJournals.A.days['2026-06-09'].tasks[0].title).toBe('A first');
+    expect(snapshot.memberJournals.B.days['2026-06-09'].tasks[0].title).toBe('B first');
+    expect(snapshot.meta.memberUpdatedAt.A).toBe('2026-06-09T01:00:00.000Z');
+    expect(snapshot.meta.memberUpdatedAt.B).toBe('2026-06-09T02:00:00.000Z');
+  });
+
+  it('applyRemoteMemberJournalSave does not replace other members', () => {
+    const local = {
+      memberJournals: {
+        A: { days: day('A local') },
+        B: { days: day('B local') },
+        C: { days: day('C local') },
+      },
+      meta: { memberUpdatedAt: { A: '2026-06-09T01:00:00.000Z', B: '2026-06-09T01:00:00.000Z', C: '2026-06-09T01:00:00.000Z' } },
+    };
+    const remote = normalizeJournalCloudSnapshot({
+      publishedAt: '2026-06-11T08:00:00.000Z',
+      meta: { memberUpdatedAt: { B: '2026-06-11T08:00:00.000Z' } },
+      memberJournals: { B: { days: day('B remote') } },
+    });
+    const next = applyRemoteMemberJournalSave(local, remote, 'B');
+    expect(next.memberJournals.A.days['2026-06-09'].tasks[0].title).toBe('A local');
+    expect(next.memberJournals.B.days['2026-06-09'].tasks[0].title).toBe('B remote');
+    expect(next.memberJournals.C.days['2026-06-09'].tasks[0].title).toBe('C local');
   });
 });

@@ -147,7 +147,14 @@ export async function saveJournalMemberSnapshot(memberCode, journal, updatedAt) 
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     recordCloudFailure(res.status, body);
-    throw new Error(body.message || body.error || `공유 일지 저장 실패 (${res.status})`);
+    const err = new Error(body.message || body.error || `공유 일지 저장 실패 (${res.status})`);
+    err.status = res.status;
+    err.body = body;
+    if (res.status === 409) {
+      err.reason = 'conflict';
+      err.snapshot = body.snapshot ? normalizeJournalSnapshot(body.snapshot) : null;
+    }
+    throw err;
   }
   recordCloudSuccess();
   return normalizeJournalSnapshot(body.snapshot);
