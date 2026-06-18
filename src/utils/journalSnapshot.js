@@ -87,7 +87,16 @@ function inferSnapshotSource(path, headerSource) {
 async function fetchSnapshotFrom(path) {
   const res = await fetch(`${path}?t=${Date.now()}`, { cache: 'no-store' });
   if (res.status === 404) return null;
-  if (!isJsonSnapshotResponse(res)) return null;
+  if (!isJsonSnapshotResponse(res)) {
+    if (!res.ok) {
+      recordCloudFailure(res.status, {});
+      const err = new Error(`공유 일지를 불러오지 못했습니다 (${res.status})`);
+      err.status = res.status;
+      err.body = {};
+      throw err;
+    }
+    return null;
+  }
 
   const body = await res.json().catch(() => null);
   if (!body || !isJournalSnapshotImportable(body)) {
@@ -121,12 +130,8 @@ async function fetchSnapshotFrom(path) {
 
 /** @returns {Promise<{ snapshot: object, source: string } | null>} */
 export async function fetchJournalSnapshot() {
-  try {
-    const api = await fetchSnapshotFrom(JOURNAL_API_PATH);
-    if (api) return api;
-  } catch {
-    // API 오류 시 public 백업 JSON으로 폴백
-  }
+  const api = await fetchSnapshotFrom(JOURNAL_API_PATH);
+  if (api) return api;
   return fetchSnapshotFrom(JOURNAL_SNAPSHOT_PATH);
 }
 
