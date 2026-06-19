@@ -160,6 +160,67 @@ describe('journalKpiApprovalSlice', () => {
     expect(merged.kpi2RowStatus[rowId].approver).toBe('팀장');
   });
 
+  it('mergeMemberKpiApprovalIntoStore — keeps approved monthly01 over later submitted backup', () => {
+    const store = createEmptyKpiOperationalStore();
+    store.months['2026-06'] = {
+      B: {
+        monthly01: {
+          status: KPI_STATUS.APPROVED,
+          submittedAt: '2026-06-19T09:00:00.000Z',
+          approvedAt: '2026-06-19T10:00:00.000Z',
+          approver: '팀장',
+        },
+      },
+    };
+    const incoming = {
+      months: {
+        '2026-06': {
+          monthly01: {
+            status: KPI_STATUS.SUBMITTED,
+            submittedAt: '2026-06-19T11:00:00.000Z',
+            approvedAt: null,
+            approver: '',
+          },
+        },
+      },
+      kpi2RowStatus: {},
+    };
+
+    const merged = mergeMemberKpiApprovalIntoStore(store, 'B', incoming);
+
+    expect(merged.months['2026-06'].B.monthly01.status).toBe(KPI_STATUS.APPROVED);
+    expect(merged.months['2026-06'].B.monthly01.approvedAt).toBe('2026-06-19T10:00:00.000Z');
+  });
+
+  it('mergeMemberKpiApprovalIntoStore — keeps rejected KPI2 row over later submitted backup', () => {
+    const store = createEmptyKpiOperationalStore();
+    const rowId = kpi2RowId('B', '2026-06-19', 'task-1');
+    store.kpi2RowStatus[rowId] = {
+      status: KPI_STATUS.REJECTED,
+      submittedAt: '2026-06-19T09:00:00.000Z',
+      approvedAt: '2026-06-19T10:00:00.000Z',
+      approver: '팀장',
+      rejectReason: 'needs evidence',
+    };
+    const incoming = {
+      months: {},
+      kpi2RowStatus: {
+        [rowId]: {
+          status: KPI_STATUS.SUBMITTED,
+          submittedAt: '2026-06-19T11:00:00.000Z',
+          approvedAt: null,
+          approver: '',
+          rejectReason: '',
+        },
+      },
+    };
+
+    const merged = mergeMemberKpiApprovalIntoStore(store, 'B', incoming);
+
+    expect(merged.kpi2RowStatus[rowId].status).toBe(KPI_STATUS.REJECTED);
+    expect(merged.kpi2RowStatus[rowId].rejectReason).toBe('needs evidence');
+  });
+
   it('extractMemberKpiApprovalSlice — legacy row id도 포함', () => {
     const days = {
       '2026-06-16': {

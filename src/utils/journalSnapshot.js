@@ -16,23 +16,35 @@ function recalcMemberDays(days) {
   return next;
 }
 
+function hasKpiApprovalEntries(approval) {
+  return Object.keys(approval.months).length || Object.keys(approval.kpi2RowStatus).length;
+}
+
+export function buildMemberJournalSnapshot(memberCode, slice = {}, kpiOperational = null) {
+  const normalized = {
+    days: slice.days || {},
+    weekSummaries: slice.weekSummaries || {},
+    nextWeekPlans: slice.nextWeekPlans || {},
+    kpiWeekMemos: slice.kpiWeekMemos || {},
+    prefs: slice.prefs || null,
+  };
+  if (slice.kpiApproval && typeof slice.kpiApproval === 'object') {
+    normalized.kpiApproval = JSON.parse(JSON.stringify(slice.kpiApproval));
+  }
+  if (kpiOperational) {
+    const approval = extractMemberKpiApprovalSlice(kpiOperational, memberCode, slice.days || {});
+    if (hasKpiApprovalEntries(approval)) {
+      normalized.kpiApproval = approval;
+    }
+  }
+  return normalized;
+}
+
 export function buildJournalSnapshot(store, kpiOperational = null) {
   const memberJournals = store.memberJournals || createEmptyMemberJournals();
   const normalized = {};
   Object.entries(memberJournals).forEach(([code, slice]) => {
-    normalized[code] = {
-      days: slice.days || {},
-      weekSummaries: slice.weekSummaries || {},
-      nextWeekPlans: slice.nextWeekPlans || {},
-      kpiWeekMemos: slice.kpiWeekMemos || {},
-      prefs: slice.prefs || null,
-    };
-    if (kpiOperational) {
-      const approval = extractMemberKpiApprovalSlice(kpiOperational, code, slice.days || {});
-      if (Object.keys(approval.months).length || Object.keys(approval.kpi2RowStatus).length) {
-        normalized[code].kpiApproval = approval;
-      }
-    }
+    normalized[code] = buildMemberJournalSnapshot(code, slice, kpiOperational);
   });
 
   return normalizeJournalCloudSnapshot({

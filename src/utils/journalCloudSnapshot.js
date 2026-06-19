@@ -20,6 +20,13 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function isIsoAfter(left, right) {
+  if (!left || !right) return false;
+  const leftTime = new Date(left).getTime();
+  const rightTime = new Date(right).getTime();
+  return Number.isFinite(leftTime) && Number.isFinite(rightTime) && leftTime > rightTime;
+}
+
 function normalizeMemberUpdatedAt(raw) {
   const source = raw && typeof raw === 'object' ? raw : {};
   return Object.fromEntries(
@@ -51,11 +58,15 @@ export function isMemberJournalWriteStale(snapshot, memberCode, clientUpdatedAt)
 }
 
 /** 단일 멤버 cloud 저장 응답을 로컬 store에 반영 — 다른 멤버 slice/meta는 유지 */
-export function applyRemoteMemberJournalSave(localStore, remoteSnapshot, memberCode) {
+export function applyRemoteMemberJournalSave(localStore, remoteSnapshot, memberCode, { savedUpdatedAt = null } = {}) {
   if (!isValidMemberCode(memberCode)) {
     throw new Error('A/B/C 구성원 코드가 필요합니다.');
   }
   const remote = normalizeJournalCloudSnapshot(remoteSnapshot);
+  const localMemberAt = localStore?.meta?.memberUpdatedAt?.[memberCode] || null;
+  if (savedUpdatedAt && isIsoAfter(localMemberAt, savedUpdatedAt)) {
+    return clone(localStore);
+  }
   const remoteSlice = remote.memberJournals[memberCode];
   const memberJournals = {
     ...(localStore?.memberJournals || createEmptyMemberJournals()),

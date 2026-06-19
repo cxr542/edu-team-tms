@@ -131,4 +131,49 @@ describe('journalCloudSnapshot', () => {
     expect(next.memberJournals.B.days['2026-06-09'].tasks[0].title).toBe('B remote');
     expect(next.memberJournals.C.days['2026-06-09'].tasks[0].title).toBe('C local');
   });
+
+  it('does not replace newer local edits with an older in-flight save response', () => {
+    const localStore = {
+      memberJournals: {
+        A: {
+          days: {
+            '2026-06-19': { tasks: [{ id: 'new-local', title: 'new local edit' }] },
+          },
+          weekSummaries: {},
+          nextWeekPlans: {},
+          kpiWeekMemos: {},
+          prefs: null,
+        },
+        B: { days: {}, weekSummaries: {}, nextWeekPlans: {}, kpiWeekMemos: {}, prefs: null },
+        C: { days: {}, weekSummaries: {}, nextWeekPlans: {}, kpiWeekMemos: {}, prefs: null },
+      },
+      meta: {
+        updatedAt: '2026-06-19T10:01:00.000Z',
+        memberUpdatedAt: { A: '2026-06-19T10:01:00.000Z' },
+      },
+    };
+    const remoteSnapshot = normalizeJournalCloudSnapshot({
+      publishedAt: '2026-06-19T10:00:00.000Z',
+      meta: {
+        updatedAt: '2026-06-19T10:00:00.000Z',
+        memberUpdatedAt: { A: '2026-06-19T10:00:00.000Z' },
+      },
+      memberJournals: {
+        A: {
+          days: {
+            '2026-06-19': { tasks: [{ id: 'saved-before-edit', title: 'saved before edit' }] },
+          },
+        },
+      },
+    });
+
+    const merged = applyRemoteMemberJournalSave(localStore, remoteSnapshot, 'A', {
+      savedUpdatedAt: '2026-06-19T10:00:00.000Z',
+    });
+
+    expect(merged.memberJournals.A.days['2026-06-19'].tasks).toEqual([
+      { id: 'new-local', title: 'new local edit' },
+    ]);
+    expect(merged.meta.memberUpdatedAt.A).toBe('2026-06-19T10:01:00.000Z');
+  });
 });

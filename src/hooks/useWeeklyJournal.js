@@ -19,6 +19,7 @@ import {
 } from '../constants/kpiMembers';
 import {
   applyJournalSnapshotViewOnlyImport,
+  buildMemberJournalSnapshot,
   downloadJournalSnapshot,
   fetchJournalSnapshot,
   JOURNAL_STORAGE_KEY,
@@ -196,10 +197,10 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
   }, [readOnly]);
 
   const applyMemberCloudSave = useCallback(
-    (memberCode, snapshot) => {
+    (memberCode, snapshot, options = {}) => {
       let merged;
       setStore((prev) => {
-        merged = cacheStore(applyRemoteMemberJournalSave(prev, snapshot, memberCode));
+        merged = cacheStore(applyRemoteMemberJournalSave(prev, snapshot, memberCode, options));
         return merged;
       });
       setSyncStatus('synced');
@@ -486,16 +487,22 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
   );
 
   const saveMemberToCloud = useCallback(
-    async (memberCode = JOURNAL_LINKED_MEMBER_CODE) => {
+    async (memberCode = JOURNAL_LINKED_MEMBER_CODE, kpiOperational = null) => {
       if (readOnly) return { ok: false, reason: 'read-only' };
       setCloudSaveStatus('saving');
       try {
-        const latest = await saveJournalMemberSnapshot(
+        const saveRequestedAt = new Date().toISOString();
+        const memberJournal = buildMemberJournalSnapshot(
           memberCode,
           getMemberJournal(store, memberCode),
-          store.meta?.memberUpdatedAt?.[memberCode] || store.meta?.updatedAt
+          kpiOperational
         );
-        applyMemberCloudSave(memberCode, latest);
+        const latest = await saveJournalMemberSnapshot(
+          memberCode,
+          memberJournal,
+          saveRequestedAt
+        );
+        applyMemberCloudSave(memberCode, latest, { savedUpdatedAt: saveRequestedAt });
         setCloudSaveStatus('saved');
         setPendingCloudMembers((prev) => prev.filter((code) => code !== memberCode));
         return { ok: true, remote: latest };
@@ -522,12 +529,13 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
       try {
         for (const memberCode of members) {
           try {
+            const saveRequestedAt = new Date().toISOString();
             const latest = await saveJournalMemberSnapshot(
               memberCode,
-              getMemberJournal(store, memberCode),
-              store.meta?.memberUpdatedAt?.[memberCode] || store.meta?.updatedAt
+              buildMemberJournalSnapshot(memberCode, getMemberJournal(store, memberCode)),
+              saveRequestedAt
             );
-            applyMemberCloudSave(memberCode, latest);
+            applyMemberCloudSave(memberCode, latest, { savedUpdatedAt: saveRequestedAt });
           } catch (e) {
             if (e.reason === 'conflict') {
               hadConflict = true;

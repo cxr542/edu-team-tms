@@ -55,6 +55,7 @@ export function JournalProvider({ children, readOnly = false, autoSyncCloud = fa
       importJournalBackup,
       importJournalViewOnlyBackup,
       downloadJournalBackup: () => journal.downloadJournalBackup(kpiApi.kpiOperational),
+      saveMemberToCloud: (memberCode) => journal.saveMemberToCloud(memberCode, kpiApi.kpiOperational),
     }),
     [journal, kpiApi, improveProjectsApi, readOnly]
   );
