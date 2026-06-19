@@ -1,5 +1,34 @@
 import { kpi2LegacyRowId, kpi2RowId } from '../constants/kpiOperationalStore';
+import { KPI_STATUS } from '../constants/kpiStatuses';
 import { isKpi2EffectTask } from './computeTeamKpi';
+
+function approvalStatusRank(status) {
+  if (status === KPI_STATUS.APPROVED || status === KPI_STATUS.REJECTED) return 2;
+  if (status === KPI_STATUS.SUBMITTED) return 1;
+  return 0;
+}
+
+function approvalEventAt(record) {
+  return record?.approvedAt || record?.submittedAt || null;
+}
+
+function timeValue(value) {
+  if (!value) return null;
+  const time = new Date(value).getTime();
+  return Number.isFinite(time) ? time : null;
+}
+
+function shouldUseIncomingApproval(existing, incoming) {
+  if (!existing) return true;
+  const incomingTime = timeValue(approvalEventAt(incoming));
+  const existingTime = timeValue(approvalEventAt(existing));
+  if (incomingTime !== null && existingTime !== null && incomingTime !== existingTime) {
+    return incomingTime > existingTime;
+  }
+  if (incomingTime !== null && existingTime === null) return true;
+  if (incomingTime === null && existingTime !== null) return false;
+  return approvalStatusRank(incoming?.status) >= approvalStatusRank(existing?.status);
+}
 
 /** 구성원 일지 백업 JSON에 포함할 KPI1/KPI2 승인 상태 */
 export function extractMemberKpiApprovalSlice(kpiOperational, memberCode, days = {}) {
@@ -47,11 +76,7 @@ export function mergeMemberKpiApprovalIntoStore(store, memberCode, slice) {
       const month = { ...(months[ym] || {}) };
       const existing = month[memberCode]?.monthly01;
       const incoming = rec.monthly01;
-      const useIncoming =
-        !existing?.submittedAt ||
-        (incoming.submittedAt &&
-          new Date(incoming.submittedAt).getTime() >= new Date(existing.submittedAt).getTime());
-      if (!existing || useIncoming) {
+      if (shouldUseIncomingApproval(existing, incoming)) {
         month[memberCode] = { monthly01: { ...incoming } };
       }
       months[ym] = month;
@@ -66,11 +91,7 @@ export function mergeMemberKpiApprovalIntoStore(store, memberCode, slice) {
       const [part1, part2, part3] = String(id).split('|');
       const scopedId = part3 ? id : kpi2RowId(memberCode, part1, part2);
       const existing = kpi2RowStatus[scopedId];
-      const useIncoming =
-        !existing?.submittedAt ||
-        (meta.submittedAt &&
-          new Date(meta.submittedAt).getTime() >= new Date(existing.submittedAt).getTime());
-      if (!existing || useIncoming) {
+      if (shouldUseIncomingApproval(existing, meta)) {
         kpi2RowStatus[scopedId] = { ...meta };
       }
     });

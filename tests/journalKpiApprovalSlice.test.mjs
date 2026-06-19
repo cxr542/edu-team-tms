@@ -103,6 +103,63 @@ describe('journalKpiApprovalSlice', () => {
     expect(merged.months['2026-06'].B.monthly01.status).toBe(KPI_STATUS.SUBMITTED);
   });
 
+  it('mergeMemberKpiApprovalIntoStore — keeps approved monthly01 over stale submitted backup', () => {
+    const store = createEmptyKpiOperationalStore();
+    store.months['2026-06'] = {
+      B: {
+        monthly01: {
+          work: 1,
+          status: KPI_STATUS.APPROVED,
+          submittedAt: '2026-06-21T10:00:00.000Z',
+          approvedAt: '2026-06-21T11:00:00.000Z',
+          approver: '팀장',
+        },
+      },
+    };
+    const incoming = {
+      months: {
+        '2026-06': {
+          monthly01: {
+            work: 1,
+            status: KPI_STATUS.SUBMITTED,
+            submittedAt: '2026-06-21T10:00:00.000Z',
+          },
+        },
+      },
+      kpi2RowStatus: {},
+    };
+
+    const merged = mergeMemberKpiApprovalIntoStore(store, 'B', incoming);
+
+    expect(merged.months['2026-06'].B.monthly01.status).toBe(KPI_STATUS.APPROVED);
+    expect(merged.months['2026-06'].B.monthly01.approver).toBe('팀장');
+  });
+
+  it('mergeMemberKpiApprovalIntoStore — keeps approved KPI2 row over stale submitted backup', () => {
+    const store = createEmptyKpiOperationalStore();
+    const rowId = kpi2RowId('B', '2026-06-16', 't1');
+    store.kpi2RowStatus[rowId] = {
+      status: KPI_STATUS.APPROVED,
+      submittedAt: '2026-06-21T10:00:00.000Z',
+      approvedAt: '2026-06-21T11:00:00.000Z',
+      approver: '팀장',
+    };
+    const incoming = {
+      months: {},
+      kpi2RowStatus: {
+        '2026-06-16|t1': {
+          status: KPI_STATUS.SUBMITTED,
+          submittedAt: '2026-06-21T10:00:00.000Z',
+        },
+      },
+    };
+
+    const merged = mergeMemberKpiApprovalIntoStore(store, 'B', incoming);
+
+    expect(merged.kpi2RowStatus[rowId].status).toBe(KPI_STATUS.APPROVED);
+    expect(merged.kpi2RowStatus[rowId].approver).toBe('팀장');
+  });
+
   it('extractMemberKpiApprovalSlice — legacy row id도 포함', () => {
     const days = {
       '2026-06-16': {

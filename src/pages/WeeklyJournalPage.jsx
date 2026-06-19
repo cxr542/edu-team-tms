@@ -226,7 +226,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const memberTeamSharePullOpts =
     teamAccess.isMemberScope && teamAccess.scopedMember
       ? { ownMemberCode: teamAccess.scopedMember }
-      : {};
+      : { ownMemberCode: memberCode };
   const showJournalLeaderToolbar = teamAccess.isLeader && !teamAccess.isMemberScope;
   const showJournalBackupToolbar = showJournalLeaderToolbar && !journalReadOnly;
   const showViewOnlyJsonImport =
