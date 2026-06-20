@@ -7,7 +7,11 @@ import {
   mergeMemberJournalSlicesImport,
   normalizeJournalCloudSnapshot,
 } from '../src/utils/journalCloudSnapshot.js';
-import { buildJournalSnapshot, parseJournalSnapshotForImport } from '../src/utils/journalSnapshot.js';
+import {
+  buildJournalSnapshot,
+  buildMemberJournalSavePayload,
+  parseJournalSnapshotForImport,
+} from '../src/utils/journalSnapshot.js';
 import { mergeJournalKpiApprovalImport } from '../src/utils/journalKpiApprovalSlice.js';
 
 describe('journal KPI approval backup round-trip', () => {
@@ -76,6 +80,20 @@ describe('journal KPI approval backup round-trip', () => {
     expect(snapshot.memberJournals.B.kpiApproval.kpi2RowStatus[kpi2RowId('B', '2026-06-16', 't1')].status).toBe(
       KPI_STATUS.APPROVED
     );
+  });
+
+  it('buildMemberJournalSavePayload keeps B and C approval state isolated', () => {
+    const kpiStore = createEmptyKpiOperationalStore();
+    kpiStore.months['2026-06'] = {
+      B: { monthly01: { status: KPI_STATUS.SUBMITTED, submittedAt: '2026-06-20T10:00:00.000Z' } },
+      C: { monthly01: { status: KPI_STATUS.REJECTED, approvedAt: '2026-06-20T11:00:00.000Z' } },
+    };
+    const bPayload = buildMemberJournalSavePayload(store.memberJournals.B, kpiStore, 'B');
+    const cPayload = buildMemberJournalSavePayload(store.memberJournals.C, kpiStore, 'C');
+
+    expect(bPayload.kpiApproval.months['2026-06'].monthly01.status).toBe(KPI_STATUS.SUBMITTED);
+    expect(cPayload.kpiApproval.months['2026-06'].monthly01.status).toBe(KPI_STATUS.REJECTED);
+    expect(bPayload.kpiApproval.kpi2RowStatus[kpi2RowId('C', '2026-06-16', 't1')]).toBeUndefined();
   });
 
   it('import round-trip restores KPI approval into operational store', () => {

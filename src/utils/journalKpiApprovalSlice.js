@@ -20,6 +20,9 @@ function timeValue(value) {
 
 function shouldUseIncomingApproval(existing, incoming) {
   if (!existing) return true;
+  const incomingRank = approvalStatusRank(incoming?.status);
+  const existingRank = approvalStatusRank(existing?.status);
+  if (incomingRank !== existingRank) return incomingRank > existingRank;
   const incomingTime = timeValue(approvalEventAt(incoming));
   const existingTime = timeValue(approvalEventAt(existing));
   if (incomingTime !== null && existingTime !== null && incomingTime !== existingTime) {
@@ -27,7 +30,7 @@ function shouldUseIncomingApproval(existing, incoming) {
   }
   if (incomingTime !== null && existingTime === null) return true;
   if (incomingTime === null && existingTime !== null) return false;
-  return approvalStatusRank(incoming?.status) >= approvalStatusRank(existing?.status);
+  return true;
 }
 
 /** 구성원 일지 백업 JSON에 포함할 KPI1/KPI2 승인 상태 */

@@ -486,13 +486,13 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
   );
 
   const saveMemberToCloud = useCallback(
-    async (memberCode = JOURNAL_LINKED_MEMBER_CODE) => {
+    async (memberCode = JOURNAL_LINKED_MEMBER_CODE, memberJournal = getMemberJournal(store, memberCode)) => {
       if (readOnly) return { ok: false, reason: 'read-only' };
       setCloudSaveStatus('saving');
       try {
         const latest = await saveJournalMemberSnapshot(
           memberCode,
-          getMemberJournal(store, memberCode),
+          memberJournal,
           store.meta?.memberUpdatedAt?.[memberCode] || store.meta?.updatedAt
         );
         applyMemberCloudSave(memberCode, latest);

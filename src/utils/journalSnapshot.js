@@ -43,6 +43,17 @@ export function buildJournalSnapshot(store, kpiOperational = null) {
   });
 }
 
+/** 구성원 팀 공유 저장에 현재 구성원의 KPI1/KPI2 승인 상태를 포함한다. */
+export function buildMemberJournalSavePayload(journal, kpiOperational, memberCode) {
+  const baseJournal = { ...(journal || {}) };
+  delete baseJournal.kpiApproval;
+  const approval = extractMemberKpiApprovalSlice(kpiOperational, memberCode, baseJournal.days || {});
+  if (!Object.keys(approval.months).length && !Object.keys(approval.kpi2RowStatus).length) {
+    return baseJournal;
+  }
+  return { ...baseJournal, kpiApproval: approval };
+}
+
 export function normalizeJournalSnapshot(raw) {
   const normalized = normalizeJournalCloudSnapshot(raw);
   const memberJournals = {};

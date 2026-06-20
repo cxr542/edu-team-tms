@@ -1,10 +1,11 @@
-import React, { createContext, useContext, useEffect, useMemo, useRef } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { useWeeklyJournal } from '../hooks/useWeeklyJournal';
 import { useImproveProjects } from '../hooks/useImproveProjects';
 import { useKpiOperational } from '../hooks/useKpiOperational';
 import { computeTeamKpi } from '../utils/computeTeamKpi';
 import { JOURNAL_LINKED_MEMBER_CODE } from '../constants/kpiMembers';
 import { mergeJournalKpiApprovalImport } from '../utils/journalKpiApprovalSlice';
+import { buildMemberJournalSavePayload } from '../utils/journalSnapshot';
 
 const JournalContext = createContext(null);
 
@@ -45,6 +46,12 @@ export function JournalProvider({ children, readOnly = false, autoSyncCloud = fa
     return journal.importViewOnlyFromFile(file, ownMemberCode);
   };
 
+  const saveMemberToCloud = useCallback((memberCode = JOURNAL_LINKED_MEMBER_CODE) => {
+    const memberJournal = journal.memberJournals?.[memberCode];
+    const payload = buildMemberJournalSavePayload(memberJournal, kpiApi.kpiOperational, memberCode);
+    return journal.saveMemberToCloud(memberCode, payload);
+  }, [journal, kpiApi.kpiOperational]);
+
   const value = useMemo(
     () => ({
       ...journal,
@@ -54,9 +61,10 @@ export function JournalProvider({ children, readOnly = false, autoSyncCloud = fa
       improveProjectsApi,
       importJournalBackup,
       importJournalViewOnlyBackup,
+      saveMemberToCloud,
       downloadJournalBackup: () => journal.downloadJournalBackup(kpiApi.kpiOperational),
     }),
-    [journal, kpiApi, improveProjectsApi, readOnly]
+    [journal, kpiApi, improveProjectsApi, importJournalBackup, importJournalViewOnlyBackup, readOnly, saveMemberToCloud]
   );
 
   return <JournalContext.Provider value={value}>{children}</JournalContext.Provider>;
