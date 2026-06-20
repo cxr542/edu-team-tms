@@ -233,11 +233,29 @@ export function migrateLegacyKpi2RowStatus(
   if (!src || typeof src !== 'object') return store;
 
   const next = {};
+  const approvalStatusRank = (status) => {
+    if (status === KPI_STATUS.APPROVED || status === KPI_STATUS.REJECTED) return 2;
+    if (status === KPI_STATUS.SUBMITTED) return 1;
+    return 0;
+  };
+  const approvalEventTime = (record) => {
+    const value = record?.approvedAt || record?.submittedAt;
+    if (!value) return null;
+    const time = new Date(value).getTime();
+    return Number.isFinite(time) ? time : null;
+  };
   const chooseLatest = (prev, candidate) => {
     if (!prev) return candidate;
-    const prevTs = prev?.submittedAt ? new Date(prev.submittedAt).getTime() : -Infinity;
-    const candTs = candidate?.submittedAt ? new Date(candidate.submittedAt).getTime() : -Infinity;
-    return candTs >= prevTs ? candidate : prev;
+    const prevTs = approvalEventTime(prev);
+    const candTs = approvalEventTime(candidate);
+    if (prevTs !== null && candTs !== null && candTs !== prevTs) {
+      return candTs > prevTs ? candidate : prev;
+    }
+    if (prevTs === null && candTs !== null) return candidate;
+    if (prevTs !== null && candTs === null) return prev;
+    return approvalStatusRank(candidate?.status) >= approvalStatusRank(prev?.status)
+      ? candidate
+      : prev;
   };
 
   Object.entries(src).forEach(([id, meta]) => {

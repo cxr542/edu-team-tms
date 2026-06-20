@@ -43,11 +43,16 @@ export function isMemberJournalEmpty(slice) {
 
 /** 클라이언트 updatedAt이 서버 member slice보다 오래되었는지 */
 export function isMemberJournalWriteStale(snapshot, memberCode, clientUpdatedAt) {
-  if (!clientUpdatedAt || !isValidMemberCode(memberCode)) return false;
+  if (!isValidMemberCode(memberCode)) return false;
   const current = normalizeJournalCloudSnapshot(snapshot);
   const serverAt = current.meta.memberUpdatedAt?.[memberCode] || null;
   if (!serverAt) return false;
-  return new Date(clientUpdatedAt).getTime() < new Date(serverAt).getTime();
+  if (!clientUpdatedAt) return true;
+  const clientTime = new Date(clientUpdatedAt).getTime();
+  const serverTime = new Date(serverAt).getTime();
+  if (!Number.isFinite(clientTime)) return true;
+  if (!Number.isFinite(serverTime)) return false;
+  return clientTime < serverTime;
 }
 
 /** 단일 멤버 cloud 저장 응답을 로컬 store에 반영 — 다른 멤버 slice/meta는 유지 */
