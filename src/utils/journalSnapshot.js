@@ -86,7 +86,18 @@ function inferSnapshotSource(path, headerSource) {
 
 async function fetchSnapshotFrom(path) {
   const res = await fetch(`${path}?t=${Date.now()}`, { cache: 'no-store' });
-  if (res.status === 404) return null;
+  if (res.status === 404) {
+    if (path === JOURNAL_API_PATH && isJsonSnapshotResponse(res)) {
+      const body = await res.json().catch(() => null);
+      if (body?.error === 'snapshot not found') {
+        return {
+          snapshot: null,
+          source: 'empty',
+        };
+      }
+    }
+    return null;
+  }
   if (!isJsonSnapshotResponse(res)) {
     if (!res.ok) {
       recordCloudFailure(res.status, {});
@@ -128,7 +139,7 @@ async function fetchSnapshotFrom(path) {
   };
 }
 
-/** @returns {Promise<{ snapshot: object, source: string } | null>} */
+/** @returns {Promise<{ snapshot: object | null, source: string } | null>} */
 export async function fetchJournalSnapshot() {
   const api = await fetchSnapshotFrom(JOURNAL_API_PATH);
   if (api) return api;
