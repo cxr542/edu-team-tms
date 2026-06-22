@@ -239,7 +239,7 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
   );
 
   const pullFromCloud = useCallback(
-    async ({ ownMemberCode } = {}) => {
+    async ({ ownMemberCode, includeOwnMember = false } = {}) => {
       setSyncStatus('checking');
       try {
         const result = await fetchJournalSnapshot();
@@ -248,7 +248,8 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
           return { ok: false, reason: 'no-remote' };
         }
         const snapshot = parseJournalSnapshotForImport(result.snapshot);
-        const { changed } = ownMemberCode
+        const shouldPreserveOwnMember = ownMemberCode && !includeOwnMember;
+        const { changed } = shouldPreserveOwnMember
           ? applyViewOnlySnapshot(snapshot, ownMemberCode)
           : applyRemoteSnapshot(snapshot, { importRemote: true });
         return {
@@ -256,6 +257,7 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
           changed,
           source: result.source,
           publishedAt: snapshot.publishedAt,
+          includeOwnMember,
         };
       } catch (e) {
         setSyncStatus('error');

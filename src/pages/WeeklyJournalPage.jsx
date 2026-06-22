@@ -874,14 +874,22 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   aria-label="팀 공유본 가져오기"
                   {...uiTooltip(
                     showMemberTeamSharePull
-                      ? '팀 공유 일지를 수동으로 가져옵니다. 본인 일지는 유지하고 타 구성원 일지만 갱신합니다.'
+                      ? '팀 공유 일지를 수동으로 가져옵니다. 기본은 본인 일지 유지이며, 확인 시 본인 일지도 포함해 병합할 수 있습니다.'
                       : '팀 공유 일지를 수동으로 가져옵니다. 자동 동기화는 사용하지 않습니다.',
                     undefined,
                     { wrap: true }
                   )}
                   onClick={async () => {
                     try {
-                      const r = await journal.pullFromCloud(memberTeamSharePullOpts);
+                      const includeOwnMember =
+                        showMemberTeamSharePull &&
+                        window.confirm(
+                          '본인 일지도 팀 공유본으로 병합할까요?\\n\\n확인: 본인 일지도 포함해서 가져오기\\n취소: 기존처럼 본인 일지는 유지하고 타 구성원만 가져오기'
+                        );
+                      const r = await journal.pullFromCloud({
+                        ...memberTeamSharePullOpts,
+                        includeOwnMember,
+                      });
                       showToast(journalPullToastMessage(r));
                     } catch (e) {
                       showToast(e.message);
