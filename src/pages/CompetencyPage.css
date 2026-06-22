@@ -611,3 +611,46 @@
     margin-left: 0;
   }
 }
+
+.competency-page-member-guide {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  margin-bottom: 16px;
+}
+
+.competency-page-member-guide__item {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 12px 14px;
+  border: 1px solid var(--border-subtle, #e5e7eb);
+  border-radius: 14px;
+  background: var(--surface-muted, #f8fafc);
+}
+
+.competency-page-member-guide__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 1rem;
+}
+
+.competency-page-member-guide__item strong {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--text-main, #111827);
+  font-size: 0.9rem;
+}
+
+.competency-page-member-guide__item p {
+  margin: 0;
+  color: var(--text-muted, #64748b);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
