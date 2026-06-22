@@ -95,20 +95,44 @@ export default function CompetencyPage() {
             <ChevronRight size={18} />
           </button>
         </div>
-        {selectedMember && (
-          <p className="competency-page-member-role">{formatKpiMemberRoleLine(selectedMember)}</p>
+
+        {quarterPeriodRange && (
+          <div className="competency-page-member-guide" aria-label="역량 평가 안내">
+            <div className="competency-page-member-guide__item">
+              <span className="competency-page-member-guide__icon" aria-hidden="true">🗓</span>
+              <div>
+                <strong>평가 기간</strong>
+                <p>{year}년 {quarter}분기 · {quarterPeriodRange.start} ~ {quarterPeriodRange.end}</p>
+              </div>
+            </div>
+            <div className="competency-page-member-guide__item">
+              <span className="competency-page-member-guide__icon" aria-hidden="true">
+                {teamAccess.isMemberScope ? '✍️' : '👥'}
+              </span>
+              <div>
+                <strong>{teamAccess.isMemberScope ? '입력 방식' : '관리 대상'}</strong>
+                <p>
+                  {teamAccess.isMemberScope
+                    ? '월별 레벨 자체평가는 매월 작성하고, 다면·리더·실전 평가는 분기별로 작성합니다.'
+                    : `교육팀 구성원 ${TEAM_KPI_MEMBERS.length}명 · 분기 키 ${yq}`}
+                </p>
+              </div>
+            </div>
+            <div className="competency-page-member-guide__item">
+              <span className="competency-page-member-guide__icon" aria-hidden="true">
+                {teamAccess.isMemberScope ? '✅' : '🛠'}
+              </span>
+              <div>
+                <strong>{teamAccess.isMemberScope ? '검토 흐름' : '관리 흐름'}</strong>
+                <p>
+                  {teamAccess.isMemberScope
+                    ? '입력한 내용은 팀장 검토 후 확정됩니다.'
+                    : '구성원 입력 내용을 확인하고, 팀장 검토·확정 및 KPI 반영을 진행합니다.'}
+                </p>
+              </div>
+            </div>
+          </div>
         )}
-        {selectedMember && quarterPeriodRange && (
-          <p className="team-kpi-hint competency-page-period-hint">
-            평가 기간: {year}년 {quarter}분기 · {quarterPeriodRange.start} ~ {quarterPeriodRange.end}
-          </p>
-        )}
-        <p className="team-kpi-hint" style={{ marginTop: 0 }}>
-          교육팀 구성원 <strong>{TEAM_KPI_MEMBERS.length}명</strong> · 분기 키 {yq}
-        </p>
-        <p className="team-kpi-hint">
-          월별 레벨 자체평가는 매월 작성하고, 다면·리더·실전 평가는 분기별로 작성합니다.
-        </p>
         {showHub && (
           <p className="team-kpi-hint competency-page-intro-hint">
             아래에서 구성원을 선택하면 해당 구성원 전용 평가 페이지로 이동합니다.
