@@ -266,6 +266,31 @@ export function mergeCompetencyMonthsIntoKpiStore(localStore, remoteSnapshot) {
   };
 }
 
+export function mergeApprovedCompetencyMonthsIntoKpiStore(localStore, remoteSnapshot) {
+  const local = normalizeKpiOperationalStore(localStore);
+  const remote = normalizeCompetencyCloudSnapshot(remoteSnapshot);
+  const approvedRemoteMonths = {};
+
+  Object.entries(remote.competencyMonths || {}).forEach(([ym, members]) => {
+    const approvedMembers = {};
+    Object.entries(members || {}).forEach(([memberCode, rec]) => {
+      if (rec?.managerLocked) {
+        approvedMembers[memberCode] = rec;
+      }
+    });
+    if (Object.keys(approvedMembers).length > 0) {
+      approvedRemoteMonths[ym] = approvedMembers;
+    }
+  });
+
+  const competencyMonths = mergeCompetencyMonths(local.competencyMonths, approvedRemoteMonths);
+
+  return {
+    ...local,
+    competencyMonths,
+  };
+}
+
 /** 빈 competency cloud snapshot */
 export function createEmptyCompetencyCloudSnapshot() {
   return normalizeCompetencyCloudSnapshot({
