@@ -233,14 +233,6 @@ export default function CompetencyMemberSection({
                   onToast?.('조회 모드에서는 수정할 수 없습니다');
                 }
               }}
-              onUnlockManager={() => {
-                const r = journal.unlockCompetencyMonthManager?.(year, selectedMonthIndex, memberCode);
-                if (r?.ok) {
-                  onToast?.(`${member.displayName} · ${year}-${String(selectedMonthIndex + 1).padStart(2, '0')} 팀장 확정 해제`);
-                } else if (r?.reason === 'read-only') {
-                  onToast?.('조회 모드에서는 수정할 수 없습니다');
-                }
-              }}
             />
           </div>
         )}

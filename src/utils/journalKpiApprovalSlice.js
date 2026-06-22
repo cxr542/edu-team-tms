@@ -33,6 +33,53 @@ function shouldUseIncomingApproval(existing, incoming) {
   return true;
 }
 
+function cloneApprovalRecord(record) {
+  return record && typeof record === 'object' ? { ...record } : record;
+}
+
+function hasApprovalSliceData(slice) {
+  return (
+    Boolean(slice) &&
+    (Object.keys(slice.months || {}).length > 0 ||
+      Object.keys(slice.kpi2RowStatus || {}).length > 0)
+  );
+}
+
+function scopedKpi2ApprovalId(id, memberCode) {
+  const [part1, part2, part3] = String(id).split('|');
+  if (part3 || !memberCode) return id;
+  return kpi2RowId(memberCode, part1, part2);
+}
+
+export function mergeKpiApprovalSlices(existingSlice, incomingSlice, memberCode) {
+  const next = { months: {}, kpi2RowStatus: {} };
+
+  Object.entries(existingSlice?.months || {}).forEach(([ym, rec]) => {
+    if (!rec?.monthly01) return;
+    next.months[ym] = { monthly01: cloneApprovalRecord(rec.monthly01) };
+  });
+  Object.entries(incomingSlice?.months || {}).forEach(([ym, rec]) => {
+    if (!rec?.monthly01) return;
+    const existing = next.months[ym]?.monthly01;
+    if (shouldUseIncomingApproval(existing, rec.monthly01)) {
+      next.months[ym] = { monthly01: cloneApprovalRecord(rec.monthly01) };
+    }
+  });
+
+  Object.entries(existingSlice?.kpi2RowStatus || {}).forEach(([id, meta]) => {
+    next.kpi2RowStatus[scopedKpi2ApprovalId(id, memberCode)] = cloneApprovalRecord(meta);
+  });
+  Object.entries(incomingSlice?.kpi2RowStatus || {}).forEach(([id, meta]) => {
+    const scopedId = scopedKpi2ApprovalId(id, memberCode);
+    const existing = next.kpi2RowStatus[scopedId];
+    if (shouldUseIncomingApproval(existing, meta)) {
+      next.kpi2RowStatus[scopedId] = cloneApprovalRecord(meta);
+    }
+  });
+
+  return hasApprovalSliceData(next) ? next : null;
+}
+
 /** 구성원 일지 백업 JSON에 포함할 KPI1/KPI2 승인 상태 */
 export function extractMemberKpiApprovalSlice(kpiOperational, memberCode, days = {}) {
   if (!kpiOperational || !memberCode) {

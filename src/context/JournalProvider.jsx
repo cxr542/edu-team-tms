@@ -52,6 +52,14 @@ export function JournalProvider({ children, readOnly = false, autoSyncCloud = fa
     return journal.saveMemberToCloud(memberCode, payload);
   }, [journal, kpiApi.kpiOperational]);
 
+  const pullFromCloud = useCallback(async (options) => {
+    const result = await journal.pullFromCloud(options);
+    if (result?.ok && result.snapshot && !readOnly) {
+      kpiApi.mergeJournalKpiApproval(result.snapshot);
+    }
+    return result;
+  }, [journal, kpiApi, readOnly]);
+
   const value = useMemo(
     () => ({
       ...journal,
@@ -61,10 +69,11 @@ export function JournalProvider({ children, readOnly = false, autoSyncCloud = fa
       improveProjectsApi,
       importJournalBackup,
       importJournalViewOnlyBackup,
+      pullFromCloud,
       saveMemberToCloud,
       downloadJournalBackup: () => journal.downloadJournalBackup(kpiApi.kpiOperational),
     }),
-    [journal, kpiApi, improveProjectsApi, importJournalBackup, importJournalViewOnlyBackup, readOnly, saveMemberToCloud]
+    [journal, kpiApi, improveProjectsApi, importJournalBackup, importJournalViewOnlyBackup, pullFromCloud, readOnly, saveMemberToCloud]
   );
 
   return <JournalContext.Provider value={value}>{children}</JournalContext.Provider>;
