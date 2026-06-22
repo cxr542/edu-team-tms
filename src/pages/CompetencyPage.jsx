@@ -106,7 +106,9 @@ export default function CompetencyPage() {
         <p className="team-kpi-hint" style={{ marginTop: 0 }}>
           교육팀 구성원 <strong>{TEAM_KPI_MEMBERS.length}명</strong> · 분기 키 {yq}
         </p>
-        <p className="team-kpi-hint">{KPI3_FORMULA_TEXT}</p>
+        <p className="team-kpi-hint">
+          월별 레벨 자체평가는 매월 작성하고, 다면·리더·실전 평가는 분기별로 작성합니다.
+        </p>
         {showHub && (
           <p className="team-kpi-hint competency-page-intro-hint">
             아래에서 구성원을 선택하면 해당 구성원 전용 평가 페이지로 이동합니다.
@@ -120,7 +122,7 @@ export default function CompetencyPage() {
         )}
         {isLeaderOwnSelf && selectedMember && (
           <p className="competency-page-leader-note">
-            관리자 모드에서는 본인 역량 폼만 수정하세요. 다른 구성원 <strong>팀장 평가</strong>·분기 확정은{' '}
+            관리자 모드에서는 이 화면에서 입력 내용을 확인하고, 최종 확정과 KPI 반영은{' '}
             <AppModuleLink
               module="kpi"
               mode="edit"
@@ -131,7 +133,7 @@ export default function CompetencyPage() {
             >
               팀 KPI 관리
             </AppModuleLink>
-            의 {KPI3_NAME} 탭에서 진행합니다.
+            에서 진행합니다.
           </p>
         )}
         {selectedMember && teamAccess.isLeader && !teamAccess.isMemberScope && (
@@ -201,7 +203,7 @@ export default function CompetencyPage() {
             yq={yq}
             monthIndex={monthIndex}
             journal={journal}
-            canEditSelf={canEditByCode(selectedMember.code)}
+            canEditSelf={teamAccess.isLeader && !teamAccess.isMemberScope ? canEdit : canEditByCode(selectedMember.code)}
             onToast={showToast}
             pageMode
           />

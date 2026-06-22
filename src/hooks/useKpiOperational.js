@@ -759,6 +759,73 @@ export function useKpiOperational({ readOnly = false } = {}) {
     [readOnly, persist]
   );
 
+  const unlockCompetencyMonthSelf = useCallback(
+    (year, monthIndex, memberCode) => {
+      if (readOnly) return { ok: false, reason: 'read-only' };
+      const ym = monthKey(year, monthIndex);
+      let result = { ok: true };
+      setStore((prev) => {
+        let next = ensureCompetencyMonthMember(prev, ym, memberCode);
+        const rec = next.competencyMonths[ym][memberCode];
+        if (rec.managerLocked) {
+          result = { ok: false, reason: 'manager-locked' };
+          return prev;
+        }
+        const roleId =
+          rec.roleId ?? mapMemberRoleToCompetency(findKpiMember(memberCode)?.role);
+        const updatedAt = new Date().toISOString();
+        const updated = {
+          ...rec,
+          roleId,
+          self: normalizeCompetencyEvalSide(rec.self, roleId),
+          selfLocked: false,
+          updatedAt,
+        };
+        next = {
+          ...next,
+          competencyMonths: {
+            ...next.competencyMonths,
+            [ym]: { ...next.competencyMonths[ym], [memberCode]: updated },
+          },
+        };
+        return persist(next);
+      });
+      return result;
+    },
+    [readOnly, persist]
+  );
+
+  const unlockCompetencyMonthManager = useCallback(
+    (year, monthIndex, memberCode) => {
+      if (readOnly) return { ok: false, reason: 'read-only' };
+      const ym = monthKey(year, monthIndex);
+      setStore((prev) => {
+        let next = ensureCompetencyMonthMember(prev, ym, memberCode);
+        const rec = next.competencyMonths[ym][memberCode];
+        const roleId =
+          rec.roleId ?? mapMemberRoleToCompetency(findKpiMember(memberCode)?.role);
+        const updatedAt = new Date().toISOString();
+        const updated = {
+          ...rec,
+          roleId,
+          manager: normalizeCompetencyEvalSide(rec.manager, roleId),
+          managerLocked: false,
+          updatedAt,
+        };
+        next = {
+          ...next,
+          competencyMonths: {
+            ...next.competencyMonths,
+            [ym]: { ...next.competencyMonths[ym], [memberCode]: updated },
+          },
+        };
+        return persist(next);
+      });
+      return { ok: true };
+    },
+    [readOnly, persist]
+  );
+
   const rollupCompetencyToKpi3Quarter = useCallback(
     (year, monthIndex, memberCode) => {
       if (readOnly) return;
@@ -942,6 +1009,8 @@ export function useKpiOperational({ readOnly = false } = {}) {
     pullCompetencyManagerFromSelf,
     lockCompetencyMonth,
     lockCompetencyQuarter,
+    unlockCompetencyMonthSelf,
+    unlockCompetencyMonthManager,
     unlockCompetencyQuarterSelf,
     rollupCompetencyToKpi3Quarter,
     getCompetencyMonthlyFinal,
