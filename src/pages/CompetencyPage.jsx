@@ -170,45 +170,13 @@ export default function CompetencyPage() {
               year={year}
               quarter={quarter}
             >
-              ← 구성원 선택
+              ← 구성원 목록으로
             </AppModuleLink>
           </p>
         )}
       </header>
 
-      {showCloudPull && (
-        <div className="competency-page-actions">
-          <button
-            type="button"
-            className="btn btn-import-shared"
-            disabled={cloudBusy}
-            aria-label="월별 역량 공유 가져오기"
-            {...uiTooltip(
-              '공유 저장소의 월별 역량 평가를 competencyMonths에 병합합니다. 분기 자체평가는 로컬 competencyQuarters에만 저장됩니다.',
-              undefined,
-              { wrap: true }
-            )}
-            onClick={async () => {
-              setCloudBusy(true);
-              try {
-                const r = await journal.pullCompetencyCloudSnapshot();
-                if (r.ok) showToast('월별 역량 공유 데이터를 competencyMonths에 병합했습니다');
-                else if (r.reason === 'read-only') showToast('조회 모드에서는 가져올 수 없습니다');
-                else showToast(r.error?.message || '월별 역량 공유 가져오기에 실패했습니다');
-              } finally {
-                setCloudBusy(false);
-              }
-            }}
-          >
-            <Import size={16} />
-            {cloudBusy ? '가져오는 중…' : '월별 역량 공유 가져오기'}
-          </button>
-          <p className="team-kpi-hint competency-page-cloud-hint">
-            분기 자체평가는 이 기기의 <code>competencyQuarters</code>에 저장됩니다. 위 버튼은
-            월별 공유(competencyMonths) 병합 전용이며, 분기 데이터는 업로드하지 않습니다.
-          </p>
-        </div>
-      )}
+
 
       {showHub && (
         <CompetencyMemberHub year={year} quarter={quarter} yq={yq} canEditByCode={canEditByCode} />

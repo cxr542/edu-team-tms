@@ -124,29 +124,41 @@ export default function Kpi3ElementsPanel({
   const practiceDetail = quarterRec.practiceDetail || { cases: [] };
 
   const isMemberQuarterInput = !showManagerTabs && Boolean(section);
-  const isSubmittedForReview = (detail) =>
-    detail?.submissionStatus === 'submitted' || Boolean(detail?.submittedAt);
-  const dmSubmitted = isMemberQuarterInput && isSubmittedForReview(dmDetail);
-  const leaderSubmitted = isMemberQuarterInput && isSubmittedForReview(leaderDetail);
-  const practiceSubmittedForReview = isMemberQuarterInput && isSubmittedForReview(practiceDetail);
+  const getSubmissionStatus = (detail) =>
+    detail?.submissionStatus || (detail?.submittedAt ? 'submitted' : '');
+  const isPendingReview = (detail) => getSubmissionStatus(detail) === 'submitted';
+  const isApprovedReview = (detail) => getSubmissionStatus(detail) === 'approved';
+  const isRejectedReview = (detail) => getSubmissionStatus(detail) === 'rejected';
+  const isLockedForMemberReview = (detail) => isPendingReview(detail) || isApprovedReview(detail);
+  const dmSubmitted = isMemberQuarterInput && isLockedForMemberReview(dmDetail);
+  const leaderSubmitted = isMemberQuarterInput && isLockedForMemberReview(leaderDetail);
+  const practiceSubmittedForReview = isMemberQuarterInput && isLockedForMemberReview(practiceDetail);
+
+  const detailKeyForQuarterSection = (sectionKey) =>
+    sectionKey === 'dm'
+      ? 'dmDetail'
+      : sectionKey === 'leader'
+        ? 'leaderDetail'
+        : 'practiceDetail';
 
   const updateQuarterSubmission = (sectionKey, submitted) => {
-    const detailKey =
-      sectionKey === 'dm'
-        ? 'dmDetail'
-        : sectionKey === 'leader'
-          ? 'leaderDetail'
-          : 'practiceDetail';
+    const detailKey = detailKeyForQuarterSection(sectionKey);
     const patch = submitted
       ? {
           submissionStatus: 'submitted',
           submittedAt: new Date().toISOString(),
           submittedBy: memberCode,
+          reviewedAt: '',
+          reviewedBy: '',
+          rejectedReason: '',
         }
       : {
           submissionStatus: '',
           submittedAt: '',
           submittedBy: '',
+          reviewedAt: '',
+          reviewedBy: '',
+          rejectedReason: '',
         };
 
     journal.updateKpi3QuarterExtras(year, month, memberCode, {
@@ -160,12 +172,44 @@ export default function Kpi3ElementsPanel({
     );
   };
 
+  const updateQuarterReview = (sectionKey, status) => {
+    const detailKey = detailKeyForQuarterSection(sectionKey);
+    const isApproved = status === 'approved';
+    const isRejected = status === 'rejected';
+    const isReturnedToPending = status === 'submitted';
+    const patch = {
+      submissionStatus: status,
+      reviewedAt: isReturnedToPending ? '' : new Date().toISOString(),
+      reviewedBy: isReturnedToPending ? '' : 'manager',
+      rejectedReason: isRejected ? '보완 후 다시 제출해 주세요' : '',
+    };
+
+    journal.updateKpi3QuarterExtras(year, month, memberCode, {
+      [detailKey]: patch,
+    });
+
+    onToast?.(
+      isApproved
+        ? '팀장 승인 완료'
+        : isRejected
+          ? '반려 처리했습니다'
+          : '검토 대기 상태로 되돌렸습니다'
+    );
+  };
+
   const renderMemberSubmissionActions = (sectionKey, detail) => {
     if (!isMemberQuarterInput) return null;
-    const submitted = isSubmittedForReview(detail);
+    const pending = isPendingReview(detail);
+    const approved = isApprovedReview(detail);
+    const rejected = isRejectedReview(detail);
+
     return (
       <div className="kpi3-member-submit-actions">
-        {submitted ? (
+        {approved ? (
+          <p className="team-kpi-hint kpi3-member-submit-actions__hint">
+            팀장 승인이 완료되어 수정할 수 없습니다.
+          </p>
+        ) : pending ? (
           <>
             <p className="team-kpi-hint kpi3-member-submit-actions__hint">
               팀장 검토 대기 중입니다. 검토 전까지 제출을 취소하고 다시 수정할 수 있습니다.
@@ -183,7 +227,9 @@ export default function Kpi3ElementsPanel({
         ) : (
           <>
             <p className="team-kpi-hint kpi3-member-submit-actions__hint">
-              입력을 마쳤다면 팀장에게 제출해 주세요.
+              {rejected
+                ? '팀장 반려 상태입니다. 내용을 보완한 뒤 다시 제출해 주세요.'
+                : '입력을 마쳤다면 팀장에게 제출해 주세요.'}
             </p>
             {!readOnly && !locked && (
               <button
@@ -191,11 +237,91 @@ export default function Kpi3ElementsPanel({
                 className="btn btn-primary btn-sm"
                 onClick={() => updateQuarterSubmission(sectionKey, true)}
               >
-                팀장에게 제출
+                {rejected ? '보완 후 다시 제출' : '팀장에게 제출'}
               </button>
             )}
           </>
         )}
+      </div>
+    );
+  };
+
+  const renderManagerReviewActions = (sectionKey, detail, scoreValue) => {
+    if (!showManagerTabs) return null;
+    const pending = isPendingReview(detail);
+    const approved = isApprovedReview(detail);
+    const rejected = isRejectedReview(detail);
+
+    const statusLabel = approved
+      ? '승인 완료'
+      : rejected
+        ? '반려'
+        : pending
+          ? '검토 대기'
+          : '제출 전';
+
+    const statusHint = approved
+      ? '승인된 입력입니다. 점수 반영 전에는 승인 취소가 가능합니다.'
+      : rejected
+        ? '구성원이 보완 후 다시 제출해야 합니다.'
+        : pending
+          ? '구성원 제출 내용 검토가 필요합니다.'
+          : '아직 구성원이 제출하지 않았습니다.';
+
+    return (
+      <div className="kpi3-manager-review-actions">
+        <div className={`kpi3-review-state kpi3-review-state--${getSubmissionStatus(detail) || 'draft'}`}>
+          <span className="kpi3-review-state__label">현재 상태</span>
+          <strong>{statusLabel}</strong>
+          <span>{statusHint}</span>
+        </div>
+        <div className="kpi3-manager-review-actions__buttons">
+          {pending && !readOnly && !locked && (
+            <>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => updateQuarterReview(sectionKey, 'approved')}
+              >
+                승인
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => updateQuarterReview(sectionKey, 'rejected')}
+              >
+                반려
+              </button>
+            </>
+          )}
+          {approved && !readOnly && !locked && (
+            <>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => updateQuarterReview(sectionKey, 'submitted')}
+              >
+                승인 취소
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => applyScore(sectionKey, scoreValue)}
+              >
+                분기 점수에 반영
+              </button>
+            </>
+          )}
+          {rejected && !readOnly && !locked && (
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => updateQuarterReview(sectionKey, 'submitted')}
+            >
+              반려 취소
+            </button>
+          )}
+        </div>
       </div>
     );
   };
@@ -625,19 +751,7 @@ export default function Kpi3ElementsPanel({
         </div>
         {showManagerTabs && (
           <Kpi3PreviewRow
-            action={
-              canApplyQuarterScore &&
-              !readOnly &&
-              !locked && (
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => applyScore('dm', dmPreview.score)}
-                >
-                  분기 점수에 반영
-                </button>
-              )
-            }
+            action={renderManagerReviewActions('dm', dmDetail, dmPreview.score)}
           >
             산출 미리보기: <strong>{dmPreview.score ?? '—'}</strong>
             {dmPreview.note ? ` · ${dmPreview.note}` : ''}
@@ -714,19 +828,7 @@ export default function Kpi3ElementsPanel({
         </div>
         {showManagerTabs && (
           <Kpi3PreviewRow
-            action={
-              canApplyQuarterScore &&
-              !readOnly &&
-              !locked && (
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => applyScore('leader', computeLeaderScore(leaderDetail))}
-                >
-                  분기 점수에 반영
-                </button>
-              )
-            }
+            action={renderManagerReviewActions('leader', leaderDetail, computeLeaderScore(leaderDetail))}
           >
             산출 미리보기: <strong>{computeLeaderScore(leaderDetail) ?? '—'}</strong>
           </Kpi3PreviewRow>
@@ -793,19 +895,7 @@ export default function Kpi3ElementsPanel({
         </ul>
         {showManagerTabs && (
           <Kpi3PreviewRow
-            action={
-              canApplyQuarterScore &&
-              !readOnly &&
-              !locked && (
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => applyScore('practice', computePracticeScore(practiceDetail))}
-                >
-                  분기 점수에 반영
-                </button>
-              )
-            }
+            action={renderManagerReviewActions('practice', practiceDetail, computePracticeScore(practiceDetail))}
           >
             산출 미리보기: <strong>{computePracticeScore(practiceDetail) ?? '—'}</strong>
           </Kpi3PreviewRow>

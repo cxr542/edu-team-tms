@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { Import } from 'lucide-react';
 import CompetencyRubricPanel from './CompetencyRubricPanel';
 import Kpi3ElementsPanel from './Kpi3ElementsPanel';
 import { COMPETENCY_MEMBER_TABS } from '../constants/competencyTabs';
 import { KPI3_ELEMENTS } from '../constants/kpi3Elements';
 import { formatKpiMemberLabel } from '../constants/kpiMembers';
 import { useTeamKpiMetrics } from '../context/JournalProvider';
+import { uiTooltip } from '../utils/uiTooltip';
 
 const KPI3_BY_KEY = Object.fromEntries(KPI3_ELEMENTS.map((el) => [el.key, el]));
 
@@ -26,6 +28,7 @@ export default function CompetencyMemberSection({
 }) {
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(monthIndex);
+  const [cloudBusy, setCloudBusy] = useState(false);
   const memberCode = member.code;
   const competencyMonthRec = journal.getCompetencyMonth(year, selectedMonthIndex, memberCode);
   const quarterRec = journal.getQuarterRecord(year, monthIndex, memberCode);
@@ -123,19 +126,53 @@ export default function CompetencyMemberSection({
             <h3>{kpi3Section ? '분기 평가 입력' : `${year}년 ${selectedMonthIndex + 1}월 ${monthlyTab.label}`}</h3>
             <p className="team-kpi-hint competency-member-tab-hint">{activeMeta.hint}</p>
             {!kpi3Section && (
-              <div className="competency-month-selector" aria-label="월별 레벨 자체평가 월 선택">
-                {quarterMonthIndexes.map((mIdx) => (
-                  <button
-                    key={mIdx}
-                    type="button"
-                    className={`competency-month-selector__btn${selectedMonthIndex === mIdx ? ' is-active' : ''}`}
-                    onClick={() => setSelectedMonthIndex(mIdx)}
-                    aria-current={selectedMonthIndex === mIdx ? 'true' : undefined}
-                  >
-                    {mIdx + 1}월
-                  </button>
-                ))}
-              </div>
+              <>
+                <div className="competency-month-selector" aria-label="월별 레벨 자체평가 월 선택">
+                  {quarterMonthIndexes.map((mIdx) => (
+                    <button
+                      key={mIdx}
+                      type="button"
+                      className={`competency-month-selector__btn${selectedMonthIndex === mIdx ? ' is-active' : ''}`}
+                      onClick={() => setSelectedMonthIndex(mIdx)}
+                      aria-current={selectedMonthIndex === mIdx ? 'true' : undefined}
+                    >
+                      {mIdx + 1}월
+                    </button>
+                  ))}
+                </div>
+                {showManagerTabs && (
+                  <div className="competency-month-cloud-actions">
+                    <button
+                      type="button"
+                      className="btn btn-import-shared btn-sm"
+                      disabled={cloudBusy || readOnly}
+                      aria-label="월별 역량 공유 가져오기"
+                      {...uiTooltip(
+                        '공유 저장소의 월별 레벨 자체평가 데이터를 현재 기기로 불러옵니다. 다면·리더·실전 등 분기 평가 입력 내용은 변경하지 않습니다.',
+                        undefined,
+                        { wrap: true }
+                      )}
+                      onClick={async () => {
+                        setCloudBusy(true);
+                        try {
+                          const r = await journal.pullCompetencyCloudSnapshot();
+                          if (r.ok) onToast?.('월별 역량 공유 데이터를 가져왔습니다');
+                          else if (r.reason === 'read-only') onToast?.('조회 모드에서는 가져올 수 없습니다');
+                          else onToast?.(r.error?.message || '월별 역량 공유 가져오기에 실패했습니다');
+                        } finally {
+                          setCloudBusy(false);
+                        }
+                      }}
+                    >
+                      <Import size={15} />
+                      {cloudBusy ? '가져오는 중…' : '월별 역량 공유 가져오기'}
+                    </button>
+                    <p className="team-kpi-hint competency-month-cloud-actions__hint">
+                      월별 레벨 자체평가 데이터만 불러옵니다. 분기 평가 입력 내용은 유지됩니다.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
@@ -160,6 +197,12 @@ export default function CompetencyMemberSection({
 
         {activeTab === 'level' && (
           <div className="competency-member-tab-panel" role="tabpanel">
+            {!showManagerTabs && (
+              <div className="competency-member-save-guide">
+                <strong>입력 내용은 자동 저장됩니다</strong>
+                <p>월별 레벨 자체평가 작성을 마쳤다면 팀장에게 제출해 주세요.</p>
+              </div>
+            )}
             <CompetencyRubricPanel
               side="self"
               record={competencyMonthRec}
