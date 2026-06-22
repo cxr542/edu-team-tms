@@ -117,11 +117,88 @@ export default function Kpi3ElementsPanel({
   const locked = quarterRec.quarter.locked;
   const readOnly = journal.kpiOperationalReadOnly || !canEdit;
   const canEditDmDetail = showManagerTabs || allowMemberDmEdit;
-  const canApplyQuarterScore = showManagerTabs || allowMemberDmEdit;
+  const canApplyQuarterScore = showManagerTabs;
   const q = quarterRec.quarter;
   const dmDetail = quarterRec.dmDetail || {};
   const leaderDetail = quarterRec.leaderDetail || {};
   const practiceDetail = quarterRec.practiceDetail || { cases: [] };
+
+  const isMemberQuarterInput = !showManagerTabs && Boolean(section);
+  const isSubmittedForReview = (detail) =>
+    detail?.submissionStatus === 'submitted' || Boolean(detail?.submittedAt);
+  const dmSubmitted = isMemberQuarterInput && isSubmittedForReview(dmDetail);
+  const leaderSubmitted = isMemberQuarterInput && isSubmittedForReview(leaderDetail);
+  const practiceSubmittedForReview = isMemberQuarterInput && isSubmittedForReview(practiceDetail);
+
+  const updateQuarterSubmission = (sectionKey, submitted) => {
+    const detailKey =
+      sectionKey === 'dm'
+        ? 'dmDetail'
+        : sectionKey === 'leader'
+          ? 'leaderDetail'
+          : 'practiceDetail';
+    const patch = submitted
+      ? {
+          submissionStatus: 'submitted',
+          submittedAt: new Date().toISOString(),
+          submittedBy: memberCode,
+        }
+      : {
+          submissionStatus: '',
+          submittedAt: '',
+          submittedBy: '',
+        };
+
+    journal.updateKpi3QuarterExtras(year, month, memberCode, {
+      [detailKey]: patch,
+    });
+
+    onToast?.(
+      submitted
+        ? '분기 평가 입력을 팀장에게 제출했습니다'
+        : '분기 평가 제출을 취소했습니다'
+    );
+  };
+
+  const renderMemberSubmissionActions = (sectionKey, detail) => {
+    if (!isMemberQuarterInput) return null;
+    const submitted = isSubmittedForReview(detail);
+    return (
+      <div className="kpi3-member-submit-actions">
+        {submitted ? (
+          <>
+            <p className="team-kpi-hint kpi3-member-submit-actions__hint">
+              팀장 검토 대기 중입니다. 검토 전까지 제출을 취소하고 다시 수정할 수 있습니다.
+            </p>
+            {!readOnly && !locked && (
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => updateQuarterSubmission(sectionKey, false)}
+              >
+                제출 취소 후 수정
+              </button>
+            )}
+          </>
+        ) : (
+          <>
+            <p className="team-kpi-hint kpi3-member-submit-actions__hint">
+              입력을 마쳤다면 팀장에게 제출해 주세요.
+            </p>
+            {!readOnly && !locked && (
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => updateQuarterSubmission(sectionKey, true)}
+              >
+                팀장에게 제출
+              </button>
+            )}
+          </>
+        )}
+      </div>
+    );
+  };
 
   const compositeLive = useMemo(() => computeKpi3Composite(q), [q]);
   const memberLabel = formatKpiMemberLabel(findKpiMember(memberCode));
@@ -483,7 +560,7 @@ export default function Kpi3ElementsPanel({
               step={0.1}
               className="form-input"
               value={dmDetail.lectureAvg ?? ''}
-              disabled={locked || readOnly || !canEditDmDetail}
+              disabled={locked || readOnly || !canEditDmDetail || dmSubmitted}
               onChange={(e) =>
                 journal.updateKpi3QuarterExtras(year, month, memberCode, {
                   dmDetail: { lectureAvg: e.target.value },
@@ -497,7 +574,7 @@ export default function Kpi3ElementsPanel({
               min={0}
               className="form-input"
               value={dmDetail.lectureN ?? ''}
-              disabled={locked || readOnly || !canEditDmDetail}
+              disabled={locked || readOnly || !canEditDmDetail || dmSubmitted}
               onChange={(e) =>
                 journal.updateKpi3QuarterExtras(year, month, memberCode, {
                   dmDetail: { lectureN: e.target.value },
@@ -523,7 +600,7 @@ export default function Kpi3ElementsPanel({
               step={0.1}
               className="form-input"
               value={dmDetail.opsAvg ?? ''}
-              disabled={locked || readOnly || !canEditDmDetail}
+              disabled={locked || readOnly || !canEditDmDetail || dmSubmitted}
               onChange={(e) =>
                 journal.updateKpi3QuarterExtras(year, month, memberCode, {
                   dmDetail: { opsAvg: e.target.value },
@@ -537,7 +614,7 @@ export default function Kpi3ElementsPanel({
               min={0}
               className="form-input"
               value={dmDetail.opsN ?? ''}
-              disabled={locked || readOnly || !canEditDmDetail}
+              disabled={locked || readOnly || !canEditDmDetail || dmSubmitted}
               onChange={(e) =>
                 journal.updateKpi3QuarterExtras(year, month, memberCode, {
                   dmDetail: { opsN: e.target.value },
@@ -546,24 +623,27 @@ export default function Kpi3ElementsPanel({
             />
           </Kpi3GridField>
         </div>
-        <Kpi3PreviewRow
-          action={
-            canApplyQuarterScore &&
-            !readOnly &&
-            !locked && (
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={() => applyScore('dm', dmPreview.score)}
-              >
-                분기 점수에 반영
-              </button>
-            )
-          }
-        >
-          산출 미리보기: <strong>{dmPreview.score ?? '—'}</strong>
-          {dmPreview.note ? ` · ${dmPreview.note}` : ''}
-        </Kpi3PreviewRow>
+        {showManagerTabs && (
+          <Kpi3PreviewRow
+            action={
+              canApplyQuarterScore &&
+              !readOnly &&
+              !locked && (
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => applyScore('dm', dmPreview.score)}
+                >
+                  분기 점수에 반영
+                </button>
+              )
+            }
+          >
+            산출 미리보기: <strong>{dmPreview.score ?? '—'}</strong>
+            {dmPreview.note ? ` · ${dmPreview.note}` : ''}
+          </Kpi3PreviewRow>
+        )}
+        {renderMemberSubmissionActions('dm', dmDetail)}
       </section>
       )}
 
@@ -605,7 +685,7 @@ export default function Kpi3ElementsPanel({
               step={0.1}
               className="form-input"
               value={leaderDetail.memberSelf ?? ''}
-              disabled={locked || readOnly}
+              disabled={locked || readOnly || leaderSubmitted}
               onChange={(e) =>
                 journal.updateKpi3QuarterExtras(year, month, memberCode, {
                   leaderDetail: { memberSelf: e.target.value },
@@ -651,6 +731,7 @@ export default function Kpi3ElementsPanel({
             산출 미리보기: <strong>{computeLeaderScore(leaderDetail) ?? '—'}</strong>
           </Kpi3PreviewRow>
         )}
+        {renderMemberSubmissionActions('leader', leaderDetail)}
       </section>
       )}
 
@@ -660,7 +741,7 @@ export default function Kpi3ElementsPanel({
         <p className="team-kpi-hint">
           분기 실전 사례 증빙 제출 → 팀장 인정 건수: 3건↑=5점, 2건=4점, 1건=3점, 제출만=2점.
         </p>
-        {!readOnly && !locked && (
+        {!readOnly && !locked && !practiceSubmittedForReview && (
           <div className="kpi3-elements-practice-add">
             <input
               className="form-input"
@@ -710,23 +791,26 @@ export default function Kpi3ElementsPanel({
             </li>
           ))}
         </ul>
-        <Kpi3PreviewRow
-          action={
-            canApplyQuarterScore &&
-            !readOnly &&
-            !locked && (
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={() => applyScore('practice', computePracticeScore(practiceDetail))}
-              >
-                분기 점수에 반영
-              </button>
-            )
-          }
-        >
-          산출 미리보기: <strong>{computePracticeScore(practiceDetail) ?? '—'}</strong>
-        </Kpi3PreviewRow>
+        {showManagerTabs && (
+          <Kpi3PreviewRow
+            action={
+              canApplyQuarterScore &&
+              !readOnly &&
+              !locked && (
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => applyScore('practice', computePracticeScore(practiceDetail))}
+                >
+                  분기 점수에 반영
+                </button>
+              )
+            }
+          >
+            산출 미리보기: <strong>{computePracticeScore(practiceDetail) ?? '—'}</strong>
+          </Kpi3PreviewRow>
+        )}
+        {renderMemberSubmissionActions('practice', practiceDetail)}
       </section>
       )}
 

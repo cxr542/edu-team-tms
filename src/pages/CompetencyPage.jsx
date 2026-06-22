@@ -230,6 +230,7 @@ export default function CompetencyPage() {
             canEditSelf={teamAccess.isLeader && !teamAccess.isMemberScope ? canEdit : canEditByCode(selectedMember.code)}
             onToast={showToast}
             pageMode
+            showManagerTabs={teamAccess.isLeader && !teamAccess.isMemberScope}
           />
         </section>
       )}
