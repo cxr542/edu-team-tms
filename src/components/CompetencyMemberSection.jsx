@@ -22,6 +22,7 @@ export default function CompetencyMemberSection({
   onToast,
   defaultTab = 'level',
   pageMode = false,
+  showManagerTabs = false,
 }) {
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(monthIndex);
@@ -208,7 +209,7 @@ export default function CompetencyMemberSection({
               yq={yq}
               quarterRec={quarterRec}
               journal={journal}
-              showManagerTabs={false}
+              showManagerTabs={showManagerTabs}
               allowMemberDmEdit={canEditSelf}
               showCoaching={false}
               section={kpi3Section}
