@@ -406,6 +406,23 @@ html.project-sidebar-collapsed-boot .project-nav-group + .project-nav-group {
   background: rgba(255, 255, 255, 0.04);
 }
 
+.project-nav-item--disabled-preview {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.project-nav-item--disabled-preview:hover,
+.project-nav-item--disabled-preview:focus-visible {
+  color: var(--shell-muted);
+  background: transparent;
+  opacity: 0.62;
+}
+
+.project-nav-item--disabled-preview .project-nav-item__icon,
+.project-nav-item--disabled-preview span {
+  filter: grayscale(1);
+}
+
 .project-nav-item.is-active {
   color: var(--shell-text);
   background: rgba(var(--app-accent-rgb), 0.12);

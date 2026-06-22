@@ -118,6 +118,9 @@ export default function AppShell({
   const showExperimentalNav = !isViewer && isAdminShell;
   const showLeaderApprovalBadge = showLeaderNav && teamAccess?.isAdmin && !teamAccess?.isMemberScope;
   const leaderPending = useLeaderKpiPendingBadge(showLeaderApprovalBadge);
+  const canUseCompetencyPilot = isAdminShell || !teamAccess?.isMemberScope || teamAccess?.scopedMember === 'A';
+  const competencyPreviewMessage =
+    '역량 평가는 기능 개선 중이라 아직 공개 전입니다. 먼저 A 구성원과 팀장/관리자 화면에서 테스트 후 순차 공개할 예정입니다.';
 
   const navBtn = (module, Icon, { viewer = false, badgeCount = 0 } = {}) => {
     const visible = viewer ? showInViewer(module) : canShowEditModule(module);
@@ -265,7 +268,23 @@ export default function AppShell({
                   {showMemberWorkNav && (
                     <NavGroup title={NAV_GROUP_MEMBER_WORK}>
                       {navBtn('journal', Calendar)}
-                      {navBtn('competency', Award)}
+                      {canUseCompetencyPilot ? (
+                        navBtn('competency', Award)
+                      ) : (
+                        <button
+                          type="button"
+                          className="project-nav-item project-nav-item--disabled-preview"
+                          aria-disabled="true"
+                          title={competencyPreviewMessage}
+                          onClick={() => {
+                            window.alert(competencyPreviewMessage);
+                            onNavSelect();
+                          }}
+                        >
+                          <Award size={18} aria-hidden />
+                          <span>{navLabels.competency || '역량 평가'}</span>
+                        </button>
+                      )}
                     </NavGroup>
                   )}
                   {showExperimentalNav && (
