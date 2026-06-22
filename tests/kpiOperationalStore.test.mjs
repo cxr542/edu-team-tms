@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { KPI_STATUS } from '../src/constants/kpiStatuses.js';
 import {
   createEmptyKpiOperationalStore,
   kpi2LegacyRowId,
@@ -48,5 +49,29 @@ describe('kpiOperationalStore kpi2 row id migration', () => {
       onUnresolvedLegacyRow: (row) => unresolved.push(row.id),
     });
     expect(unresolved).toEqual([kpi2LegacyRowId('2026-06-01', 't1')]);
+  });
+
+  it('migrateLegacyKpi2RowStatus - scoped 승인 상태를 legacy 제출로 덮어쓰지 않는다', () => {
+    const rowId = kpi2RowId('B', '2026-06-16', 't1');
+    const legacyId = kpi2LegacyRowId('2026-06-16', 't1');
+    const store = createEmptyKpiOperationalStore();
+    store.kpi2RowStatus = {
+      [rowId]: {
+        status: KPI_STATUS.APPROVED,
+        submittedAt: '2026-06-20T10:00:00.000Z',
+        approvedAt: '2026-06-20T11:00:00.000Z',
+        approver: '팀장',
+      },
+      [legacyId]: {
+        status: KPI_STATUS.SUBMITTED,
+        submittedAt: '2026-06-20T10:00:00.000Z',
+      },
+    };
+
+    const migrated = migrateLegacyKpi2RowStatus(store, () => 'B');
+
+    expect(migrated.kpi2RowStatus[rowId].status).toBe(KPI_STATUS.APPROVED);
+    expect(migrated.kpi2RowStatus[rowId].approver).toBe('팀장');
+    expect(migrated.kpi2RowStatus[legacyId]).toBeUndefined();
   });
 });

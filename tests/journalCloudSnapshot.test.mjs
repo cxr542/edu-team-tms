@@ -92,7 +92,14 @@ describe('journalCloudSnapshot', () => {
     });
     expect(isMemberJournalWriteStale(current, 'B', '2026-06-10T08:00:00.000Z')).toBe(true);
     expect(isMemberJournalWriteStale(current, 'B', '2026-06-12T08:00:00.000Z')).toBe(false);
-    expect(isMemberJournalWriteStale(current, 'B', null)).toBe(false);
+    expect(isMemberJournalWriteStale(current, 'B', null)).toBe(true);
+    expect(isMemberJournalWriteStale(current, 'B', 'not-a-date')).toBe(true);
+
+    const emptyRemote = normalizeJournalCloudSnapshot({
+      publishedAt: '2026-06-11T08:00:00.000Z',
+      memberJournals: {},
+    });
+    expect(isMemberJournalWriteStale(emptyRemote, 'B', null)).toBe(false);
   });
 
   it('sequential saves from two members preserve both latest slices', () => {
