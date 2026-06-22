@@ -170,6 +170,7 @@ export function mergeCompetencyEvalSidePatch(existingSide, patch = {}, roleId = 
   return {
     intLevel: normalizeCompetencyIntLevel(rawIntLevel),
     dims: normalizeDimsChain(mergedDims, roleId),
+    evidence: patch.evidence ?? existingSide?.evidence ?? '',
   };
 }
 

@@ -337,7 +337,7 @@ export default function Kpi3ElementsPanel({
 
       {showDmSection && (
       <section className="kpi3-elements-section">
-        <h3>② 다면 평가 ({Math.round(KPI3_WEIGHTS.dm * 100)}%)</h3>
+        <h3>② 다면 평가{showManagerTabs ? ` (${Math.round(KPI3_WEIGHTS.dm * 100)}%)` : ''}</h3>
         <p className="team-kpi-hint">{dmProfileHint(dmProfile)}</p>
         {dmProfile === DM_PROFILE.DUAL && dmDualWeightsPreview && (
           <div className="kpi3-dm-weight-panel" role="region" aria-label="겸업 다면 가중">
@@ -569,9 +569,11 @@ export default function Kpi3ElementsPanel({
 
       {showLeaderSection && (
       <section className="kpi3-elements-section">
-        <h3>③ 리더 평가 ({Math.round(KPI3_WEIGHTS.leader * 100)}%)</h3>
+        <h3>③ 리더 평가{showManagerTabs ? ` (${Math.round(KPI3_WEIGHTS.leader * 100)}%)` : ''}</h3>
         <p className="team-kpi-hint">
-          팀원 자체평가(40%) + 팀장 평가(60%). KPI1·2 등급 환산은 참고용(가동·생산 모두 충족 시 낮은 등급 기준).
+          {showManagerTabs
+            ? '팀원 자체평가(40%) + 팀장 평가(60%). KPI1·2 등급 환산은 참고용입니다.'
+            : '이번 분기의 주도성, 일정 조율, 리딩 사례를 본인 관점에서 입력합니다.'}
         </p>
         {kpiGradeHint?.suggested != null && (
           <div className="kpi3-elements-preview">
@@ -611,46 +613,50 @@ export default function Kpi3ElementsPanel({
               }
             />
           </Kpi3GridField>
-          <Kpi3GridField title="팀장 평가 (5점)">
-            <input
-              type="number"
-              min={0}
-              max={5}
-              step={0.1}
-              className="form-input"
-              value={leaderDetail.managerScore ?? ''}
-              disabled={locked || readOnly || !showManagerTabs}
-              onChange={(e) =>
-                journal.updateKpi3QuarterExtras(year, month, memberCode, {
-                  leaderDetail: { managerScore: e.target.value },
-                })
-              }
-            />
-          </Kpi3GridField>
+          {showManagerTabs && (
+            <Kpi3GridField title="팀장 평가 (5점)">
+              <input
+                type="number"
+                min={0}
+                max={5}
+                step={0.1}
+                className="form-input"
+                value={leaderDetail.managerScore ?? ''}
+                disabled={locked || readOnly}
+                onChange={(e) =>
+                  journal.updateKpi3QuarterExtras(year, month, memberCode, {
+                    leaderDetail: { managerScore: e.target.value },
+                  })
+                }
+              />
+            </Kpi3GridField>
+          )}
         </div>
-        <Kpi3PreviewRow
-          action={
-            canApplyQuarterScore &&
-            !readOnly &&
-            !locked && (
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={() => applyScore('leader', computeLeaderScore(leaderDetail))}
-              >
-                분기 점수에 반영
-              </button>
-            )
-          }
-        >
-          산출 미리보기: <strong>{computeLeaderScore(leaderDetail) ?? '—'}</strong>
-        </Kpi3PreviewRow>
+        {showManagerTabs && (
+          <Kpi3PreviewRow
+            action={
+              canApplyQuarterScore &&
+              !readOnly &&
+              !locked && (
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => applyScore('leader', computeLeaderScore(leaderDetail))}
+                >
+                  분기 점수에 반영
+                </button>
+              )
+            }
+          >
+            산출 미리보기: <strong>{computeLeaderScore(leaderDetail) ?? '—'}</strong>
+          </Kpi3PreviewRow>
+        )}
       </section>
       )}
 
       {showPracticeSection && (
       <section className="kpi3-elements-section">
-        <h3>④ 역량 실전 적용률 ({Math.round(KPI3_WEIGHTS.practice * 100)}%)</h3>
+        <h3>④ 실전 적용{showManagerTabs ? ` (${Math.round(KPI3_WEIGHTS.practice * 100)}%)` : ''}</h3>
         <p className="team-kpi-hint">
           분기 실전 사례 증빙 제출 → 팀장 인정 건수: 3건↑=5점, 2건=4점, 1건=3점, 제출만=2점.
         </p>
