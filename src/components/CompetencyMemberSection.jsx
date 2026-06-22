@@ -9,7 +9,7 @@ import { useTeamKpiMetrics } from '../context/JournalProvider';
 const KPI3_BY_KEY = Object.fromEntries(KPI3_ELEMENTS.map((el) => [el.key, el]));
 
 /**
- * 구성원 1명 — 헤더 + 4탭(레벨·자체평가 / 다면 / 리더 / 실전)
+ * 구성원 1명 — 헤더 + 4탭(레벨 자체평가 / 다면 / 리더 / 실전)
  */
 export default function CompetencyMemberSection({
   member,
@@ -25,7 +25,7 @@ export default function CompetencyMemberSection({
 }) {
   const [activeTab, setActiveTab] = useState(defaultTab);
   const memberCode = member.code;
-  const competencyRec = journal.getCompetencyQuarter(yq, memberCode);
+  const competencyMonthRec = journal.getCompetencyMonth(year, monthIndex, memberCode);
   const quarterRec = journal.getQuarterRecord(year, monthIndex, memberCode);
   const kpiMetrics = useTeamKpiMetrics(year, monthIndex, memberCode);
   const readOnly = journal.kpiOperationalReadOnly || !canEditSelf;
@@ -51,16 +51,16 @@ export default function CompetencyMemberSection({
         {!canEditSelf && <span className="competency-member-block__badge">조회</span>}
         <dl className="competency-member-block__status">
           <div>
-            <dt>{quarter}분기 자체</dt>
-            <dd className={competencyRec?.selfLocked ? 'is-done' : ''}>
-              {competencyRec?.selfLocked ? '확정' : '작성중'}
+            <dt>{monthIndex + 1}월 자체</dt>
+            <dd className={competencyMonthRec?.selfLocked ? 'is-done' : ''}>
+              {competencyMonthRec?.selfLocked ? '확정' : '작성중'}
             </dd>
           </div>
           <div>
-            <dt>분기 제안</dt>
+            <dt>월 제안</dt>
             <dd>
-              {competencyRec?.selfLocked && competencyRec?.self?.computed?.proposed != null
-                ? competencyRec.self.computed.proposed
+              {competencyMonthRec?.selfLocked && competencyMonthRec?.self?.computed?.proposed != null
+                ? competencyMonthRec.self.computed.proposed
                 : '—'}
             </dd>
           </div>
@@ -103,31 +103,19 @@ export default function CompetencyMemberSection({
           <div className="competency-member-tab-panel" role="tabpanel">
             <CompetencyRubricPanel
               side="self"
-              record={competencyRec}
+              record={competencyMonthRec}
               memberRole={member.role}
               readOnly={readOnly}
               memberView
-              onUpdate={(patch) => journal.updateCompetencyQuarterSelf(yq, memberCode, patch)}
+              onUpdate={(patch) => journal.updateCompetencySelf(year, monthIndex, memberCode, patch)}
               onLock={() => {
-                const r = journal.lockCompetencyQuarter(yq, memberCode, { side: 'self' });
+                const r = journal.lockCompetencyMonth(year, monthIndex, memberCode, { side: 'self' });
                 if (r.ok) {
-                  onToast?.(`${member.displayName} · ${yq} 분기 자체평가 확정`);
+                  onToast?.(`${member.displayName} · ${year}-${String(monthIndex + 1).padStart(2, '0')} 레벨 자체평가 확정`);
                 } else if (r.reason === 'invalid-int-level') {
                   onToast?.('정수 레벨을 1~5 중에서 선택해 주세요');
                 }
               }}
-              onUnlockSelf={
-                canEditSelf
-                  ? () => {
-                      const r = journal.unlockCompetencyQuarterSelf(yq, memberCode);
-                      if (r.ok) {
-                        onToast?.('자체평가 수정 모드로 전환했습니다');
-                      } else if (r.reason === 'manager-locked') {
-                        onToast?.('팀장 평가가 확정되어 수정할 수 없습니다');
-                      }
-                    }
-                  : undefined
-              }
             />
           </div>
         )}
