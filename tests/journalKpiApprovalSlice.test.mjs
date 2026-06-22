@@ -160,6 +160,53 @@ describe('journalKpiApprovalSlice', () => {
     expect(merged.kpi2RowStatus[rowId].approver).toBe('팀장');
   });
 
+  it('mergeMemberKpiApprovalIntoStore — keeps terminal decisions over later submitted backups', () => {
+    const store = createEmptyKpiOperationalStore();
+    store.months['2026-06'] = {
+      B: {
+        monthly01: {
+          status: KPI_STATUS.REJECTED,
+          submittedAt: '2026-06-21T10:00:00.000Z',
+          approvedAt: '2026-06-21T11:00:00.000Z',
+        },
+      },
+    };
+    const incoming = {
+      months: {
+        '2026-06': {
+          monthly01: {
+            status: KPI_STATUS.SUBMITTED,
+            submittedAt: '2026-06-21T12:00:00.000Z',
+          },
+        },
+      },
+      kpi2RowStatus: {},
+    };
+
+    const merged = mergeMemberKpiApprovalIntoStore(store, 'B', incoming);
+
+    expect(merged.months['2026-06'].B.monthly01.status).toBe(KPI_STATUS.REJECTED);
+  });
+
+  it('mergeMemberKpiApprovalIntoStore — uses the newer timestamp when ranks match', () => {
+    const store = createEmptyKpiOperationalStore();
+    store.months['2026-06'] = {
+      B: { monthly01: { status: KPI_STATUS.SUBMITTED, submittedAt: '2026-06-21T10:00:00.000Z' } },
+    };
+    const incoming = {
+      months: {
+        '2026-06': {
+          monthly01: { status: KPI_STATUS.SUBMITTED, submittedAt: '2026-06-21T12:00:00.000Z' },
+        },
+      },
+      kpi2RowStatus: {},
+    };
+
+    const merged = mergeMemberKpiApprovalIntoStore(store, 'B', incoming);
+
+    expect(merged.months['2026-06'].B.monthly01.submittedAt).toBe('2026-06-21T12:00:00.000Z');
+  });
+
   it('extractMemberKpiApprovalSlice — legacy row id도 포함', () => {
     const days = {
       '2026-06-16': {

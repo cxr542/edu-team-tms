@@ -56,12 +56,20 @@ export function applyRemoteMemberJournalSave(localStore, remoteSnapshot, memberC
     throw new Error('A/B/C 구성원 코드가 필요합니다.');
   }
   const remote = normalizeJournalCloudSnapshot(remoteSnapshot);
+  const remoteMemberAt = remote.meta.memberUpdatedAt?.[memberCode] || remote.meta.updatedAt || null;
+  const local = normalizeJournalCloudSnapshot({
+    publishedAt: localStore?.meta?.updatedAt || null,
+    meta: localStore?.meta || {},
+    memberJournals: localStore?.memberJournals || createEmptyMemberJournals(),
+  });
+  if (isNewer(memberTime(local, memberCode), remoteMemberAt)) {
+    return localStore;
+  }
   const remoteSlice = remote.memberJournals[memberCode];
   const memberJournals = {
     ...(localStore?.memberJournals || createEmptyMemberJournals()),
     [memberCode]: clone(remoteSlice || emptyMemberJournal()),
   };
-  const remoteMemberAt = remote.meta.memberUpdatedAt?.[memberCode] || remote.meta.updatedAt || null;
   return {
     ...localStore,
     memberJournals,
