@@ -68,14 +68,6 @@ export default function CompetencyMemberSection({
             </dd>
           </div>
           <div>
-            <dt>월 제안</dt>
-            <dd>
-              {competencyMonthRec?.selfLocked && competencyMonthRec?.self?.computed?.proposed != null
-                ? competencyMonthRec.self.computed.proposed
-                : '—'}
-            </dd>
-          </div>
-          <div>
             <dt>다면</dt>
             <dd>{q.dm > 0 ? q.dm : '—'}</dd>
           </div>
@@ -203,6 +195,19 @@ export default function CompetencyMemberSection({
                 <p>월별 레벨 자체평가 작성을 마쳤다면 팀장에게 제출해 주세요.</p>
               </div>
             )}
+            <div className="competency-month-proposal-card">
+              <span>이번 달 제안 레벨</span>
+              <strong>
+                {competencyMonthRec?.selfLocked && competencyMonthRec?.self?.computed?.proposed != null
+                  ? competencyMonthRec.self.computed.proposed
+                  : '제출 후 산출'}
+              </strong>
+              <p>
+                {competencyMonthRec?.selfLocked
+                  ? '팀장 검토 시 참고되는 월별 제안 레벨입니다.'
+                  : '자체평가를 제출하면 제안 레벨이 자동으로 표시됩니다.'}
+              </p>
+            </div>
             <CompetencyRubricPanel
               side="self"
               record={competencyMonthRec}
