@@ -42,7 +42,7 @@ import { isProductionEnvironment } from '../constants/appEnv';
 import {
   isCompetencyMonthRecordSaveable,
   isValidCompetencyMemberCode,
-  mergeCompetencyMonthsIntoKpiStore,
+  mergeApprovedCompetencyMonthsIntoKpiStore,
 } from '../utils/kpiOperationalCloudSnapshot';
 import {
   loadMemberJournalsFromStorage,
@@ -918,7 +918,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
       const remote = await fetchCompetencyCloudSnapshot();
       let mergedStore = null;
       setStore((prev) => {
-        mergedStore = mergeCompetencyMonthsIntoKpiStore(prev, remote);
+        mergedStore = mergeApprovedCompetencyMonthsIntoKpiStore(prev, remote);
         return persist(mergedStore);
       });
       return { ok: true, remote, store: mergedStore };
@@ -959,7 +959,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
         }
         let mergedStore = null;
         setStore((prev) => {
-          mergedStore = mergeCompetencyMonthsIntoKpiStore(prev, body.snapshot || body);
+          mergedStore = mergeApprovedCompetencyMonthsIntoKpiStore(prev, body.snapshot || body);
           return persist(mergedStore);
         });
         return { ok: true, remote: body.snapshot, store: mergedStore };
