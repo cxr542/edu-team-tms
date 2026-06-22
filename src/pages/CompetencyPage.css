@@ -851,3 +851,34 @@
   font-size: 0.82rem;
   line-height: 1.4;
 }
+
+.competency-month-proposal-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+  margin-bottom: 14px;
+  padding: 11px 13px;
+  border: 1px solid var(--border-subtle, #e5e7eb);
+  border-radius: 12px;
+  background: var(--surface-muted, #f8fafc);
+}
+
+.competency-month-proposal-card span {
+  color: var(--text-muted, #64748b);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.competency-month-proposal-card strong {
+  color: var(--text-main, #111827);
+  font-size: 1.05rem;
+}
+
+.competency-month-proposal-card p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--text-muted, #64748b);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
