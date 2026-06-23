@@ -4,6 +4,7 @@ import { resolveMemberLedgerViewMode } from '../utils/ledgerAccess';
 import {
   buildAppScopedUrl,
   getModuleFromLocation,
+  parseAppRoute,
 } from '../utils/appRoute';
 import { applyTeamAccessToUrl } from './useTeamAccess';
 
@@ -71,9 +72,10 @@ export function useAppModule() {
       url.searchParams.set('mode', 'view');
     }
     if (next === 'competency') {
+      const currentRoute = parseAppRoute(window.location);
       const routeMember = url.searchParams.get('member');
       const access = url.searchParams.get('access');
-      const memberOnlyScope = routeMember && !isAdminAccessParam(access);
+      const memberOnlyScope = currentRoute.scope === 'user' || (routeMember && !isAdminAccessParam(access));
       if (!memberOnlyScope) {
         applyTeamAccessToUrl(url, { member: null, access: URL_ACCESS_ADMIN });
       }
