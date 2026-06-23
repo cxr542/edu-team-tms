@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { canEditMemberJournal, getTeamAccessFromSearchParams } from '../src/hooks/useTeamAccess.js';
+import {
+  canAccessTeamModule,
+  canEditMemberJournal,
+  getTeamAccessFromSearchParams,
+} from '../src/hooks/useTeamAccess.js';
 import { isAdminAccessParam, isTeamCommonModule, URL_ACCESS_ADMIN, URL_ACCESS_LEADER } from '../src/constants/teamAccess.js';
 
 describe('canEditMemberJournal', () => {
@@ -42,6 +46,19 @@ describe('canEditMemberJournal', () => {
     expect(isAdminAccessParam(URL_ACCESS_ADMIN)).toBe(true);
     expect(isAdminAccessParam(URL_ACCESS_LEADER)).toBe(true);
     expect(isAdminAccessParam('member')).toBe(false);
+  });
+
+  it('enforces the competency pilot gate for direct member URLs', () => {
+    const admin = getTeamAccessFromSearchParams(new URLSearchParams('access=admin&module=competency'));
+    const memberA = getTeamAccessFromSearchParams(new URLSearchParams('member=A&module=competency'));
+    const memberB = getTeamAccessFromSearchParams(new URLSearchParams('member=B&module=competency'));
+    const memberC = getTeamAccessFromSearchParams(new URLSearchParams('member=C&module=competency'));
+
+    expect(canAccessTeamModule(admin, 'competency')).toBe(true);
+    expect(canAccessTeamModule(memberA, 'competency')).toBe(true);
+    expect(canAccessTeamModule(memberB, 'competency')).toBe(false);
+    expect(canAccessTeamModule(memberC, 'competency')).toBe(false);
+    expect(canAccessTeamModule(memberB, 'journal')).toBe(true);
   });
 });
 

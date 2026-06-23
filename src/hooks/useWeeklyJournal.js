@@ -258,6 +258,7 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
           source: result.source,
           publishedAt: snapshot.publishedAt,
           includeOwnMember,
+          snapshot,
         };
       } catch (e) {
         setSyncStatus('error');

@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { kpi2RowId } from '../src/constants/kpiOperationalStore.js';
+import { KPI_STATUS } from '../src/constants/kpiStatuses.js';
 import {
   applyRemoteMemberJournalSave,
   isJournalMemberUpdateStale,
@@ -117,6 +119,71 @@ describe('journalCloudSnapshot', () => {
     expect(snapshot.memberJournals.B.days['2026-06-09'].tasks[0].title).toBe('B first');
     expect(snapshot.meta.memberUpdatedAt.A).toBe('2026-06-09T01:00:00.000Z');
     expect(snapshot.meta.memberUpdatedAt.B).toBe('2026-06-09T02:00:00.000Z');
+  });
+
+  it('member save preserves stronger cloud KPI approval decisions', () => {
+    const rowId = kpi2RowId('B', '2026-06-09', 'kpi2-task');
+    const current = normalizeJournalCloudSnapshot({
+      publishedAt: '2026-06-09T10:00:00.000Z',
+      meta: { memberUpdatedAt: { B: '2026-06-09T10:00:00.000Z' } },
+      memberJournals: {
+        B: {
+          days: day('B approved remote'),
+          kpiApproval: {
+            months: {
+              '2026-06': {
+                monthly01: {
+                  status: KPI_STATUS.APPROVED,
+                  submittedAt: '2026-06-09T09:00:00.000Z',
+                  approvedAt: '2026-06-09T10:00:00.000Z',
+                  approver: '팀장',
+                },
+              },
+            },
+            kpi2RowStatus: {
+              [rowId]: {
+                status: KPI_STATUS.APPROVED,
+                submittedAt: '2026-06-09T09:00:00.000Z',
+                approvedAt: '2026-06-09T10:00:00.000Z',
+                approver: '팀장',
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const next = mergeMemberIntoJournalSnapshot(
+      current,
+      'B',
+      {
+        days: day('B newer journal edit'),
+        kpiApproval: {
+          months: {
+            '2026-06': {
+              monthly01: {
+                status: KPI_STATUS.SUBMITTED,
+                submittedAt: '2026-06-09T11:00:00.000Z',
+              },
+            },
+          },
+          kpi2RowStatus: {
+            '2026-06-09|kpi2-task': {
+              status: KPI_STATUS.SUBMITTED,
+              submittedAt: '2026-06-09T11:00:00.000Z',
+            },
+          },
+        },
+      },
+      { updatedAt: '2026-06-09T11:00:00.000Z' }
+    );
+
+    expect(next.memberJournals.B.days['2026-06-09'].tasks[0].title).toBe('B newer journal edit');
+    expect(next.memberJournals.B.kpiApproval.months['2026-06'].monthly01.status).toBe(
+      KPI_STATUS.APPROVED
+    );
+    expect(next.memberJournals.B.kpiApproval.months['2026-06'].monthly01.approver).toBe('팀장');
+    expect(next.memberJournals.B.kpiApproval.kpi2RowStatus[rowId].status).toBe(KPI_STATUS.APPROVED);
   });
 
   it('applyRemoteMemberJournalSave does not replace other members', () => {

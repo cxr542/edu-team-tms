@@ -45,6 +45,7 @@ import {
 import { isEditorMode } from '../utils/appMode';
 import { useFontSizePreference } from '../hooks/useFontSizePreference';
 import { useProjectSidebar } from '../hooks/useProjectSidebar';
+import { canUseCompetencyPilot } from '../hooks/useTeamAccess';
 import { uiTooltip } from '../utils/uiTooltip';
 import NavLabelsModal from './NavLabelsModal';
 import MobileHomeGuideModal from './MobileHomeGuideModal';
@@ -118,7 +119,7 @@ export default function AppShell({
   const showExperimentalNav = !isViewer && isAdminShell;
   const showLeaderApprovalBadge = showLeaderNav && teamAccess?.isAdmin && !teamAccess?.isMemberScope;
   const leaderPending = useLeaderKpiPendingBadge(showLeaderApprovalBadge);
-  const canUseCompetencyPilot = isAdminShell || !teamAccess?.isMemberScope || teamAccess?.scopedMember === 'A';
+  const canUseCompetencyPilotNav = canUseCompetencyPilot(teamAccess);
   const competencyPreviewMessage =
     '역량 평가는 기능 개선 중이라 아직 공개 전입니다. 먼저 A 구성원과 팀장/관리자 화면에서 테스트 후 순차 공개할 예정입니다.';
 
@@ -268,7 +269,7 @@ export default function AppShell({
                   {showMemberWorkNav && (
                     <NavGroup title={NAV_GROUP_MEMBER_WORK}>
                       {navBtn('journal', Calendar)}
-                      {canUseCompetencyPilot ? (
+                      {canUseCompetencyPilotNav ? (
                         navBtn('competency', Award)
                       ) : (
                         <button

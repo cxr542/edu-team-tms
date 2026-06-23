@@ -87,6 +87,21 @@ export function canEditMemberJournal(access, memberCode) {
   return memberCode === (access.scopedMember || access.leaderMemberCode);
 }
 
+export function canUseCompetencyPilot(access) {
+  return Boolean(access?.isAdmin || !access?.isMemberScope || access?.scopedMember === 'A');
+}
+
+export function canAccessTeamModule(access, module) {
+  if (!module) return true;
+  if (isLeaderOnlyModule(module)) return Boolean(access?.isAdmin);
+  if (isExperimentalModule(module)) return Boolean(access?.isAdmin);
+  if (access?.isMemberScope) {
+    if (module === 'competency' && !canUseCompetencyPilot(access)) return false;
+    return isMemberWorkModule(module) || isTeamCommonModule(module);
+  }
+  return true;
+}
+
 function readTeamAccess() {
   if (typeof window === 'undefined') {
     return getTeamAccessFromSearchParams(new URLSearchParams());
@@ -117,13 +132,7 @@ export function useTeamAccess() {
 
   const canAccessModule = useCallback(
     (module) => {
-      if (!module) return true;
-      if (isLeaderOnlyModule(module)) return access.isAdmin;
-      if (isExperimentalModule(module)) return access.isAdmin;
-      if (access.isMemberScope) {
-        return isMemberWorkModule(module) || isTeamCommonModule(module);
-      }
-      return true;
+      return canAccessTeamModule(access, module);
     },
     [access]
   );

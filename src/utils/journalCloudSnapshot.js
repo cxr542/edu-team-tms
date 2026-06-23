@@ -4,6 +4,7 @@ import {
   emptyMemberJournal,
   normalizeMemberJournalSlice,
 } from './journalMemberStore.js';
+import { mergeKpiApprovalSlices } from './journalKpiApprovalSlice.js';
 
 export const JOURNAL_CLOUD_SNAPSHOT_VERSION = 1;
 export const JOURNAL_MEMBER_CODES = TEAM_KPI_MEMBERS.map((m) => m.code);
@@ -265,6 +266,18 @@ export function mergeMemberIntoJournalSnapshot(snapshot, memberCode, journal, { 
     throw new Error('A/B/C 구성원 코드가 필요합니다.');
   }
   const current = normalizeJournalCloudSnapshot(snapshot, { publishedAt: updatedAt });
+  const incomingSlice = normalizeMemberJournalSlice(journal);
+  const mergedApproval = mergeKpiApprovalSlices(
+    current.memberJournals[memberCode]?.kpiApproval,
+    incomingSlice.kpiApproval,
+    memberCode
+  );
+  const nextMemberSlice = { ...incomingSlice };
+  if (mergedApproval) {
+    nextMemberSlice.kpiApproval = mergedApproval;
+  } else {
+    delete nextMemberSlice.kpiApproval;
+  }
   return normalizeJournalCloudSnapshot({
     ...current,
     publishedAt: updatedAt,
@@ -278,7 +291,7 @@ export function mergeMemberIntoJournalSnapshot(snapshot, memberCode, journal, { 
     },
     memberJournals: {
       ...current.memberJournals,
-      [memberCode]: normalizeMemberJournalSlice(journal),
+      [memberCode]: nextMemberSlice,
     },
   });
 }

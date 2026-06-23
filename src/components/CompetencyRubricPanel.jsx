@@ -51,7 +51,6 @@ export default function CompetencyRubricPanel({
   onPullFromSelf,
   onLock,
   onUnlockSelf,
-  onUnlockManager,
   showPullButton = false,
   /** 구성원 자체평가 — 직군 고정·산식 숨김 */
   memberView = false,
@@ -400,23 +399,10 @@ export default function CompetencyRubricPanel({
                   ? canUnlockSelf
                     ? '팀장에게 제출되었습니다. 팀장 검토 전까지 아래 버튼으로 다시 수정할 수 있습니다.'
                     : managerLocked
-                      ? '팀장 확정이 완료된 월입니다. 수정하려면 팀장 확정을 해제해야 합니다.'
+                      ? '팀장 확정이 완료된 월입니다. 수정이 필요하면 팀장에게 문의하세요.'
                       : '팀장에게 제출되었습니다. 수정이 필요하면 팀장에게 문의하세요.'
                   : '확정됨 — 수정하려면 팀장에게 문의하세요.'}
               </p>
-              {memberView && managerLocked && typeof onUnlockManager === 'function' && !readOnly && (
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm competency-manager-unlock-btn"
-                  onClick={() => {
-                    if (window.confirm('팀장 확정을 해제하고 자체평가를 다시 수정 가능하게 할까요?')) {
-                      onUnlockManager();
-                    }
-                  }}
-                >
-                  팀장 확정 해제
-                </button>
-              )}
               {canUnlockSelf && (
                 <button
                   type="button"
