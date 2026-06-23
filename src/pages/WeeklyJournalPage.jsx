@@ -7,6 +7,7 @@ import {
   ChevronUp,
   Import,
   Copy,
+  MessageSquare,
   Download,
   Send,
   Sparkles,
@@ -192,6 +193,9 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   }, [teamAccess.memberLocked, teamAccess.scopedMember, teamAccess.isLeader]);
   const [selectedDayKey, setSelectedDayKey] = useState(null);
   const [editTask, setEditTask] = useState(null);
+  const [memoOpen, setMemoOpen] = useState(false);
+  const [memoTask, setMemoTask] = useState(null);
+  const [memoText, setMemoText] = useState('');
   const [addDayKey, setAddDayKey] = useState(null);
   const [leaveDayKey, setLeaveDayKey] = useState(null);
   const [panelOpen, setPanelOpen] = useState(false);
@@ -255,6 +259,9 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     setCopyOpen(false);
     setMoveOpen(false);
     setLeaveOpen(false);
+    setMemoOpen(false);
+    setMemoTask(null);
+    setMemoText('');
     setImproveProjectsModalOpen(false);
     setKpiApprovalModalOpen(false);
     setLeaveDayKey(null);
@@ -438,6 +445,30 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     if (!task) return;
     setEditTask({ ...task, dayKey });
     setPanelOpen(true);
+  };
+
+  const openTaskMemo = (task, dayKey) => {
+    setMemoTask({ id: task.id, title: task.title, dayKey });
+    setMemoText(task.note || '');
+    setMemoOpen(true);
+  };
+
+  const closeTaskMemo = () => {
+    setMemoOpen(false);
+    setMemoTask(null);
+    setMemoText('');
+  };
+
+  const saveTaskMemo = () => {
+    if (!memoTask || journalReadOnly) return;
+    patchDay(memoTask.dayKey, (day) => ({
+      ...day,
+      tasks: day.tasks.map((task) =>
+        task.id === memoTask.id ? { ...task, note: memoText.trim() } : task
+      ),
+    }));
+    closeTaskMemo();
+    showToast(memoText.trim() ? '업무 메모 저장됨' : '업무 메모 삭제됨');
   };
 
   const saveEdit = (e) => {
@@ -645,6 +676,9 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     setCopyOpen(false);
     setMoveOpen(false);
     setLeaveOpen(false);
+    setMemoOpen(false);
+    setMemoTask(null);
+    setMemoText('');
     setImproveProjectsModalOpen(false);
     setKpiApprovalModalOpen(false);
     setEditTask(null);
@@ -738,6 +772,19 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               </span>
               <TaskKpiBadge task={t} dayKey={key} improveProjects={journal.improveProjects} />
               <TaskMmPill task={t} />
+              <button
+                type="button"
+                className={`journal-task-memo-btn${t.note ? ' has-memo' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openTaskMemo(t, key);
+                }}
+                aria-label={`${t.title} 업무 메모 ${t.note ? '보기' : '작성'}`}
+                title={t.note ? '메모 있음' : '메모 작성'}
+              >
+                <MessageSquare size={13} aria-hidden />
+                {t.note ? '메모 있음' : '메모'}
+              </button>
               {t.done && <span className="journal-task-done">✓</span>}
             </li>
             );
@@ -1462,7 +1509,45 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           />
         )}
 
-      <div className={`journal-panel-overlay${panelOpen || addOpen || copyOpen || moveOpen || leaveOpen ? ' open' : ''}`} onClick={closeAll} role="presentation" />
+      <div className={`journal-panel-overlay${panelOpen || addOpen || copyOpen || moveOpen || leaveOpen || memoOpen ? ' open' : ''}`} onClick={closeAll} role="presentation" />
+
+      {memoOpen && memoTask && (
+        <div className="modal-content journal-task-memo-modal" role="dialog" aria-modal="true" aria-labelledby="journal-task-memo-title">
+          <div className="modal-header">
+            <h3 id="journal-task-memo-title">업무 메모</h3>
+            <button type="button" className="modal-close" onClick={closeTaskMemo} aria-label="닫기">
+              ×
+            </button>
+          </div>
+          <div className="form-group">
+            <p className="journal-field-help">
+              「{memoTask.title}」 업무 처리 중 참고할 내용, 협의 사항, 이슈, 후속 조치 등을 기록하세요.
+            </p>
+            <textarea
+              className="form-input"
+              rows={8}
+              value={memoText}
+              onChange={(e) => setMemoText(e.target.value)}
+              placeholder="예: 회의 결과, 이슈, 확인 필요 사항, 후속 조치 등"
+              readOnly={journalReadOnly}
+              autoFocus
+            />
+          </div>
+          {!journalReadOnly && (
+            <div className="modal-actions">
+              <button type="button" className="btn btn-secondary" onClick={() => setMemoText('')}>
+                메모 삭제
+              </button>
+              <button type="button" className="btn btn-secondary" onClick={closeTaskMemo}>
+                닫기
+              </button>
+              <button type="button" className="btn btn-primary" onClick={saveTaskMemo}>
+                저장
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       <aside className={`journal-side-panel${panelOpen ? ' open' : ''}`}>
         {editTask && (
