@@ -108,6 +108,8 @@ function mergeRemoteIntoStore(store, remote, options) {
   return toStore(mergeJournalSnapshotsByMember(storeToSnapshot(store), remote, options));
 }
 
+const JOURNAL_CLOUD_AUTO_SYNC_DEBOUNCE_MS = 8000;
+
 function mergeViewOnlyIntoStore(store, remote, ownMemberCode) {
   return applyJournalSnapshotViewOnlyImport(store, remote, ownMemberCode);
 }
@@ -542,7 +544,7 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
       } catch {
         setCloudSaveStatus('error');
       }
-    }, 1200);
+    }, JOURNAL_CLOUD_AUTO_SYNC_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
   }, [applyMemberCloudSave, autoSyncCloud, pendingCloudMembers, readOnly, store]);
 
