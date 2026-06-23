@@ -82,11 +82,14 @@ async function readLiveLatestBlob() {
 async function readLatestSnapshot({ failOnBlobReadError = false } = {}) {
   const blob = await readLiveLatestBlob();
   if (blob.snapshot) return { snapshot: blob.snapshot, source: 'blob' };
-  if (failOnBlobReadError && blob.configured && blob.unavailable) {
-    const err = new Error('공유 일지 Blob을 읽지 못했습니다. 최신 원격본을 확인할 수 없어 저장을 중단합니다.');
-    err.code = 'BLOB_READ_UNAVAILABLE';
-    err.cause = blob.error;
-    throw err;
+  if (blob.configured) {
+    if (failOnBlobReadError && blob.unavailable) {
+      const err = new Error('공유 일지 Blob을 읽지 못했습니다. 최신 원격본을 확인할 수 없어 저장을 중단합니다.');
+      err.code = 'BLOB_READ_UNAVAILABLE';
+      err.cause = blob.error;
+      throw err;
+    }
+    return { snapshot: null, source: 'empty' };
   }
   const disk = await readStaticFromDisk();
   if (disk) return { snapshot: disk, source: 'static' };

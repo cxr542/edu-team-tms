@@ -45,7 +45,7 @@ describe('journal snapshot fetch validation', () => {
   it('falls back to static JSON only when the API has no snapshot response', async () => {
     const fetchMock = vi.fn(async (url) => {
       if (String(url).startsWith('/api/journal-snapshot')) {
-        return jsonResponse(404, { error: 'snapshot not found' });
+        return jsonResponse(404, '<html>not found</html>', { 'content-type': 'text/html' });
       }
       return jsonResponse(
         200,
@@ -63,6 +63,25 @@ describe('journal snapshot fetch validation', () => {
 
     expect(result.source).toBe('static');
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not fall back to stale static JSON when the API reports an empty Blob', async () => {
+    const fetchMock = vi.fn(async (url) => {
+      if (String(url).startsWith('/api/journal-snapshot')) {
+        return jsonResponse(
+          404,
+          { error: 'snapshot not found' },
+          { 'content-type': 'application/json; charset=utf-8' }
+        );
+      }
+      throw new Error('static snapshot should not be fetched');
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await fetchJournalSnapshot();
+
+    expect(result).toEqual({ snapshot: null, source: 'empty' });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('does not merge stale static JSON after an API error', async () => {
