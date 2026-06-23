@@ -1105,3 +1105,16 @@ html.project-sidebar-collapsed-boot .project-logo h1 {
     display: none;
   }
 }
+
+.project-toolbar__supabase-health .btn {
+  min-height: 28px;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+.project-toolbar__supabase-health-message {
+  max-width: 180px;
+  font-size: 0.72rem;
+}
