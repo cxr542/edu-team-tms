@@ -1071,3 +1071,37 @@ html.project-sidebar-collapsed-boot .project-logo h1 {
     display: none;
   }
 }
+
+.project-toolbar__supabase-health {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: 0.35rem;
+}
+
+.project-toolbar__supabase-health-message {
+  max-width: 220px;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-toolbar__supabase-health-message--ok {
+  color: var(--success-color, #16a34a);
+}
+
+.project-toolbar__supabase-health-message--error {
+  color: var(--danger-color, #dc2626);
+}
+
+.project-toolbar__supabase-health-message--disabled {
+  color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+  .project-toolbar__supabase-health {
+    display: none;
+  }
+}
