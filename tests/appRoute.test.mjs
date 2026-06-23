@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   APP_ROUTE_ADMIN,
   MEMBER_ROUTE_SLUG,
@@ -10,6 +10,10 @@ import {
   parseAppRoute,
   resolveScopedPathname,
 } from '../src/utils/appRoute.js';
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe('appRoute path scopes', () => {
   it('parses admin and user paths', () => {
@@ -72,6 +76,36 @@ describe('appRoute path scopes', () => {
     });
     expect(url.pathname).toBe('/admin');
     expect(url.searchParams.get('access')).toBeNull();
+  });
+
+  it('moves admin view member links to member scope before the gate check', () => {
+    const replaceState = vi.fn();
+    vi.stubGlobal('window', {
+      location: {
+        pathname: '/admin',
+        search: '?mode=view&module=competency&member=A&quarter=2',
+        href: 'https://example.test/admin?mode=view&module=competency&member=A&quarter=2',
+      },
+      history: { replaceState },
+    });
+
+    expect(migrateLegacyAppUrlIfNeeded()).toBe(true);
+    expect(replaceState).toHaveBeenCalledWith({}, '', '/yhkim?module=competency&quarter=2');
+  });
+
+  it('preserves member ledger view mode when moving admin view links to member scope', () => {
+    const replaceState = vi.fn();
+    vi.stubGlobal('window', {
+      location: {
+        pathname: '/admin',
+        search: '?mode=view&member=B',
+        href: 'https://example.test/admin?mode=view&member=B',
+      },
+      history: { replaceState },
+    });
+
+    expect(migrateLegacyAppUrlIfNeeded()).toBe(true);
+    expect(replaceState).toHaveBeenCalledWith({}, '', '/wschoi?mode=view&module=ledger');
   });
 
   it('maps member slugs', () => {
