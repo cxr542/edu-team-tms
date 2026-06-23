@@ -266,11 +266,12 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     setTimeout(() => setToast(''), 2500);
   };
   const sharedSaveText = {
-    saving: ' · 공유 저장 중',
-    saved: ' · 공유 저장 완료',
+    queued: ' · 클라우드 동기화 대기 중',
+    saving: ' · 클라우드 동기화 중',
+    saved: ' · 클라우드 동기화 완료',
     conflict:
-      ' · 공유 저장 충돌 — 최신 내용을 불러오거나 확인한 뒤 다시 저장해 주세요',
-    error: ' · 공유 저장 실패 — 이 브라우저에는 임시 저장됨',
+      ' · 클라우드 동기화 충돌 — 최신 내용을 불러오거나 확인한 뒤 다시 저장해 주세요',
+    error: ' · 클라우드 동기화 실패 — 이 브라우저에는 임시 저장됨',
   }[journal.cloudSaveStatus] || '';
   const cloudHealthMessage = getCloudHealthUserMessage();
 
@@ -1191,13 +1192,13 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               {showJournalTeamShareControls ? (
                 <>
                   팀 공유가 필요할 때만 「팀 공유 저장」·「팀 공유본 가져오기」를 사용하세요.{' '}
-                  가져오기는 본인 일지는 유지하고 타 구성원 일지만 갱신합니다. 자동 공유 저장은 사용하지
-                  않습니다.
+                  가져오기는 본인 일지는 유지하고 타 구성원 일지만 갱신합니다. 현재 자동 클라우드
+                  동기화는 꺼져 있으며, 공유 저장은 수동으로 실행할 때만 반영됩니다.
                 </>
               ) : (
                 <>
                   향상 과제 공유는 「팀장에게 받은 JSON 가져오기」를 사용하세요.{' '}
-                  자동 공유 저장은 사용하지 않습니다.
+                  현재 자동 클라우드 동기화는 꺼져 있으며, 공유 저장은 수동으로 실행할 때만 반영됩니다.
                 </>
               )}
             </p>
