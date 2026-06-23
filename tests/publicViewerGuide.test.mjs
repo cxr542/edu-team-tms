@@ -78,6 +78,7 @@ describe('public viewer landing UI', () => {
 
   it('gates /admin behind password screen', () => {
     expect(appSource).toContain('needsAdminGate');
+    expect(appSource).toContain('isRouteViewMode');
     expect(appSource).toContain('<AdminGatePage');
     expect(appSource).toContain('isAdminGateUnlocked');
   });
