@@ -26,7 +26,7 @@ describe('journal UX guidance', () => {
     expect(journalSource).toContain('팀 공유 저장');
     expect(journalSource).toContain('aria-label="저장"');
     expect(journalSource).toContain('저장은 이 브라우저에 먼저 반영됩니다.');
-    expect(journalSource).toContain('자동 공유 저장은 사용하지 않습니다.');
+    expect(journalSource).toContain('현재 자동 클라우드 동기화는 꺼져 있으며, 공유 저장은 수동으로 실행할 때만 반영됩니다.');
   });
 
   it('documents M/M and KPI2 meaning with done-gated MM logic', () => {
