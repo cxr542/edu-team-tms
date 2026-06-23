@@ -169,7 +169,9 @@ export default function App() {
   }, [routeRevision]);
 
   const isPublicViewer = appRoute.scope === 'public';
-  const needsAdminGate = appRoute.scope === 'admin' && !isAdminGateUnlocked();
+  const isRouteViewMode =
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mode') === 'view';
+  const needsAdminGate = appRoute.scope === 'admin' && !isRouteViewMode && !isAdminGateUnlocked();
   const accessParam = teamAccess.isAdmin && !teamAccess.isMemberScope ? URL_ACCESS_ADMIN : null;
   const isMemberLedger = isMemberLedgerScope({ module, isMemberScope: teamAccess.isMemberScope });
   /** 공개 조회·구성원 장부 — mode와 무관하게 read-only */
