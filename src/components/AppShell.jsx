@@ -53,6 +53,7 @@ import AppModuleNavItem from './AppModuleNavItem';
 import { buildAppModuleUrl } from '../hooks/useAppModule';
 import { openAppModuleInNewTab } from '../utils/appModuleNavigation';
 import { withAppBase } from '../utils/appRoute';
+import { checkSupabaseHealth, SUPABASE_HEALTH_STATUS } from '../utils/supabaseHealth';
 
 export default function AppShell({
   activeModule,
@@ -72,6 +73,8 @@ export default function AppShell({
   const [navLabelsOpen, setNavLabelsOpen] = useState(false);
   const [mobileGuideOpen, setMobileGuideOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [supabaseHealth, setSupabaseHealth] = useState(null);
+  const [supabaseHealthChecking, setSupabaseHealthChecking] = useState(false);
   const { fontSizeId, setFontSizeId, options: fontSizeOptions } = useFontSizePreference();
   const canEditNav = isEditorMode();
   const { collapsed, drawerOpen, toggleSidebar, closeDrawer, onNavSelect } = useProjectSidebar();
@@ -122,6 +125,22 @@ export default function AppShell({
   const canUseCompetencyPilotNav = canUseCompetencyPilot(teamAccess);
   const competencyPreviewMessage =
     '역량 평가는 기능 개선 중이라 아직 공개 전입니다. 먼저 A 구성원과 팀장/관리자 화면에서 테스트 후 순차 공개할 예정입니다.';
+
+  const supabaseHealthLabel =
+    supabaseHealth?.status === SUPABASE_HEALTH_STATUS.OK
+      ? 'Supabase 정상'
+      : supabaseHealth?.status === SUPABASE_HEALTH_STATUS.ERROR
+        ? 'Supabase 오류'
+        : supabaseHealth?.status === SUPABASE_HEALTH_STATUS.DISABLED
+          ? 'Supabase 비활성'
+          : 'Supabase 점검';
+
+  const handleSupabaseHealthCheck = async () => {
+    setSupabaseHealthChecking(true);
+    const result = await checkSupabaseHealth();
+    setSupabaseHealth(result);
+    setSupabaseHealthChecking(false);
+  };
 
   const navBtn = (module, Icon, { viewer = false, badgeCount = 0 } = {}) => {
     const visible = viewer ? showInViewer(module) : canShowEditModule(module);
@@ -487,6 +506,27 @@ export default function AppShell({
               )}
               {teamAccess?.isAdmin && !teamAccess.isMemberScope && (
                 <span className="project-toolbar__scope project-toolbar__scope--leader">관리자</span>
+              )}
+              {isAdminShell && (
+                <span className="project-toolbar__supabase-health">
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={handleSupabaseHealthCheck}
+                    disabled={supabaseHealthChecking}
+                    {...uiTooltip('Supabase 연결 상태 점검', 'below')}
+                  >
+                    {supabaseHealthChecking ? 'Supabase 점검 중…' : supabaseHealthLabel}
+                  </button>
+                  {supabaseHealth?.message && (
+                    <span
+                      className={`project-toolbar__supabase-health-message project-toolbar__supabase-health-message--${supabaseHealth.status}`}
+                      title={supabaseHealth.message}
+                    >
+                      {supabaseHealth.message}
+                    </span>
+                  )}
+                </span>
               )}
             </p>
             {showLeaderApprovalBadge && (
