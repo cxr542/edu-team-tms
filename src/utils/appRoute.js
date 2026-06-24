@@ -146,6 +146,26 @@ export function migrateLegacyAppUrlIfNeeded(location = window.location) {
   if (route.scope !== 'admin' && route.scope !== 'user') return false;
 
   const url = new URL(location.href);
+
+  if (
+    route.scope === 'admin' &&
+    route.memberCode &&
+    route.searchParams.get('mode') === 'view'
+  ) {
+    const moduleName = route.searchParams.get('module') || defaultModuleForScope(route.scope);
+    url.pathname = resolveScopedPathname({ scope: 'user', memberCode: route.memberCode });
+    url.searchParams.delete(URL_PARAM_MEMBER);
+    url.searchParams.delete('access');
+    if (moduleName === 'ledger') {
+      url.searchParams.set('module', 'ledger');
+    } else {
+      url.searchParams.delete('mode');
+    }
+    pruneDefaultScopedQuery(url, moduleName);
+    window.history.replaceState({}, '', `${url.pathname}${url.search}`);
+    return true;
+  }
+
   const nextPath = resolveScopedPathname({
     scope: route.scope,
     memberCode: route.memberCode,
