@@ -59,6 +59,14 @@ Blob은 클라우드 저장, 공유 저장, 복구 흐름에서 사용된다.
 
 초기 단계에서는 스냅샷 저장 방식으로 시작하고, 이후 항목 단위 저장으로 분리한다.
 
+### 2-1단계. 업무일지 snapshot 유틸 추가
+
+- `src/utils/supabaseJournalSnapshot.js`에 구성원별 `journal_snapshots` upsert/read 유틸을 추가했다.
+- 유틸은 `member_code` unique key, `payload_version = 1`, 전달받은 `updatedAt` 또는 현재 시각을 사용한다.
+- Supabase 환경변수가 없거나 요청이 실패해도 예외를 던지지 않고 상태 결과를 반환한다.
+- 아직 기존 localStorage 저장, Blob 저장/불러오기, 업무일지 Provider/hook에 연결하지 않았다.
+- 자동 저장과 Supabase 병행 저장은 아직 활성화하지 않았다.
+
 ### 3단계. 병행 저장
 
 localStorage 저장은 유지하면서 Supabase에도 동일 데이터를 저장한다.
@@ -127,4 +135,3 @@ Supabase 병행 저장을 시작하기 전에 연결 상태 점검 유틸을 별
 - Supabase client 생성 가능 여부
 - `sync_events` 테이블 조회 가능 여부
 - RLS 또는 네트워크 오류 메시지 확인
-
