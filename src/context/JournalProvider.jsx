@@ -55,7 +55,9 @@ export function JournalProvider({ children, readOnly = false, autoSyncCloud = fa
   const pullFromCloud = useCallback(async (options) => {
     const result = await journal.pullFromCloud(options);
     if (result?.ok && result.snapshot && !readOnly) {
-      kpiApi.mergeJournalKpiApproval(result.snapshot);
+      const ownMemberCode = result.ownMemberCode || options?.ownMemberCode;
+      const excludeMemberCodes = ownMemberCode && !result.includeOwnMember ? [ownMemberCode] : [];
+      kpiApi.mergeJournalKpiApproval(result.snapshot, { excludeMemberCodes });
     }
     return result;
   }, [journal, kpiApi, readOnly]);

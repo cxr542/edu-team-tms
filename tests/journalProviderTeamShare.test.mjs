@@ -8,11 +8,13 @@ describe('JournalProvider team-share orchestration', () => {
 
   it('returns the pulled snapshot so provider-level imports can sync approval state', () => {
     expect(weeklyHookSource).toContain('snapshot,');
+    expect(weeklyHookSource).toContain('ownMemberCode,');
   });
 
-  it('merges team-share pull kpiApproval into the KPI operational store', () => {
+  it('merges team-share pull kpiApproval while excluding preserved own-member state', () => {
     expect(providerSource).toContain('const pullFromCloud = useCallback(async (options) => {');
-    expect(providerSource).toContain('kpiApi.mergeJournalKpiApproval(result.snapshot)');
+    expect(providerSource).toContain('ownMemberCode && !result.includeOwnMember');
+    expect(providerSource).toContain('kpiApi.mergeJournalKpiApproval(result.snapshot, { excludeMemberCodes })');
     expect(providerSource).toMatch(/\.\.\.journal,[\s\S]*\.\.\.kpiApi,[\s\S]*pullFromCloud,/);
   });
 });

@@ -75,6 +75,68 @@ describe('journalKpiApprovalSlice', () => {
     expect(merged.kpi2RowStatus[kpi2RowId('B', '2026-06-16', 't1')].status).toBe(KPI_STATUS.SUBMITTED);
   });
 
+  it('mergeJournalKpiApprovalImport — excludes preserved own-member approval on view-only pull', () => {
+    const store = createEmptyKpiOperationalStore();
+    store.months['2026-06'] = {
+      B: {
+        monthly01: {
+          work: 0.5,
+          status: KPI_STATUS.DRAFT,
+          submittedAt: null,
+        },
+      },
+    };
+    const snapshot = {
+      memberJournals: {
+        B: {
+          kpiApproval: {
+            months: {
+              '2026-06': {
+                monthly01: {
+                  work: 1,
+                  status: KPI_STATUS.SUBMITTED,
+                  submittedAt: '2026-06-20T10:00:00.000Z',
+                },
+              },
+            },
+            kpi2RowStatus: {
+              '2026-06-16|b1': {
+                status: KPI_STATUS.SUBMITTED,
+                submittedAt: '2026-06-20T11:00:00.000Z',
+              },
+            },
+          },
+        },
+        C: {
+          kpiApproval: {
+            months: {
+              '2026-06': {
+                monthly01: {
+                  work: 1,
+                  status: KPI_STATUS.SUBMITTED,
+                  submittedAt: '2026-06-20T12:00:00.000Z',
+                },
+              },
+            },
+            kpi2RowStatus: {
+              '2026-06-17|c1': {
+                status: KPI_STATUS.SUBMITTED,
+                submittedAt: '2026-06-20T13:00:00.000Z',
+              },
+            },
+          },
+        },
+      },
+    };
+
+    const merged = mergeJournalKpiApprovalImport(store, snapshot, { excludeMemberCodes: ['B'] });
+
+    expect(merged.months['2026-06'].B.monthly01.status).toBe(KPI_STATUS.DRAFT);
+    expect(merged.months['2026-06'].C.monthly01.status).toBe(KPI_STATUS.SUBMITTED);
+    expect(merged.kpi2RowStatus[kpi2RowId('B', '2026-06-16', 'b1')]).toBeUndefined();
+    expect(merged.kpi2RowStatus[kpi2RowId('C', '2026-06-17', 'c1')].status).toBe(KPI_STATUS.SUBMITTED);
+  });
+
   it('mergeMemberKpiApprovalIntoStore — keeps newer submittedAt', () => {
     const store = createEmptyKpiOperationalStore();
     store.months['2026-06'] = {

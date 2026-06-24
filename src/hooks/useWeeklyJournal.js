@@ -259,6 +259,7 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
           changed,
           source: result.source,
           publishedAt: snapshot.publishedAt,
+          ownMemberCode,
           includeOwnMember,
           snapshot,
         };
