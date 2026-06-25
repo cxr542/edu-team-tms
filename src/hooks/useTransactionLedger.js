@@ -34,14 +34,55 @@ export function shouldAdoptPublishedSnapshot({
   ledgerMeta,
 }) {
   if (readOnly || !publishedSnapshot?.transactions?.length) return false;
-  if (!storedTransactions?.length) return true;
-  if (!ledgerMeta?.updatedAt) return true;
-  const syncStatus = getLedgerSyncStatus({
-    publishedAt: publishedSnapshot.publishedAt,
-    localUpdatedAt: ledgerMeta?.updatedAt,
-    syncedPublishedAt: ledgerMeta?.syncedPublishedAt,
-  });
-  return syncStatus === 'remote-ahead';
+
+  // Safety first: never overwrite an existing editable local ledger automatically.
+  // Published snapshots can still be pulled explicitly through the UI action.
+  if (storedTransactions?.length) return false;
+
+  return true;
+}
+
+function countByYearMonth(transactions = []) {
+  return transactions.reduce((acc, tx) => {
+    const ym = String(tx?.date || '').slice(0, 7);
+    if (/^\d{4}-\d{2}$/.test(ym)) {
+      acc[ym] = (acc[ym] || 0) + 1;
+    }
+    return acc;
+  }, {});
+}
+
+export function validateLedgerSnapshotAdoption(currentTransactions = [], incomingTransactions = []) {
+  if (!currentTransactions.length || !incomingTransactions.length) {
+    return { ok: true };
+  }
+
+  if (incomingTransactions.length < currentTransactions.length) {
+    return {
+      ok: false,
+      reason: 'transaction-count-decrease',
+      currentCount: currentTransactions.length,
+      incomingCount: incomingTransactions.length,
+    };
+  }
+
+  const currentMonths = countByYearMonth(currentTransactions);
+  const incomingMonths = countByYearMonth(incomingTransactions);
+  const removedMonth = Object.keys(currentMonths).find(
+    (ym) => currentMonths[ym] > 0 && !incomingMonths[ym]
+  );
+
+  if (removedMonth) {
+    return {
+      ok: false,
+      reason: 'month-data-removed',
+      month: removedMonth,
+      currentCount: currentMonths[removedMonth],
+      incomingCount: incomingMonths[removedMonth] || 0,
+    };
+  }
+
+  return { ok: true };
 }
 
 export function useTransactionLedger(categories, options = {}) {
@@ -68,6 +109,8 @@ export function useTransactionLedger(categories, options = {}) {
     (snap, { markSynced = true } = {}) => {
       if (!snap?.transactions?.length) return { ok: false, reason: 'empty' };
       const next = prepareLedger(snap.transactions, categories);
+      const validation = validateLedgerSnapshotAdoption(transactions, next);
+      if (!validation.ok) return validation;
       setTransactions(next);
       const publishedAt = snap.publishedAt || new Date().toISOString();
       const nextMeta = markSynced
@@ -78,7 +121,7 @@ export function useTransactionLedger(categories, options = {}) {
       saveStoredTransactions(next);
       return { ok: true, count: next.length };
     },
-    [categories]
+    [categories, transactions]
   );
 
   useEffect(() => {

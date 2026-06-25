@@ -511,6 +511,17 @@ export default function App() {
     showAlert('장부 JSON 백업 파일(ledger-snapshot.json)을 다운로드했습니다.', 'info', 5000);
   };
 
+  const getLedgerAdoptionBlockMessage = (result) => {
+    if (result?.reason === 'transaction-count-decrease') {
+      return `장부 반영을 중단했습니다. 가져올 데이터가 현재 작성 장부보다 적습니다. 현재 ${result.currentCount}건 / 가져올 데이터 ${result.incomingCount}건입니다.`;
+    }
+    if (result?.reason === 'month-data-removed') {
+      return `장부 반영을 중단했습니다. 가져올 데이터에서 ${result.month} 데이터가 사라집니다. 현재 ${result.currentCount}건 / 가져올 데이터 ${result.incomingCount}건입니다.`;
+    }
+    return null;
+  };
+
+
   const handleImportLedgerBackup = async (file) => {
     if (
       !window.confirm(
@@ -536,7 +547,7 @@ export default function App() {
           6500
         );
       } else {
-        showAlert('장부 백업에 거래 내역이 없습니다.', 'warning');
+        showAlert(getLedgerAdoptionBlockMessage(r) || '장부 백업에 거래 내역이 없습니다.', 'warning');
       }
     } catch (err) {
       showAlert(`장부 백업 가져오기 실패: ${err.message}`, 'danger');
@@ -598,6 +609,8 @@ export default function App() {
     }
     if (r.ok) {
       showAlert(`조회 화면 데이터 ${r.count}건을 작성 장부에 반영했습니다.`, 'success');
+    } else {
+      showAlert(getLedgerAdoptionBlockMessage(r) || '조회 화면 데이터를 작성 장부에 반영하지 못했습니다.', 'warning');
     }
   };
 
@@ -621,7 +634,7 @@ export default function App() {
         await reload({ quiet: true });
         showAlert(`운영 장부 ${r.count}건을 개발 편집본에 반영했습니다.`, 'success');
       } else {
-        showAlert('운영 장부 데이터가 비어 있어 반영하지 못했습니다.', 'warning');
+        showAlert(getLedgerAdoptionBlockMessage(r) || '운영 장부 데이터가 비어 있어 반영하지 못했습니다.', 'warning');
       }
     } catch (err) {
       const detail = err?.message ? ` (${err.message})` : '';
