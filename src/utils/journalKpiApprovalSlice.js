@@ -45,6 +45,10 @@ function hasApprovalSliceData(slice) {
   );
 }
 
+function excludedMemberCodeSet(memberCodes) {
+  return new Set([memberCodes].flat().filter(Boolean).map(String));
+}
+
 function scopedKpi2ApprovalId(id, memberCode) {
   const [part1, part2, part3] = String(id).split('|');
   if (part3 || !memberCode) return id;
@@ -151,11 +155,13 @@ export function mergeMemberKpiApprovalIntoStore(store, memberCode, slice) {
   return next;
 }
 
-export function mergeJournalKpiApprovalImport(kpiOperationalStore, snapshot) {
+export function mergeJournalKpiApprovalImport(kpiOperationalStore, snapshot, options = {}) {
   if (!snapshot?.memberJournals) return kpiOperationalStore;
 
+  const excludedMemberCodes = excludedMemberCodeSet(options.excludeMemberCodes);
   let next = kpiOperationalStore;
   Object.entries(snapshot.memberJournals).forEach(([memberCode, slice]) => {
+    if (excludedMemberCodes.has(String(memberCode))) return;
     if (!slice?.kpiApproval) return;
     next = mergeMemberKpiApprovalIntoStore(next, memberCode, slice.kpiApproval);
   });

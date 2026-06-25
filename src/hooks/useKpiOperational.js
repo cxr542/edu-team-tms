@@ -971,9 +971,9 @@ export function useKpiOperational({ readOnly = false } = {}) {
   );
 
   const mergeJournalKpiApproval = useCallback(
-    (snapshot) => {
+    (snapshot, options) => {
       if (readOnly) return;
-      setStore((prev) => persist(mergeJournalKpiApprovalImport(prev, snapshot)));
+      setStore((prev) => persist(mergeJournalKpiApprovalImport(prev, snapshot, options)));
     },
     [readOnly, persist]
   );
