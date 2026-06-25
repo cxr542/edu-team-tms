@@ -24,6 +24,13 @@ describe('journal UX guidance', () => {
   it('clarifies local save vs team shared save/import buttons', () => {
     expect(journalSource).toContain('팀 공유본 가져오기');
     expect(journalSource).toContain('팀 공유 저장');
+    expect(journalSource).toContain('Supabase 업무일지 저장');
+    expect(journalSource).toContain('Supabase 저장 중');
+    expect(journalSource).toContain('Supabase 저장 완료');
+    expect(journalSource).toContain('Supabase 미설정');
+    expect(journalSource).toContain('saveJournalSnapshotToSupabase');
+    expect(journalSource).toContain('buildMemberJournalSavePayload');
+    expect(journalSource).toContain('showJournalLeaderToolbar && !journalReadOnly');
     expect(journalSource).toContain('aria-label="저장"');
     expect(journalSource).toContain('저장은 이 브라우저에 먼저 반영됩니다.');
     expect(journalSource).toContain('현재 자동 클라우드 동기화는 꺼져 있으며, 공유 저장은 수동으로 실행할 때만 반영됩니다.');
