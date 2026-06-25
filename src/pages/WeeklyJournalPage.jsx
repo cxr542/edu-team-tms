@@ -9,6 +9,7 @@ import {
   Copy,
   MessageSquare,
   Download,
+  Save,
   Send,
   Sparkles,
   Target,
@@ -72,9 +73,18 @@ import {
 } from '../utils/improveProjectLink';
 import { SHOW_BC_JOURNAL_TEAM_SHARE_UI } from '../constants/improveProjectSharingConfig';
 import { IMPROVE_PROJECT_BLOB_SHARE_ENABLED } from '../constants/improveProjectsShare';
+import { buildMemberJournalSavePayload } from '../utils/journalSnapshot';
+import { saveJournalSnapshotToSupabase } from '../utils/supabaseJournalSnapshot';
 import './WeeklyJournalPage.css';
 
 const MEMBER_IMPROVE_PROJECT_CODES = new Set(['B', 'C']);
+const SUPABASE_JOURNAL_SAVE_STATUS_LABEL = {
+  idle: '',
+  saving: ' · Supabase 저장 중',
+  ok: ' · Supabase 저장 완료',
+  disabled: ' · Supabase 미설정',
+  error: ' · Supabase 저장 실패',
+};
 
 const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -210,6 +220,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const [memberPrefsOpen, setMemberPrefsOpen] = useState(false);
   const [improveProjectsModalOpen, setImproveProjectsModalOpen] = useState(false);
   const [kpiApprovalModalOpen, setKpiApprovalModalOpen] = useState(false);
+  const [supabaseJournalSaveStatus, setSupabaseJournalSaveStatus] = useState('idle');
 
   const memberCategoryView = useMemo(
     () => resolveMemberCategories(journal.memberJournals?.[memberCode]?.prefs),
@@ -268,6 +279,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     setSelectedDayKey(null);
   }, [memberCode]);
 
+  useEffect(() => {
+    setSupabaseJournalSaveStatus('idle');
+  }, [memberCode]);
+
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(''), 2500);
@@ -281,6 +296,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     error: ' · 클라우드 동기화 실패 — 이 브라우저에는 임시 저장됨',
   }[journal.cloudSaveStatus] || '';
   const cloudHealthMessage = getCloudHealthUserMessage();
+  const supabaseJournalSaveHint = SUPABASE_JOURNAL_SAVE_STATUS_LABEL[supabaseJournalSaveStatus] || '';
 
   const memberDays = journal.getMemberDays(memberCode);
 
@@ -384,6 +400,38 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       selectedDayKey || dateKey(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
     openLeave(key);
   };
+
+  const saveSelectedMemberToSupabase = useCallback(async () => {
+    if (journalReadOnly || supabaseJournalSaveStatus === 'saving') return;
+    const saveCode = memberCode;
+    setSupabaseJournalSaveStatus('saving');
+    const payload = buildMemberJournalSavePayload(
+      journal.memberJournals?.[saveCode],
+      journal.kpiOperational,
+      saveCode
+    );
+    const result = await saveJournalSnapshotToSupabase({
+      memberCode: saveCode,
+      payload,
+      updatedAt: journal.meta?.memberUpdatedAt?.[saveCode] || journal.meta?.updatedAt,
+    });
+
+    if (result.ok) {
+      setSupabaseJournalSaveStatus('ok');
+      showToast('Supabase 저장 완료');
+      return result;
+    }
+
+    if (result.status === 'disabled') {
+      setSupabaseJournalSaveStatus('disabled');
+      showToast('Supabase 미설정');
+      return result;
+    }
+
+    setSupabaseJournalSaveStatus('error');
+    showToast(result.message || 'Supabase 저장 실패');
+    return result;
+  }, [journal, journalReadOnly, memberCode, showToast, supabaseJournalSaveStatus]);
 
   const [scrollTick, setScrollTick] = useState(0);
 
@@ -876,6 +924,22 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   팀 KPI 관리 →
                 </AppModuleLink>
               )}
+              {showJournalLeaderToolbar && !journalReadOnly && (
+                <button
+                  type="button"
+                  className="btn btn-secondary journal-member-tool-btn"
+                  disabled={supabaseJournalSaveStatus === 'saving'}
+                  onClick={saveSelectedMemberToSupabase}
+                  {...uiTooltip(
+                    '현재 선택한 구성원의 업무일지를 Supabase journal_snapshots에 수동 저장합니다. 자동 저장은 사용하지 않습니다.',
+                    undefined,
+                    { wrap: true }
+                  )}
+                >
+                  <Save size={16} />
+                  {supabaseJournalSaveStatus === 'saving' ? '저장 중…' : 'Supabase 업무일지 저장'}
+                </button>
+              )}
               <button
                 type="button"
                 className="btn btn-secondary"
@@ -1086,6 +1150,17 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 </span>
                 <span>{describeFocusDayTasks(focusDay.tasks)}</span>
               </p>
+              {supabaseJournalSaveHint && (
+                <p
+                  className={`journal-sync-hint${
+                    supabaseJournalSaveStatus === 'error' || supabaseJournalSaveStatus === 'disabled'
+                      ? ' journal-sync-hint--warn'
+                      : ''
+                  }`}
+                >
+                  {supabaseJournalSaveHint}
+                </p>
+              )}
               <p className="journal-status-panel__save">
                 {localSavedAtLabel ? (
                   <>로컬 저장됨 ({localSavedAtLabel})</>
