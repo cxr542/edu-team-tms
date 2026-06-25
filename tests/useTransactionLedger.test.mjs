@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { shouldAdoptPublishedSnapshot, validateLedgerSnapshotAdoption } from '../src/hooks/useTransactionLedger.js';
+import teamBuildingData from '../src/data/teamBuilding2026.json';
+import { DEFAULT_USAGE_CATEGORIES } from '../src/constants/usageCategories.js';
+import {
+  isImplicitBundledLedgerSeed,
+  shouldAdoptPublishedSnapshot,
+  validateLedgerSnapshotAdoption,
+} from '../src/hooks/useTransactionLedger.js';
 
 describe('shouldAdoptPublishedSnapshot', () => {
   it('keeps existing local transactions even when the published snapshot is newer', () => {
@@ -62,6 +68,39 @@ describe('shouldAdoptPublishedSnapshot', () => {
         ledgerMeta: {},
       })
     ).toBe(true);
+  });
+});
+
+
+describe('isImplicitBundledLedgerSeed', () => {
+  it('recognizes bundled seed data saved before ledger metadata exists', () => {
+    expect(
+      isImplicitBundledLedgerSeed({
+        storedTransactions: teamBuildingData,
+        categories: DEFAULT_USAGE_CATEGORIES,
+        ledgerMeta: {},
+      })
+    ).toBe(true);
+  });
+
+  it('does not treat bundled data as implicit seed once sync metadata exists', () => {
+    expect(
+      isImplicitBundledLedgerSeed({
+        storedTransactions: teamBuildingData,
+        categories: DEFAULT_USAGE_CATEGORIES,
+        ledgerMeta: { updatedAt: '2026-06-25T00:00:00.000Z' },
+      })
+    ).toBe(false);
+  });
+
+  it('does not treat edited transaction data as implicit seed', () => {
+    expect(
+      isImplicitBundledLedgerSeed({
+        storedTransactions: [{ ...teamBuildingData[0], amount: teamBuildingData[0].amount + 1 }],
+        categories: DEFAULT_USAGE_CATEGORIES,
+        ledgerMeta: {},
+      })
+    ).toBe(false);
   });
 });
 

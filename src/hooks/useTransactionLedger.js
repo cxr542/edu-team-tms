@@ -42,6 +42,30 @@ export function shouldAdoptPublishedSnapshot({
   return true;
 }
 
+function ledgerSeedComparisonKey(tx) {
+  return JSON.stringify({
+    id: tx?.id || '',
+    date: tx?.date || '',
+    description: tx?.description || '',
+    amount: Number(tx?.amount) || 0,
+    category: tx?.category || '',
+    paymentMethod: tx?.paymentMethod || '',
+    attendees: tx?.attendees || '',
+  });
+}
+
+export function isImplicitBundledLedgerSeed({ storedTransactions, categories, ledgerMeta }) {
+  if (!storedTransactions?.length) return false;
+  if (ledgerMeta?.updatedAt || ledgerMeta?.syncedPublishedAt) return false;
+
+  const bundled = prepareLedger(teamBuildingData, categories);
+  if (storedTransactions.length !== bundled.length) return false;
+
+  return storedTransactions.every(
+    (tx, index) => ledgerSeedComparisonKey(tx) === ledgerSeedComparisonKey(bundled[index])
+  );
+}
+
 function countByYearMonth(transactions = []) {
   return transactions.reduce((acc, tx) => {
     const ym = String(tx?.date || '').slice(0, 7);
@@ -88,30 +112,46 @@ export function validateLedgerSnapshotAdoption(currentTransactions = [], incomin
 export function useTransactionLedger(categories, options = {}) {
   const { readOnly = false, seedTransactions = null, publishedSnapshot = null } = options;
 
-  const [transactions, setTransactions] = useState(() => {
+  const [ledgerState, setLedgerState] = useState(() => {
     if (seedTransactions?.length) {
-      return prepareLedger(seedTransactions, categories);
+      return {
+        transactions: prepareLedger(seedTransactions, categories),
+        usingBundledSeed: false,
+      };
     }
-    if (readOnly) return [];
+    if (readOnly) {
+      return {
+        transactions: [],
+        usingBundledSeed: false,
+      };
+    }
     const stored = loadStoredTransactions();
     const base = stored?.length ? stored : teamBuildingData;
-    return prepareLedger(base, categories);
+    return {
+      transactions: prepareLedger(base, categories),
+      usingBundledSeed: !stored?.length,
+    };
   });
+  const { transactions, usingBundledSeed } = ledgerState;
 
   const [meta, setMeta] = useState(() => loadLedgerMeta());
 
   useEffect(() => {
     if (!seedTransactions?.length) return;
-    setTransactions(prepareLedger(seedTransactions, categories));
+    setLedgerState({
+      transactions: prepareLedger(seedTransactions, categories),
+      usingBundledSeed: false,
+    });
   }, [seedTransactions, categories]);
 
   const applyPublished = useCallback(
     (snap, { markSynced = true } = {}) => {
       if (!snap?.transactions?.length) return { ok: false, reason: 'empty' };
       const next = prepareLedger(snap.transactions, categories);
-      const validation = validateLedgerSnapshotAdoption(transactions, next);
+      const currentTransactions = usingBundledSeed ? [] : transactions;
+      const validation = validateLedgerSnapshotAdoption(currentTransactions, next);
       if (!validation.ok) return validation;
-      setTransactions(next);
+      setLedgerState({ transactions: next, usingBundledSeed: false });
       const publishedAt = snap.publishedAt || new Date().toISOString();
       const nextMeta = markSynced
         ? { updatedAt: publishedAt, syncedPublishedAt: publishedAt }
@@ -121,14 +161,25 @@ export function useTransactionLedger(categories, options = {}) {
       saveStoredTransactions(next);
       return { ok: true, count: next.length };
     },
-    [categories, transactions]
+    [categories, transactions, usingBundledSeed]
   );
 
   useEffect(() => {
+    const storedTransactions = loadStoredTransactions();
+    const localTransactions =
+      usingBundledSeed ||
+      isImplicitBundledLedgerSeed({
+        storedTransactions,
+        categories,
+        ledgerMeta: meta,
+      })
+        ? []
+        : storedTransactions;
+
     if (
       !shouldAdoptPublishedSnapshot({
         readOnly,
-        storedTransactions: loadStoredTransactions(),
+        storedTransactions: localTransactions,
         publishedSnapshot,
         ledgerMeta: meta,
       })
@@ -136,7 +187,7 @@ export function useTransactionLedger(categories, options = {}) {
       return;
     }
     applyPublished(publishedSnapshot);
-  }, [readOnly, publishedSnapshot, applyPublished, meta]);
+  }, [readOnly, publishedSnapshot, applyPublished, meta, categories, usingBundledSeed]);
 
   const pullFromPublished = useCallback(
     (snap = publishedSnapshot) => {
@@ -157,14 +208,17 @@ export function useTransactionLedger(categories, options = {}) {
   );
 
   useEffect(() => {
-    if (readOnly) return;
+    if (readOnly || usingBundledSeed) return;
     saveStoredTransactions(transactions);
-  }, [transactions, readOnly]);
+  }, [transactions, readOnly, usingBundledSeed]);
 
   const updateTransactionsList = useCallback(
     (newList) => {
       if (readOnly) return;
-      setTransactions(prepareLedger(newList, categories));
+      setLedgerState({
+        transactions: prepareLedger(newList, categories),
+        usingBundledSeed: false,
+      });
       setMeta(touchLocalMeta());
     },
     [categories, readOnly]
@@ -174,7 +228,10 @@ export function useTransactionLedger(categories, options = {}) {
     if (readOnly) return;
     clearStoredTransactions();
     setMeta({});
-    setTransactions(prepareLedger(teamBuildingData, categories));
+    setLedgerState({
+      transactions: prepareLedger(teamBuildingData, categories),
+      usingBundledSeed: true,
+    });
   }, [categories, readOnly]);
 
   const markPublishedLocally = useCallback((publishedAt) => {
