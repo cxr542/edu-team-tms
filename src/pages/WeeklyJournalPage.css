@@ -1422,23 +1422,26 @@
 }
 
 .journal-share-choice-modal {
-  max-width: 520px;
+  width: min(420px, calc(100vw - 2rem));
+  max-width: 420px;
 }
 
 .journal-share-choice-modal__lead {
-  margin: 0 0 16px;
+  margin: 0 0 14px;
   color: #475569;
-  line-height: 1.6;
+  font-size: 0.92rem;
+  line-height: 1.5;
 }
 
 .journal-share-choice-modal__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .journal-share-choice-modal__actions .btn {
-  min-height: 42px;
+  min-height: 40px;
+  padding-inline: 14px;
 }
 
 @media (max-width: 640px) {
@@ -1449,4 +1452,4 @@
   .journal-share-choice-modal__actions .btn {
     width: 100%;
   }
-}
+}\n

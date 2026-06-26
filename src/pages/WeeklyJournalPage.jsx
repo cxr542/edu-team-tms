@@ -1979,7 +1979,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             <header className="modal-card__header">
               <div>
                 <p className="eyebrow">팀 공유본 가져오기</p>
-                <h3 id="journal-share-choice-title">어떤 범위로 가져올까요?</h3>
+                <h3 id="journal-share-choice-title">가져올 범위 선택</h3>
               </div>
               <button
                 type="button"
@@ -1991,8 +1991,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               </button>
             </header>
             <p className="journal-share-choice-modal__lead">
-              본인 일지를 포함하면 팀 공유본의 본인 데이터까지 이 브라우저에 병합합니다. 본인 작성 내용은 유지하고
-              다른 구성원 일지만 보려면 「타 구성원 것만 가져오기」를 선택하세요.
+              본인 작성 내용은 유지하려면 「타 구성원 것만 가져오기」를 선택하세요.
             </p>
             <div className="journal-share-choice-modal__actions">
               <button
