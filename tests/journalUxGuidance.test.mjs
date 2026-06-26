@@ -24,6 +24,8 @@ describe('journal UX guidance', () => {
   it('clarifies local save vs team shared save/import buttons', () => {
     expect(journalSource).toContain('팀 공유본 가져오기');
     expect(journalSource).toContain('팀 공유 저장');
+    expect(journalSource).toContain('includeOwnMember: true');
+    expect(journalSource).toContain('includeOwnMember: false');
     expect(journalSource).toContain('Supabase 업무일지 저장');
     expect(journalSource).toContain('Supabase 저장 중');
     expect(journalSource).toContain('Supabase 저장 완료');

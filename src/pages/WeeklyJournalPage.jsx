@@ -1003,7 +1003,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                     try {
                       const r = await journal.pullFromCloud({
                         ...memberTeamSharePullOpts,
-                        includeOwnMember: false,
+                        includeOwnMember: true,
                       });
                       showToast(journalPullToastMessage(r));
                     } catch (e) {
