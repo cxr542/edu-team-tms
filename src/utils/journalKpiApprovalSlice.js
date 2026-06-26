@@ -1,6 +1,6 @@
-import { kpi2LegacyRowId, kpi2RowId } from '../constants/kpiOperationalStore';
-import { KPI_STATUS } from '../constants/kpiStatuses';
-import { isKpi2EffectTask } from './computeTeamKpi';
+import { kpi2LegacyRowId, kpi2RowId } from '../constants/kpiOperationalStore.js';
+import { KPI_STATUS } from '../constants/kpiStatuses.js';
+import { isKpi2EffectTask } from './computeTeamKpi.js';
 
 function approvalStatusRank(status) {
   if (status === KPI_STATUS.APPROVED || status === KPI_STATUS.REJECTED) return 2;

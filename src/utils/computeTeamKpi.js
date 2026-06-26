@@ -1,10 +1,10 @@
-import { JOURNAL_LINKED_MEMBER_CODE } from '../constants/kpiMembers';
-import { findKpiMember } from '../constants/kpiSchema';
-import { KPI_STATUS } from '../constants/kpiStatuses';
-import { readKpi2RowStatus } from '../constants/kpiOperationalStore';
-import { getTaskSlotLabel } from '../constants/journalTaskSlot';
-import { LEAVE_MEMO_TASK_RE } from './journalLeavePresets';
-import { isMonthly01ContentUnset } from './kpiMonthlyClose';
+import { JOURNAL_LINKED_MEMBER_CODE } from '../constants/kpiMembers.js';
+import { findKpiMember } from '../constants/kpiSchema.js';
+import { KPI_STATUS } from '../constants/kpiStatuses.js';
+import { readKpi2RowStatus } from '../constants/kpiOperationalStore.js';
+import { getTaskSlotLabel } from '../constants/journalTaskSlot.js';
+import { LEAVE_MEMO_TASK_RE } from './journalLeavePresets.js';
+import { isMonthly01ContentUnset } from './kpiMonthlyClose.js';
 import {
   getDayAvailableMm,
   getTaskLoggedHours,
@@ -12,7 +12,7 @@ import {
   getWeeksInMonth,
   pad,
   roundMm,
-} from './journalMm';
+} from './journalMm.js';
 
 function quarterFromMonth(month1to12) {
   if (month1to12 <= 3) return '1Q';

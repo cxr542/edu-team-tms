@@ -1,5 +1,5 @@
-import { KPI_STATUS } from '../constants/kpiStatuses';
-import { MM_VALIDATION_TOLERANCE } from '../constants/kpiRules';
+import { KPI_STATUS } from '../constants/kpiStatuses.js';
+import { MM_VALIDATION_TOLERANCE } from '../constants/kpiRules.js';
 
 function round4(n) {
   return Math.round(n * 10000) / 10000;
