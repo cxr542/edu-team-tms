@@ -65,7 +65,7 @@ npx vercel blob put ledger/live-latest.json ./ledger-live.json --pathname ledger
 | `LEDGER_PUBLISH_SECRET` | 권장 | 장부 POST 추가 인증 |
 | `VITE_LEDGER_PUBLISH_KEY` | 위와 동일 값 | 클라이언트 키 (설정 시) |
 | `VITE_TMS_ORIGIN` | 권장 | `https://edu-team-tms-ten.vercel.app` |
-| `TMS_PUBLISH_ALLOWED_ORIGINS` | 선택 | 커스텀 도메인 추가 시 |
+| `TMS_PUBLISH_ALLOWED_ORIGINS` | 조건부 | 새 운영·프리뷰·커스텀 origin 추가 시 (쉼표 구분) |
 
 변경 후 **Redeploy** 필수.
 
@@ -106,7 +106,7 @@ curl -sS "https://YOUR-NEW-URL.vercel.app/api/ledger-snapshot" | head -c 200
 | `forbidden` | `?mode=edit` URL이 아님 / 출처 불일치 |
 | `blob-quota-exceeded` | **새 팀에서도** 한도 초과 (용량 또는 연산) |
 
-코드는 **모든 `*.vercel.app`** 출처에서 POST를 허용하도록 되어 있어, 새 계정 URL은 별도 코드 수정 없이 동작합니다.
+Blob 쓰기 API는 운영 기본 origin만 허용합니다. 새 계정 URL·프리뷰 URL·커스텀 도메인에서 쓰기 테스트가 필요하면 `TMS_PUBLISH_ALLOWED_ORIGINS`에 해당 origin을 명시적으로 추가한 뒤 재배포하세요.
 
 ---
 
