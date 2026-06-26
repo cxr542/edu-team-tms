@@ -104,6 +104,44 @@ import UsageStandardsPanel from './components/UsageStandardsPanel';
 const LEDGER_SNAPSHOT_REFRESH_LABEL = '조회 데이터 새로고침';
 const LEDGER_SNAPSHOT_REFRESH_TITLE =
   '저장된 조회용 장부 snapshot을 다시 불러옵니다. 장부 데이터는 수정하지 않습니다.';
+const LEDGER_BUTTON_GUIDE_ROWS = [
+  {
+    label: '조회 데이터 맞추기',
+    meaning: '조회용 공개 장부 데이터를 현재 작성 장부로 가져옵니다',
+    timing: '복구/동기화가 필요할 때만 사용',
+    caution: '평소에는 누르지 않습니다',
+  },
+  {
+    label: '장부 JSON 백업 다운로드',
+    meaning: '현재 작성 장부를 JSON 파일로 백업합니다',
+    timing: '큰 수정 전/후, 운영 반영 전',
+    caution: '복구용 백업 파일로 보관합니다',
+  },
+  {
+    label: '장부 JSON 백업 가져오기',
+    meaning: '백업 JSON 파일을 현재 작성 장부에 반영합니다',
+    timing: '데이터 복구가 필요할 때',
+    caution: '기존 작성 장부가 바뀔 수 있으므로 확인 후 사용합니다',
+  },
+  {
+    label: '지금 조회에 반영',
+    meaning: '현재 작성 장부를 팀원 조회 화면에 공개 반영합니다',
+    timing: '장부를 추가/수정한 뒤 팀원 화면에도 보이게 할 때',
+    caution: '입력 후 팀원 조회 화면에 반영하려면 이 버튼을 눌러야 합니다',
+  },
+  {
+    label: '엑셀 불러오기',
+    meaning: '엑셀 파일의 장부 데이터를 불러옵니다',
+    timing: '대량 입력이나 외부 엑셀 자료 반영 시',
+    caution: '반영 전 데이터 형식을 확인합니다',
+  },
+  {
+    label: '엑셀로 내보내기',
+    meaning: '현재 장부를 엑셀 파일로 저장합니다',
+    timing: '보고, 공유, 백업이 필요할 때',
+    caution: '조회/보고용 파일입니다',
+  },
+];
 
 function sanitizeExtraData(extraData) {
   const base = { 영수증번호: '', 비고: '' };
@@ -1274,7 +1312,57 @@ export default function App() {
               </p>
             )}
           </div>
-          
+          <details className="ledger-button-guide">
+            <summary className="ledger-button-guide__summary">버튼 설명 보기</summary>
+            <p className="ledger-button-guide__lead">
+              장부를 추가·수정한 뒤 팀원 조회 화면에도 반영하려면 「지금 조회에 반영」을 눌러주세요. 내
+              브라우저 작성 장부에는 저장되지만, 공개 조회 화면에는 별도 반영이 필요합니다.
+            </p>
+            <div className="ledger-button-guide__table-wrap">
+              <table className="ledger-button-guide__table">
+                <thead>
+                  <tr>
+                    <th scope="col">버튼</th>
+                    <th scope="col">의미</th>
+                    <th scope="col">사용 시점</th>
+                    <th scope="col">주의</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {LEDGER_BUTTON_GUIDE_ROWS.map((row) => (
+                    <tr key={row.label}>
+                      <th scope="row">{row.label}</th>
+                      <td data-label="의미">{row.meaning}</td>
+                      <td data-label="사용 시점">{row.timing}</td>
+                      <td data-label="주의">{row.caution}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="ledger-button-guide__cards" aria-label="버튼 설명 카드 목록">
+                {LEDGER_BUTTON_GUIDE_ROWS.map((row) => (
+                  <article className="ledger-button-guide__card" key={row.label}>
+                    <h3>{row.label}</h3>
+                    <dl>
+                      <div>
+                        <dt>의미</dt>
+                        <dd>{row.meaning}</dd>
+                      </div>
+                      <div>
+                        <dt>사용 시점</dt>
+                        <dd>{row.timing}</dd>
+                      </div>
+                      <div>
+                        <dt>주의</dt>
+                        <dd>{row.caution}</dd>
+                      </div>
+                    </dl>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </details>
+
           <div className="header-action-area">
             {ledgerReadOnly ? (
               <>

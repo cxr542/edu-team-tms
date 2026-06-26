@@ -40,6 +40,11 @@ describe('ledger control labels and export visibility', () => {
     expect(source).toContain('지금 조회에 반영');
     expect(source).toContain('장부 JSON 백업 다운로드');
     expect(source).toContain('장부 JSON 백업 가져오기');
+    expect(source).toContain('버튼 설명 보기');
+    expect(source).toContain('장부를 추가·수정한 뒤 팀원 조회 화면에도 반영하려면');
+    expect(source).toContain('LEDGER_BUTTON_GUIDE_ROWS');
+    expect(source).toContain('조회 데이터 맞추기');
+    expect(source).toContain('엑셀로 내보내기');
     expect(publishHandler).not.toContain('downloadTeamSnapshot');
   });
 });

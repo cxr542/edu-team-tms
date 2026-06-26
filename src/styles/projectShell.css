@@ -192,6 +192,139 @@ html.project-sidebar-collapsed-boot .project-app.theme-tms {
   background: rgba(217, 119, 6, 0.08);
 }
 
+.ledger-button-guide {
+  margin-top: 0.85rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg, 12px);
+  background: var(--bg-secondary);
+}
+
+.ledger-button-guide__summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--secondary);
+}
+
+.ledger-button-guide__summary::-webkit-details-marker {
+  display: none;
+}
+
+.ledger-button-guide__summary::after {
+  content: '▾';
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.ledger-button-guide[open] .ledger-button-guide__summary::after {
+  content: '▴';
+}
+
+.ledger-button-guide__lead {
+  margin: 0.7rem 0 0.85rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.ledger-button-guide__table-wrap {
+  overflow-x: auto;
+}
+
+.ledger-button-guide__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.ledger-button-guide__table th,
+.ledger-button-guide__table td {
+  padding: 0.68rem 0.72rem;
+  border: 1px solid var(--border-color);
+  vertical-align: top;
+}
+
+.ledger-button-guide__table thead th {
+  background: rgba(0, 102, 204, 0.05);
+  color: var(--text-secondary);
+  text-align: left;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ledger-button-guide__table tbody th {
+  width: 11rem;
+  background: var(--bg-primary);
+  color: var(--secondary);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.ledger-button-guide__cards {
+  display: none;
+}
+
+.ledger-button-guide__card {
+  padding: 0.8rem 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 8px);
+  background: var(--bg-primary);
+}
+
+.ledger-button-guide__card h3 {
+  margin: 0 0 0.55rem;
+  font-size: 0.92rem;
+  color: var(--secondary);
+}
+
+.ledger-button-guide__card dl {
+  margin: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.ledger-button-guide__card dl div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.ledger-button-guide__card dt {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.ledger-button-guide__card dd {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 760px) {
+  .ledger-button-guide {
+    padding: 0.8rem 0.85rem;
+  }
+
+  .ledger-button-guide__table-wrap {
+    overflow: visible;
+  }
+
+  .ledger-button-guide__table {
+    display: none;
+  }
+
+  .ledger-button-guide__cards {
+    display: grid;
+    gap: 0.65rem;
+  }
+}
+
 .project-app .app-banner__tagline {
   color: var(--text-secondary);
   font-weight: 500;
