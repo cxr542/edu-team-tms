@@ -1420,3 +1420,33 @@
   width: min(520px, calc(100vw - 2rem));
   transform: translate(-50%, -50%);
 }
+
+.journal-share-choice-modal {
+  max-width: 520px;
+}
+
+.journal-share-choice-modal__lead {
+  margin: 0 0 16px;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.journal-share-choice-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.journal-share-choice-modal__actions .btn {
+  min-height: 42px;
+}
+
+@media (max-width: 640px) {
+  .journal-share-choice-modal__actions {
+    flex-direction: column;
+  }
+
+  .journal-share-choice-modal__actions .btn {
+    width: 100%;
+  }
+}

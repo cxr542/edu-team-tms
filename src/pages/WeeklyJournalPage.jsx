@@ -220,6 +220,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const [memberPrefsOpen, setMemberPrefsOpen] = useState(false);
   const [improveProjectsModalOpen, setImproveProjectsModalOpen] = useState(false);
   const [kpiApprovalModalOpen, setKpiApprovalModalOpen] = useState(false);
+  const [shareImportChoiceOpen, setShareImportChoiceOpen] = useState(false);
   const [supabaseJournalSaveStatus, setSupabaseJournalSaveStatus] = useState('idle');
 
   const memberCategoryView = useMemo(
@@ -236,6 +237,9 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     isEditorMode();
   const showJournalTeamShareControls =
     !journalReadOnly && (SHOW_BC_JOURNAL_TEAM_SHARE_UI || !isImproveProjectMember);
+  const canSaveJournalTeamShare =
+    !teamAccess.isLeader &&
+    showJournalTeamShareControls;
   const showMemberTeamSharePull =
     SHOW_BC_JOURNAL_TEAM_SHARE_UI && teamAccess.isMemberScope && Boolean(teamAccess.scopedMember);
   const memberTeamSharePullOpts =
@@ -992,15 +996,14 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                     { wrap: true }
                   )}
                   onClick={async () => {
+                    if (showMemberTeamSharePull) {
+                      setShareImportChoiceOpen(true);
+                      return;
+                    }
                     try {
-                      const includeOwnMember =
-                        showMemberTeamSharePull &&
-                        window.confirm(
-                          '본인 일지도 팀 공유본으로 병합할까요?\\n\\n확인: 본인 일지도 포함해서 가져오기\\n취소: 기존처럼 본인 일지는 유지하고 타 구성원만 가져오기'
-                        );
                       const r = await journal.pullFromCloud({
                         ...memberTeamSharePullOpts,
-                        includeOwnMember,
+                        includeOwnMember: false,
                       });
                       showToast(journalPullToastMessage(r));
                     } catch (e) {
@@ -1014,7 +1017,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               )}
               {!journalReadOnly && (
                 <>
-                  {showJournalTeamShareControls && (
+                  {canSaveJournalTeamShare && (
                     <>
                       <button
                         type="button"
@@ -1961,6 +1964,82 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       {toast && (
         <div className="journal-toast" role="status">
           {toast}
+        </div>
+      )}
+
+      {shareImportChoiceOpen && (
+        <div className="modal-overlay active" role="presentation" onClick={() => setShareImportChoiceOpen(false)}>
+          <div
+            className="modal-card journal-share-choice-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="journal-share-choice-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <header className="modal-card__header">
+              <div>
+                <p className="eyebrow">팀 공유본 가져오기</p>
+                <h3 id="journal-share-choice-title">어떤 범위로 가져올까요?</h3>
+              </div>
+              <button
+                type="button"
+                className="icon-btn"
+                aria-label="닫기"
+                onClick={() => setShareImportChoiceOpen(false)}
+              >
+                ×
+              </button>
+            </header>
+            <p className="journal-share-choice-modal__lead">
+              본인 일지를 포함하면 팀 공유본의 본인 데이터까지 이 브라우저에 병합합니다. 본인 작성 내용은 유지하고
+              다른 구성원 일지만 보려면 「타 구성원 것만 가져오기」를 선택하세요.
+            </p>
+            <div className="journal-share-choice-modal__actions">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={async () => {
+                  setShareImportChoiceOpen(false);
+                  try {
+                    const r = await journal.pullFromCloud({
+                      ...memberTeamSharePullOpts,
+                      includeOwnMember: true,
+                    });
+                    showToast(journalPullToastMessage(r));
+                  } catch (e) {
+                    showToast(e.message);
+                  }
+                }}
+              >
+                본인 것 포함해서 가져오기
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={async () => {
+                  setShareImportChoiceOpen(false);
+                  try {
+                    const r = await journal.pullFromCloud({
+                      ...memberTeamSharePullOpts,
+                      includeOwnMember: false,
+                    });
+                    showToast(journalPullToastMessage(r));
+                  } catch (e) {
+                    showToast(e.message);
+                  }
+                }}
+              >
+                타 구성원 것만 가져오기
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => setShareImportChoiceOpen(false)}
+              >
+                닫기
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
