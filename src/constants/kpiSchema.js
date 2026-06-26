@@ -1,4 +1,4 @@
-import { JOURNAL_LINKED_MEMBER_CODE, findKpiMember, TEAM_KPI_MEMBERS } from './kpiMembers';
+import { JOURNAL_LINKED_MEMBER_CODE, findKpiMember, TEAM_KPI_MEMBERS } from './kpiMembers.js';
 
 /** @deprecated use findKpiMember / TEAM_KPI_MEMBERS */
 export const KPI_JOURNAL_MEMBER = findKpiMember(JOURNAL_LINKED_MEMBER_CODE) || TEAM_KPI_MEMBERS[0];

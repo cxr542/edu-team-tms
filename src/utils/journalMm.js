@@ -1,4 +1,4 @@
-import { LEAVE_MEMO_TASK_RE } from './journalLeavePresets';
+import { LEAVE_MEMO_TASK_RE } from './journalLeavePresets.js';
 
 export const LUNCH_HOURS = 1.5;
 export const WORK_DAY_HOURS = 8;
