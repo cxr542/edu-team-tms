@@ -2,16 +2,22 @@ import { describe, expect, it } from 'vitest';
 import { isAllowedPublishOrigin } from '../api/utils/publishOrigin.js';
 
 describe('isAllowedPublishOrigin', () => {
-  it('allows localhost and any vercel.app deployment', () => {
+  it('allows localhost and known TMS deployment origins', () => {
     expect(isAllowedPublishOrigin('http://localhost:3000/')).toBe(true);
+    expect(isAllowedPublishOrigin('https://edu-team-tms-ten.vercel.app/admin')).toBe(true);
     expect(isAllowedPublishOrigin('https://okestro-edu-team-tms.vercel.app/?mode=edit')).toBe(true);
-    expect(isAllowedPublishOrigin('https://edu-team-tms-new.vercel.app/?mode=edit')).toBe(true);
-    expect(isAllowedPublishOrigin('https://edu-team-tms-abc123.vercel.app')).toBe(true);
+    expect(isAllowedPublishOrigin('https://edu-team-tms.vercel.app/?mode=edit')).toBe(true);
   });
 
   it('blocks unknown origins', () => {
     expect(isAllowedPublishOrigin('https://evil.example.com')).toBe(false);
+    expect(isAllowedPublishOrigin('https://edu-team-tms-abc123.vercel.app')).toBe(false);
+    expect(isAllowedPublishOrigin('https://attacker.vercel.app')).toBe(false);
     expect(isAllowedPublishOrigin('')).toBe(false);
+  });
+
+  it('does not allow origin prefix spoofing', () => {
+    expect(isAllowedPublishOrigin('https://edu-team-tms-ten.vercel.app.evil.example/?mode=edit')).toBe(false);
   });
 
   it('allows TMS_PUBLISH_ALLOWED_ORIGINS extras', () => {
