@@ -4,7 +4,6 @@ import { normalizeTransaction } from '../constants/usageCategories';
 import { calculateBalances } from '../utils/ledgerBalances';
 import { getLedgerSyncStatus } from '../utils/ledgerSync';
 import {
-  clearStoredTransactions,
   loadLedgerMeta,
   loadStoredTransactions,
   saveLedgerMeta,
@@ -107,6 +106,14 @@ export function validateLedgerSnapshotAdoption(currentTransactions = [], incomin
   }
 
   return { ok: true };
+}
+
+export function buildBundledLedgerResetState(categories, now = new Date()) {
+  return {
+    transactions: prepareLedger(teamBuildingData, categories),
+    meta: { updatedAt: now.toISOString() },
+    usingBundledSeed: false,
+  };
 }
 
 export function useTransactionLedger(categories, options = {}) {
@@ -226,11 +233,13 @@ export function useTransactionLedger(categories, options = {}) {
 
   const resetToBundledData = useCallback(() => {
     if (readOnly) return;
-    clearStoredTransactions();
-    setMeta({});
+    const next = buildBundledLedgerResetState(categories);
+    saveStoredTransactions(next.transactions);
+    saveLedgerMeta(next.meta);
+    setMeta(next.meta);
     setLedgerState({
-      transactions: prepareLedger(teamBuildingData, categories),
-      usingBundledSeed: true,
+      transactions: next.transactions,
+      usingBundledSeed: next.usingBundledSeed,
     });
   }, [categories, readOnly]);
 
