@@ -61,7 +61,7 @@ describe('journal-snapshot API', () => {
     const handler = await loadHandler();
     const req = {
       method: 'POST',
-      headers: { referer: 'http://localhost:4173/' },
+      headers: { referer: 'http://localhost:4173/wschoi' },
       body: {
         memberCode: 'B',
         updatedAt: '2026-06-15T09:00:00.000Z',
@@ -79,5 +79,27 @@ describe('journal-snapshot API', () => {
     expect(Object.keys(saved.memberJournals.A.days)).toHaveLength(0);
     expect(saved.memberJournals.B.days['2026-06-15'].tasks[0].title).toBe('B first share');
     expect(saved.meta.memberUpdatedAt.B).toBe('2026-06-15T09:00:00.000Z');
+  });
+
+  it('rejects saving a member slice from a different member route', async () => {
+    headMock.mockRejectedValue(new Error('not found'));
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: { referer: 'http://localhost:4173/wschoi' },
+      body: {
+        memberCode: 'C',
+        updatedAt: '2026-06-15T09:00:00.000Z',
+        journal: { days: bDay },
+      },
+    };
+    const res = createRes();
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(403);
+    expect(JSON.parse(res.body).error).toBe('journal-member-forbidden');
+    expect(headMock).not.toHaveBeenCalled();
+    expect(putMock).not.toHaveBeenCalled();
   });
 });
