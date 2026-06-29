@@ -12,10 +12,25 @@ import {
 } from './utils/blobClient.js';
 
 const LIVE_LATEST_PATH = 'journal/live-latest.json';
+const MEMBER_ROUTE_SLUG_TO_CODE = {
+  yhkim: 'A',
+  wschoi: 'B',
+  hwshin: 'C',
+};
 
 function canUse(req) {
   const referer = req.headers.referer || req.headers.origin || '';
   return isAllowedPublishOrigin(referer);
+}
+
+function memberCodeFromReferer(referer = '') {
+  try {
+    const url = new URL(String(referer || ''));
+    const segment = url.pathname.split('/').filter(Boolean)[0] || '';
+    return MEMBER_ROUTE_SLUG_TO_CODE[segment] || null;
+  } catch {
+    return null;
+  }
 }
 
 function json(res, status, body) {
@@ -144,6 +159,13 @@ export default async function handler(req, res) {
       const body = requestBody(req);
       if (!body || !body.memberCode || !body.journal) {
         return json(res, 400, { error: 'memberCode와 journal이 필요합니다.' });
+      }
+      const routeMemberCode = memberCodeFromReferer(req.headers.referer);
+      if (routeMemberCode !== body.memberCode) {
+        return json(res, 403, {
+          error: 'journal-member-forbidden',
+          message: '현재 구성원 URL과 다른 일지는 팀 공유 저장할 수 없습니다.',
+        });
       }
 
       const { snapshot: currentSnapshot } = await readLatestSnapshot({ failOnBlobReadError: true });
