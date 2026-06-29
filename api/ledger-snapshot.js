@@ -5,6 +5,7 @@
 import { readFile } from 'fs/promises';
 import path from 'path';
 import { isAllowedPublishOrigin } from './utils/publishOrigin.js';
+import { isAdminRouteReferer } from './utils/requestScope.js';
 import {
   assertBlobConfigured,
   getBlobSdkOptions,
@@ -18,7 +19,7 @@ function canPublish(req) {
   if (secret && key && key === secret) return true;
 
   const referer = req.headers.referer || req.headers.origin || '';
-  return isAllowedPublishOrigin(referer);
+  return isAllowedPublishOrigin(referer) && isAdminRouteReferer(req);
 }
 
 async function readStaticFromDisk() {

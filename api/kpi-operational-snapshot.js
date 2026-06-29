@@ -8,6 +8,7 @@ import {
   normalizeCompetencyCloudSnapshot,
 } from '../src/utils/kpiOperationalCloudSnapshot.js';
 import { isAllowedPublishOrigin } from './utils/publishOrigin.js';
+import { isAdminOrSameMemberRouteReferer } from './utils/requestScope.js';
 import {
   assertBlobConfigured,
   getBlobSdkOptions,
@@ -98,6 +99,12 @@ export default async function handler(req, res) {
 
       if (!isValidCompetencyMemberCode(memberCode)) {
         return json(res, 400, { error: 'memberCode는 A/B/C 중 하나여야 합니다.' });
+      }
+      if (!isAdminOrSameMemberRouteReferer(req, memberCode)) {
+        return json(res, 403, {
+          error: 'kpi-operational-member-forbidden',
+          message: '현재 구성원 URL과 다른 역량 평가는 공유 저장할 수 없습니다.',
+        });
       }
       if (!isValidCompetencyYearMonth(yearMonth)) {
         return json(res, 400, { error: 'yearMonth는 YYYY-MM 형식이어야 합니다.' });
