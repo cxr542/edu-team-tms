@@ -11,6 +11,7 @@ import {
   Download,
   Save,
   Send,
+  Search,
   Sparkles,
   Target,
   Upload,
@@ -74,7 +75,10 @@ import {
 import { SHOW_BC_JOURNAL_TEAM_SHARE_UI } from '../constants/improveProjectSharingConfig';
 import { IMPROVE_PROJECT_BLOB_SHARE_ENABLED } from '../constants/improveProjectsShare';
 import { buildMemberJournalSavePayload } from '../utils/journalSnapshot';
+import { fetchJournalSnapshot } from '../utils/journalSnapshot';
 import { saveJournalSnapshotToSupabase } from '../utils/supabaseJournalSnapshot';
+import { getJournalSnapshotFromSupabase } from '../utils/supabaseJournalSnapshot';
+import { compareJournalSnapshots } from '../utils/journalStorageComparison';
 import './WeeklyJournalPage.css';
 
 const MEMBER_IMPROVE_PROJECT_CODES = new Set(['B', 'C']);
@@ -222,6 +226,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const [kpiApprovalModalOpen, setKpiApprovalModalOpen] = useState(false);
   const [shareImportChoiceOpen, setShareImportChoiceOpen] = useState(false);
   const [supabaseJournalSaveStatus, setSupabaseJournalSaveStatus] = useState('idle');
+  const [storageComparisonStatus, setStorageComparisonStatus] = useState('idle');
+  const [storageComparison, setStorageComparison] = useState(null);
 
   const memberCategoryView = useMemo(
     () => resolveMemberCategories(journal.memberJournals?.[memberCode]?.prefs),
@@ -436,6 +442,71 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     showToast(result.message || 'Supabase 저장 실패');
     return result;
   }, [journal, journalReadOnly, memberCode, showToast, supabaseJournalSaveStatus]);
+
+  const runStorageComparison = useCallback(async () => {
+    setStorageComparisonStatus('loading');
+    try {
+      const [blobResult, supabaseResult] = await Promise.all([
+        fetchJournalSnapshot(),
+        Promise.all(
+          ['A', 'B', 'C'].map(async (code) => [code, await getJournalSnapshotFromSupabase(code)])
+        ).then((entries) => Object.fromEntries(entries)),
+      ]);
+
+      const supabaseSnapshot = {
+        publishedAt: null,
+        meta: { updatedAt: null, memberUpdatedAt: {} },
+        memberJournals: {},
+      };
+      let supabaseError = null;
+      let supabaseEmpty = true;
+      Object.entries(supabaseResult).forEach(([code, result]) => {
+        if (!result?.ok) {
+          if (!supabaseError) supabaseError = result;
+          return;
+        }
+        if (result.status === 'ok' && result.data) {
+          supabaseEmpty = false;
+          supabaseSnapshot.memberJournals[code] = {
+            ...result.data.payload,
+            updatedAt: result.data.updated_at || result.data.payload?.updatedAt || null,
+            savedAt: result.data.updated_at || result.data.payload?.savedAt || null,
+          };
+          supabaseSnapshot.meta.memberUpdatedAt[code] = result.data.updated_at || null;
+          supabaseSnapshot.meta.updatedAt =
+            result.data.updated_at || supabaseSnapshot.meta.updatedAt;
+        }
+      });
+
+      const comparison = compareJournalSnapshots(blobResult?.snapshot || null, supabaseEmpty ? null : supabaseSnapshot);
+      setStorageComparison({
+        blobSource: blobResult?.source || 'empty',
+        supabaseError,
+        supabaseEmpty,
+        ...comparison,
+      });
+      setStorageComparisonStatus('ready');
+    } catch (error) {
+      setStorageComparison({
+        blobSource: 'error',
+        supabaseError: { status: 'error', message: error instanceof Error ? error.message : 'Unknown error' },
+        supabaseEmpty: true,
+        blob: { exists: false, publishedAt: null, updatedAt: null, members: [] },
+        supabase: { exists: false, publishedAt: null, updatedAt: null, members: [] },
+        rows: [],
+        diff: {
+          blobOnlyMembers: [],
+          supabaseOnlyMembers: [],
+          updatedAtDiffMembers: [],
+          taskCountDiffMembers: [],
+          sameMembers: [],
+          blobEmpty: true,
+          supabaseEmpty: true,
+        },
+      });
+      setStorageComparisonStatus('error');
+    }
+  }, []);
 
   const [scrollTick, setScrollTick] = useState(0);
 
@@ -928,6 +999,20 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   팀 KPI 관리 →
                 </AppModuleLink>
               )}
+              {showJournalLeaderToolbar && (
+                <button
+                  type="button"
+                  className="btn btn-secondary journal-member-tool-btn"
+                  onClick={runStorageComparison}
+                  disabled={storageComparisonStatus === 'loading'}
+                  {...uiTooltip('Blob 팀 공유본과 Supabase journal snapshot을 읽기 전용으로 비교합니다.', undefined, {
+                    wrap: true,
+                  })}
+                >
+                  <Search size={16} />
+                  {storageComparisonStatus === 'loading' ? '저장소 점검 중…' : '저장소 비교'}
+                </button>
+              )}
               {showJournalLeaderToolbar && !journalReadOnly && (
                 <button
                   type="button"
@@ -1171,6 +1256,82 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   <>저장은 이 브라우저에 먼저 반영됩니다.</>
                 )}
               </p>
+            </section>
+          )}
+
+          {showJournalLeaderToolbar && storageComparison && (
+            <section className="journal-storage-compare-panel" aria-label="Blob과 Supabase 저장소 비교">
+              <h3 className="journal-storage-compare-panel__title">저장소 비교</h3>
+              <p className="journal-field-help">
+                이 도구는 읽기 전용 진단입니다. 기존 일지 상태를 변경하지 않고 Blob 팀 공유본과 Supabase
+                journal snapshot만 조회합니다.
+              </p>
+              <div className="journal-storage-compare-panel__cards">
+                <article className="journal-storage-compare-card">
+                  <strong>Blob 팀 공유본</strong>
+                  <p>{storageComparison.blob.exists ? '존재함' : '없음'}</p>
+                  <p>publishedAt: {storageComparison.blob.publishedAt || '없음'}</p>
+                  <p>updatedAt: {storageComparison.blob.updatedAt || '없음'}</p>
+                </article>
+                <article className="journal-storage-compare-card">
+                  <strong>Supabase journal snapshot</strong>
+                  <p>
+                    {storageComparison.supabaseError
+                      ? storageComparison.supabaseError.message || '조회 실패'
+                      : storageComparison.supabase.exists
+                        ? '존재함'
+                        : '없음'}
+                  </p>
+                  <p>updatedAt: {storageComparison.supabase.updatedAt || '없음'}</p>
+                  <p>상태: {storageComparisonStatus === 'error' ? '오류' : '조회 완료'}</p>
+                </article>
+              </div>
+              <div className="journal-storage-compare-panel__summary">
+                <p>Blob에만 있는 구성원: {storageComparison.diff.blobOnlyMembers.join(', ') || '없음'}</p>
+                <p>
+                  Supabase에만 있는 구성원: {storageComparison.diff.supabaseOnlyMembers.join(', ') || '없음'}
+                </p>
+                <p>
+                  updatedAt 차이: {storageComparison.diff.updatedAtDiffMembers.join(', ') || '없음'}
+                </p>
+                <p>
+                  task count 차이: {storageComparison.diff.taskCountDiffMembers.join(', ') || '없음'}
+                </p>
+                <p>동일해 보이는 구성원: {storageComparison.diff.sameMembers.join(', ') || '없음'}</p>
+              </div>
+              <table className="journal-storage-compare-table">
+                <thead>
+                  <tr>
+                    <th>구성원</th>
+                    <th>Blob</th>
+                    <th>Supabase</th>
+                    <th>비교 결과</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {storageComparison.rows.map((row) => (
+                    <tr key={row.code}>
+                      <td>
+                        {row.code} {row.displayName}
+                      </td>
+                      <td>
+                        {row.blob.exists ? `있음 · ${row.blob.tasks} tasks · ${row.blob.updatedAt || 'updatedAt 없음'}` : '없음'}
+                      </td>
+                      <td>
+                        {row.supabase.exists
+                          ? `있음 · ${row.supabase.tasks} tasks · ${row.supabase.updatedAt || 'updatedAt 없음'}`
+                          : '없음'}
+                      </td>
+                      <td>{row.status === 'same' ? '동일' : row.status === 'different' ? '차이 있음' : row.status === 'blob-only' ? 'Blob만 있음' : row.status === 'supabase-only' ? 'Supabase만 있음' : '데이터 없음'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {storageComparison.supabaseError && (
+                <p className="journal-sync-hint journal-sync-hint--warn">
+                  Supabase 조회 오류: {storageComparison.supabaseError.message || '알 수 없는 오류'}
+                </p>
+              )}
             </section>
           )}
 
