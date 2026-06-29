@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import teamBuildingData from '../src/data/teamBuilding2026.json';
 import { DEFAULT_USAGE_CATEGORIES } from '../src/constants/usageCategories.js';
 import {
+  buildBundledLedgerResetState,
   isImplicitBundledLedgerSeed,
   shouldAdoptPublishedSnapshot,
   validateLedgerSnapshotAdoption,
@@ -99,6 +100,31 @@ describe('isImplicitBundledLedgerSeed', () => {
         storedTransactions: [{ ...teamBuildingData[0], amount: teamBuildingData[0].amount + 1 }],
         categories: DEFAULT_USAGE_CATEGORIES,
         ledgerMeta: {},
+      })
+    ).toBe(false);
+  });
+});
+
+
+describe('buildBundledLedgerResetState', () => {
+  it('marks explicit bundled resets as editable local data so published snapshots are not auto-adopted', () => {
+    const resetState = buildBundledLedgerResetState(
+      DEFAULT_USAGE_CATEGORIES,
+      new Date('2026-06-27T12:00:00.000Z')
+    );
+
+    expect(resetState.transactions).toHaveLength(teamBuildingData.length);
+    expect(resetState.meta).toEqual({ updatedAt: '2026-06-27T12:00:00.000Z' });
+    expect(resetState.usingBundledSeed).toBe(false);
+    expect(
+      shouldAdoptPublishedSnapshot({
+        readOnly: false,
+        storedTransactions: resetState.transactions,
+        publishedSnapshot: {
+          publishedAt: '2026-06-27T13:00:00.000Z',
+          transactions: [{ id: 'remote-1' }],
+        },
+        ledgerMeta: resetState.meta,
       })
     ).toBe(false);
   });
