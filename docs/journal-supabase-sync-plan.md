@@ -135,3 +135,33 @@ Supabase 병행 저장을 시작하기 전에 연결 상태 점검 유틸을 별
 - Supabase client 생성 가능 여부
 - `sync_events` 테이블 조회 가능 여부
 - RLS 또는 네트워크 오류 메시지 확인
+
+## 운영 점검 이력
+
+### 2026-06-29 Supabase health check 오류 조치
+
+관리자 화면의 `Supabase 점검` 버튼 클릭 시 `Supabase 오류`로 표시되는 문제가 확인되었다.
+
+조사 결과, 운영 Supabase DB에는 `public.sync_events` 테이블이 존재하고 RLS 및 SELECT policy도 설정되어 있었으나, `anon` role에 대한 테이블 SELECT 권한이 없어 클라이언트 health check가 실패하고 있었다.
+
+확인 결과:
+
+- `public.sync_events` 테이블 존재
+- RLS 활성화 상태
+- `sync_events_read_all_draft` SELECT policy 존재
+- `anon` schema usage: `true`
+- `anon` table select: `false`
+
+조치 SQL:
+
+```sql
+grant select on table public.sync_events to anon;
+```
+
+조치 후 확인 결과:
+
+- `anon` table select: `true`
+- 관리자 화면 Supabase 점검 결과: `Supabase 정상`
+- 메시지: `Supabase connection is healthy.`
+
+현재 일일 업무일지의 운영 주경로는 여전히 `localStorage + Blob 수동 팀 공유`이며, Supabase는 primary가 아닌 보조/병행 준비 경로이다. 따라서 이번 조치는 운영 일지 저장/가져오기 장애 복구가 아니라, Supabase health check 및 향후 전환 준비를 위한 DB 권한 정리로 기록한다.
