@@ -165,3 +165,12 @@ grant select on table public.sync_events to anon;
 - 메시지: `Supabase connection is healthy.`
 
 현재 일일 업무일지의 운영 주경로는 여전히 `localStorage + Blob 수동 팀 공유`이며, Supabase는 primary가 아닌 보조/병행 준비 경로이다. 따라서 이번 조치는 운영 일지 저장/가져오기 장애 복구가 아니라, Supabase health check 및 향후 전환 준비를 위한 DB 권한 정리로 기록한다.
+
+### 2026-06-29 저장소 비교 진단 도구 추가
+
+관리자/리더 화면에 읽기 전용 `Blob / Supabase 저장소 비교` 진단 도구를 추가하는 전환 준비를 기록한다.
+
+- 기존 `팀 공유 저장` / `팀 공유본 가져오기` 동작은 유지한다.
+- 새 도구는 Blob 팀 공유본과 Supabase `journal_snapshots`를 조회만 하고, 저장/덮어쓰기를 수행하지 않는다.
+- 비교 항목은 구성원별 존재 여부, updatedAt, task count, Blob-only / Supabase-only / 차이 여부이다.
+- Supabase 조회 실패는 상태 표시만 하고 기존 journal state를 변경하지 않는다.
