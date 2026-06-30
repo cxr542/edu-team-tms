@@ -117,7 +117,7 @@ describe('improve-projects-snapshot API', () => {
     const handler = await loadHandler();
     const req = {
       method: 'POST',
-      headers: { referer: 'https://okestro-edu-team-tms.vercel.app/' },
+      headers: { referer: 'https://okestro-edu-team-tms.vercel.app/admin?module=kpi' },
       body: {
         projects: [{ id: 'team-kpi', name: '팀 KPI', code: 'team-kpi', ownerMemberId: 'B' }],
       },
@@ -141,12 +141,28 @@ describe('improve-projects-snapshot API', () => {
     const handler = await loadHandler();
     const req = {
       method: 'POST',
-      headers: { referer: 'https://okestro-edu-team-tms.vercel.app/' },
+      headers: { referer: 'https://okestro-edu-team-tms.vercel.app/admin?module=kpi' },
       body: { projects: [{ name: 'no id' }] },
     };
     const res = createRes();
     await handler(req, res);
     expect(res.statusCode).toBe(400);
+    expect(putMock).not.toHaveBeenCalled();
+  });
+
+  it('POST rejects member-scoped routes before writing Blob', async () => {
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: { referer: 'https://okestro-edu-team-tms.vercel.app/wschoi' },
+      body: {
+        projects: [{ id: 'team-kpi', name: '팀 KPI', code: 'team-kpi', ownerMemberId: 'B' }],
+      },
+    };
+    const res = createRes();
+    await handler(req, res);
+    expect(res.statusCode).toBe(403);
+    expect(JSON.parse(res.body).error).toBe('forbidden');
     expect(putMock).not.toHaveBeenCalled();
   });
 

@@ -6,6 +6,7 @@ import {
   validateImproveProjectsPayload,
 } from './utils/improveProjectsSnapshotCore.js';
 import { isAllowedPublishOrigin } from './utils/publishOrigin.js';
+import { isAdminRouteReferer } from './utils/requestScope.js';
 import {
   assertBlobConfigured,
   getBlobSdkOptions,
@@ -136,6 +137,13 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
+    if (!isAdminRouteReferer(req)) {
+      return json(res, 403, {
+        error: 'forbidden',
+        message: '관리자 URL에서만 향상 과제 팀 공유본을 저장할 수 있습니다.',
+      });
+    }
+
     try {
       const body = requestBody(req);
       const projects = Array.isArray(body?.projects) ? body.projects : null;
