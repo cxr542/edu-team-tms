@@ -36,6 +36,7 @@ function saveableCompetencyMonth() {
 describe('kpi-operational-snapshot API write scope', () => {
   beforeEach(() => {
     vi.resetModules();
+    vi.unstubAllGlobals();
     headMock.mockReset();
     putMock.mockReset();
     process.env.BLOB_READ_WRITE_TOKEN = 'test-token';
@@ -108,5 +109,58 @@ describe('kpi-operational-snapshot API write scope', () => {
     expect(res.statusCode).toBe(200);
     expect(JSON.parse(res.body).ok).toBe(true);
     expect(putMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not overwrite the live snapshot when Blob head is temporarily unavailable', async () => {
+    headMock.mockRejectedValue(new Error('rate limit exceeded'));
+    putMock.mockResolvedValue({ url: 'https://blob.example/kpi-operational/live-latest.json' });
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: { referer: 'https://edu-team-tms-ten.vercel.app/wschoi?module=competency' },
+      body: {
+        memberCode: 'B',
+        yearMonth: '2026-06',
+        competencyMonth: saveableCompetencyMonth(),
+        updatedAt: '2026-06-29T00:00:00.000Z',
+      },
+    };
+    const res = createRes();
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(503);
+    expect(JSON.parse(res.body).error).toBe('blob-read-unavailable');
+    expect(putMock).not.toHaveBeenCalled();
+  });
+
+  it('does not overwrite the live snapshot when Blob JSON fetch fails', async () => {
+    headMock.mockResolvedValue({ downloadUrl: 'https://blob.example/kpi-operational/live-latest.json' });
+    putMock.mockResolvedValue({ url: 'https://blob.example/kpi-operational/live-latest.json' });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 503,
+      })
+    );
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: { referer: 'https://edu-team-tms-ten.vercel.app/admin?module=competency' },
+      body: {
+        memberCode: 'C',
+        yearMonth: '2026-06',
+        competencyMonth: saveableCompetencyMonth(),
+        updatedAt: '2026-06-29T00:00:00.000Z',
+      },
+    };
+    const res = createRes();
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(503);
+    expect(JSON.parse(res.body).error).toBe('blob-read-unavailable');
+    expect(putMock).not.toHaveBeenCalled();
   });
 });

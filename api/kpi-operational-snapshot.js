@@ -32,27 +32,51 @@ async function fetchBlobJson(url) {
   const res = await fetch(`${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`, {
     cache: 'no-store',
   });
-  if (!res.ok) return null;
+  if (!res.ok) {
+    const err = new Error(`Blob snapshot read failed (${res.status})`);
+    err.status = res.status;
+    throw err;
+  }
   return res.json();
+}
+
+function isNotFoundError(e) {
+  const status = Number(e?.status || e?.statusCode);
+  return status === 404 || e?.code === 'BLOB_NOT_FOUND' || /not found|404/i.test(String(e?.message || e));
 }
 
 async function readLiveLatestBlob() {
   const blobOpts = getBlobSdkOptions();
-  if (!blobOpts) return null;
+  if (!blobOpts) return { configured: false, snapshot: null, unavailable: false };
 
   try {
     const { head } = await import('@vercel/blob');
     const meta = await head(LIVE_LATEST_PATH, blobOpts);
-    return fetchBlobJson(meta.downloadUrl || meta.url);
-  } catch {
-    return null;
+    return {
+      configured: true,
+      snapshot: await fetchBlobJson(meta.downloadUrl || meta.url),
+      unavailable: false,
+    };
+  } catch (e) {
+    return {
+      configured: true,
+      snapshot: null,
+      unavailable: !isNotFoundError(e),
+      error: e,
+    };
   }
 }
 
-async function readLatestSnapshot() {
-  const raw = await readLiveLatestBlob();
-  if (!raw) return createEmptyCompetencyCloudSnapshot();
-  return normalizeCompetencyCloudSnapshot(raw);
+async function readLatestSnapshot({ failOnBlobReadError = false } = {}) {
+  const blob = await readLiveLatestBlob();
+  if (blob.snapshot) return normalizeCompetencyCloudSnapshot(blob.snapshot);
+  if (blob.configured && failOnBlobReadError && blob.unavailable) {
+    const err = new Error('공유 역량 평가 Blob을 읽지 못했습니다. 최신 원격본을 확인할 수 없어 저장을 중단합니다.');
+    err.code = 'BLOB_READ_UNAVAILABLE';
+    err.cause = blob.error;
+    throw err;
+  }
+  return createEmptyCompetencyCloudSnapshot();
 }
 
 async function writeLiveBlob(payload) {
@@ -82,10 +106,16 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const snapshot = await readLatestSnapshot();
+      const snapshot = await readLatestSnapshot({ failOnBlobReadError: true });
       res.setHeader('Cache-Control', 'no-store');
       return json(res, 200, formatCompetencyCloudApiPayload(snapshot));
     } catch (e) {
+      if (e.code === 'BLOB_READ_UNAVAILABLE') {
+        return json(res, 503, {
+          error: 'blob-read-unavailable',
+          message: e.message,
+        });
+      }
       return json(res, 500, { error: e.message || String(e) });
     }
   }
@@ -118,7 +148,7 @@ export default async function handler(req, res) {
 
       const updatedAt =
         typeof body.updatedAt === 'string' ? body.updatedAt : new Date().toISOString();
-      const current = await readLatestSnapshot();
+      const current = await readLatestSnapshot({ failOnBlobReadError: true });
       const next = mergeMemberIntoCompetencyCloudSnapshot(
         current,
         memberCode,
@@ -147,6 +177,12 @@ export default async function handler(req, res) {
         return json(res, 507, {
           error: 'blob-quota-exceeded',
           message: 'Vercel Blob 저장 용량이 가득 찼습니다. Storage 정리 후 다시 시도하세요.',
+        });
+      }
+      if (e.code === 'BLOB_READ_UNAVAILABLE') {
+        return json(res, 503, {
+          error: 'blob-read-unavailable',
+          message: e.message,
         });
       }
       return json(res, 500, { error: msg });
