@@ -79,6 +79,8 @@ localStorage 저장은 유지하면서 Supabase에도 동일 데이터를 저장
 - Supabase: 클라우드 최신본
 - Blob: 백업/복구
 
+KPI 승인 요청과 관리자 승인/반려는 기존 localStorage 저장을 유지하면서 Supabase row table에도 병행 저장한다.
+
 ### 4단계. 최신본 비교
 
 각 저장 단위에 `updatedAt`을 두고, 불러오기 시 최신본을 비교한다.
