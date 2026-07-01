@@ -150,6 +150,36 @@ describe('kpiOperationalCloudSnapshot', () => {
     expect(merged.self.intLevel).toBe(5);
   });
 
+  it('keeps timestamped local self over an unstamped remote self', () => {
+    const local = competencyRecord({
+      selfLevel: 5,
+      selfUpdatedAt: '2026-06-05T00:00:00.000Z',
+    });
+    const remote = competencyRecord({
+      selfLevel: 2,
+    });
+
+    const merged = mergeCompetencyMonthRecord(local, remote, 'B');
+
+    expect(merged.self.intLevel).toBe(5);
+    expect(merged.selfUpdatedAt).toBe('2026-06-05T00:00:00.000Z');
+  });
+
+  it('uses timestamped remote self when the local self is unstamped', () => {
+    const local = competencyRecord({
+      selfLevel: 2,
+    });
+    const remote = competencyRecord({
+      selfLevel: 5,
+      selfUpdatedAt: '2026-06-05T00:00:00.000Z',
+    });
+
+    const merged = mergeCompetencyMonthRecord(local, remote, 'B');
+
+    expect(merged.self.intLevel).toBe(5);
+    expect(merged.selfUpdatedAt).toBe('2026-06-05T00:00:00.000Z');
+  });
+
   it('applies newer remote self when unlocked', () => {
     const local = competencyRecord({
       selfLevel: 2,

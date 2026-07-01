@@ -19,8 +19,8 @@ function nowIso() {
 }
 
 function isNewer(left, right) {
-  if (!right) return false;
-  if (!left) return true;
+  if (!left) return false;
+  if (!right) return true;
   return new Date(left).getTime() > new Date(right).getTime();
 }
 
