@@ -59,11 +59,21 @@ function rowUpdatedAt(row, fallback = null) {
   return fallback || row?.approvedAt || row?.submittedAt || row?.updatedAt || nowIso();
 }
 
+function toApprovalTopLevelFields(record) {
+  return {
+    status: normalizeSupabaseApprovalStatus(record?.status),
+    submitted_at: record?.submittedAt ?? null,
+    approved_at: record?.approvedAt ?? null,
+    approver: record?.approver ?? null,
+    reject_reason: record?.rejectReason ?? null,
+  };
+}
+
 function toMonthlyApprovalRow(memberCode, yearMonth, monthly01, updatedAt = null) {
   return {
     member_code: memberCode.trim(),
     year_month: yearMonth,
-    status: normalizeSupabaseApprovalStatus(monthly01?.status),
+    ...toApprovalTopLevelFields(monthly01),
     monthly01,
     payload_version: PAYLOAD_VERSION,
     updated_at: monthlyUpdatedAt(monthly01, updatedAt),
@@ -75,7 +85,7 @@ function toKpi2ApprovalRow(memberCode, dayKey, taskId, kpi2RowStatus, updatedAt 
     member_code: memberCode.trim(),
     day_key: dayKey,
     task_id: taskId,
-    status: normalizeSupabaseApprovalStatus(kpi2RowStatus?.status),
+    ...toApprovalTopLevelFields(kpi2RowStatus),
     kpi2_row_status: kpi2RowStatus,
     payload_version: PAYLOAD_VERSION,
     updated_at: rowUpdatedAt(kpi2RowStatus, updatedAt),
@@ -169,7 +179,7 @@ export async function getKpiMonthlyApprovalFromSupabase(memberCode, yearMonth) {
       getSupabaseClient(),
       KPI_MONTHLY_APPROVALS_TABLE,
       { member_code: memberCode.trim(), year_month: normalizedYearMonth },
-      'member_code, year_month, status, monthly01, payload_version, updated_at',
+      'member_code, year_month, status, submitted_at, approved_at, approver, reject_reason, monthly01, payload_version, updated_at',
       'KPI monthly approval row was not found.'
     );
   } catch (error) {
@@ -231,7 +241,7 @@ export async function getKpi2RowApprovalFromSupabase(memberCode, dayKey, taskId)
         day_key: dayKey.trim(),
         task_id: taskId.trim(),
       },
-      'member_code, day_key, task_id, status, kpi2_row_status, payload_version, updated_at',
+      'member_code, day_key, task_id, status, submitted_at, approved_at, approver, reject_reason, kpi2_row_status, payload_version, updated_at',
       'KPI2 approval row was not found.'
     );
   } catch (error) {

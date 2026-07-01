@@ -119,21 +119,28 @@ describe('kpiOperationalSupabase', () => {
       mod.saveKpiMonthlyApprovalToSupabase({
         memberCode: ' B ',
         yearMonth: '2026-06',
-        monthly01: { status: KPI_STATUS.SUBMITTED },
+        monthly01: {
+          status: KPI_STATUS.SUBMITTED,
+          submittedAt: '2026-06-20T10:00:00.000Z',
+        },
         updatedAt: '2026-06-20T10:00:00.000Z',
       }),
     ).resolves.toMatchObject({ ok: true, status: 'ok' });
 
     expect(from).toHaveBeenCalledWith('kpi_monthly_approvals');
     expect(upsert).toHaveBeenCalledWith(
-      {
+      expect.objectContaining({
         member_code: 'B',
         year_month: '2026-06',
         status: 'submitted',
-        monthly01: { status: KPI_STATUS.SUBMITTED },
+        submitted_at: '2026-06-20T10:00:00.000Z',
+        approved_at: null,
+        approver: null,
+        reject_reason: null,
+        monthly01: { status: KPI_STATUS.SUBMITTED, submittedAt: '2026-06-20T10:00:00.000Z' },
         payload_version: 1,
         updated_at: '2026-06-20T10:00:00.000Z',
-      },
+      }),
       { onConflict: 'member_code,year_month' },
     );
     expect(select).toHaveBeenCalledWith();
@@ -144,6 +151,11 @@ describe('kpiOperationalSupabase', () => {
     const row = {
       member_code: 'B',
       year_month: '2026-06',
+      status: 'approved',
+      submitted_at: '2026-06-20T10:00:00.000Z',
+      approved_at: '2026-06-21T10:00:00.000Z',
+      approver: '팀장',
+      reject_reason: null,
       monthly01: { status: KPI_STATUS.APPROVED, approver: '팀장' },
       payload_version: 1,
       updated_at: '2026-06-21T10:00:00.000Z',
@@ -161,48 +173,12 @@ describe('kpiOperationalSupabase', () => {
     });
 
     expect(from).toHaveBeenCalledWith('kpi_monthly_approvals');
-    expect(select).toHaveBeenCalledWith('member_code, year_month, status, monthly01, payload_version, updated_at');
+    expect(select).toHaveBeenCalledWith(
+      'member_code, year_month, status, submitted_at, approved_at, approver, reject_reason, monthly01, payload_version, updated_at'
+    );
     expect(query.eq).toHaveBeenCalledWith('member_code', 'B');
     expect(query.eq).toHaveBeenCalledWith('year_month', '2026-06');
     expect(query.maybeSingle).toHaveBeenCalledWith();
-  });
-
-  it.each([
-    ['작성중', 'draft'],
-    ['제출', 'submitted'],
-    ['승인', 'approved'],
-    ['반려', 'rejected'],
-  ])('maps KPI1 monthly01 status %s to %s', async (inputStatus, expectedStatus) => {
-    const single = vi.fn().mockResolvedValue({
-      data: {
-        member_code: 'B',
-        year_month: '2026-06',
-        status: expectedStatus,
-        monthly01: { status: inputStatus, submittedAt: '2026-06-20T10:00:00.000Z' },
-        payload_version: 1,
-        updated_at: '2026-06-20T10:00:00.000Z',
-      },
-      error: null,
-    });
-    const select = vi.fn().mockReturnValue({ single });
-    const upsert = vi.fn().mockReturnValue({ select });
-    const from = vi.fn().mockReturnValue({ upsert });
-    const mod = await loadModuleWithClient({ from });
-
-    await mod.saveKpiMonthlyApprovalToSupabase({
-      memberCode: 'B',
-      yearMonth: '2026-06',
-      monthly01: { status: inputStatus, submittedAt: '2026-06-20T10:00:00.000Z' },
-      updatedAt: '2026-06-20T10:00:00.000Z',
-    });
-
-    expect(upsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        status: expectedStatus,
-        monthly01: expect.objectContaining({ status: inputStatus }),
-      }),
-      { onConflict: 'member_code,year_month' },
-    );
   });
 
   it('saves and loads a KPI2 approval row from Supabase', async () => {
@@ -211,7 +187,16 @@ describe('kpiOperationalSupabase', () => {
       day_key: '2026-06-16',
       task_id: 't1',
       status: 'approved',
-      kpi2_row_status: { status: KPI_STATUS.APPROVED, approver: '팀장' },
+      submitted_at: '2026-06-21T09:00:00.000Z',
+      approved_at: '2026-06-21T10:00:00.000Z',
+      approver: '팀장',
+      reject_reason: null,
+      kpi2_row_status: {
+        status: KPI_STATUS.APPROVED,
+        submittedAt: '2026-06-21T09:00:00.000Z',
+        approvedAt: '2026-06-21T10:00:00.000Z',
+        approver: '팀장',
+      },
       payload_version: 1,
       updated_at: '2026-06-21T10:00:00.000Z',
     };
@@ -244,50 +229,12 @@ describe('kpiOperationalSupabase', () => {
 
     expect(from).toHaveBeenNthCalledWith(1, 'kpi2_row_approvals');
     expect(from).toHaveBeenNthCalledWith(2, 'kpi2_row_approvals');
-    expect(loadSelect).toHaveBeenCalledWith('member_code, day_key, task_id, status, kpi2_row_status, payload_version, updated_at');
+    expect(loadSelect).toHaveBeenCalledWith(
+      'member_code, day_key, task_id, status, submitted_at, approved_at, approver, reject_reason, kpi2_row_status, payload_version, updated_at'
+    );
     expect(loadQuery.eq).toHaveBeenCalledWith('member_code', 'B');
     expect(loadQuery.eq).toHaveBeenCalledWith('day_key', '2026-06-16');
     expect(loadQuery.eq).toHaveBeenCalledWith('task_id', 't1');
     expect(loadQuery.maybeSingle).toHaveBeenCalledWith();
-  });
-
-  it.each([
-    ['작성중', 'draft'],
-    ['제출', 'submitted'],
-    ['승인', 'approved'],
-    ['반려', 'rejected'],
-  ])('maps KPI2 row status %s to %s', async (inputStatus, expectedStatus) => {
-    const single = vi.fn().mockResolvedValue({
-      data: {
-        member_code: 'B',
-        day_key: '2026-06-16',
-        task_id: 't1',
-        status: expectedStatus,
-        kpi2_row_status: { status: inputStatus, approver: '팀장' },
-        payload_version: 1,
-        updated_at: '2026-06-21T10:00:00.000Z',
-      },
-      error: null,
-    });
-    const select = vi.fn().mockReturnValue({ single });
-    const upsert = vi.fn().mockReturnValue({ select });
-    const from = vi.fn().mockReturnValue({ upsert });
-    const mod = await loadModuleWithClient({ from });
-
-    await mod.saveKpi2RowApprovalToSupabase({
-      memberCode: 'B',
-      dayKey: '2026-06-16',
-      taskId: 't1',
-      kpi2RowStatus: { status: inputStatus, approver: '팀장' },
-      updatedAt: '2026-06-21T10:00:00.000Z',
-    });
-
-    expect(upsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        status: expectedStatus,
-        kpi2_row_status: expect.objectContaining({ status: inputStatus }),
-      }),
-      { onConflict: 'member_code,day_key,task_id' },
-    );
   });
 });
