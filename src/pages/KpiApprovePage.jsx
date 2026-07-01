@@ -1,9 +1,11 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { Check, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import AppModuleLink from '../components/AppModuleLink';
 import { useJournal } from '../context/JournalProvider';
 import { useJournalPeriod } from '../hooks/useJournalPeriod';
 import { listPendingApprovals, summarizePendingApprovals } from '../utils/kpiReportData';
 import { KPI1_NAME, KPI2_NAME, kpiTypeLabel } from '../constants/kpiDisplayNames';
+import { URL_ACCESS_ADMIN } from '../constants/teamAccess';
 import { uiTooltip } from '../utils/uiTooltip';
 import './TeamKpiPage.css';
 import './KpiReportPage.css';
@@ -132,6 +134,16 @@ export default function KpiApprovePage({ readOnly = false }) {
                 </div>
                 {!readOnly && (
                   <div className="team-kpi-approve-actions">
+                    <AppModuleLink
+                      module="journal"
+                      access={URL_ACCESS_ADMIN}
+                      member={item.member.code}
+                      year={year}
+                      month={month + 1}
+                      className="btn btn-secondary btn-sm"
+                    >
+                      업무일지 보기
+                    </AppModuleLink>
                     <button
                       type="button"
                       className="btn btn-primary btn-sm"
