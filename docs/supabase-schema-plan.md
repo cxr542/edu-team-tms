@@ -55,6 +55,45 @@ KPI/역량 평가 운영 데이터를 팀 단위 스냅샷으로 저장한다.
 - 역량 평가 월별/분기별 상태 저장
 - 관리자 화면과 구성원 화면 간 최신 상태 공유
 
+### kpi_monthly_approvals
+
+KPI1 월 확정 승인 상태를 구성원·월 단위 행으로 저장한다.
+
+주요 컬럼:
+
+- `member_code`
+- `year_month`
+- `monthly01`
+- `payload_version`
+- `updated_at`
+- `created_at`
+
+사용 목적:
+
+- KPI1 월 확정 승인/반려 상태의 중앙 저장
+- localStorage `months[ym][memberCode].monthly01` 구조와 1:1 변환
+- 후속 병행 저장/조회에서 월별 승인 상태를 독립적으로 읽기
+
+### kpi2_row_approvals
+
+KPI2 효과 건 승인 상태를 구성원·일자·작업 단위 행으로 저장한다.
+
+주요 컬럼:
+
+- `member_code`
+- `day_key`
+- `task_id`
+- `kpi2_row_status`
+- `payload_version`
+- `updated_at`
+- `created_at`
+
+사용 목적:
+
+- KPI2 행별 승인/반려 상태의 중앙 저장
+- localStorage `kpi2RowStatus[member|day|task]` 구조와 1:1 변환
+- 후속 병행 저장/조회에서 행별 승인 상태를 독립적으로 읽기
+
 ### sync_events
 
 동기화 이벤트 로그를 저장한다.
@@ -81,6 +120,8 @@ KPI/역량 평가 운영 데이터를 팀 단위 스냅샷으로 저장한다.
 - `member_journals`
 - `weekly_tasks`
 - `monthly_kpi_01`
+- `kpi_monthly_approvals`
+- `kpi2_row_approvals`
 - `kpi_approval_events`
 - `competency_months`
 - `competency_quarters`
@@ -98,7 +139,7 @@ KPI/역량 평가 운영 데이터를 팀 단위 스냅샷으로 저장한다.
 
 ## RLS 방향
 
-이번 SQL 초안에서는 RLS를 활성화하지만, 실제 production write policy는 추가하지 않는다.
+이번 SQL 초안에서는 RLS를 활성화하고, 현재 1단계 병행 저장을 위한 draft select/insert/update policy만 둔다. 실제 production write policy는 후속 PR에서 인증 전략을 확정한 뒤 더 좁게 설계한다.
 
 후속 PR에서 인증 전략을 확정한 뒤 다음 정책을 설계한다.
 
@@ -129,7 +170,8 @@ KPI/역량 평가 운영 데이터를 팀 단위 스냅샷으로 저장한다.
 
 ### 4단계. KPI 운영 데이터 병행 저장
 
-- `tms-kpi-operational-v1` 스냅샷을 Supabase에 병행 저장
+- `tms-kpi-operational-v1` 스냅샷은 유지한다
+- KPI1 월 승인과 KPI2 행 승인은 row table에 1:1 병행 저장
 - 승인/반려/확정 이벤트 충돌 기준 추가
 
 ### 5단계. 최신본 불러오기

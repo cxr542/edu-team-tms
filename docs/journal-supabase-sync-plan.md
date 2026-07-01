@@ -52,12 +52,16 @@ Blob은 클라우드 저장, 공유 저장, 복구 흐름에서 사용된다.
 
 - `journal_snapshots`
 - `kpi_operational_snapshots`
+- `kpi_monthly_approvals`
+- `kpi2_row_approvals`
 - `member_journals`
 - `competency_months`
 - `competency_quarters`
 - `approval_events`
 
 초기 단계에서는 스냅샷 저장 방식으로 시작하고, 이후 항목 단위 저장으로 분리한다.
+
+이번 1단계에서는 `tms-kpi-operational-v1` 전체 스냅샷을 즉시 전환하지 않고, KPI1 월 승인과 KPI2 행 승인만 row table로 먼저 분리한다. 기존 localStorage 운영 스토어는 그대로 유지한다.
 
 ### 2-1단계. 업무일지 snapshot 유틸 추가
 
@@ -84,6 +88,8 @@ localStorage 저장은 유지하면서 Supabase에도 동일 데이터를 저장
 1. 더 최신인 `updatedAt`
 2. 승인/반려/확정 상태는 상태 rank 우선
 3. 동일 상태에서는 timestamp 비교
+
+KPI 운영에서는 월 승인과 행 승인을 별도 row table로 저장하고, localStorage의 `months[ym][memberCode].monthly01` 및 `kpi2RowStatus[member|day|task]`와 1:1 변환한다.
 
 ### 5단계. 실시간 구독
 
