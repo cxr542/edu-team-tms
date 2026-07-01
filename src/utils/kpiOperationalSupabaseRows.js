@@ -2,6 +2,12 @@ import { createEmptyKpiOperationalStore } from '../constants/kpiOperationalStore
 
 const YEAR_MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
 const KPI2_ROW_ID_RE = /^([^|]+)\|(\d{4}-\d{2}-\d{2})\|([^|]+)$/;
+const SUPABASE_STATUS = Object.freeze({
+  DRAFT: 'draft',
+  SUBMITTED: 'submitted',
+  APPROVED: 'approved',
+  REJECTED: 'rejected',
+});
 
 function hasText(value) {
   return typeof value === 'string' && value.trim().length > 0;
@@ -26,6 +32,15 @@ function parseKpi2RowId(rowId) {
   };
 }
 
+export function normalizeSupabaseApprovalStatus(status) {
+  const value = String(status || '').trim().toLowerCase();
+  if (value === '작성중' || value === SUPABASE_STATUS.DRAFT) return SUPABASE_STATUS.DRAFT;
+  if (value === '제출' || value === SUPABASE_STATUS.SUBMITTED) return SUPABASE_STATUS.SUBMITTED;
+  if (value === '승인' || value === SUPABASE_STATUS.APPROVED) return SUPABASE_STATUS.APPROVED;
+  if (value === '반려' || value === SUPABASE_STATUS.REJECTED) return SUPABASE_STATUS.REJECTED;
+  return SUPABASE_STATUS.DRAFT;
+}
+
 function monthlyUpdatedAt(monthly01, fallback = null) {
   return fallback || monthly01?.approvedAt || monthly01?.submittedAt || new Date().toISOString();
 }
@@ -42,21 +57,23 @@ function hasKpi2ApprovalRow(row) {
   return Boolean(row?.member_code && row?.day_key && row?.task_id && row?.kpi2_row_status);
 }
 
-function toMonthlyApprovalRow(memberCode, yearMonth, monthly01, updatedAt = null) {
+function toMonthlyApprovalRow({ memberCode, yearMonth, monthly01, status, updatedAt = null }) {
   return {
     member_code: memberCode.trim(),
     year_month: yearMonth,
+    status: normalizeSupabaseApprovalStatus(status ?? monthly01?.status),
     monthly01: clone(monthly01),
     payload_version: 1,
     updated_at: monthlyUpdatedAt(monthly01, updatedAt),
   };
 }
 
-function toKpi2ApprovalRow(memberCode, dayKey, taskId, kpi2RowStatus, updatedAt = null) {
+function toKpi2ApprovalRow({ memberCode, dayKey, taskId, kpi2RowStatus, status, updatedAt = null }) {
   return {
     member_code: memberCode.trim(),
     day_key: dayKey,
     task_id: taskId,
+    status: normalizeSupabaseApprovalStatus(status ?? kpi2RowStatus?.status),
     kpi2_row_status: clone(kpi2RowStatus),
     payload_version: 1,
     updated_at: rowUpdatedAt(kpi2RowStatus, updatedAt),
@@ -98,12 +115,13 @@ export function extractKpiApprovalRowsFromStore(store) {
     Object.entries(byMember).forEach(([memberCode, memberMonth]) => {
       if (!hasText(memberCode) || !memberMonth?.monthly01) return;
       monthlyApprovals.push(
-        toMonthlyApprovalRow(
+        toMonthlyApprovalRow({
           memberCode,
-          normalizedYearMonth,
-          memberMonth.monthly01,
-          memberMonth.monthly01.updatedAt
-        )
+          yearMonth: normalizedYearMonth,
+          monthly01: memberMonth.monthly01,
+          status: memberMonth.monthly01.status,
+          updatedAt: memberMonth.monthly01.updatedAt,
+        })
       );
     });
   });
@@ -113,13 +131,14 @@ export function extractKpiApprovalRowsFromStore(store) {
     const parsed = parseKpi2RowId(rowId);
     if (!parsed || !kpi2RowStatus) return;
     kpi2RowApprovals.push(
-      toKpi2ApprovalRow(
-        parsed.memberCode,
-        parsed.dayKey,
-        parsed.taskId,
+      toKpi2ApprovalRow({
+        memberCode: parsed.memberCode,
+        dayKey: parsed.dayKey,
+        taskId: parsed.taskId,
         kpi2RowStatus,
-        kpi2RowStatus.updatedAt
-      )
+        status: kpi2RowStatus.status,
+        updatedAt: kpi2RowStatus.updatedAt,
+      })
     );
   });
 

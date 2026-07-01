@@ -1,6 +1,11 @@
 import { getSupabaseClient, isSupabaseConfigured } from './supabaseClient.js';
+import { normalizeSupabaseApprovalStatus } from './kpiOperationalSupabaseRows.js';
 
-export { applyKpiApprovalRowsToStore, extractKpiApprovalRowsFromStore } from './kpiOperationalSupabaseRows.js';
+export {
+  applyKpiApprovalRowsToStore,
+  extractKpiApprovalRowsFromStore,
+  normalizeSupabaseApprovalStatus,
+} from './kpiOperationalSupabaseRows.js';
 
 const KPI_MONTHLY_APPROVALS_TABLE = 'kpi_monthly_approvals';
 const KPI2_ROW_APPROVALS_TABLE = 'kpi2_row_approvals';
@@ -58,6 +63,7 @@ function toMonthlyApprovalRow(memberCode, yearMonth, monthly01, updatedAt = null
   return {
     member_code: memberCode.trim(),
     year_month: yearMonth,
+    status: normalizeSupabaseApprovalStatus(monthly01?.status),
     monthly01,
     payload_version: PAYLOAD_VERSION,
     updated_at: monthlyUpdatedAt(monthly01, updatedAt),
@@ -69,6 +75,7 @@ function toKpi2ApprovalRow(memberCode, dayKey, taskId, kpi2RowStatus, updatedAt 
     member_code: memberCode.trim(),
     day_key: dayKey,
     task_id: taskId,
+    status: normalizeSupabaseApprovalStatus(kpi2RowStatus?.status),
     kpi2_row_status: kpi2RowStatus,
     payload_version: PAYLOAD_VERSION,
     updated_at: rowUpdatedAt(kpi2RowStatus, updatedAt),
@@ -162,7 +169,7 @@ export async function getKpiMonthlyApprovalFromSupabase(memberCode, yearMonth) {
       getSupabaseClient(),
       KPI_MONTHLY_APPROVALS_TABLE,
       { member_code: memberCode.trim(), year_month: normalizedYearMonth },
-      'member_code, year_month, monthly01, payload_version, updated_at',
+      'member_code, year_month, status, monthly01, payload_version, updated_at',
       'KPI monthly approval row was not found.'
     );
   } catch (error) {
@@ -224,7 +231,7 @@ export async function getKpi2RowApprovalFromSupabase(memberCode, dayKey, taskId)
         day_key: dayKey.trim(),
         task_id: taskId.trim(),
       },
-      'member_code, day_key, task_id, kpi2_row_status, payload_version, updated_at',
+      'member_code, day_key, task_id, status, kpi2_row_status, payload_version, updated_at',
       'KPI2 approval row was not found.'
     );
   } catch (error) {
