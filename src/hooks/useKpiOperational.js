@@ -45,6 +45,10 @@ import {
   mergeApprovedCompetencyMonthsIntoKpiStore,
 } from '../utils/kpiOperationalCloudSnapshot';
 import {
+  mirrorKpi2RowApprovalToSupabase,
+  mirrorKpiMonthlyApprovalToSupabase,
+} from '../utils/kpiOperationalSupabaseMirror';
+import {
   loadMemberJournalsFromStorage,
   resolveLegacyKpi2Member,
 } from '../utils/kpi2LegacyMigration';
@@ -313,9 +317,12 @@ export function useKpiOperational({ readOnly = false } = {}) {
     (year, monthIndex, memberCode, patch) => {
       if (readOnly) return;
       const ym = monthKey(year, monthIndex);
+      const shouldMirror = Boolean(patch?.status);
+      let persisted = null;
       setStore((prev) => {
         let next = ensureMonthMember(prev, ym, memberCode);
         const current = next.months[ym][memberCode].monthly01;
+        const nextMonthly01 = { ...current, ...patch };
         next = {
           ...next,
           months: {
@@ -323,13 +330,23 @@ export function useKpiOperational({ readOnly = false } = {}) {
             [ym]: {
               ...next.months[ym],
               [memberCode]: {
-                monthly01: { ...current, ...patch },
+                monthly01: nextMonthly01,
               },
             },
           },
         };
-        return persist(next);
+        persisted = persist(next);
+        return persisted;
       });
+      if (shouldMirror && persisted) {
+        void mirrorKpiMonthlyApprovalToSupabase({
+          year,
+          monthIndex,
+          memberCode,
+          monthly01: persisted.months[ym][memberCode].monthly01,
+          updatedAt: persisted.meta?.updatedAt,
+        });
+      }
     },
     [readOnly, persist]
   );
@@ -370,6 +387,8 @@ export function useKpiOperational({ readOnly = false } = {}) {
       if (readOnly) return;
       const id = kpi2RowId(memberCode, dayKey, taskId);
       const legacyId = kpi2LegacyRowId(dayKey, taskId);
+      const shouldMirror = Boolean(patch?.status);
+      let persisted = null;
       setStore((prev) => {
         const current = readKpi2RowStatus(prev.kpi2RowStatus, memberCode, dayKey, taskId).value || {
           status: KPI_STATUS.DRAFT,
@@ -386,8 +405,18 @@ export function useKpiOperational({ readOnly = false } = {}) {
           },
         };
         delete next.kpi2RowStatus[legacyId];
-        return persist(next);
+        persisted = persist(next);
+        return persisted;
       });
+      if (shouldMirror && persisted) {
+        void mirrorKpi2RowApprovalToSupabase({
+          memberCode,
+          dayKey,
+          taskId,
+          kpi2RowStatus: persisted.kpi2RowStatus[id],
+          updatedAt: persisted.meta?.updatedAt,
+        });
+      }
     },
     [readOnly, persist]
   );
