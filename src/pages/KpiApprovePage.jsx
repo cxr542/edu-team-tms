@@ -1,9 +1,10 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Check, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import AppModuleLink from '../components/AppModuleLink';
 import { useJournal } from '../context/JournalProvider';
 import { useJournalPeriod } from '../hooks/useJournalPeriod';
 import { listPendingApprovals, summarizePendingApprovals } from '../utils/kpiReportData';
+import { loadAdminKpiPendingApprovals } from '../utils/kpiApprovePendingApprovals';
 import { KPI1_NAME, KPI2_NAME, kpiTypeLabel } from '../constants/kpiDisplayNames';
 import { URL_ACCESS_ADMIN } from '../constants/teamAccess';
 import { uiTooltip } from '../utils/uiTooltip';
@@ -34,23 +35,44 @@ export default function KpiApprovePage({ readOnly = false }) {
   const [toast, setToast] = useState('');
   const [rejecting, setRejecting] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
+  const [pendingState, setPendingState] = useState({ status: 'loading', items: [] });
 
   const showToast = useCallback((msg) => {
     setToast(msg);
     window.setTimeout(() => setToast(''), 3200);
   }, []);
 
-  const pending = useMemo(
-    () =>
-      listPendingApprovals({
-        year,
-        monthIndex: month,
-        getMemberDays,
-        kpiOperational,
-        improveProjects,
-      }),
-    [year, month, getMemberDays, kpiOperational, improveProjects]
-  );
+  useEffect(() => {
+    let cancelled = false;
+
+    setPendingState({ status: 'loading', items: [] });
+    loadAdminKpiPendingApprovals({
+      year,
+      monthIndex: month,
+      getMemberDays,
+      improveProjects,
+      fallbackPendingApprovals: () =>
+        listPendingApprovals({
+          year,
+          monthIndex: month,
+          getMemberDays,
+          kpiOperational,
+          improveProjects,
+        }),
+    }).then((result) => {
+      if (cancelled) return;
+      setPendingState({
+        status: result.status,
+        items: result.data || [],
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [year, month, getMemberDays, kpiOperational, improveProjects]);
+
+  const pending = pendingState.items;
   const pendingSummary = useMemo(() => summarizePendingApprovals(pending), [pending]);
 
   const handleReject = () => {
@@ -110,7 +132,7 @@ export default function KpiApprovePage({ readOnly = false }) {
       </header>
 
       <section className="team-kpi-section">
-        {pending.length === 0 && (
+        {pendingState.status !== 'loading' && pending.length === 0 && (
           <p className="team-kpi-hint">이 달 승인 대기 건이 없습니다. 구성원이 일지 하단 「KPI 승인 요청」에서 내면 여기에 모입니다.</p>
         )}
         <ul className="team-kpi-approve-list">
