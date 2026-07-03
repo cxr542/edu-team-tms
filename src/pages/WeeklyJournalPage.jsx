@@ -383,6 +383,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     const seen = new Set();
     weeks.forEach((week) => {
       week.days.forEach((d) => {
+        if (d.getMonth() !== month) return;
         const key = dateKey(d.getFullYear(), d.getMonth(), d.getDate());
         if (seen.has(key)) return;
         seen.add(key);
@@ -797,8 +798,13 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     if (!leaveDayKey || journalReadOnly) return;
     const leave = Number(leaveLeave) || 0;
     patchDay(leaveDayKey, (day) => {
-      if (leave >= 1) {
-        return { ...day, holiday: true, mm: { work: 0, improve: 0, leave: 1 }, tasks: day.tasks };
+      if (leave >= 0.8125 - 0.001) {
+        return {
+          ...day,
+          holiday: true,
+          mm: { work: 0, improve: 0, leave: 0.8125 },
+          tasks: day.tasks,
+        };
       }
       const next = { ...day, holiday: false, mm: { ...day.mm, leave } };
       recalcDayMmFromHours(next);
@@ -1552,17 +1558,17 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           </div>
 
           <div className="journal-mm-panel">
-            <div className="journal-mm-panel-head">
-              <h2>
-                월 업무일지 입력 현황 (주차 평균) — {selectedMember.displayName}
+          <div className="journal-mm-panel-head">
+            <h2>
+                월 업무일지 입력 현황 — {selectedMember.displayName}
               </h2>
               <div className="journal-mm-panel-meta">
-                주차 평균 입력 <strong>{monthMm.totalLogged.toFixed(2)}</strong> / 가용{' '}
+                주차별 입력 <strong>{monthMm.totalLogged.toFixed(2)}</strong> / 가용{' '}
                 <strong>{monthMm.totalAvail.toFixed(2)}</strong> M/M
                 {monthMm.shortage > 0.001 ? (
                   <span className="shortage"> · 부족 {monthMm.shortage.toFixed(2)} M/M</span>
                 ) : (
-                  <span className="ok"> · 주차 평균 입력 완료</span>
+                  <span className="ok"> · 주차별 M/M 합계 완료</span>
                 )}
               </div>
             </div>
@@ -1572,7 +1578,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 style={{ width: `${monthMm.pct.toFixed(1)}%` }}
               />
             </div>
-            <p className="journal-mm-hint">주차별 평균 기준 · 실작업(h)÷8 자동 · 평일 가용 0.8125(점심 제외)</p>
+            <p className="journal-mm-hint">주차별 M/M 합계 기준 · 실작업(h)÷8 자동 · 평일 가용 0.8125(점심 제외)</p>
           </div>
         </div>
 
@@ -2137,7 +2143,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           ))}
         </div>
         <p className="journal-leave-preset-hint">
-          연차·외근·출장 1일 = 휴일 M/M 1.0 + 메모 항목. 실무 외근은 「+ 항목」에 실작업(h) 입력.
+          연차·외근·출장 1일 = 휴일 M/M 0.8125 + 메모 항목. 반차는 0.40625, 반반차는 0.203125입니다. 실무 외근은 「+ 항목」에 실작업(h) 입력.
         </p>
         <div className="form-group" style={{ padding: '0 1rem' }}>
           <label>휴일 M/M</label>

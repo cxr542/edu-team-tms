@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
+  getDayAvailableMm,
   getMmAxisSelectValue,
   getTaskMmAxis,
   getTaskLoggedHours,
+  getWeekMmStats,
   recalcDayMmFromHours,
   sumDayWorkHours,
 } from '../src/utils/journalMm.js';
+import { applyLeavePresetToDay } from '../src/utils/journalLeavePresets.js';
 
 describe('journalMm axis', () => {
   it('getTaskMmAxis — AI만 자동 향상, 그 외 업무', () => {
@@ -22,10 +25,23 @@ describe('journalMm axis', () => {
 });
 
 describe('journalMm logged hours', () => {
+  it('getDayAvailableMm — 모든 평일은 0.8125 M/M', () => {
+    expect(getDayAvailableMm({ holiday: false, mm: { leave: 0 } })).toBeCloseTo(0.8125, 4);
+    expect(getDayAvailableMm({ holiday: true, mm: { leave: 0.8125 } })).toBeCloseTo(0.8125, 4);
+  });
+
   it('getTaskLoggedHours — 완료 건만 실작업 반환', () => {
     expect(getTaskLoggedHours({ title: '업무', actual: 4, done: true })).toBe(4);
     expect(getTaskLoggedHours({ title: '업무', actual: 4, done: false })).toBe(0);
     expect(getTaskLoggedHours({ title: '연차 1일', actual: 0, done: true })).toBe(0);
+  });
+
+  it('applyLeavePresetToDay — full/half leave policy uses 0.8125 based M/M', () => {
+    const baseDay = { holiday: false, mm: { work: 0, improve: 0, leave: 0 }, tasks: [] };
+    expect(applyLeavePresetToDay(baseDay, 'holiday').mm.leave).toBeCloseTo(0.8125, 4);
+    expect(applyLeavePresetToDay(baseDay, 'annual').mm.leave).toBeCloseTo(0.8125, 4);
+    expect(applyLeavePresetToDay(baseDay, 'half-am').mm.leave).toBeCloseTo(0.40625, 4);
+    expect(applyLeavePresetToDay(baseDay, 'half-pm').mm.leave).toBeCloseTo(0.40625, 4);
   });
 
   it('recalcDayMmFromHours — 미완료 실작업은 M/M에 미반영', () => {
@@ -52,5 +68,26 @@ describe('journalMm logged hours', () => {
       ],
     };
     expect(sumDayWorkHours(day)).toBe(2);
+  });
+
+  it('getWeekMmStats — 주차 합계를 반환한다', () => {
+    const weekDays = [
+      new Date(2026, 5, 1),
+      new Date(2026, 5, 2),
+      new Date(2026, 5, 3),
+      new Date(2026, 5, 4),
+      new Date(2026, 5, 5),
+    ];
+    const days = {
+      '2026-06-01': { holiday: false, mm: { work: 0.8125, improve: 0, leave: 0 }, tasks: [] },
+      '2026-06-02': { holiday: false, mm: { work: 0, improve: 0, leave: 0 }, tasks: [] },
+      '2026-06-03': { holiday: true, mm: { work: 0, improve: 0, leave: 0.8125 }, tasks: [] },
+      '2026-06-04': { holiday: false, mm: { work: 0.25, improve: 0, leave: 0 }, tasks: [] },
+      '2026-06-05': { holiday: false, mm: { work: 0, improve: 0.125, leave: 0 }, tasks: [] },
+    };
+    const stats = getWeekMmStats(weekDays, 5, (key) => days[key]);
+    expect(stats.available).toBeCloseTo(4.0625, 4);
+    expect(stats.logged).toBeCloseTo(2.0, 4);
+    expect(stats.shortage).toBeCloseTo(2.0625, 4);
   });
 });

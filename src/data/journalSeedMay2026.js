@@ -1,7 +1,7 @@
 /** 5월 파일럿 샘플 (프로토타입과 동기) */
 export const JOURNAL_SEED_MAY_2026 = {
   '2026-05-04': { holiday: false, mm: { work: 0, improve: 0, leave: 0 }, tasks: [] },
-  '2026-05-05': { holiday: true, mm: { work: 0, improve: 0, leave: 1 }, tasks: [] },
+  '2026-05-05': { holiday: true, mm: { work: 0, improve: 0, leave: 0.8125 }, tasks: [] },
   '2026-05-06': {
     holiday: false,
     mm: { work: 0, improve: 0, leave: 0 },
@@ -42,9 +42,9 @@ export const JOURNAL_SEED_MAY_2026 = {
   },
   '2026-05-15': {
     holiday: false,
-    mm: { work: 0, improve: 0, leave: 0.5 },
+    mm: { work: 0, improve: 0, leave: 0.40625 },
     tasks: [
-      { id: 't9', cat: 'other', title: '오후 반차', plan: 0, actual: 0, done: true, note: '휴일 M/M 0.5' },
+      { id: 't9', cat: 'other', title: '오후 반차', plan: 0, actual: 0, done: true, note: '휴일 M/M 0.40625' },
     ],
   },
   '2026-05-18': {
@@ -110,7 +110,7 @@ export const JOURNAL_SEED_MAY_2026 = {
       },
     ],
   },
-  '2026-05-25': { holiday: true, mm: { work: 0, improve: 0, leave: 1 }, tasks: [] },
+  '2026-05-25': { holiday: true, mm: { work: 0, improve: 0, leave: 0.8125 }, tasks: [] },
   '2026-05-26': {
     holiday: false,
     mm: { work: 0, improve: 0, leave: 0 },

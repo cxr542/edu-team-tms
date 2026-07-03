@@ -1,5 +1,7 @@
 /** 휴일 M/M 메모 항목 — 실작업·KPI2 집계에서 제외 */
 export const LEAVE_MEMO_TASK_RE = /반차|공휴일|연차|외근|출장/;
+const FULL_LEAVE_MM = 0.8125;
+const HALF_LEAVE_MM = 0.40625;
 
 export const LEAVE_PRESET_BUTTONS = [
   { id: 'holiday', label: '공휴', group: 'full' },
@@ -32,32 +34,32 @@ export function applyLeavePresetToDay(day, preset) {
     return {
       ...day,
       holiday: true,
-      mm: { work: 0, improve: 0, leave: 1 },
-      tasks: appendMemoTask(day.tasks, '공휴일', '휴일 M/M 1.0'),
+      mm: { work: 0, improve: 0, leave: FULL_LEAVE_MM },
+      tasks: appendMemoTask(day.tasks, '공휴일', '휴일 M/M 0.8125'),
     };
   }
   if (preset === 'annual') {
     return {
       ...day,
       holiday: true,
-      mm: { work: 0, improve: 0, leave: 1 },
-      tasks: appendMemoTask(day.tasks, '연차', '휴일 M/M 1.0'),
+      mm: { work: 0, improve: 0, leave: FULL_LEAVE_MM },
+      tasks: appendMemoTask(day.tasks, '연차', '휴일 M/M 0.8125'),
     };
   }
   if (preset === 'field') {
     return {
       ...day,
       holiday: true,
-      mm: { work: 0, improve: 0, leave: 1 },
-      tasks: appendMemoTask(day.tasks, '외근', '휴일 M/M 1.0'),
+      mm: { work: 0, improve: 0, leave: FULL_LEAVE_MM },
+      tasks: appendMemoTask(day.tasks, '외근', '휴일 M/M 0.8125'),
     };
   }
   if (preset === 'trip') {
     return {
       ...day,
       holiday: true,
-      mm: { work: 0, improve: 0, leave: 1 },
-      tasks: appendMemoTask(day.tasks, '출장', '휴일 M/M 1.0'),
+      mm: { work: 0, improve: 0, leave: FULL_LEAVE_MM },
+      tasks: appendMemoTask(day.tasks, '출장', '휴일 M/M 0.8125'),
     };
   }
   if (preset === 'half-am' || preset === 'half-pm') {
@@ -71,10 +73,10 @@ export function applyLeavePresetToDay(day, preset) {
         plan: 0,
         actual: 0,
         done: true,
-        note: '휴일 M/M 0.5',
+        note: '휴일 M/M 0.40625',
       });
     }
-    return { ...day, holiday: false, mm: { ...day.mm, leave: 0.5 }, tasks };
+    return { ...day, holiday: false, mm: { ...day.mm, leave: HALF_LEAVE_MM }, tasks };
   }
   if (preset === 'clear') {
     return { ...day, holiday: false, mm: { work: 0, improve: 0, leave: 0 }, tasks: day.tasks };

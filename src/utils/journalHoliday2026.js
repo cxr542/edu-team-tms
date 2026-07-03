@@ -1,11 +1,11 @@
 import { is2026PublicHoliday, KR_PUBLIC_HOLIDAY_DATES_2026 } from '../data/krPublicHolidays2026';
 import { recalcDayMmFromHours } from './journalMm';
+const FULL_LEAVE_MM = 0.8125;
 
-/** 공휴일 프리셋과 동일: 휴일 M/M 1.0 */
 export function createPublicHolidayDay(existing) {
   return {
     holiday: true,
-    mm: { work: 0, improve: 0, leave: 1 },
+    mm: { work: 0, improve: 0, leave: FULL_LEAVE_MM },
     tasks: existing?.tasks ? [...existing.tasks] : [],
   };
 }
@@ -30,7 +30,7 @@ export function defaultDayForKey(key) {
 /** 저장값·미등록일 모두 2026 공휴일 규칙 반영 (렌더·M/M 집계용) */
 export function resolveJournalDay(key, stored) {
   if (stored && is2026PublicHoliday(key)) {
-    if (!stored.holiday || (Number(stored.mm?.leave) || 0) < 1) {
+    if (!stored.holiday || (Number(stored.mm?.leave) || 0) < FULL_LEAVE_MM - 0.001) {
       return createPublicHolidayDay(stored);
     }
     return stored;
