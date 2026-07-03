@@ -3,6 +3,10 @@ import { LEAVE_MEMO_TASK_RE } from './journalLeavePresets.js';
 export const LUNCH_HOURS = 1.5;
 export const WORK_DAY_HOURS = 8;
 export const LUNCH_LEAVE_MM = Math.round((LUNCH_HOURS / WORK_DAY_HOURS) * 10000) / 10000;
+export const STANDARD_DAY_AVAILABLE_MM = roundMm(1 - LUNCH_LEAVE_MM);
+export const FULL_LEAVE_MM = STANDARD_DAY_AVAILABLE_MM;
+export const HALF_LEAVE_MM = roundMm(STANDARD_DAY_AVAILABLE_MM * 0.5);
+export const QUARTER_LEAVE_MM = roundMm(STANDARD_DAY_AVAILABLE_MM * 0.25);
 
 export function roundMm(v) {
   return Math.round(v * 10000) / 10000;
@@ -47,9 +51,13 @@ export function sumDayPlanHours(data) {
 }
 
 export function getExpectedWorkHours(data) {
-  if (data.holiday && data.mm.leave >= 1) return 0;
-  if ((Number(data.mm.leave) || 0) >= 0.5 - 0.001) {
+  const leave = Number(data.mm.leave) || 0;
+  if (data.holiday && leave >= FULL_LEAVE_MM - 0.001) return 0;
+  if (leave >= HALF_LEAVE_MM - 0.001) {
     return Math.max(0, WORK_DAY_HOURS * 0.5 - LUNCH_HOURS);
+  }
+  if (leave >= QUARTER_LEAVE_MM - 0.001) {
+    return Math.max(0, WORK_DAY_HOURS * 0.25 - LUNCH_HOURS);
   }
   return WORK_DAY_HOURS - LUNCH_HOURS;
 }
@@ -69,8 +77,7 @@ export function getDayHoursInfo(data) {
 }
 
 export function getDayAvailableMm(data) {
-  if (data.holiday && (Number(data.mm.leave) || 0) >= 1) return 1;
-  return roundMm(1 - LUNCH_LEAVE_MM);
+  return STANDARD_DAY_AVAILABLE_MM;
 }
 
 export function sumDayMm(data) {
@@ -79,11 +86,11 @@ export function sumDayMm(data) {
 }
 
 export function recalcDayMmFromHours(data) {
-  if (data.holiday && (Number(data.mm.leave) || 0) >= 1) {
-    data.mm = { work: 0, improve: 0, leave: 1 };
+  const leave = roundMm(Number(data.mm.leave) || 0);
+  if (data.holiday && leave >= FULL_LEAVE_MM - 0.001) {
+    data.mm = { work: 0, improve: 0, leave: FULL_LEAVE_MM };
     return;
   }
-  const leave = roundMm(Number(data.mm.leave) || 0);
   data.mm.leave = leave;
   let workH = 0;
   let improveH = 0;
@@ -118,8 +125,8 @@ export function getWeekMmStats(weekDays, month, getDayData) {
     availableSum += getDayAvailableMm(data);
     loggedSum += sumDayMm(data);
   });
-  const available = availableSum / 5;
-  const logged = loggedSum / 5;
+  const available = availableSum;
+  const logged = loggedSum;
   const shortage = Math.max(0, available - logged);
   const pct = available > 0 ? Math.min(100, (logged / available) * 100) : 100;
   return { available, logged, shortage, pct, count };

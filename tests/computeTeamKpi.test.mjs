@@ -11,6 +11,7 @@ import {
   buildKpi01cRows,
   buildKpi02EffectRows,
   computeTeamKpi,
+  computeMonthKpi1Totals,
   isImproveInvestmentTask,
   isKpi2EffectTask,
 } from '../src/utils/computeTeamKpi.js';
@@ -50,7 +51,7 @@ const juneDays = {
   },
   '2026-06-03': {
     holiday: true,
-    mm: { work: 0, improve: 0, leave: 1 },
+    mm: { work: 0, improve: 0, leave: 0.8125 },
     tasks: [],
   },
 };
@@ -80,7 +81,17 @@ describe('computeTeamKpi june', () => {
   it('buildKpi01cRows — 6월 주차·휴일', () => {
     const rows = buildKpi01cRows(2026, 5, juneDays, {});
     expect(rows.length).toBeGreaterThanOrEqual(1);
-    expect(rows.some((r) => r.휴일MM >= 1)).toBe(true);
+    expect(rows.some((r) => r.휴일MM >= 0.8125)).toBe(true);
+  });
+
+  it('computeMonthKpi1Totals — 월 경계 밖 spillover 일자를 제외한다', () => {
+    const days = {
+      '2026-06-30': { holiday: false, mm: { work: 0.25, improve: 0, leave: 0 }, tasks: [] },
+      '2026-07-01': { holiday: false, mm: { work: 0.5, improve: 0, leave: 0 }, tasks: [] },
+    };
+    const totals = computeMonthKpi1Totals(2026, 5, days);
+    expect(totals.work).toBeCloseTo(0.25, 4);
+    expect(totals.available).toBeCloseTo(0.8125, 4);
   });
 
   it('buildKpi01cRows — KPI 탭 주간메모만 01c에 반영', () => {

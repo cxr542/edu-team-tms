@@ -49,6 +49,8 @@ describe('journal UX guidance', () => {
     expect(journalSource).toContain('가용 M/M');
     expect(journalSource).toContain('현재 가동률');
     expect(journalSource).toContain('생산성향상 비율');
+    expect(journalSource).toContain('주차별 M/M 합계 기준');
+    expect(journalSource).not.toContain('주차 평균 입력');
     expect(journalSource).toContain('개선 효과로 제출할 항목만 체크합니다.');
     expect(journalSource).toContain('완료 체크한 업무의 실작업(h)만 M/M·가동률');
     expect(journalSource).toContain('kpi2EffectDone');
