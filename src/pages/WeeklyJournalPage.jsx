@@ -1494,7 +1494,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         <div className="journal-summary-blocks">
           <div className="journal-kpi-strip">
             <p className="journal-kpi-strip-member">
-              {formatKpiMemberLabel(selectedMember)} · {month + 1}월 집계
+              {formatKpiMemberLabel(selectedMember)} · {month + 1}월 KPI1 집계
             </p>
             <div className="journal-kpi-strip-grid">
             <div>
@@ -1523,15 +1523,15 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           <div className="journal-mm-panel">
             <div className="journal-mm-panel-head">
               <h2>
-                월 M/M 입력 현황 ({KPI1_NAME}) — {selectedMember.displayName}
+                월 업무일지 입력 현황 (주차 평균) — {selectedMember.displayName}
               </h2>
               <div className="journal-mm-panel-meta">
-                입력 <strong>{monthMm.totalLogged.toFixed(2)}</strong> / 가용 <strong>{monthMm.totalAvail.toFixed(2)}</strong>{' '}
-                M/M
+                주차 평균 입력 <strong>{monthMm.totalLogged.toFixed(2)}</strong> / 가용{' '}
+                <strong>{monthMm.totalAvail.toFixed(2)}</strong> M/M
                 {monthMm.shortage > 0.001 ? (
                   <span className="shortage"> · 부족 {monthMm.shortage.toFixed(2)} M/M</span>
                 ) : (
-                  <span className="ok"> · 월간 입력 완료</span>
+                  <span className="ok"> · 주차 평균 입력 완료</span>
                 )}
               </div>
             </div>
@@ -1541,7 +1541,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 style={{ width: `${monthMm.pct.toFixed(1)}%` }}
               />
             </div>
-            <p className="journal-mm-hint">실작업(h)÷8 자동 · 평일 가용 0.8125(점심 제외) · 실작업 목표 6.5h</p>
+            <p className="journal-mm-hint">주차별 평균 기준 · 실작업(h)÷8 자동 · 평일 가용 0.8125(점심 제외)</p>
           </div>
         </div>
 
