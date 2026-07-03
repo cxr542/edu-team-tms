@@ -60,6 +60,7 @@ describe('appRoute path scopes', () => {
   it('defaults modules by scope', () => {
     expect(getModuleFromLocation({ pathname: '/admin', search: '' })).toBe('ledger');
     expect(getModuleFromLocation({ pathname: '/yhkim', search: '' })).toBe('journal');
+    expect(getModuleFromLocation({ pathname: '/admin', search: '?module=announcements' })).toBe('announcements');
   });
 
   it('migrates legacy admin query to /admin path shape', () => {

@@ -14,8 +14,7 @@ export function isAdminAccessParam(access) {
 /** 사용자가 쓰는 메뉴 */
 export const MEMBER_WORK_MODULES = new Set(['journal', 'competency']);
 
-/** 사용자·관리자 공통 (장부·점심·이것도?·참고문서) */
-export const TEAM_COMMON_MODULES = new Set(['ledger', 'lunch', 'idea-bank', 'docs']);
+export const TEAM_COMMON_MODULES = new Set(['ledger', 'announcements', 'lunch', 'idea-bank', 'docs']);
 
 /** 실험·베타 메뉴 */
 export const EXPERIMENTAL_MODULES = new Set(['cloud-chatbot']);

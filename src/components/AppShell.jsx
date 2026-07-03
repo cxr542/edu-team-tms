@@ -18,6 +18,7 @@ import {
   Lightbulb,
   UtensilsCrossed,
   MessageCircle,
+  Megaphone,
   Sparkles,
 } from 'lucide-react';
 import LeaderKpiApprovalBell from './LeaderKpiApprovalBell';
@@ -274,6 +275,7 @@ export default function AppShell({
                   {showGeneralNav && (
                     <NavGroup title={NAV_GROUP_COMMON}>
                       {navBtn('ledger', FileSpreadsheet)}
+                      {navBtn('announcements', Megaphone)}
                       {navBtn('academizer', Presentation)}
                       {navBtn('lunch', UtensilsCrossed)}
                     </NavGroup>
@@ -281,6 +283,7 @@ export default function AppShell({
                   {showTeamCommonNav && (
                     <NavGroup title={NAV_GROUP_TEAM_COMMON}>
                       {navBtn('ledger', FileSpreadsheet)}
+                      {navBtn('announcements', Megaphone)}
                       {navBtn('lunch', UtensilsCrossed)}
                       {navBtn('idea-bank', Lightbulb)}
                     </NavGroup>
