@@ -4,7 +4,8 @@ import {
   getMmAxisSelectValue,
   getTaskMmAxis,
   getTaskLoggedHours,
-  getWeekMmStats,
+  getWeekCompletionStats,
+  sumCompletedDayMm,
   recalcDayMmFromHours,
   sumDayWorkHours,
 } from '../src/utils/journalMm.js';
@@ -71,7 +72,20 @@ describe('journalMm logged hours', () => {
     expect(sumDayWorkHours(day)).toBe(2);
   });
 
-  it('getWeekMmStats — 주차 합계를 반환한다', () => {
+  it('sumCompletedDayMm — 완료된 task와 휴일 M/M만 반영한다', () => {
+    const day = {
+      holiday: false,
+      mm: { work: 0, improve: 0, leave: 0.40625 },
+      tasks: [
+        { id: 'a', cat: 'edu', title: 'A', actual: 4, done: false },
+        { id: 'b', cat: 'edu', title: 'B', actual: 4, done: true },
+        { id: 'c', cat: 'edu', title: 'C', actual: 0, done: true },
+      ],
+    };
+    expect(sumCompletedDayMm(day)).toBeCloseTo(0.9063, 4);
+  });
+
+  it('getWeekCompletionStats — 주차 완료 M/M를 반환한다', () => {
     const weekDays = [
       new Date(2026, 5, 1),
       new Date(2026, 5, 2),
@@ -80,15 +94,40 @@ describe('journalMm logged hours', () => {
       new Date(2026, 5, 5),
     ];
     const days = {
-      '2026-06-01': { holiday: false, mm: { work: 0.8125, improve: 0, leave: 0 }, tasks: [] },
-      '2026-06-02': { holiday: false, mm: { work: 0, improve: 0, leave: 0 }, tasks: [] },
+      '2026-06-01': {
+        holiday: false,
+        mm: { work: 0.8125, improve: 0, leave: 0 },
+        tasks: [
+          { id: 'd1', cat: 'edu', title: '완료 업무', actual: 4, done: true },
+        ],
+      },
+      '2026-06-02': {
+        holiday: false,
+        mm: { work: 0.8125, improve: 0, leave: 0 },
+        tasks: [
+          { id: 'd2', cat: 'edu', title: '미완료 업무', actual: 4, done: false },
+        ],
+      },
       '2026-06-03': { holiday: true, mm: { work: 0, improve: 0, leave: 0.8125 }, tasks: [] },
-      '2026-06-04': { holiday: false, mm: { work: 0.25, improve: 0, leave: 0 }, tasks: [] },
-      '2026-06-05': { holiday: false, mm: { work: 0, improve: 0.125, leave: 0 }, tasks: [] },
+      '2026-06-04': {
+        holiday: false,
+        mm: { work: 0, improve: 0, leave: 0 },
+        tasks: [
+          { id: 'd4', cat: 'edu', title: '0시간 완료', actual: 0, done: true },
+        ],
+      },
+      '2026-06-05': {
+        holiday: false,
+        mm: { work: 0, improve: 0.125, leave: 0 },
+        tasks: [
+          { id: 'd5', cat: 'ai', title: '향상 완료', actual: 1, done: true, mmAxis: 'improve' },
+        ],
+      },
     };
-    const stats = getWeekMmStats(weekDays, 5, (key) => days[key]);
+    const stats = getWeekCompletionStats(weekDays, 5, (key) => days[key]);
     expect(stats.available).toBeCloseTo(4.0625, 4);
-    expect(stats.logged).toBeCloseTo(2.0, 4);
-    expect(stats.shortage).toBeCloseTo(2.0625, 4);
+    expect(stats.logged).toBeCloseTo(1.4375, 4);
+    expect(stats.shortage).toBeCloseTo(2.625, 4);
+    expect(stats.pct).toBeCloseTo((1.4375 / 4.0625) * 100, 4);
   });
 });

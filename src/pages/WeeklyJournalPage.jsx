@@ -26,7 +26,7 @@ import {
   getDayAvailableMm,
   getTaskLoggedHours,
   getTaskMmAxis,
-  getWeekMmStats,
+  getWeekCompletionStats,
   getWeeksInMonth,
   hoursToMm,
   getMmAxisSelectValue,
@@ -363,15 +363,15 @@ export default function WeeklyJournalPage({ readOnly = false }) {
 
   const monthMm = useMemo(() => {
     let totalAvail = 0;
-    let totalLogged = 0;
+    let totalCompleted = 0;
     weeks.forEach((week) => {
-      const s = getWeekMmStats(week.days, month, getDay);
+      const s = getWeekCompletionStats(week.days, month, getDay);
       totalAvail += s.available;
-      totalLogged += s.logged;
+      totalCompleted += s.logged;
     });
-    const shortage = Math.max(0, totalAvail - totalLogged);
-    const pct = totalAvail > 0 ? Math.min(100, (totalLogged / totalAvail) * 100) : 100;
-    return { totalAvail, totalLogged, shortage, pct };
+    const shortage = Math.max(0, totalAvail - totalCompleted);
+    const pct = totalAvail > 0 ? Math.min(100, (totalCompleted / totalAvail) * 100) : 100;
+    return { totalAvail, totalCompleted, shortage, pct };
   }, [weeks, month, getDay]);
 
   const kpiMonth = useMemo(() => {
@@ -1565,12 +1565,12 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 월 업무일지 입력 현황 — {selectedMember.displayName}
               </h2>
               <div className="journal-mm-panel-meta">
-                주차별 입력 <strong>{monthMm.totalLogged.toFixed(2)}</strong> / 가용{' '}
+                주차별 완료 M/M <strong>{monthMm.totalCompleted.toFixed(2)}</strong> / 가용{' '}
                 <strong>{monthMm.totalAvail.toFixed(2)}</strong> M/M
                 {monthMm.shortage > 0.001 ? (
                   <span className="shortage"> · 부족 {monthMm.shortage.toFixed(2)} M/M</span>
                 ) : (
-                  <span className="ok"> · 주차별 M/M 합계 완료</span>
+                  <span className="ok"> · 주차별 완료 M/M 기준 충족</span>
                 )}
               </div>
             </div>
@@ -1580,7 +1580,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 style={{ width: `${monthMm.pct.toFixed(1)}%` }}
               />
             </div>
-            <p className="journal-mm-hint">주차별 M/M 합계 기준 · 실작업(h)÷8 자동 · 평일 가용 0.8125(점심 제외)</p>
+            <p className="journal-mm-hint">주차별 완료 M/M 기준 · 완료된 업무(h)÷8 자동 · 평일 가용 0.8125(점심 제외)</p>
           </div>
         </div>
 
@@ -1630,7 +1630,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         )}
 
         {weeks.map((week) => {
-          const stats = getWeekMmStats(week.days, month, getDay);
+          const stats = getWeekCompletionStats(week.days, month, getDay);
           const fmt = (dt) => `${dt.getMonth() + 1}/${dt.getDate()}`;
           const start = week.days[0];
           const end = week.days[4];
@@ -1665,7 +1665,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                     )}
                   </button>
                   <span className="journal-week-mm-meta">
-                    입력 <strong>{stats.logged.toFixed(2)}</strong> / 가용 <strong>{stats.available.toFixed(2)}</strong> M/M
+                    완료 <strong>{stats.logged.toFixed(2)}</strong> / 가용 <strong>{stats.available.toFixed(2)}</strong> M/M
                     {stats.shortage > 0.001 ? (
                       <span className="shortage"> · 부족 {stats.shortage.toFixed(2)}</span>
                     ) : (
