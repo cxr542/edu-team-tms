@@ -46,7 +46,7 @@ function buildFallbackCountSummary(requests) {
   );
 }
 
-export function useCsrRequests({ requesterCode, canManage = false } = {}) {
+export function useCsrRequests({ requesterCode, requesterName = null, canManage = false } = {}) {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
@@ -83,7 +83,7 @@ export function useCsrRequests({ requesterCode, canManage = false } = {}) {
     async (draft) => {
       const built = buildCsrRequestDraft({
         ...draft,
-        requester: draft?.requester || memberLabel(requesterCode),
+        requester: draft?.requester || requesterName || memberLabel(requesterCode),
         requesterCode,
       });
 
@@ -101,7 +101,7 @@ export function useCsrRequests({ requesterCode, canManage = false } = {}) {
       setSavingId(null);
       return result;
     },
-    [requesterCode]
+    [requesterCode, requesterName]
   );
 
   const updateRequest = useCallback(
@@ -151,6 +151,6 @@ export function useCsrRequests({ requesterCode, canManage = false } = {}) {
     updateRequest,
     canManage,
     requesterCode,
-    defaultRequesterLabel: memberLabel(requesterCode),
+    defaultRequesterLabel: requesterName || memberLabel(requesterCode),
   };
 }

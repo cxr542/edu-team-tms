@@ -16,6 +16,11 @@ function hasText(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+function readRequesterCode(row) {
+  if (!row || typeof row !== 'object') return '';
+  return String(row.requester_code || row.requesterCode || '').trim();
+}
+
 function nowIso() {
   return new Date().toISOString();
 }
@@ -56,7 +61,7 @@ export function normalizeCsrRequest(row) {
     category: normalizeCsrRequestCategory(row.category),
     status: normalizeCsrRequestStatus(row.status),
     requester: String(row.requester || '').trim(),
-    requesterCode: String(row.requester_code || '').trim(),
+    requesterCode: readRequesterCode(row),
     adminComment: typeof row.admin_comment === 'string' ? row.admin_comment.trim() : '',
     createdAt: row.created_at || row.createdAt || null,
     updatedAt: row.updated_at || row.updatedAt || null,
@@ -233,7 +238,7 @@ export async function updateCsrRequestStatusInSupabase({
     category: normalizeCsrRequestCategory(target.category),
     status: normalizedStatus,
     requester: String(target.requester || '').trim(),
-    requesterCode: String(target.requesterCode || '').trim(),
+    requesterCode: readRequesterCode(target),
     adminComment: typeof adminComment === 'string' ? adminComment.trim() : String(target.adminComment || '').trim(),
     createdAt: target.createdAt || current?.createdAt || nowIso(),
     updatedAt: nowIso(),
@@ -245,4 +250,3 @@ export async function updateCsrRequestStatusInSupabase({
 
   return upsertCsrRequestToSupabase(payload);
 }
-
