@@ -85,6 +85,11 @@ export function sumDayMm(data) {
   return Math.min(1, (Number(m.work) || 0) + (Number(m.improve) || 0) + (Number(m.leave) || 0));
 }
 
+export function sumCompletedDayMm(data) {
+  const leave = Number(data.mm.leave) || 0;
+  return roundMm(hoursToMm(sumDayWorkHours(data)) + leave);
+}
+
 export function recalcDayMmFromHours(data) {
   const leave = roundMm(Number(data.mm.leave) || 0);
   if (data.holiday && leave >= FULL_LEAVE_MM - 0.001) {
@@ -113,7 +118,7 @@ export function recalcDayMmFromHours(data) {
   data.mm.improve = improve;
 }
 
-export function getWeekMmStats(weekDays, month, getDayData) {
+export function getWeekCompletionStats(weekDays, month, getDayData) {
   const inMonthDays = weekDays.filter((d) => d.getMonth() === month);
   const count = inMonthDays.length;
   if (count === 0) return { available: 0, logged: 0, shortage: 0, pct: 100 };
@@ -123,13 +128,17 @@ export function getWeekMmStats(weekDays, month, getDayData) {
     const key = dateKey(d.getFullYear(), d.getMonth(), d.getDate());
     const data = getDayData(key);
     availableSum += getDayAvailableMm(data);
-    loggedSum += sumDayMm(data);
+    loggedSum += sumCompletedDayMm(data);
   });
   const available = availableSum;
   const logged = loggedSum;
   const shortage = Math.max(0, available - logged);
   const pct = available > 0 ? Math.min(100, (logged / available) * 100) : 100;
   return { available, logged, shortage, pct, count };
+}
+
+export function getWeekMmStats(weekDays, month, getDayData) {
+  return getWeekCompletionStats(weekDays, month, getDayData);
 }
 
 export function pad(n) {
