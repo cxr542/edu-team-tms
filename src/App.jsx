@@ -100,6 +100,7 @@ import {
 } from './constants/viewerMenu';
 import ViewerMenuSettingsModal from './components/ViewerMenuSettingsModal';
 import UsageStandardsPanel from './components/UsageStandardsPanel';
+import { resolveCsrRequesterIdentity } from './utils/csrRequesterIdentity.js';
 
 const LEDGER_SNAPSHOT_REFRESH_LABEL = '조회 데이터 새로고침';
 const LEDGER_SNAPSHOT_REFRESH_TITLE =
@@ -192,6 +193,7 @@ export default function App() {
   const isViewer = isViewerMode();
   const { module, setModule } = useAppModule();
   const teamAccess = useTeamAccess();
+  const csrRequester = useMemo(() => resolveCsrRequesterIdentity(teamAccess), [teamAccess]);
   const [routeRevision, setRouteRevision] = useState(0);
 
   useEffect(() => {
@@ -1092,7 +1094,12 @@ export default function App() {
       ) : displayModule === 'lunch' ? (
         <LunchPickPage />
       ) : displayModule === 'idea-bank' ? (
-        <IdeaBankPage readOnly={isViewer} teamAccess={teamAccess} />
+        <IdeaBankPage
+          readOnly={isViewer}
+          teamAccess={teamAccess}
+          requesterCode={csrRequester.requesterCode}
+          requesterName={csrRequester.requesterName}
+        />
       ) : isKpiRelatedModule(displayModule) &&
         (!isViewer || displayModule === 'kpi-approve' || displayModule === 'kpi-report') ? (
         <JournalProvider readOnly={isViewer && displayModule !== 'kpi-approve'} autoSyncCloud={false}>

@@ -1,20 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Lightbulb, Plus, RotateCcw } from 'lucide-react';
-import { TEAM_KPI_MEMBERS, findKpiMember } from '../constants/kpiMembers.js';
 import { CSR_REQUEST_CATEGORY_LIST } from '../constants/csrRequests.js';
 import CsrRequestCard from '../components/CsrRequestCard.jsx';
 import { useCsrRequests } from '../hooks/useCsrRequests.js';
 import { isEditorMode } from '../utils/appMode.js';
+import { resolveCsrRequesterIdentity } from '../utils/csrRequesterIdentity.js';
 import './IdeaBankPage.css';
 
-function memberName(memberCode) {
-  return findKpiMember(memberCode)?.displayName || memberCode || '알 수 없음';
-}
-
-export default function IdeaBankPage({ readOnly = false, teamAccess = null }) {
+export default function IdeaBankPage({
+  readOnly = false,
+  teamAccess = null,
+  requesterCode: requesterCodeProp = null,
+  requesterName: requesterNameProp = null,
+}) {
   const isManager = Boolean(teamAccess?.isLeader && !teamAccess?.isMemberScope);
-  const requesterCode = teamAccess?.defaultMemberCode || TEAM_KPI_MEMBERS[0]?.code || 'A';
-  const requesterName = memberName(requesterCode);
+  const requesterIdentity =
+    requesterCodeProp && requesterNameProp
+      ? { requesterCode: requesterCodeProp, requesterName: requesterNameProp }
+      : resolveCsrRequesterIdentity(teamAccess);
+  const requesterCode = requesterIdentity.requesterCode;
+  const requesterName = requesterIdentity.requesterName;
   const canEdit = isEditorMode() && !readOnly;
   const canSubmit = canEdit;
 
@@ -28,7 +33,7 @@ export default function IdeaBankPage({ readOnly = false, teamAccess = null }) {
     refresh,
     createRequest,
     updateRequest,
-  } = useCsrRequests({ requesterCode, canManage: isManager });
+  } = useCsrRequests({ requesterCode, requesterName, canManage: isManager });
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');

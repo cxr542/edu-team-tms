@@ -76,9 +76,10 @@ describe('csrRequestsSupabase', () => {
   });
 
   it('upserts CSR requests to Supabase', async () => {
+    let query;
     const client = {
-      from: vi.fn(() =>
-        makeQuery({
+      from: vi.fn(() => {
+        query = makeQuery({
           data: {
             id: 'csr-1',
             title: 'KPI 저장 오류',
@@ -93,8 +94,9 @@ describe('csrRequestsSupabase', () => {
             completed_at: null,
           },
           error: null,
-        })
-      ),
+        });
+        return query;
+      }),
     };
     const mod = await loadModule(client);
 
@@ -113,6 +115,13 @@ describe('csrRequestsSupabase', () => {
     });
 
     expect(client.from).toHaveBeenCalledWith('csr_requests');
+    expect(query.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requester: '김윤형',
+        requester_code: 'A',
+      }),
+      { onConflict: 'id' }
+    );
     expect(result).toMatchObject({
       ok: true,
       status: 'ok',
@@ -125,9 +134,10 @@ describe('csrRequestsSupabase', () => {
   });
 
   it('lists requester scoped CSR requests', async () => {
+    let query;
     const client = {
-      from: vi.fn(() =>
-        makeQuery({
+      from: vi.fn(() => {
+        query = makeQuery({
           data: [
             {
               id: 'csr-1',
@@ -144,12 +154,14 @@ describe('csrRequestsSupabase', () => {
             },
           ],
           error: null,
-        })
-      ),
+        });
+        return query;
+      }),
     };
     const mod = await loadModule(client);
     const result = await mod.listCsrRequestsFromSupabase({ requesterCode: 'A' });
 
+    expect(query.eq).toHaveBeenCalledWith('requester_code', 'A');
     expect(result).toMatchObject({
       ok: true,
       status: 'ok',
@@ -159,6 +171,23 @@ describe('csrRequestsSupabase', () => {
           requesterCode: 'A',
         },
       ],
+    });
+  });
+
+  it('rejects CSR request drafts without a requester code', async () => {
+    const { buildCsrRequestDraft } = await loadModule({});
+
+    const draft = buildCsrRequestDraft({
+      title: '권한 문의',
+      description: '구성원 코드가 필요합니다.',
+      category: 'question',
+      requester: '신혜윤',
+    });
+
+    expect(draft).toMatchObject({
+      ok: false,
+      status: 'error',
+      message: 'requesterCode is required.',
     });
   });
 });
