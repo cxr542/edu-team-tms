@@ -22,6 +22,7 @@ import { useJournalPeriod } from '../hooks/useJournalPeriod';
 import {
   dateKey,
   getDayHoursInfo,
+  getDayAvailableMm,
   getTaskLoggedHours,
   getTaskMmAxis,
   getWeekMmStats,
@@ -91,6 +92,11 @@ const SUPABASE_JOURNAL_SAVE_STATUS_LABEL = {
 };
 
 const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
+
+function formatSummaryPct(value) {
+  if (value == null || Number.isNaN(value)) return '—';
+  return `${Math.min(100, Number(value)).toFixed(1)}%`;
+}
 
 function formatDayLabel(key) {
   const [y, m, d] = key.split('-').map(Number);
@@ -371,6 +377,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     let work = 0;
     let improve = 0;
     let leave = 0;
+    let available = 0;
     let shortDays = 0;
     let doneTasks = 0;
     const seen = new Set();
@@ -383,15 +390,23 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         work += day.mm.work;
         improve += day.mm.improve;
         leave += day.mm.leave;
+        available += getDayAvailableMm(day);
         doneTasks += (day.tasks || []).filter((t) => t.done).length;
         const info = getDayHoursInfo(day);
         if (info.show && info.isShort) shortDays += 1;
       });
     });
+    const reflected = work + improve + leave;
+    const utilization = available > 0 ? (reflected / available) * 100 : null;
+    const improveRatio = reflected > 0 ? (improve / reflected) * 100 : null;
     return {
       work,
       improve,
       leave,
+      available,
+      reflected,
+      utilization,
+      improveRatio,
       shortDays,
       kpi2EffectDone: countKpi2EffectTasks(journal.getMemberDays(memberCode), year, month),
     };
@@ -1508,6 +1523,22 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             <div>
               휴일 M/M
               <strong>{kpiMonth.leave.toFixed(2)}</strong>
+            </div>
+            <div>
+              반영 M/M
+              <strong>{kpiMonth.reflected.toFixed(2)}</strong>
+            </div>
+            <div>
+              가용 M/M
+              <strong>{kpiMonth.available.toFixed(2)}</strong>
+            </div>
+            <div>
+              현재 가동률
+              <strong>{formatSummaryPct(kpiMonth.utilization)}</strong>
+            </div>
+            <div>
+              생산성향상 비율
+              <strong>{formatSummaryPct(kpiMonth.improveRatio)}</strong>
             </div>
             <div>
               {KPI2_NAME} 효과 (완료)
