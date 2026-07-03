@@ -22,6 +22,7 @@ import { useJournalPeriod } from '../hooks/useJournalPeriod';
 import {
   dateKey,
   getDayHoursInfo,
+  FULL_LEAVE_MM,
   getDayAvailableMm,
   getTaskLoggedHours,
   getTaskMmAxis,
@@ -782,14 +783,15 @@ export default function WeeklyJournalPage({ readOnly = false }) {
 
   const applyLeavePreset = (preset) => {
     if (!leaveDayKey || journalReadOnly) return;
+    let nextLeave = null;
     patchDay(leaveDayKey, (day) => {
       const next = applyLeavePresetToDay(day, preset);
       if (!next) return day;
+      nextLeave = next.mm?.leave ?? null;
       recalcDayMmFromHours(next);
       return next;
     });
-    const updated = getDay(leaveDayKey);
-    setLeaveLeave(updated.mm.leave);
+    if (nextLeave != null) setLeaveLeave(nextLeave);
     const label = LEAVE_PRESET_BUTTONS.find((b) => b.id === preset)?.label;
     if (label) showToast(`${label} 적용됨`);
   };
@@ -798,11 +800,11 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     if (!leaveDayKey || journalReadOnly) return;
     const leave = Number(leaveLeave) || 0;
     patchDay(leaveDayKey, (day) => {
-      if (leave >= 0.8125 - 0.001) {
+      if (leave >= FULL_LEAVE_MM - 0.001) {
         return {
           ...day,
           holiday: true,
-          mm: { work: 0, improve: 0, leave: 0.8125 },
+          mm: { work: 0, improve: 0, leave: FULL_LEAVE_MM },
           tasks: day.tasks,
         };
       }
@@ -2143,7 +2145,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           ))}
         </div>
         <p className="journal-leave-preset-hint">
-          연차·외근·출장 1일 = 휴일 M/M 0.8125 + 메모 항목. 반차는 0.40625, 반반차는 0.203125입니다. 실무 외근은 「+ 항목」에 실작업(h) 입력.
+          연차·외근·출장·공휴 1일 = 휴일 M/M 0.8125 + 메모 항목. 오전반차·오후반차는 0.40625, 반반차는 0.203125입니다. 실무 외근은 「+ 항목」에 실작업(h) 입력.
         </p>
         <div className="form-group" style={{ padding: '0 1rem' }}>
           <label>휴일 M/M</label>

@@ -42,6 +42,7 @@ describe('journalMm logged hours', () => {
     expect(applyLeavePresetToDay(baseDay, 'annual').mm.leave).toBeCloseTo(0.8125, 4);
     expect(applyLeavePresetToDay(baseDay, 'half-am').mm.leave).toBeCloseTo(0.40625, 4);
     expect(applyLeavePresetToDay(baseDay, 'half-pm').mm.leave).toBeCloseTo(0.40625, 4);
+    expect(applyLeavePresetToDay(baseDay, 'quarter').mm.leave).toBeCloseTo(0.203125, 6);
   });
 
   it('recalcDayMmFromHours — 미완료 실작업은 M/M에 미반영', () => {
