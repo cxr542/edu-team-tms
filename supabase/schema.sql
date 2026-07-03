@@ -102,6 +102,46 @@ create index if not exists kpi2_row_approvals_updated_at_idx
   on public.kpi2_row_approvals (updated_at desc);
 
 
+create table if not exists public.csr_requests (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  description text not null default '',
+  category text not null default 'improvement',
+  status text not null default 'received',
+  requester text not null,
+  requester_code text not null,
+  admin_comment text not null default '',
+  completed_at timestamptz,
+  payload_version integer not null default 1,
+  updated_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+
+  constraint csr_requests_title_not_blank
+    check (length(trim(title)) > 0),
+
+  constraint csr_requests_category_not_blank
+    check (length(trim(category)) > 0),
+
+  constraint csr_requests_status_not_blank
+    check (length(trim(status)) > 0),
+
+  constraint csr_requests_requester_not_blank
+    check (length(trim(requester)) > 0),
+
+  constraint csr_requests_requester_code_not_blank
+    check (length(trim(requester_code)) > 0)
+);
+
+create unique index if not exists csr_requests_id_uidx
+  on public.csr_requests (id);
+
+create index if not exists csr_requests_status_updated_at_idx
+  on public.csr_requests (status, updated_at desc);
+
+create index if not exists csr_requests_requester_code_updated_at_idx
+  on public.csr_requests (requester_code, updated_at desc);
+
+
 create table if not exists public.sync_events (
   id uuid primary key default gen_random_uuid(),
   source text not null,
@@ -131,10 +171,12 @@ alter table public.journal_snapshots enable row level security;
 alter table public.kpi_operational_snapshots enable row level security;
 alter table public.kpi_monthly_approvals enable row level security;
 alter table public.kpi2_row_approvals enable row level security;
+alter table public.csr_requests enable row level security;
 alter table public.sync_events enable row level security;
 
 grant select, insert, update on table public.kpi_monthly_approvals to anon;
 grant select, insert, update on table public.kpi2_row_approvals to anon;
+grant select, insert, update on table public.csr_requests to anon;
 
 -- Temporary development policies.
 -- Do not use these policies as-is for production write access.
@@ -178,6 +220,22 @@ create policy "kpi2_row_approvals_insert_all_draft"
 
 create policy "kpi2_row_approvals_update_all_draft"
   on public.kpi2_row_approvals
+  for update
+  using (true)
+  with check (true);
+
+create policy "csr_requests_read_all_draft"
+  on public.csr_requests
+  for select
+  using (true);
+
+create policy "csr_requests_insert_all_draft"
+  on public.csr_requests
+  for insert
+  with check (true);
+
+create policy "csr_requests_update_all_draft"
+  on public.csr_requests
   for update
   using (true)
   with check (true);

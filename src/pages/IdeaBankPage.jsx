@@ -1,104 +1,237 @@
-import React, { useState } from 'react';
-import { Lightbulb, Plus, Trash2 } from 'lucide-react';
-import { useIdeaBankItems } from '../hooks/useIdeaBankItems';
+import React, { useEffect, useState } from 'react';
+import { AlertTriangle, CheckCircle2, Lightbulb, Plus, RotateCcw } from 'lucide-react';
+import { TEAM_KPI_MEMBERS, findKpiMember } from '../constants/kpiMembers.js';
+import { CSR_REQUEST_CATEGORY_LIST } from '../constants/csrRequests.js';
+import CsrRequestCard from '../components/CsrRequestCard.jsx';
+import { useCsrRequests } from '../hooks/useCsrRequests.js';
+import { isEditorMode } from '../utils/appMode.js';
 import './IdeaBankPage.css';
 
-function formatDate(value) {
-  try {
-    return new Date(value).toLocaleString('ko-KR');
-  } catch {
-    return value;
-  }
+function memberName(memberCode) {
+  return findKpiMember(memberCode)?.displayName || memberCode || '알 수 없음';
 }
 
-export default function IdeaBankPage({ readOnly = false }) {
-  const { items, count, addItem, removeItem } = useIdeaBankItems();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [message, setMessage] = useState('');
+export default function IdeaBankPage({ readOnly = false, teamAccess = null }) {
+  const isManager = Boolean(teamAccess?.isLeader && !teamAccess?.isMemberScope);
+  const requesterCode = teamAccess?.defaultMemberCode || TEAM_KPI_MEMBERS[0]?.code || 'A';
+  const requesterName = memberName(requesterCode);
+  const canEdit = isEditorMode() && !readOnly;
+  const canSubmit = canEdit;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const result = addItem({ name, description });
-    if (!result.ok) {
-      if (result.reason === 'name-required') setMessage('서비스명을 입력해 주세요.');
-      if (result.reason === 'duplicate-name') setMessage('이미 등록된 서비스명입니다.');
+  const {
+    requests,
+    loading,
+    savingId,
+    error,
+    sourceStatus,
+    summary,
+    refresh,
+    createRequest,
+    updateRequest,
+  } = useCsrRequests({ requesterCode, canManage: isManager });
+
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('improvement');
+  const [message, setMessage] = useState('');
+  const [drafts, setDrafts] = useState({});
+
+  useEffect(() => {
+    setDrafts((prev) => {
+      const next = {};
+      requests.forEach((request) => {
+        next[request.id] = prev[request.id] || {
+          status: request.status,
+          adminComment: request.adminComment || '',
+        };
+      });
+      return next;
+    });
+  }, [requests]);
+
+  const visibleRequests = requests;
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!canSubmit) {
+      setMessage('조회 모드에서는 등록할 수 없습니다.');
       return;
     }
-    setName('');
+    const result = await createRequest({
+      title,
+      description,
+      category,
+      requester: requesterName,
+      requesterCode,
+    });
+    if (!result.ok) {
+      setMessage(
+        result.reason === 'name-required'
+          ? '제목을 입력해 주세요.'
+          : result.message || 'CSR 요청 등록에 실패했습니다.'
+      );
+      return;
+    }
+    setTitle('');
     setDescription('');
-    setMessage('요청이 등록되었습니다.');
+    setCategory('improvement');
+    setMessage('요청이 접수되었습니다.');
   };
 
+  const handleManagerSave = async (requestId) => {
+    const draft = drafts[requestId];
+    const request = requests.find((item) => item.id === requestId);
+    if (!draft || !request) return;
+    const result = await updateRequest(requestId, {
+      status: draft.status,
+      adminComment: draft.adminComment,
+    });
+    if (!result.ok) {
+      setMessage(result.message || '상태를 저장하지 못했습니다.');
+      return;
+    }
+    setMessage('요청 상태가 저장되었습니다.');
+  };
+
+  const summaryCards = [
+    ['전체 요청', summary.total],
+    ['접수', summary.received],
+    ['진행 중', summary.inProgress],
+    ['완료', summary.done],
+  ];
+
   return (
-    <main className="idea-bank-page">
-      <header className="idea-bank-header">
-        <h2>
+    <main className="idea-bank-page csr-board-page">
+      <header className="idea-bank-header csr-board-header">
+        <div className="csr-board-header__title">
           <Lightbulb size={18} aria-hidden />
-          이것도 아이디어뱅크
-        </h2>
-        <p>팀원들이 원하는 서비스명을 모아 다음 개발 아이템으로 정리합니다.</p>
-        <strong>누적 요청 {count}건</strong>
+          <div>
+            <h2>이것도 CSR 게시판</h2>
+            <p>버그, 개선 요청, 추가 개발, 문의를 등록하고 처리 상태를 관리합니다.</p>
+          </div>
+        </div>
+        <div className="csr-board-header__meta">
+          <strong>요청자 {requesterName}</strong>
+          <span>{isManager ? '관리자 모드' : '구성원 모드'}</span>
+        </div>
       </header>
 
-      <section className="idea-bank-panel">
-        {readOnly && (
-          <p className="idea-bank-readonly">조회 모드에서도 아이디어 등록은 가능합니다. 삭제는 작성 모드에서만 가능합니다.</p>
-        )}
-        <form className="idea-bank-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="idea-name">서비스명</label>
-            <input
-              id="idea-name"
-              className="form-input"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="예: 회의록 자동 요약"
-              maxLength={80}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="idea-desc">한 줄 설명 (선택)</label>
-            <input
-              id="idea-desc"
-              className="form-input"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="예: 팀 노션 페이지를 자동으로 정리해주는 도구"
-              maxLength={140}
-            />
-          </div>
-          <button type="submit" className="btn btn-primary">
-            <Plus size={14} />
-            요청 추가
-          </button>
-        </form>
-        {message && <p className="idea-bank-message">{message}</p>}
+      <section className="idea-bank-panel csr-board-summary">
+        <div className="csr-board-summary__grid">
+          {summaryCards.map(([label, value]) => (
+            <article key={label} className="csr-board-summary__card">
+              <span>{label}</span>
+              <strong>{value}</strong>
+            </article>
+          ))}
+        </div>
+        <div className="csr-board-summary__sub">
+          <span>보류 {summary.hold}</span>
+          <span>불가 {summary.rejected}</span>
+          <span>{sourceStatus === 'disabled' ? 'Supabase 미설정' : sourceStatus === 'error' ? 'Supabase 오류' : 'Supabase 연결 확인'}</span>
+        </div>
       </section>
 
-      <section className="idea-bank-list">
-        {items.length === 0 ? (
-          <div className="idea-bank-empty">아직 등록된 요청이 없습니다.</div>
+      <section className="idea-bank-panel csr-board-panel">
+        {!canSubmit && (
+          <p className="idea-bank-readonly csr-board-note">
+            조회 모드에서는 등록할 수 없습니다. 요청 등록은 편집 모드에서만 가능합니다.
+          </p>
+        )}
+        {error && (
+          <p className="csr-board-alert csr-board-alert--warning">
+            <AlertTriangle size={14} aria-hidden />
+            {error}
+          </p>
+        )}
+        {message && (
+          <p className="idea-bank-message csr-board-message">
+            <CheckCircle2 size={14} aria-hidden />
+            {message}
+          </p>
+        )}
+        <form className="idea-bank-form csr-board-form" onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="csr-title">제목</label>
+            <input
+              id="csr-title"
+              className="form-input"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="예: KPI 승인 화면 저장 지연"
+              maxLength={120}
+              disabled={!canSubmit}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="csr-category">유형</label>
+            <select
+              id="csr-category"
+              className="form-input"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              disabled={!canSubmit}
+            >
+              {CSR_REQUEST_CATEGORY_LIST.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-group csr-board-form__wide">
+            <label htmlFor="csr-description">내용</label>
+            <textarea
+              id="csr-description"
+              className="form-input csr-board-textarea"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="문제 상황, 기대 동작, 화면 경로를 적어 주세요."
+              rows={4}
+              maxLength={1000}
+              disabled={!canSubmit}
+            />
+          </div>
+          <button type="submit" className="btn btn-primary" disabled={!canSubmit || savingId !== null}>
+            <Plus size={14} />
+            요청 등록
+          </button>
+          <button type="button" className="btn btn-secondary" onClick={refresh} disabled={loading}>
+            <RotateCcw size={14} />
+            새로고침
+          </button>
+        </form>
+      </section>
+
+      <section className="idea-bank-list csr-board-list">
+        {loading ? (
+          <div className="idea-bank-empty">요청을 불러오는 중입니다.</div>
+        ) : visibleRequests.length === 0 ? (
+          <div className="idea-bank-empty">아직 등록된 CSR 요청이 없습니다.</div>
         ) : (
-          items.map((item) => (
-            <article key={item.id} className="idea-bank-item">
-              <div>
-                <h3>{item.name}</h3>
-                {item.description && <p>{item.description}</p>}
-                <small>{formatDate(item.createdAt)}</small>
-              </div>
-              {!readOnly && (
-                <button
-                  type="button"
-                  className="btn btn-secondary idea-bank-remove"
-                  onClick={() => removeItem(item.id)}
-                >
-                  <Trash2 size={14} />
-                  삭제
-                </button>
-              )}
-            </article>
-          ))
+          visibleRequests.map((item) => {
+            const draft = drafts[item.id] || {
+              status: item.status,
+              adminComment: item.adminComment || '',
+            };
+            return (
+              <CsrRequestCard
+                key={item.id}
+                request={item}
+                draft={draft}
+                isManager={isManager}
+                canEdit={canSubmit}
+                saving={savingId === item.id}
+                onDraftChange={(requestId, nextDraft) =>
+                  setDrafts((prev) => ({
+                    ...prev,
+                    [requestId]: nextDraft,
+                  }))
+                }
+                onSave={handleManagerSave}
+              />
+            );
+          })
         )}
       </section>
     </main>

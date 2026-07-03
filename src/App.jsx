@@ -1092,7 +1092,7 @@ export default function App() {
       ) : displayModule === 'lunch' ? (
         <LunchPickPage />
       ) : displayModule === 'idea-bank' ? (
-        <IdeaBankPage readOnly={isViewer} />
+        <IdeaBankPage readOnly={isViewer} teamAccess={teamAccess} />
       ) : isKpiRelatedModule(displayModule) &&
         (!isViewer || displayModule === 'kpi-approve' || displayModule === 'kpi-report') ? (
         <JournalProvider readOnly={isViewer && displayModule !== 'kpi-approve'} autoSyncCloud={false}>
