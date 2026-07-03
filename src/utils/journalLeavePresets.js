@@ -10,6 +10,7 @@ export const LEAVE_PRESET_BUTTONS = [
   { id: 'trip', label: '출장 1일', group: 'full' },
   { id: 'half-am', label: '오전반차', group: 'half' },
   { id: 'half-pm', label: '오후반차', group: 'half' },
+  { id: 'quarter', label: '반반차', group: 'half' },
   { id: 'clear', label: '해제', group: 'clear' },
 ];
 
@@ -77,6 +78,21 @@ export function applyLeavePresetToDay(day, preset) {
       });
     }
     return { ...day, holiday: false, mm: { ...day.mm, leave: HALF_LEAVE_MM }, tasks };
+  }
+  if (preset === 'quarter') {
+    const tasks = [...day.tasks];
+    if (!tasks.some((t) => t.title.includes('반반차'))) {
+      tasks.push({
+        id: `t-leave-${Date.now()}`,
+        cat: 'other',
+        title: '반반차',
+        plan: 0,
+        actual: 0,
+        done: true,
+        note: '휴일 M/M 0.203125',
+      });
+    }
+    return { ...day, holiday: false, mm: { ...day.mm, leave: 0.203125 }, tasks };
   }
   if (preset === 'clear') {
     return { ...day, holiday: false, mm: { work: 0, improve: 0, leave: 0 }, tasks: day.tasks };
