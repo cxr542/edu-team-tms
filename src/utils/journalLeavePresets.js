@@ -30,38 +30,57 @@ function appendMemoTask(tasks, title, note) {
 }
 
 /** null이면 변경 없음 */
-export function applyLeavePresetToDay(day, preset) {
+export function applyLeavePresetToDay(day, preset, { publicHoliday = false } = {}) {
+  const withPublicHolidayOverride = (next, enabled) => {
+    const withoutOverride = { ...next };
+    delete withoutOverride.publicHolidayOverride;
+    if (!publicHoliday || !enabled) return withoutOverride;
+    return { ...withoutOverride, publicHolidayOverride: true };
+  };
+
   if (preset === 'holiday') {
-    return {
-      ...day,
-      holiday: true,
-      mm: { work: 0, improve: 0, leave: FULL_LEAVE_MM },
-      tasks: appendMemoTask(day.tasks, '공휴일', '휴일 M/M 0.8125'),
-    };
+    return withPublicHolidayOverride(
+      {
+        ...day,
+        holiday: true,
+        mm: { work: 0, improve: 0, leave: FULL_LEAVE_MM },
+        tasks: appendMemoTask(day.tasks, '공휴일', '휴일 M/M 0.8125'),
+      },
+      false
+    );
   }
   if (preset === 'annual') {
-    return {
-      ...day,
-      holiday: true,
-      mm: { work: 0, improve: 0, leave: FULL_LEAVE_MM },
-      tasks: appendMemoTask(day.tasks, '연차', '휴일 M/M 0.8125'),
-    };
+    return withPublicHolidayOverride(
+      {
+        ...day,
+        holiday: true,
+        mm: { work: 0, improve: 0, leave: FULL_LEAVE_MM },
+        tasks: appendMemoTask(day.tasks, '연차', '휴일 M/M 0.8125'),
+      },
+      false
+    );
   }
   if (preset === 'field') {
-    return {
-      ...day,
-      holiday: true,
-      mm: { work: 0, improve: 0, leave: FULL_LEAVE_MM },
-      tasks: appendMemoTask(day.tasks, '외근', '휴일 M/M 0.8125'),
-    };
+    return withPublicHolidayOverride(
+      {
+        ...day,
+        holiday: true,
+        mm: { work: 0, improve: 0, leave: FULL_LEAVE_MM },
+        tasks: appendMemoTask(day.tasks, '외근', '휴일 M/M 0.8125'),
+      },
+      false
+    );
   }
   if (preset === 'trip') {
-    return {
-      ...day,
-      holiday: true,
-      mm: { work: 0, improve: 0, leave: FULL_LEAVE_MM },
-      tasks: appendMemoTask(day.tasks, '출장', '휴일 M/M 0.8125'),
-    };
+    return withPublicHolidayOverride(
+      {
+        ...day,
+        holiday: true,
+        mm: { work: 0, improve: 0, leave: FULL_LEAVE_MM },
+        tasks: appendMemoTask(day.tasks, '출장', '휴일 M/M 0.8125'),
+      },
+      false
+    );
   }
   if (preset === 'half-am' || preset === 'half-pm') {
     const label = preset === 'half-am' ? '오전 반차' : '오후 반차';
@@ -77,7 +96,10 @@ export function applyLeavePresetToDay(day, preset) {
         note: '휴일 M/M 0.40625',
       });
     }
-    return { ...day, holiday: false, mm: { ...day.mm, leave: HALF_LEAVE_MM }, tasks };
+    return withPublicHolidayOverride(
+      { ...day, holiday: false, mm: { ...day.mm, leave: HALF_LEAVE_MM }, tasks },
+      true
+    );
   }
   if (preset === 'quarter') {
     const tasks = [...day.tasks];
@@ -92,10 +114,16 @@ export function applyLeavePresetToDay(day, preset) {
         note: '휴일 M/M 0.203125',
       });
     }
-    return { ...day, holiday: false, mm: { ...day.mm, leave: 0.203125 }, tasks };
+    return withPublicHolidayOverride(
+      { ...day, holiday: false, mm: { ...day.mm, leave: 0.203125 }, tasks },
+      true
+    );
   }
   if (preset === 'clear') {
-    return { ...day, holiday: false, mm: { work: 0, improve: 0, leave: 0 }, tasks: day.tasks };
+    return withPublicHolidayOverride(
+      { ...day, holiday: false, mm: { work: 0, improve: 0, leave: 0 }, tasks: day.tasks },
+      true
+    );
   }
   return null;
 }
