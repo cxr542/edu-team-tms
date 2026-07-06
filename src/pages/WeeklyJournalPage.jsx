@@ -35,7 +35,11 @@ import {
 import { countKpi2EffectTasks } from '../utils/computeTeamKpi';
 import { formatPublishedAt } from '../utils/appMode';
 import { getCloudHealthUserMessage } from '../utils/cloudHealth';
-import { resolveJournalDay } from '../utils/journalHoliday2026';
+import {
+  is2026PublicHoliday,
+  resolveJournalDay,
+  setPublicHolidayOverride,
+} from '../utils/journalHoliday2026';
 import { applyLeavePresetToDay, LEAVE_MEMO_TASK_RE, LEAVE_PRESET_BUTTONS } from '../utils/journalLeavePresets';
 import { findWeekKeyForDayKey, resolveJournalScrollDayKey, scheduleScrollJournalDay } from '../utils/journalScroll';
 import { mergeTaskFromEdit, taskFieldsFromEdit } from '../utils/journalTaskFields';
@@ -785,7 +789,9 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     if (!leaveDayKey || journalReadOnly) return;
     let nextLeave = null;
     patchDay(leaveDayKey, (day) => {
-      const next = applyLeavePresetToDay(day, preset);
+      const next = applyLeavePresetToDay(day, preset, {
+        publicHoliday: is2026PublicHoliday(leaveDayKey),
+      });
       if (!next) return day;
       nextLeave = next.mm?.leave ?? null;
       recalcDayMmFromHours(next);
@@ -801,14 +807,20 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     const leave = Number(leaveLeave) || 0;
     patchDay(leaveDayKey, (day) => {
       if (leave >= FULL_LEAVE_MM - 0.001) {
-        return {
-          ...day,
-          holiday: true,
-          mm: { work: 0, improve: 0, leave: FULL_LEAVE_MM },
-          tasks: day.tasks,
-        };
+        return setPublicHolidayOverride(
+          {
+            ...day,
+            holiday: true,
+            mm: { work: 0, improve: 0, leave: FULL_LEAVE_MM },
+            tasks: day.tasks,
+          },
+          false
+        );
       }
-      const next = { ...day, holiday: false, mm: { ...day.mm, leave } };
+      const next = setPublicHolidayOverride(
+        { ...day, holiday: false, mm: { ...day.mm, leave } },
+        is2026PublicHoliday(leaveDayKey)
+      );
       recalcDayMmFromHours(next);
       return next;
     });
