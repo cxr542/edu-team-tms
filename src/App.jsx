@@ -85,6 +85,7 @@ import AcademizerEmbedPage from './pages/AcademizerEmbedPage';
 import CloudChatbotEmbedPage from './pages/CloudChatbotEmbedPage';
 import LunchPickPage from './pages/LunchPickPage';
 import IdeaBankPage from './pages/IdeaBankPage';
+import AnnouncementsPage from './pages/AnnouncementsPage';
 import PublicViewerGuidePage from './pages/PublicViewerGuidePage';
 import { isProductionEnvironment } from './constants/appEnv';
 import { uiTooltip } from './utils/uiTooltip';
@@ -101,6 +102,7 @@ import {
 import ViewerMenuSettingsModal from './components/ViewerMenuSettingsModal';
 import UsageStandardsPanel from './components/UsageStandardsPanel';
 import { resolveCsrRequesterIdentity } from './utils/csrRequesterIdentity.js';
+import { resolveAnnouncementAuthorIdentity } from './utils/announcementAuthorIdentity.js';
 
 const LEDGER_SNAPSHOT_REFRESH_LABEL = '조회 데이터 새로고침';
 const LEDGER_SNAPSHOT_REFRESH_TITLE =
@@ -194,6 +196,7 @@ export default function App() {
   const { module, setModule } = useAppModule();
   const teamAccess = useTeamAccess();
   const csrRequester = useMemo(() => resolveCsrRequesterIdentity(teamAccess), [teamAccess]);
+  const announcementAuthor = useMemo(() => resolveAnnouncementAuthorIdentity(teamAccess), [teamAccess]);
   const [routeRevision, setRouteRevision] = useState(0);
 
   useEffect(() => {
@@ -1099,6 +1102,13 @@ export default function App() {
           teamAccess={teamAccess}
           requesterCode={csrRequester.requesterCode}
           requesterName={csrRequester.requesterName}
+        />
+      ) : displayModule === 'announcements' ? (
+        <AnnouncementsPage
+          readOnly={isViewer}
+          teamAccess={teamAccess}
+          authorCode={announcementAuthor.authorCode}
+          authorName={announcementAuthor.authorName}
         />
       ) : isKpiRelatedModule(displayModule) &&
         (!isViewer || displayModule === 'kpi-approve' || displayModule === 'kpi-report') ? (

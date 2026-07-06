@@ -102,6 +102,46 @@ create index if not exists kpi2_row_approvals_updated_at_idx
   on public.kpi2_row_approvals (updated_at desc);
 
 
+create table if not exists public.announcements (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  body text not null,
+  category text not null default 'notice',
+  is_pinned boolean not null default false,
+  is_published boolean not null default false,
+  author text not null,
+  author_code text not null,
+  published_at timestamptz,
+  payload_version integer not null default 1,
+  updated_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+
+  constraint announcements_title_not_blank
+    check (length(trim(title)) > 0),
+
+  constraint announcements_body_not_blank
+    check (length(trim(body)) > 0),
+
+  constraint announcements_category_not_blank
+    check (category in ('notice', 'release', 'incident', 'guide')),
+
+  constraint announcements_author_not_blank
+    check (length(trim(author)) > 0),
+
+  constraint announcements_author_code_not_blank
+    check (length(trim(author_code)) > 0)
+);
+
+create unique index if not exists announcements_id_uidx
+  on public.announcements (id);
+
+create index if not exists announcements_pinned_updated_at_idx
+  on public.announcements (is_pinned desc, updated_at desc);
+
+create index if not exists announcements_published_updated_at_idx
+  on public.announcements (is_published, updated_at desc);
+
+
 create table if not exists public.csr_requests (
   id uuid primary key default gen_random_uuid(),
   title text not null,
@@ -171,11 +211,13 @@ alter table public.journal_snapshots enable row level security;
 alter table public.kpi_operational_snapshots enable row level security;
 alter table public.kpi_monthly_approvals enable row level security;
 alter table public.kpi2_row_approvals enable row level security;
+alter table public.announcements enable row level security;
 alter table public.csr_requests enable row level security;
 alter table public.sync_events enable row level security;
 
 grant select, insert, update on table public.kpi_monthly_approvals to anon;
 grant select, insert, update on table public.kpi2_row_approvals to anon;
+grant select, insert, update on table public.announcements to anon;
 grant select, insert, update on table public.csr_requests to anon;
 
 -- Temporary development policies.
@@ -220,6 +262,22 @@ create policy "kpi2_row_approvals_insert_all_draft"
 
 create policy "kpi2_row_approvals_update_all_draft"
   on public.kpi2_row_approvals
+  for update
+  using (true)
+  with check (true);
+
+create policy "announcements_read_all_draft"
+  on public.announcements
+  for select
+  using (true);
+
+create policy "announcements_insert_all_draft"
+  on public.announcements
+  for insert
+  with check (true);
+
+create policy "announcements_update_all_draft"
+  on public.announcements
   for update
   using (true)
   with check (true);

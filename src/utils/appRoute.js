@@ -20,6 +20,7 @@ const APP_MODULES = new Set([
   'docs',
   'academizer',
   'cloud-chatbot',
+  'announcements',
   'lunch',
   'idea-bank',
   'journal',
