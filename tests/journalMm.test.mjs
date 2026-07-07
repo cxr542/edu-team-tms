@@ -26,9 +26,9 @@ describe('journalMm axis', () => {
 });
 
 describe('journalMm logged hours', () => {
-  it('getDayAvailableMm — 모든 평일은 0.8125 M/M', () => {
-    expect(getDayAvailableMm({ holiday: false, mm: { leave: 0 } })).toBeCloseTo(0.8125, 4);
-    expect(getDayAvailableMm({ holiday: true, mm: { leave: 0.8125 } })).toBeCloseTo(0.8125, 4);
+  it('getDayAvailableMm — 모든 평일은 1.0 M/M', () => {
+    expect(getDayAvailableMm({ holiday: false, mm: { leave: 0 } })).toBeCloseTo(1, 4);
+    expect(getDayAvailableMm({ holiday: true, mm: { leave: 1 } })).toBeCloseTo(1, 4);
   });
 
   it('getTaskLoggedHours — 완료 건만 실작업 반환', () => {
@@ -37,13 +37,13 @@ describe('journalMm logged hours', () => {
     expect(getTaskLoggedHours({ title: '연차 1일', actual: 0, done: true })).toBe(0);
   });
 
-  it('applyLeavePresetToDay — full/half leave policy uses 0.8125 based M/M', () => {
+  it('applyLeavePresetToDay — full/half leave policy uses 1.0 based M/M', () => {
     const baseDay = { holiday: false, mm: { work: 0, improve: 0, leave: 0 }, tasks: [] };
-    expect(applyLeavePresetToDay(baseDay, 'holiday').mm.leave).toBeCloseTo(0.8125, 4);
-    expect(applyLeavePresetToDay(baseDay, 'annual').mm.leave).toBeCloseTo(0.8125, 4);
-    expect(applyLeavePresetToDay(baseDay, 'half-am').mm.leave).toBeCloseTo(0.40625, 4);
-    expect(applyLeavePresetToDay(baseDay, 'half-pm').mm.leave).toBeCloseTo(0.40625, 4);
-    expect(applyLeavePresetToDay(baseDay, 'quarter').mm.leave).toBeCloseTo(0.203125, 6);
+    expect(applyLeavePresetToDay(baseDay, 'holiday').mm.leave).toBeCloseTo(1, 4);
+    expect(applyLeavePresetToDay(baseDay, 'annual').mm.leave).toBeCloseTo(1, 4);
+    expect(applyLeavePresetToDay(baseDay, 'half-am').mm.leave).toBeCloseTo(0.5, 4);
+    expect(applyLeavePresetToDay(baseDay, 'half-pm').mm.leave).toBeCloseTo(0.5, 4);
+    expect(applyLeavePresetToDay(baseDay, 'quarter').mm.leave).toBeCloseTo(0.25, 6);
   });
 
   it('recalcDayMmFromHours — 미완료 실작업은 M/M에 미반영', () => {
@@ -75,14 +75,14 @@ describe('journalMm logged hours', () => {
   it('sumCompletedDayMm — 완료된 task와 휴일 M/M만 반영한다', () => {
     const day = {
       holiday: false,
-      mm: { work: 0, improve: 0, leave: 0.40625 },
+      mm: { work: 0, improve: 0, leave: 0.5 },
       tasks: [
         { id: 'a', cat: 'edu', title: 'A', actual: 4, done: false },
         { id: 'b', cat: 'edu', title: 'B', actual: 4, done: true },
         { id: 'c', cat: 'edu', title: 'C', actual: 0, done: true },
       ],
     };
-    expect(sumCompletedDayMm(day)).toBeCloseTo(0.9063, 4);
+    expect(sumCompletedDayMm(day)).toBeCloseTo(1, 4);
   });
 
   it('getWeekCompletionStats — 주차 완료 M/M를 반환한다', () => {
@@ -96,19 +96,19 @@ describe('journalMm logged hours', () => {
     const days = {
       '2026-06-01': {
         holiday: false,
-        mm: { work: 0.8125, improve: 0, leave: 0 },
+        mm: { work: 1, improve: 0, leave: 0 },
         tasks: [
           { id: 'd1', cat: 'edu', title: '완료 업무', actual: 4, done: true },
         ],
       },
       '2026-06-02': {
         holiday: false,
-        mm: { work: 0.8125, improve: 0, leave: 0 },
+        mm: { work: 1, improve: 0, leave: 0 },
         tasks: [
           { id: 'd2', cat: 'edu', title: '미완료 업무', actual: 4, done: false },
         ],
       },
-      '2026-06-03': { holiday: true, mm: { work: 0, improve: 0, leave: 0.8125 }, tasks: [] },
+      '2026-06-03': { holiday: true, mm: { work: 0, improve: 0, leave: 1 }, tasks: [] },
       '2026-06-04': {
         holiday: false,
         mm: { work: 0, improve: 0, leave: 0 },
@@ -125,9 +125,9 @@ describe('journalMm logged hours', () => {
       },
     };
     const stats = getWeekCompletionStats(weekDays, 5, (key) => days[key]);
-    expect(stats.available).toBeCloseTo(4.0625, 4);
-    expect(stats.logged).toBeCloseTo(1.4375, 4);
-    expect(stats.shortage).toBeCloseTo(2.625, 4);
-    expect(stats.pct).toBeCloseTo((1.4375 / 4.0625) * 100, 4);
+    expect(stats.available).toBeCloseTo(5, 4);
+    expect(stats.logged).toBeCloseTo(1.625, 4);
+    expect(stats.shortage).toBeCloseTo(3.375, 4);
+    expect(stats.pct).toBeCloseTo((1.625 / 5) * 100, 4);
   });
 });

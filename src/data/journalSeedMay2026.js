@@ -1,7 +1,7 @@
 /** 5월 파일럿 샘플 (프로토타입과 동기) */
 export const JOURNAL_SEED_MAY_2026 = {
   '2026-05-04': { holiday: false, mm: { work: 0, improve: 0, leave: 0 }, tasks: [] },
-  '2026-05-05': { holiday: true, mm: { work: 0, improve: 0, leave: 0.8125 }, tasks: [] },
+  '2026-05-05': { holiday: true, mm: { work: 0, improve: 0, leave: 1 }, tasks: [] },
   '2026-05-06': {
     holiday: false,
     mm: { work: 0, improve: 0, leave: 0 },
@@ -42,9 +42,9 @@ export const JOURNAL_SEED_MAY_2026 = {
   },
   '2026-05-15': {
     holiday: false,
-    mm: { work: 0, improve: 0, leave: 0.40625 },
+    mm: { work: 0, improve: 0, leave: 0.5 },
     tasks: [
-      { id: 't9', cat: 'other', title: '오후 반차', plan: 0, actual: 0, done: true, note: '휴일 M/M 0.40625' },
+      { id: 't9', cat: 'other', title: '오후 반차', plan: 0, actual: 0, done: true, note: '휴일 M/M 0.5' },
     ],
   },
   '2026-05-18': {
@@ -89,7 +89,7 @@ export const JOURNAL_SEED_MAY_2026 = {
         cat: 'edu',
         title: '골드/플래티넘 파트너사 교육',
         plan: 8,
-        actual: 6.5,
+        actual: 8,
         done: true,
         note: 'K8s, CONTRABASS',
       },
@@ -104,18 +104,18 @@ export const JOURNAL_SEED_MAY_2026 = {
         cat: 'edu',
         title: '골드/플래티넘 파트너사 교육',
         plan: 8,
-        actual: 6.5,
+        actual: 8,
         done: true,
         note: 'CONTRABASS 실습',
       },
     ],
   },
-  '2026-05-25': { holiday: true, mm: { work: 0, improve: 0, leave: 0.8125 }, tasks: [] },
+  '2026-05-25': { holiday: true, mm: { work: 0, improve: 0, leave: 1 }, tasks: [] },
   '2026-05-26': {
     holiday: false,
     mm: { work: 0, improve: 0, leave: 0 },
     tasks: [
-      { id: 't19', cat: 'edu', title: 'OKESTRO Solution 딥다이브 교육', plan: 8, actual: 6.5, done: true, note: '' },
+      { id: 't19', cat: 'edu', title: 'OKESTRO Solution 딥다이브 교육', plan: 8, actual: 8, done: true, note: '' },
     ],
   },
   '2026-05-27': {
@@ -126,8 +126,8 @@ export const JOURNAL_SEED_MAY_2026 = {
         id: 't20',
         cat: 'edu',
         title: '파트너사 정기 교육',
-        plan: 6.5,
-        actual: 6.5,
+        plan: 8,
+        actual: 8,
         done: true,
         note: 'CONTRABASS, VIOLA',
       },

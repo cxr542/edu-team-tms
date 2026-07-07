@@ -51,7 +51,7 @@ const juneDays = {
   },
   '2026-06-03': {
     holiday: true,
-    mm: { work: 0, improve: 0, leave: 0.8125 },
+    mm: { work: 0, improve: 0, leave: 1 },
     tasks: [],
   },
 };
@@ -81,7 +81,7 @@ describe('computeTeamKpi june', () => {
   it('buildKpi01cRows — 6월 주차·휴일', () => {
     const rows = buildKpi01cRows(2026, 5, juneDays, {});
     expect(rows.length).toBeGreaterThanOrEqual(1);
-    expect(rows.some((r) => r.휴일MM >= 0.8125)).toBe(true);
+    expect(rows.some((r) => r.휴일MM >= 1)).toBe(true);
   });
 
   it('computeMonthKpi1Totals — 월 경계 밖 spillover 일자를 제외한다', () => {
@@ -91,7 +91,7 @@ describe('computeTeamKpi june', () => {
     };
     const totals = computeMonthKpi1Totals(2026, 5, days);
     expect(totals.work).toBeCloseTo(0.25, 4);
-    expect(totals.available).toBeCloseTo(0.8125, 4);
+    expect(totals.available).toBeCloseTo(1, 4);
   });
 
   it('buildKpi01cRows — KPI 탭 주간메모만 01c에 반영', () => {

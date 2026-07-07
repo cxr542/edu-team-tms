@@ -825,7 +825,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       return next;
     });
     closeAll();
-    showToast('휴일 M/M 적용됨');
+    showToast('휴일 M/D 적용됨');
   };
 
   const closeAll = () => {
@@ -1372,19 +1372,19 @@ export default function WeeklyJournalPage({ readOnly = false }) {
 
           {!journalReadOnly && (
             <details className="journal-kpi-help">
-              <summary>M/M · KPI2 효과 안내</summary>
+              <summary>M/D · KPI2 효과 안내</summary>
               <ul>
                 <li>
-                  <strong>일반 업무 M/M</strong>: 실제 투입 시간을 기록합니다. (실작업 h ÷ 8)
+                  <strong>일반 업무 M/D</strong>: 실제 투입 시간을 기록합니다. (실작업 h ÷ 8)
                 </li>
                 <li>
-                  <strong>생산성향상 M/M</strong>: 개선·자동화·효율화 성격의 업무 시간을 기록합니다.
+                  <strong>생산성향상 M/D</strong>: 개선·자동화·효율화 성격의 업무 시간을 기록합니다.
                 </li>
                 <li>
                   <strong>{KPI2_NAME} 효과</strong>: 개선 효과로 제출할 항목만 체크합니다.
                 </li>
                 <li>
-                  <strong>완료 체크</strong>: 체크한 업무의 실작업(h)만 M/M·가동률·일일 실작업 합계에 반영됩니다.
+                  <strong>완료 체크</strong>: 체크한 업무의 실작업(h)만 M/D·가동률·일일 실작업 합계에 반영됩니다.
                 </li>
               </ul>
             </details>
@@ -1430,7 +1430,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               </div>
               {linkableImproveProjects.length === 0 ? (
                 <p className="journal-improve-projects-panel__empty">
-                  아직 연결 가능한 향상 과제가 없습니다. 생산성향상 M/M 업무를 작성하면 팀장 KPI 화면에서 후보로
+                  아직 연결 가능한 향상 과제가 없습니다. 생산성향상 M/D 업무를 작성하면 팀장 KPI 화면에서 후보로
                   확인할 수 있습니다.
                 </p>
               ) : (
@@ -1592,7 +1592,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 style={{ width: `${monthMm.pct.toFixed(1)}%` }}
               />
             </div>
-            <p className="journal-mm-hint">주차별 완료 M/M 기준 · 완료된 업무(h)÷8 자동 · 평일 가용 0.8125(점심 제외)</p>
+            <p className="journal-mm-hint">주차별 완료 M/M 기준 · 완료된 업무(h)÷8 자동 · 평일 가용 1.0(8h 기준)</p>
           </div>
         </div>
 
@@ -1857,7 +1857,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 </select>
               </div>
               <div className="form-group">
-                <label>{KPI1_NAME} M/M 구분</label>
+                <label>{KPI1_NAME} M/D 구분</label>
                 <select
                   className="form-input"
                   value={getMmAxisSelectValue(editTask)}
@@ -1865,11 +1865,11 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   disabled={journalReadOnly}
                   aria-describedby="journal-mm-axis-help"
                 >
-                  <option value="work">업무 M/M</option>
-                  <option value="improve">생산향상 M/M</option>
+                  <option value="work">업무 M/D</option>
+                  <option value="improve">생산향상 M/D</option>
                 </select>
                 <p id="journal-mm-axis-help" className="journal-field-help">
-                  업무 M/M은 실제 투입 시간, 생산향상 M/M은 개선·자동화 업무 시간입니다.
+                  업무 M/D는 실제 투입 시간, 생산향상 M/D는 개선·자동화 업무 시간입니다.
                 </p>
               </div>
               <div className="form-group">
@@ -1970,7 +1970,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               <label>
                 <input type="checkbox" checked={editTask.done} onChange={(e) => setEditTask({ ...editTask, done: e.target.checked })} disabled={journalReadOnly} /> 완료
               </label>
-              <p className="journal-field-help">완료 체크한 업무의 실작업(h)만 M/M·가동률에 반영됩니다.</p>
+              <p className="journal-field-help">완료 체크한 업무의 실작업(h)만 M/D·가동률에 반영됩니다.</p>
             </div>
             {!journalReadOnly && (
               <div className="modal-actions journal-edit-actions">
@@ -2136,7 +2136,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       </div>
 
       <div className={`journal-modal${leaveOpen ? ' open' : ''}`}>
-        <h3 style={{ padding: '1rem' }}>휴일 M/M</h3>
+        <h3 style={{ padding: '1rem' }}>휴일 M/D</h3>
         <p style={{ padding: '0 1rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{leaveDayKey && formatDayLabel(leaveDayKey)}</p>
         {leavePreview && (
           <p style={{ padding: '0 1rem', fontSize: '0.85rem' }}>
@@ -2157,10 +2157,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           ))}
         </div>
         <p className="journal-leave-preset-hint">
-          연차·외근·출장·공휴 1일 = 휴일 M/M 0.8125 + 메모 항목. 오전반차·오후반차는 0.40625, 반반차는 0.203125입니다. 실무 외근은 「+ 항목」에 실작업(h) 입력.
+          연차·외근·출장·공휴 1일 = 휴일 M/D 1.0 + 메모 항목. 오전반차·오후반차는 0.5(4h), 반반차는 0.25(2h)입니다. 실무 외근은 「+ 항목」에 실작업(h) 입력.
         </p>
         <div className="form-group" style={{ padding: '0 1rem' }}>
-          <label>휴일 M/M</label>
+          <label>휴일 M/D</label>
           <input type="number" step="0.25" className="form-input" value={leaveLeave} onChange={(e) => setLeaveLeave(e.target.value)} readOnly={journalReadOnly} />
         </div>
         <div className="modal-actions">

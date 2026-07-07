@@ -3,7 +3,7 @@ import { LEAVE_MEMO_TASK_RE } from './journalLeavePresets.js';
 export const LUNCH_HOURS = 1.5;
 export const WORK_DAY_HOURS = 8;
 export const LUNCH_LEAVE_MM = Math.round((LUNCH_HOURS / WORK_DAY_HOURS) * 10000) / 10000;
-export const STANDARD_DAY_AVAILABLE_MM = roundMm(1 - LUNCH_LEAVE_MM);
+export const STANDARD_DAY_AVAILABLE_MM = 1;
 export const FULL_LEAVE_MM = STANDARD_DAY_AVAILABLE_MM;
 export const HALF_LEAVE_MM = roundMm(STANDARD_DAY_AVAILABLE_MM * 0.5);
 export const QUARTER_LEAVE_MM = roundMm(STANDARD_DAY_AVAILABLE_MM * 0.25);
@@ -54,12 +54,12 @@ export function getExpectedWorkHours(data) {
   const leave = Number(data.mm.leave) || 0;
   if (data.holiday && leave >= FULL_LEAVE_MM - 0.001) return 0;
   if (leave >= HALF_LEAVE_MM - 0.001) {
-    return Math.max(0, WORK_DAY_HOURS * 0.5 - LUNCH_HOURS);
+    return WORK_DAY_HOURS * 0.5;
   }
   if (leave >= QUARTER_LEAVE_MM - 0.001) {
-    return Math.max(0, WORK_DAY_HOURS * 0.25 - LUNCH_HOURS);
+    return WORK_DAY_HOURS * 0.25;
   }
-  return WORK_DAY_HOURS - LUNCH_HOURS;
+  return WORK_DAY_HOURS;
 }
 
 export function getDayHoursInfo(data) {
