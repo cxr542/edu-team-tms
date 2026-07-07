@@ -201,4 +201,39 @@ describe('kpiApprovePendingApprovals', () => {
     });
     expect(result.data).toEqual([]);
   });
+
+  it('uses local pending approvals when Supabase succeeds with no submitted rows', async () => {
+    const localPending = [
+      {
+        type: 'KPI1',
+        member: { code: 'B', displayName: '최우성' },
+        submittedAt: '2026-06-21T10:00:00.000Z',
+      },
+    ];
+    const fallbackPendingApprovals = vi.fn().mockReturnValue(localPending);
+    const { mod } = await loadModuleWithSupabaseResult({
+      ok: true,
+      status: 'empty',
+      message: 'empty',
+      data: {
+        monthlyApprovals: [],
+        kpi2RowApprovals: [],
+      },
+    });
+
+    const result = await mod.loadAdminKpiPendingApprovals({
+      year: 2026,
+      monthIndex: 5,
+      getMemberDays: () => ({}),
+      improveProjects: [],
+      fallbackPendingApprovals,
+    });
+
+    expect(fallbackPendingApprovals).toHaveBeenCalledWith();
+    expect(result).toMatchObject({
+      source: 'localStorage',
+      status: 'empty',
+    });
+    expect(result.data).toEqual(localPending);
+  });
 });

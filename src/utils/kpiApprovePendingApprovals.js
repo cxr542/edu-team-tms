@@ -137,6 +137,16 @@ export async function loadAdminKpiPendingApprovals({
       data: fallbackPendingApprovals(),
     };
   }
+  if (supabaseResult.status === 'empty') {
+    const localPendingApprovals = fallbackPendingApprovals();
+    if (localPendingApprovals.length > 0) {
+      return {
+        ...supabaseResult,
+        source: 'localStorage',
+        data: localPendingApprovals,
+      };
+    }
+  }
 
   const items = buildAdminKpiPendingApprovalItemsFromSupabaseRows({
     year,
