@@ -1,5 +1,6 @@
--- EDU-TMS Supabase schema (canonical)
--- Operational apply: supabase/phase0-apply.sql (idempotent, safe to re-run).
+-- EDU-TMS Supabase Phase 0 (idempotent)
+-- Paste into Supabase Dashboard → SQL Editor → Run once on the production project.
+-- Safe to re-run: uses IF NOT EXISTS / DROP POLICY IF EXISTS / CREATE OR REPLACE.
 
 create extension if not exists "pgcrypto";
 

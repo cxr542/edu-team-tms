@@ -1212,6 +1212,33 @@ html.project-sidebar-collapsed-boot .project-logo h1 {
   margin-left: 0.35rem;
 }
 
+
+.project-toolbar__supabase-auth {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: 0.35rem;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+}
+
+.project-toolbar__supabase-auth input {
+  width: 9.5rem;
+  min-height: 28px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--surface-color);
+  color: var(--text-color);
+  padding: 0.28rem 0.65rem;
+}
+
+.project-toolbar__supabase-auth-message {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .project-toolbar__supabase-health-message {
   max-width: 220px;
   overflow: hidden;
@@ -1235,6 +1262,10 @@ html.project-sidebar-collapsed-boot .project-logo h1 {
 
 @media (max-width: 768px) {
   .project-toolbar__supabase-health {
+    display: none;
+  }
+
+  .project-toolbar__supabase-auth {
     display: none;
   }
 }

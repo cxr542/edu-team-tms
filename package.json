@@ -20,6 +20,7 @@
     "deploy:vercel": "npm run build:team && npx vercel deploy --prod",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "test": "vitest run",
+    "verify:supabase": "node scripts/verify-supabase-phase0.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
