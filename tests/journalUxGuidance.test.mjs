@@ -41,10 +41,10 @@ describe('journal UX guidance', () => {
     expect(journalSource).toContain('현재 자동 클라우드 동기화는 꺼져 있으며, 공유 저장은 수동으로 실행할 때만 반영됩니다.');
   });
 
-  it('documents M/M and KPI2 meaning with done-gated MM logic', () => {
+  it('documents M/D and KPI2 meaning with done-gated MD logic', () => {
     expect(journalSource).toContain('journal-kpi-help');
-    expect(journalSource).toContain('일반 업무 M/M');
-    expect(journalSource).toContain('생산성향상 M/M');
+    expect(journalSource).toContain('일반 업무 M/D');
+    expect(journalSource).toContain('생산성향상 M/D');
     expect(journalSource).toContain('반영 M/M');
     expect(journalSource).toContain('가용 M/M');
     expect(journalSource).toContain('현재 가동률');
@@ -54,7 +54,7 @@ describe('journal UX guidance', () => {
     expect(journalSource).toContain('주차별 완료 M/M');
     expect(journalSource).not.toContain('주차별 입력');
     expect(journalSource).toContain('개선 효과로 제출할 항목만 체크합니다.');
-    expect(journalSource).toContain('완료 체크한 업무의 실작업(h)만 M/M·가동률');
+    expect(journalSource).toContain('완료 체크한 업무의 실작업(h)만 M/D·가동률');
     expect(journalSource).toContain('kpi2EffectDone');
   });
 

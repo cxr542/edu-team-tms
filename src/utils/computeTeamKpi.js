@@ -45,7 +45,7 @@ function resolveKpiWeekMemo(kpiWeekMemos, week) {
   return typeof raw === 'string' ? raw.trim() : '';
 }
 
-/** 01c: 주차별 M/M 합 + KPI 탭 주간메모 (일지 금주와 별도) */
+/** 01c: 주차별 M/D 합 + KPI 탭 주간메모 (일지 금주와 별도) */
 export function buildKpi01cRows(year, monthIndex, days, kpiWeekMemos = {}, memberCode = JOURNAL_LINKED_MEMBER_CODE) {
   const member = findKpiMember(memberCode) || { code: memberCode, displayName: memberCode };
   const weeks = getWeeksInMonth(year, monthIndex);
@@ -106,7 +106,7 @@ function buildEffectComment(task, projectName) {
     .join(' · ');
 }
 
-/** KPI2: kpi2Effect.enabled 건만 (향상 MM 투자·일반 업무 제외) */
+/** KPI2: kpi2Effect.enabled 건만 (향상 MD 투자·일반 업무 제외) */
 export function buildKpi02EffectRows(
   year,
   monthIndex,
