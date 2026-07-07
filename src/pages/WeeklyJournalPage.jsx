@@ -1592,7 +1592,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 style={{ width: `${monthMm.pct.toFixed(1)}%` }}
               />
             </div>
-            <p className="journal-mm-hint">주차별 완료 M/M 기준 · 완료된 업무(h)÷8 자동 · 평일 가용 0.8125(점심 제외)</p>
+            <p className="journal-mm-hint">주차별 완료 M/M 기준 · 완료된 업무(h)÷8 자동 · 평일 가용 1.0(8h 기준)</p>
           </div>
         </div>
 
@@ -2157,7 +2157,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           ))}
         </div>
         <p className="journal-leave-preset-hint">
-          연차·외근·출장·공휴 1일 = 휴일 M/M 0.8125 + 메모 항목. 오전반차·오후반차는 0.40625, 반반차는 0.203125입니다. 실무 외근은 「+ 항목」에 실작업(h) 입력.
+          연차·외근·출장·공휴 1일 = 휴일 M/M 1.0 + 메모 항목. 오전반차·오후반차는 0.5(4h), 반반차는 0.25(2h)입니다. 실무 외근은 「+ 항목」에 실작업(h) 입력.
         </p>
         <div className="form-group" style={{ padding: '0 1rem' }}>
           <label>휴일 M/M</label>

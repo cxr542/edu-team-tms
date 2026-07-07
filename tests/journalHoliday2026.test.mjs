@@ -10,7 +10,7 @@ describe('journal 2026 public holidays', () => {
   it('preserves an explicit cleared public-holiday override when rendering and normalizing', () => {
     const publicHoliday = {
       holiday: true,
-      mm: { work: 0, improve: 0, leave: 0.8125 },
+      mm: { work: 0, improve: 0, leave: 1 },
       tasks: [],
     };
     const cleared = applyLeavePresetToDay(publicHoliday, 'clear', { publicHoliday: true });
@@ -43,7 +43,7 @@ describe('journal 2026 public holidays', () => {
     });
 
     expect(days['2026-06-03'].holiday).toBe(true);
-    expect(days['2026-06-03'].mm).toEqual({ work: 0, improve: 0, leave: 0.8125 });
+    expect(days['2026-06-03'].mm).toEqual({ work: 0, improve: 0, leave: 1 });
     expect(resolveJournalDay('2026-06-03', days['2026-06-03']).holiday).toBe(true);
   });
 });
