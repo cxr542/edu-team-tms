@@ -270,7 +270,9 @@ grant execute on function public.is_tms_member(text) to authenticated;
 -- anon grants for modules that use URL access gate (not Supabase Auth yet)
 grant select, insert, update on table public.kpi_monthly_approvals to anon;
 grant select, insert, update on table public.kpi2_row_approvals to anon;
-grant select, insert, update on table public.announcements to anon;
+revoke insert, update, delete on table public.announcements from anon;
+grant select on table public.announcements to anon;
+grant select, insert, update on table public.announcements to authenticated;
 grant select, insert, update on table public.csr_requests to anon;
 
 -- tms_profiles
@@ -333,7 +335,7 @@ create policy "sync_events_read_admin"
   on public.sync_events for select to authenticated
   using (public.is_tms_admin());
 
--- KPI approvals + announcements + CSR (draft anon until TMS URL gate moves to Auth)
+-- KPI approvals + CSR (draft anon until TMS URL gate moves to Auth)
 drop policy if exists "kpi_monthly_approvals_read_all_draft" on public.kpi_monthly_approvals;
 drop policy if exists "kpi_monthly_approvals_insert_all_draft" on public.kpi_monthly_approvals;
 drop policy if exists "kpi_monthly_approvals_update_all_draft" on public.kpi_monthly_approvals;
@@ -359,13 +361,24 @@ create policy "kpi2_row_approvals_update_all_draft"
 drop policy if exists "announcements_read_all_draft" on public.announcements;
 drop policy if exists "announcements_insert_all_draft" on public.announcements;
 drop policy if exists "announcements_update_all_draft" on public.announcements;
+drop policy if exists "announcements_read_published" on public.announcements;
+drop policy if exists "announcements_read_admin" on public.announcements;
+drop policy if exists "announcements_insert_admin" on public.announcements;
+drop policy if exists "announcements_update_admin" on public.announcements;
 
-create policy "announcements_read_all_draft"
-  on public.announcements for select using (true);
-create policy "announcements_insert_all_draft"
-  on public.announcements for insert with check (true);
-create policy "announcements_update_all_draft"
-  on public.announcements for update using (true) with check (true);
+create policy "announcements_read_published"
+  on public.announcements for select to anon, authenticated
+  using (is_published = true);
+create policy "announcements_read_admin"
+  on public.announcements for select to authenticated
+  using (public.is_tms_admin());
+create policy "announcements_insert_admin"
+  on public.announcements for insert to authenticated
+  with check (public.is_tms_admin());
+create policy "announcements_update_admin"
+  on public.announcements for update to authenticated
+  using (public.is_tms_admin())
+  with check (public.is_tms_admin());
 
 drop policy if exists "csr_requests_read_all_draft" on public.csr_requests;
 drop policy if exists "csr_requests_insert_all_draft" on public.csr_requests;
