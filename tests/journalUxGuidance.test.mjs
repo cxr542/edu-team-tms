@@ -45,13 +45,13 @@ describe('journal UX guidance', () => {
     expect(journalSource).toContain('journal-kpi-help');
     expect(journalSource).toContain('일반 업무 M/D');
     expect(journalSource).toContain('생산성향상 M/D');
-    expect(journalSource).toContain('반영 M/M');
-    expect(journalSource).toContain('가용 M/M');
+    expect(journalSource).toContain('반영 M/D');
+    expect(journalSource).toContain('가용 M/D');
     expect(journalSource).toContain('현재 가동률');
     expect(journalSource).toContain('생산성향상 비율');
     expect(journalSource).toContain('반반차');
-    expect(journalSource).toContain('주차별 완료 M/M 기준');
-    expect(journalSource).toContain('주차별 완료 M/M');
+    expect(journalSource).toContain('주차별 완료 M/D 기준');
+    expect(journalSource).toContain('주차별 완료 M/D');
     expect(journalSource).not.toContain('주차별 입력');
     expect(journalSource).toContain('개선 효과로 제출할 항목만 체크합니다.');
     expect(journalSource).toContain('완료 체크한 업무의 실작업(h)만 M/D·가동률');

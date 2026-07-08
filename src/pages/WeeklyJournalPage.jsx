@@ -1533,23 +1533,23 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             </p>
             <div className="journal-kpi-strip-grid">
             <div>
-              업무 M/M ({month + 1}월)
+              업무 M/D ({month + 1}월)
               <strong>{kpiMonth.work.toFixed(2)}</strong>
             </div>
             <div>
-              생산향상 M/M
+              생산향상 M/D
               <strong>{kpiMonth.improve.toFixed(2)}</strong>
             </div>
             <div>
-              휴일 M/M
+              휴일 M/D
               <strong>{kpiMonth.leave.toFixed(2)}</strong>
             </div>
             <div>
-              반영 M/M
+              반영 M/D
               <strong>{kpiMonth.reflected.toFixed(2)}</strong>
             </div>
             <div>
-              가용 M/M
+              가용 M/D
               <strong>{kpiMonth.available.toFixed(2)}</strong>
             </div>
             <div>
@@ -1577,12 +1577,12 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 월 업무일지 입력 현황 — {selectedMember.displayName}
               </h2>
               <div className="journal-mm-panel-meta">
-                주차별 완료 M/M <strong>{monthMm.totalCompleted.toFixed(2)}</strong> / 가용{' '}
-                <strong>{monthMm.totalAvail.toFixed(2)}</strong> M/M
+                주차별 완료 M/D <strong>{monthMm.totalCompleted.toFixed(2)}</strong> / 가용{' '}
+                <strong>{monthMm.totalAvail.toFixed(2)}</strong> M/D
                 {monthMm.shortage > 0.001 ? (
-                  <span className="shortage"> · 부족 {monthMm.shortage.toFixed(2)} M/M</span>
+                  <span className="shortage"> · 부족 {monthMm.shortage.toFixed(2)} M/D</span>
                 ) : (
-                  <span className="ok"> · 주차별 완료 M/M 기준 충족</span>
+                  <span className="ok"> · 주차별 완료 M/D 기준 충족</span>
                 )}
               </div>
             </div>
@@ -1592,7 +1592,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 style={{ width: `${monthMm.pct.toFixed(1)}%` }}
               />
             </div>
-            <p className="journal-mm-hint">주차별 완료 M/M 기준 · 완료된 업무(h)÷8 자동 · 평일 가용 1.0(8h 기준)</p>
+            <p className="journal-mm-hint">주차별 완료 M/D 기준 · 완료된 업무(h)÷8 자동 · 평일 가용 1.0(8h 기준)</p>
           </div>
         </div>
 
@@ -1677,7 +1677,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                     )}
                   </button>
                   <span className="journal-week-mm-meta">
-                    완료 <strong>{stats.logged.toFixed(2)}</strong> / 가용 <strong>{stats.available.toFixed(2)}</strong> M/M
+                    완료 <strong>{stats.logged.toFixed(2)}</strong> / 가용 <strong>{stats.available.toFixed(2)}</strong> M/D
                     {stats.shortage > 0.001 ? (
                       <span className="shortage"> · 부족 {stats.shortage.toFixed(2)}</span>
                     ) : (
