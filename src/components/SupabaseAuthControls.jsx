@@ -7,7 +7,11 @@ import {
   subscribeSupabaseAuthState,
 } from '../utils/supabaseAuth';
 
-export default function SupabaseAuthControls() {
+export default function SupabaseAuthControls({
+  className = '',
+  inputId = 'supabase-auth-email',
+  helpId = 'supabase-auth-help',
+}) {
   const [session, setSession] = useState(null);
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -29,7 +33,7 @@ export default function SupabaseAuthControls() {
 
   if (session?.user?.email) {
     return (
-      <div className="project-supabase-auth project-supabase-auth--signed-in">
+      <div className={`project-supabase-auth project-supabase-auth--signed-in ${className}`.trim()}>
         <p className="project-supabase-auth__title">Supabase 로그인됨</p>
         <p className="project-supabase-auth__email" title={session.user.email}>
           {session.user.email}
@@ -56,7 +60,7 @@ export default function SupabaseAuthControls() {
 
   return (
     <form
-      className="project-supabase-auth"
+      className={`project-supabase-auth ${className}`.trim()}
       onSubmit={async (event) => {
         event.preventDefault();
         setBusy(true);
@@ -66,17 +70,17 @@ export default function SupabaseAuthControls() {
       }}
     >
       <p className="project-supabase-auth__title">공지 등록용 Supabase 로그인</p>
-      <p className="project-supabase-auth__help" id="supabase-auth-help">
+      <p className="project-supabase-auth__help" id={helpId}>
         공지 등록·수정 전에 관리자 이메일로 로그인하세요.
       </p>
-      <label className="project-supabase-auth__label" htmlFor="supabase-auth-email">
+      <label className="project-supabase-auth__label" htmlFor={inputId}>
         관리자 이메일
       </label>
       <input
-        id="supabase-auth-email"
+        id={inputId}
         type="email"
         autoComplete="email"
-        aria-describedby="supabase-auth-help"
+        aria-describedby={helpId}
         value={email}
         onChange={(event) => setEmail(event.target.value)}
         placeholder="예: name@okestro.com"
