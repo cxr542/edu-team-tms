@@ -31,7 +31,6 @@ function normalizeAnnouncement(row) {
     createdAt: row.created_at || row.createdAt || null,
   };
 }
-
 function json(res, status, body) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
