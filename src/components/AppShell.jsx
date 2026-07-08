@@ -330,7 +330,7 @@ export default function AppShell({
 
           {!viewerLedgerOnly && !isPublicViewerScope && (showGeneralNav || showTeamCommonNav || isMemberShell || isViewer) && (
             <nav className="sidebar-nav sidebar-nav--footer project-sidebar-nav-footer" aria-label="도구·참고">
-              {!isViewer && !isPublicViewerScope && <SupabaseAuthControls />}
+              {isAdminShell && <SupabaseAuthControls />}
               {isAdminShell && (
                 <a
                   className="nav-item project-nav-item project-nav-item--hub"
