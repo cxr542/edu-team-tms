@@ -1213,30 +1213,101 @@ html.project-sidebar-collapsed-boot .project-logo h1 {
 }
 
 
-.project-toolbar__supabase-auth {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin-left: 0.35rem;
-  color: var(--text-secondary);
-  font-size: 0.72rem;
+.project-supabase-auth {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.55rem;
+  width: 100%;
+  margin: 0 0 0.65rem;
+  padding: 0.85rem 0.8rem;
+  border: 2px solid #3b82f6;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.28);
+  color: #0f172a;
+  font-size: 0.8125rem;
 }
 
-.project-toolbar__supabase-auth input {
-  width: 9.5rem;
-  min-height: 28px;
-  border: 1px solid var(--border-color);
-  border-radius: 999px;
-  background: var(--surface-color);
-  color: var(--text-color);
-  padding: 0.28rem 0.65rem;
+.project-supabase-auth__title {
+  margin: 0;
+  color: #1d4ed8;
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1.35;
 }
 
-.project-toolbar__supabase-auth-message {
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.project-supabase-auth__help {
+  margin: 0;
+  color: #475569;
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.project-supabase-auth__label {
+  margin: 0.1rem 0 0;
+  color: #0f172a;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.project-supabase-auth__email {
+  margin: 0;
+  color: #0f172a;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+.project-supabase-auth input {
+  width: 100%;
+  min-height: 42px;
+  border: 2px solid #94a3b8;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  outline: none;
+}
+
+.project-supabase-auth input::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+
+.project-supabase-auth input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.22);
+}
+
+.project-supabase-auth__button {
+  justify-content: center;
+  width: 100%;
+  min-height: 38px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.project-supabase-auth__message {
+  margin: 0;
+  color: #1d4ed8;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.project-supabase-auth--signed-in {
+  border-color: #16a34a;
+}
+
+.project-shell.is-sidebar-collapsed .project-supabase-auth,
+html.project-sidebar-collapsed-boot .project-supabase-auth {
+  display: none;
 }
 
 .project-toolbar__supabase-health-message {
@@ -1265,7 +1336,7 @@ html.project-sidebar-collapsed-boot .project-logo h1 {
     display: none;
   }
 
-  .project-toolbar__supabase-auth {
+  .project-supabase-auth {
     display: none;
   }
 }
