@@ -13,21 +13,47 @@ export default function AdminGatePage({ onUnlocked }) {
   const [busy, setBusy] = useState(false);
   const configured = isAdminGateConfigured();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     if (!configured && !import.meta.env.DEV) {
-      setError('운영 환경에 관리자 접근 비밀번호(VITE_ADMIN_GATE_PASSWORD)가 설정되지 않았습니다.');
+      setError('운영 환경에 관리자 접근 비밀번호가 설정되지 않았습니다.');
       return;
     }
     setBusy(true);
-    if (verifyAdminGatePassword(password)) {
-      unlockAdminGate();
-      onUnlocked?.();
-    } else {
-      setError('비밀번호가 올바르지 않습니다.');
+    try {
+      const response = await fetch('/api/admin-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ password }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (response.ok && payload.ok) {
+        unlockAdminGate();
+        onUnlocked?.();
+        return;
+      }
+      if (response.status === 401) {
+        setError(payload.message || '비밀번호가 올바르지 않습니다.');
+        return;
+      }
+      if (import.meta.env.DEV && verifyAdminGatePassword(password)) {
+        unlockAdminGate();
+        onUnlocked?.();
+        return;
+      }
+      setError(payload.message || '비밀번호가 올바르지 않습니다.');
+    } catch {
+      if (import.meta.env.DEV && verifyAdminGatePassword(password)) {
+        unlockAdminGate();
+        onUnlocked?.();
+      } else {
+        setError('비밀번호가 올바르지 않습니다.');
+      }
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
   };
 
   return (

@@ -6,6 +6,7 @@ export function getAdminGatePassword() {
 }
 
 export function isAdminGateConfigured() {
+  if (import.meta.env.PROD) return true;
   return getAdminGatePassword().length > 0;
 }
 
