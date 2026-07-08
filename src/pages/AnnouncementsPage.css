@@ -14,6 +14,31 @@
   padding: 1.25rem;
 }
 
+.announcements-auth-panel {
+  margin-bottom: 1rem;
+}
+
+.announcements-auth-panel .project-supabase-auth--page {
+  max-width: 36rem;
+  margin: 0;
+  border: 1px solid #93c5fd;
+  background: #eff6ff;
+  box-shadow: none;
+}
+
+.announcements-auth-panel .project-supabase-auth--page.project-supabase-auth--signed-in {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.announcements-auth-panel .project-supabase-auth__title {
+  color: #1e40af;
+}
+
+.announcements-auth-panel .project-supabase-auth--signed-in .project-supabase-auth__title {
+  color: #166534;
+}
+
 .announcements-header {
   display: flex;
   justify-content: space-between;

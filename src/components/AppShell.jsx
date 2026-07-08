@@ -55,7 +55,6 @@ import { buildAppModuleUrl } from '../hooks/useAppModule';
 import { openAppModuleInNewTab } from '../utils/appModuleNavigation';
 import { withAppBase } from '../utils/appRoute';
 import { checkSupabaseHealth, SUPABASE_HEALTH_STATUS } from '../utils/supabaseHealth';
-import SupabaseAuthControls from './SupabaseAuthControls';
 
 export default function AppShell({
   activeModule,
@@ -330,7 +329,6 @@ export default function AppShell({
 
           {!viewerLedgerOnly && !isPublicViewerScope && (showGeneralNav || showTeamCommonNav || isMemberShell || isViewer) && (
             <nav className="sidebar-nav sidebar-nav--footer project-sidebar-nav-footer" aria-label="도구·참고">
-              {isAdminShell && <SupabaseAuthControls />}
               {isAdminShell && (
                 <a
                   className="nav-item project-nav-item project-nav-item--hub"

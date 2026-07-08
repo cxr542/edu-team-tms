@@ -17,6 +17,7 @@ import {
 } from '../constants/announcements.js';
 import { useAnnouncements } from '../hooks/useAnnouncements.js';
 import { resolveAnnouncementAuthorIdentity } from '../utils/announcementAuthorIdentity.js';
+import SupabaseAuthControls from '../components/SupabaseAuthControls.jsx';
 import './AnnouncementsPage.css';
 
 function formatDate(value) {
@@ -342,6 +343,16 @@ export default function AnnouncementsPage({
             <CheckCircle2 size={14} aria-hidden />
             {message}
           </p>
+        )}
+
+        {isManager && (
+          <div className="announcements-auth-panel">
+            <SupabaseAuthControls
+              className="project-supabase-auth--page"
+              inputId="announcements-supabase-auth-email"
+              helpId="announcements-supabase-auth-help"
+            />
+          </div>
         )}
 
         {canEdit && (
