@@ -1,4 +1,5 @@
 import { getSupabaseClient, isSupabaseConfigured } from './supabaseClient.js';
+import { lockAdminGate } from '../constants/adminGate.js';
 import {
   countRecentAnnouncementUpdates,
   formatAnnouncementCategoryLabel,
@@ -7,7 +8,6 @@ import {
 } from '../constants/announcements.js';
 
 const ANNOUNCEMENTS_TABLE = 'announcements';
-const PAYLOAD_VERSION = 1;
 
 function result({ ok, status, message, data = null }) {
   return { ok, status, message, data };
@@ -136,45 +136,44 @@ export function buildAnnouncementDraft({
   };
 }
 
-function toRowPayload(announcement, updatedAt = null) {
-  const normalized = normalizeAnnouncement(announcement);
-  if (!normalized) return null;
-  const publishedAt = normalized.isPublished
-    ? normalized.publishedAt || updatedAt || nowIso()
-    : normalized.publishedAt || null;
-  return {
-    id: normalized.id || randomId(),
-    title: normalized.title,
-    body: normalized.body,
-    category: normalizeAnnouncementCategory(normalized.category),
-    is_pinned: Boolean(normalized.isPinned),
-    is_published: Boolean(normalized.isPublished),
-    author: normalized.author,
-    author_code: normalized.authorCode,
-    published_at: publishedAt,
-    created_at: normalized.createdAt || updatedAt || nowIso(),
-    updated_at: updatedAt || normalized.updatedAt || nowIso(),
-    payload_version: PAYLOAD_VERSION,
-  };
-}
+async function callAnnouncementsApi(path, { method = 'GET', announcement = null } = {}) {
+  try {
+    const response = await fetch(path, {
+      method,
+      headers: announcement ? { 'Content-Type': 'application/json' } : undefined,
+      credentials: 'include',
+      body: announcement ? JSON.stringify({ announcement }) : undefined,
+    });
+    const payload = await response.json().catch(() => ({}));
 
-async function saveRow(client, row) {
-  const { data, error } = await client
-    .from(ANNOUNCEMENTS_TABLE)
-    .upsert(row, { onConflict: 'id' })
-    .select()
-    .single();
+    if (response.status === 403) {
+      lockAdminGate();
+      return result({
+        ok: false,
+        status: 'forbidden',
+        message:
+          payload.message ||
+          '관리자 세션이 만료되었습니다. /admin 에서 비밀번호를 다시 입력하세요.',
+      });
+    }
 
-  if (error) {
-    return result({ ok: false, status: 'error', message: error.message });
+    if (!response.ok) {
+      return result({
+        ok: false,
+        status: payload.status || 'error',
+        message: payload.message || `Announcements API failed (${response.status}).`,
+      });
+    }
+
+    return result({
+      ok: true,
+      status: payload.status || 'ok',
+      message: payload.message || 'Announcements API succeeded.',
+      data: payload.data ?? null,
+    });
+  } catch (error) {
+    return unexpectedErrorResult(error, 'api');
   }
-
-  return result({
-    ok: true,
-    status: 'ok',
-    message: 'Announcement saved to Supabase.',
-    data: normalizeAnnouncement(data),
-  });
 }
 
 export async function upsertAnnouncementToSupabase(announcement) {
@@ -195,15 +194,15 @@ export async function upsertAnnouncementToSupabase(announcement) {
   }
   if (!isConfigured()) return supabaseDisabledResult();
 
-  const client = getSupabaseClient();
-  if (!client) return supabaseDisabledResult();
-
   try {
-    const payload = toRowPayload(announcement);
-    if (!payload) {
+    const normalized = normalizeAnnouncement(announcement);
+    if (!normalized) {
       return result({ ok: false, status: 'error', message: 'Announcement payload is invalid.' });
     }
-    return await saveRow(client, payload);
+    return await callAnnouncementsApi('/api/announcements', {
+      method: 'POST',
+      announcement: normalized,
+    });
   } catch (error) {
     return unexpectedErrorResult(error, 'save');
   }
@@ -211,6 +210,10 @@ export async function upsertAnnouncementToSupabase(announcement) {
 
 export async function listAnnouncementsFromSupabase({ includeUnpublished = false } = {}) {
   if (!isConfigured()) return supabaseDisabledResult();
+
+  if (includeUnpublished) {
+    return callAnnouncementsApi('/api/announcements?includeUnpublished=true');
+  }
 
   const client = getSupabaseClient();
   if (!client) return supabaseDisabledResult();

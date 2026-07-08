@@ -17,7 +17,6 @@ import {
 } from '../constants/announcements.js';
 import { useAnnouncements } from '../hooks/useAnnouncements.js';
 import { resolveAnnouncementAuthorIdentity } from '../utils/announcementAuthorIdentity.js';
-import SupabaseAuthControls from '../components/SupabaseAuthControls.jsx';
 import './AnnouncementsPage.css';
 
 function formatDate(value) {
@@ -346,13 +345,10 @@ export default function AnnouncementsPage({
         )}
 
         {isManager && (
-          <div className="announcements-auth-panel">
-            <SupabaseAuthControls
-              className="project-supabase-auth--page"
-              inputId="announcements-supabase-auth-email"
-              helpId="announcements-supabase-auth-help"
-            />
-          </div>
+          <p className="announcements-note">
+            공지 등록·수정은 /admin 비밀번호로 발급된 서버 세션을 통해 저장됩니다. Supabase
+            로그인은 필요하지 않습니다.
+          </p>
         )}
 
         {canEdit && (
