@@ -129,7 +129,15 @@ function journalPullToastMessage(result) {
     : '팀 공유본을 이 브라우저에 병합했습니다';
 }
 
-const DEFAULT_ADD_DRAFT = { cat: 'edu', title: '', plan: 4, actual: 0, done: false, slot: '' };
+const DEFAULT_ADD_DRAFT = {
+  cat: 'edu',
+  mmAxis: 'work',
+  title: '',
+  plan: 4,
+  actual: 0,
+  done: false,
+  slot: '',
+};
 
 function navigateToDayKey(dayKey, { year, month, setPeriod, setSelectedDayKey, scrollToDayRef, setScrollTick }) {
   const [y, m] = dayKey.split('-').map(Number);
@@ -757,7 +765,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       actual: 0,
       done: false,
       note: '',
-      mmAxis: addDraft.cat === 'ai' ? 'improve' : 'work',
+      mmAxis: addDraft.mmAxis === 'improve' ? 'improve' : 'work',
       slot: resolveTaskSlotField(addDraft.slot),
     };
     const dayKey = addDayKey;
@@ -2018,6 +2026,21 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 </option>
               ))}
             </select>
+          </div>
+          <div className="form-group">
+            <label>{KPI1_NAME} M/D 구분</label>
+            <select
+              className="form-input"
+              value={addDraft.mmAxis === 'improve' ? 'improve' : 'work'}
+              onChange={(e) => setAddDraft({ ...addDraft, mmAxis: e.target.value })}
+              aria-describedby="journal-add-mm-axis-help"
+            >
+              <option value="work">업무 M/D</option>
+              <option value="improve">생산향상 M/D</option>
+            </select>
+            <p id="journal-add-mm-axis-help" className="journal-field-help">
+              카테고리와 무관하게 직접 선택한 M/D 구분으로 저장됩니다.
+            </p>
           </div>
           <div className="form-group">
             <label>시간대</label>
