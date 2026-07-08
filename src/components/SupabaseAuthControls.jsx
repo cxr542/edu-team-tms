@@ -29,8 +29,10 @@ export default function SupabaseAuthControls() {
 
   if (session?.user?.email) {
     return (
-      <span className="project-toolbar__supabase-auth">
-        <span title={session.user.email}>Supabase: {session.user.email}</span>
+      <span className="project-supabase-auth">
+        <span className="project-supabase-auth__label" title={session.user.email}>
+          Supabase 로그인: {session.user.email}
+        </span>
         <button
           type="button"
           className="btn btn-secondary btn-sm"
@@ -46,14 +48,14 @@ export default function SupabaseAuthControls() {
           <LogOut size={14} aria-hidden />
           로그아웃
         </button>
-        {message && <span className="project-toolbar__supabase-auth-message">{message}</span>}
+        {message && <span className="project-supabase-auth__message">{message}</span>}
       </span>
     );
   }
 
   return (
     <form
-      className="project-toolbar__supabase-auth"
+      className="project-supabase-auth"
       onSubmit={async (event) => {
         event.preventDefault();
         setBusy(true);
@@ -62,7 +64,9 @@ export default function SupabaseAuthControls() {
         setMessage(result.message);
       }}
     >
-      <label className="sr-only" htmlFor="supabase-auth-email">Supabase 로그인 이메일</label>
+      <label className="project-supabase-auth__label" htmlFor="supabase-auth-email">
+        Supabase 로그인 이메일
+      </label>
       <input
         id="supabase-auth-email"
         type="email"
@@ -76,7 +80,7 @@ export default function SupabaseAuthControls() {
         <LogIn size={14} aria-hidden />
         {busy ? '전송 중…' : 'Supabase 로그인'}
       </button>
-      {message && <span className="project-toolbar__supabase-auth-message">{message}</span>}
+      {message && <span className="project-supabase-auth__message">{message}</span>}
     </form>
   );
 }
