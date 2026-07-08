@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 import { sortAnnouncements } from '../src/constants/announcements.js';
-import { normalizeAnnouncement } from '../src/utils/announcementsSupabase.js';
 import { hasValidAdminSession } from './utils/adminSession.js';
 import { isAllowedPublishOrigin } from './utils/publishOrigin.js';
 import { isAdminRouteReferer } from './utils/requestScope.js';
@@ -8,6 +7,30 @@ import { isAdminRouteReferer } from './utils/requestScope.js';
 const ANNOUNCEMENTS_TABLE = 'announcements';
 const PAYLOAD_VERSION = 1;
 
+function normalizeAnnouncement(row) {
+  if (!row || typeof row !== 'object') return null;
+  const isPublished =
+    typeof row.is_published === 'boolean'
+      ? row.is_published
+      : Boolean(row.isPublished);
+  const isPinned =
+    typeof row.is_pinned === 'boolean'
+      ? row.is_pinned
+      : Boolean(row.isPinned);
+  return {
+    id: String(row.id || '').trim(),
+    title: String(row.title || '').trim(),
+    body: typeof row.body === 'string' ? row.body.trim() : '',
+    category: String(row.category || 'notice').trim() || 'notice',
+    isPinned,
+    isPublished,
+    author: String(row.author || '').trim(),
+    authorCode: String(row.author_code || row.authorCode || '').trim(),
+    publishedAt: row.published_at || row.publishedAt || null,
+    updatedAt: row.updated_at || row.updatedAt || null,
+    createdAt: row.created_at || row.createdAt || null,
+  };
+}
 function json(res, status, body) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
