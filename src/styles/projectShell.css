@@ -1217,60 +1217,92 @@ html.project-sidebar-collapsed-boot .project-logo h1 {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.45rem;
+  gap: 0.55rem;
   width: 100%;
-  margin: 0 0 0.45rem;
-  padding: 0.65rem;
-  border: 1px solid rgba(96, 165, 250, 0.35);
-  border-radius: 12px;
-  background: rgba(15, 23, 42, 0.78);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  color: #e5e7eb;
-  font-size: 0.75rem;
+  margin: 0 0 0.65rem;
+  padding: 0.85rem 0.8rem;
+  border: 2px solid #3b82f6;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.28);
+  color: #0f172a;
+  font-size: 0.8125rem;
+}
+
+.project-supabase-auth__title {
+  margin: 0;
+  color: #1d4ed8;
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.project-supabase-auth__help {
+  margin: 0;
+  color: #475569;
+  font-size: 0.74rem;
+  line-height: 1.45;
 }
 
 .project-supabase-auth__label {
-  color: #dbeafe;
-  font-size: 0.72rem;
+  margin: 0.1rem 0 0;
+  color: #0f172a;
+  font-size: 0.78rem;
   font-weight: 700;
   line-height: 1.35;
 }
 
+.project-supabase-auth__email {
+  margin: 0;
+  color: #0f172a;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
 .project-supabase-auth input {
   width: 100%;
-  min-height: 34px;
-  border: 1px solid rgba(147, 197, 253, 0.65);
-  border-radius: 999px;
+  min-height: 42px;
+  border: 2px solid #94a3b8;
+  border-radius: 10px;
   background: #ffffff;
-  color: #111827;
-  padding: 0.38rem 0.72rem;
-  font-size: 0.82rem;
+  color: #0f172a;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 500;
   outline: none;
 }
 
 .project-supabase-auth input::placeholder {
-  color: #6b7280;
+  color: #64748b;
   opacity: 1;
 }
 
 .project-supabase-auth input:focus {
-  border-color: #60a5fa;
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.28);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.22);
 }
 
-.project-supabase-auth .btn {
+.project-supabase-auth__button {
   justify-content: center;
-  min-height: 32px;
-  border-radius: 999px;
+  width: 100%;
+  min-height: 38px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
 .project-supabase-auth__message {
-  overflow: hidden;
-  color: #bfdbfe;
-  font-size: 0.72rem;
-  line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  margin: 0;
+  color: #1d4ed8;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.project-supabase-auth--signed-in {
+  border-color: #16a34a;
 }
 
 .project-shell.is-sidebar-collapsed .project-supabase-auth,
