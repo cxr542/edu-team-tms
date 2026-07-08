@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  getExpectedWorkHours,
   getDayAvailableMm,
   getMmAxisSelectValue,
   getTaskMmAxis,
   getTaskLoggedHours,
   getWeekCompletionStats,
+  normalizeJournalLeaveMm,
   sumCompletedDayMm,
   recalcDayMmFromHours,
   sumDayWorkHours,
@@ -44,6 +46,47 @@ describe('journalMm logged hours', () => {
     expect(applyLeavePresetToDay(baseDay, 'half-am').mm.leave).toBeCloseTo(0.5, 4);
     expect(applyLeavePresetToDay(baseDay, 'half-pm').mm.leave).toBeCloseTo(0.5, 4);
     expect(applyLeavePresetToDay(baseDay, 'quarter').mm.leave).toBeCloseTo(0.25, 6);
+  });
+
+  it('normalizeJournalLeaveMm — preserves old preset leave values after the 8h policy change', () => {
+    expect(normalizeJournalLeaveMm(0.8125)).toBeCloseTo(1, 4);
+    expect(normalizeJournalLeaveMm(0.4063)).toBeCloseTo(0.5, 4);
+    expect(normalizeJournalLeaveMm(0.2031)).toBeCloseTo(0.25, 4);
+    expect(normalizeJournalLeaveMm(0.75)).toBeCloseTo(0.75, 4);
+  });
+
+  it('recalcDayMmFromHours — migrates legacy full-day leave before persisting recalculated M/M', () => {
+    const day = {
+      holiday: true,
+      mm: { work: 0.25, improve: 0.25, leave: 0.8125 },
+      tasks: [{ id: 'a', cat: 'edu', title: '휴일 업무', actual: 8, done: true }],
+    };
+
+    recalcDayMmFromHours(day);
+
+    expect(day.mm).toEqual({ work: 0, improve: 0, leave: 1 });
+    expect(getExpectedWorkHours(day)).toBe(0);
+  });
+
+  it('recalcDayMmFromHours — migrates legacy half and quarter leave before capping work M/M', () => {
+    const halfDay = {
+      holiday: false,
+      mm: { work: 0, improve: 0, leave: 0.4063 },
+      tasks: [{ id: 'half', cat: 'edu', title: '업무', actual: 8, done: true }],
+    };
+    const quarterDay = {
+      holiday: false,
+      mm: { work: 0, improve: 0, leave: 0.2031 },
+      tasks: [{ id: 'quarter', cat: 'edu', title: '업무', actual: 8, done: true }],
+    };
+
+    recalcDayMmFromHours(halfDay);
+    recalcDayMmFromHours(quarterDay);
+
+    expect(halfDay.mm).toMatchObject({ work: 0.5, improve: 0, leave: 0.5 });
+    expect(quarterDay.mm).toMatchObject({ work: 0.75, improve: 0, leave: 0.25 });
+    expect(getExpectedWorkHours(halfDay)).toBe(4);
+    expect(getExpectedWorkHours(quarterDay)).toBe(2);
   });
 
   it('recalcDayMmFromHours — 미완료 실작업은 M/M에 미반영', () => {

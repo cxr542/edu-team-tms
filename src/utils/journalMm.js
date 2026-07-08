@@ -7,6 +7,12 @@ export const STANDARD_DAY_AVAILABLE_MM = 1;
 export const FULL_LEAVE_MM = STANDARD_DAY_AVAILABLE_MM;
 export const HALF_LEAVE_MM = roundMm(STANDARD_DAY_AVAILABLE_MM * 0.5);
 export const QUARTER_LEAVE_MM = roundMm(STANDARD_DAY_AVAILABLE_MM * 0.25);
+const LEGACY_LEAVE_MM_TOLERANCE = 0.0002;
+const LEGACY_LEAVE_MM_VALUES = [
+  [0.8125, FULL_LEAVE_MM],
+  [0.4063, HALF_LEAVE_MM],
+  [0.2031, QUARTER_LEAVE_MM],
+];
 
 export function roundMm(v) {
   return Math.round(v * 10000) / 10000;
@@ -14,6 +20,14 @@ export function roundMm(v) {
 
 export function hoursToMm(hours) {
   return roundMm((Number(hours) || 0) / WORK_DAY_HOURS);
+}
+
+export function normalizeJournalLeaveMm(value) {
+  const leave = roundMm(Number(value) || 0);
+  const legacy = LEGACY_LEAVE_MM_VALUES.find(([from]) => {
+    return Math.abs(leave - from) <= LEGACY_LEAVE_MM_TOLERANCE;
+  });
+  return legacy ? legacy[1] : leave;
 }
 
 /** M/M·실작업 집계 대상 — 완료 체크 + 휴일 메모 제외 */
@@ -51,7 +65,7 @@ export function sumDayPlanHours(data) {
 }
 
 export function getExpectedWorkHours(data) {
-  const leave = Number(data.mm.leave) || 0;
+  const leave = normalizeJournalLeaveMm(data.mm.leave);
   if (data.holiday && leave >= FULL_LEAVE_MM - 0.001) return 0;
   if (leave >= HALF_LEAVE_MM - 0.001) {
     return WORK_DAY_HOURS * 0.5;
@@ -86,12 +100,12 @@ export function sumDayMm(data) {
 }
 
 export function sumCompletedDayMm(data) {
-  const leave = Number(data.mm.leave) || 0;
+  const leave = normalizeJournalLeaveMm(data.mm.leave);
   return roundMm(hoursToMm(sumDayWorkHours(data)) + leave);
 }
 
 export function recalcDayMmFromHours(data) {
-  const leave = roundMm(Number(data.mm.leave) || 0);
+  const leave = normalizeJournalLeaveMm(data.mm.leave);
   if (data.holiday && leave >= FULL_LEAVE_MM - 0.001) {
     data.mm = { work: 0, improve: 0, leave: FULL_LEAVE_MM };
     return;
