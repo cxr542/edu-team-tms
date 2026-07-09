@@ -34,6 +34,8 @@ Blob은 클라우드 저장, 공유 저장, 복구 흐름에서 사용된다.
 - 기존 localStorage 저장 흐름을 즉시 제거하지 않는다
 - Blob 저장/복구 흐름을 즉시 제거하지 않는다
 - Supabase 저장은 병행 저장부터 시작한다
+- **일지·공지 쓰기 인증:** `/admin` 비밀번호(admin-session)만 사용. Supabase 매직링크 추가 로그인 없음
+- 브라우저 anon/authenticated 직접 write 없이 서버 API + `SUPABASE_SERVICE_ROLE_KEY`로 접근
 - 충돌 방지를 위해 `updatedAt` 기반 최신본 비교를 우선 적용한다
 - 운영 데이터 마이그레이션은 별도 PR에서 수행한다
 
@@ -63,13 +65,13 @@ Blob은 클라우드 저장, 공유 저장, 복구 흐름에서 사용된다.
 
 이번 1단계에서는 `tms-kpi-operational-v1` 전체 스냅샷을 즉시 전환하지 않고, KPI1 월 승인과 KPI2 행 승인만 row table로 먼저 분리한다. 기존 localStorage 운영 스토어는 그대로 유지한다.
 
-### 2-1단계. 업무일지 snapshot 유틸 추가
+### 2-1단계. 업무일지 snapshot 유틸·admin API
 
-- `src/utils/supabaseJournalSnapshot.js`에 구성원별 `journal_snapshots` upsert/read 유틸을 추가했다.
-- 유틸은 `member_code` unique key, `payload_version = 1`, 전달받은 `updatedAt` 또는 현재 시각을 사용한다.
-- Supabase 환경변수가 없거나 요청이 실패해도 예외를 던지지 않고 상태 결과를 반환한다.
-- 아직 기존 localStorage 저장, Blob 저장/불러오기, 업무일지 Provider/hook에 연결하지 않았다.
-- 자동 저장과 Supabase 병행 저장은 아직 활성화하지 않았다.
+- `api/journal-snapshots.js`: `/admin` admin-session + `SUPABASE_SERVICE_ROLE_KEY`로 GET/POST (공지 `/api/announcements`와 동일 패턴).
+- `src/utils/supabaseJournalSnapshot.js`: 브라우저에서 위 API를 `credentials: 'include'`로 호출. Supabase Auth/매직링크 불필요.
+- `src/constants/supabaseSync.js`: `VITE_SUPABASE_MANUAL_MIRROR_ENABLED` — production 기본 false, Preview 파일럿만 true.
+- WeeklyJournalPage 리더 툴바의 「Supabase 업무일지 저장」「저장소 비교」는 플래그가 켜진 경우에만 표시.
+- localStorage 즉시 저장·Blob 팀 공유는 그대로. Provider `persist()` 자동 미러(J6)는 아직 없음.
 
 ### 3단계. 병행 저장
 
