@@ -5,6 +5,12 @@
 
 ---
 
+## 2026-07-09 — Add J4 journal Supabase freshness UI (read-only)
+
+- 일지 상태 패널에 「원격이 더 최신」 등 Supabase 신선도 힌트 표시 (Preview `MANUAL_MIRROR` + 팀장)
+- 가져오기/충돌 복구는 아직 없음 (J5)
+- PR #88: https://github.com/cxr542/edu-team-tms/pull/88
+
 ## 2026-07-09 — Add PR-merge automation for TMS release notes md
 
 - main 머지 시 참고문서 릴리즈 노트(md)가 PR 제목/`## 릴리즈` 불릿으로 자동 갱신됩니다
