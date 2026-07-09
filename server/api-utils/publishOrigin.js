@@ -33,6 +33,17 @@ export function isAllowedPublishOrigin(refererOrOrigin = '') {
 
   if (/^https?:\/\/localhost(?::\d+)?$/i.test(origin)) return true;
   if (DEFAULT_ALLOWED_ORIGINS.has(origin)) return true;
+  // Vercel Preview / deployment URLs for this project (J3+ admin API from Preview UI)
+  if (
+    /^https:\/\/edu-team-tms(?:-ten)?(?:-[a-z0-9-]+)?-okestro-edu-tms-v2-s-projects\.vercel\.app$/i.test(
+      origin
+    ) ||
+    /^https:\/\/edu-team-tms-ten-git-[a-z0-9-]+-okestro-edu-tms-v2-s-projects\.vercel\.app$/i.test(
+      origin
+    )
+  ) {
+    return true;
+  }
 
   return configuredAllowedOrigins().includes(origin);
 }

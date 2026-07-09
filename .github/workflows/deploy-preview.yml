@@ -32,6 +32,38 @@ jobs:
       - name: Build app
         run: npm run build
 
+      - name: Ensure Preview MANUAL_MIRROR=true (J3 pilot; Production untouched)
+        if: github.head_ref == 'chore/j3-preview-mirror-pilot'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          npx vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+          # Non-interactive Preview-only flag (do not touch Production)
+          npx vercel env add VITE_SUPABASE_MANUAL_MIRROR_ENABLED preview \
+            --value true \
+            --yes \
+            --force \
+            --non-interactive \
+            --token="$VERCEL_TOKEN"
+          npx vercel env ls --token="$VERCEL_TOKEN" | tee /tmp/vercel-env-ls.txt
+          {
+            echo "## Vercel env (after Preview MANUAL_MIRROR)"
+            echo '```'
+            cat /tmp/vercel-env-ls.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if ! grep -E 'VITE_SUPABASE_MANUAL_MIRROR_ENABLED' /tmp/vercel-env-ls.txt | grep -qi 'Preview'; then
+            echo "ERROR: Preview MANUAL_MIRROR missing after env add" >&2
+            exit 1
+          fi
+          if grep -E 'VITE_SUPABASE_MANUAL_MIRROR_ENABLED' /tmp/vercel-env-ls.txt | grep -i 'Production' | grep -Eiq '(^|[^a-z])true([^a-z]|$)'; then
+            echo "ERROR: Production MANUAL_MIRROR must not be true" >&2
+            exit 1
+          fi
+
       - name: Deploy preview to Vercel
         id: vercel_deploy
         env:
@@ -39,7 +71,19 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
+          # Re-pull so Preview env (incl. MANUAL_MIRROR) is present for the Vite build
           npx vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+          ENV_FILE=.vercel/.env.preview.local
+          if ! grep -q '^VITE_SUPABASE_MANUAL_MIRROR_ENABLED=' "$ENV_FILE"; then
+            echo "ERROR: Preview env file missing MANUAL_MIRROR key after pull" >&2
+            cut -d= -f1 "$ENV_FILE" || true
+            exit 1
+          fi
+          # Normalize value for this build (Vercel pull may quote/escape; Vite needs true)
+          grep -v '^VITE_SUPABASE_MANUAL_MIRROR_ENABLED=' "$ENV_FILE" > /tmp/env.preview.local
+          printf 'VITE_SUPABASE_MANUAL_MIRROR_ENABLED=true\n' >> /tmp/env.preview.local
+          mv /tmp/env.preview.local "$ENV_FILE"
+          export VITE_SUPABASE_MANUAL_MIRROR_ENABLED=true
           npx vercel build --token="$VERCEL_TOKEN"
           DEPLOY_OUTPUT="$(npx vercel deploy --prebuilt --token="$VERCEL_TOKEN")"
           echo "$DEPLOY_OUTPUT"
@@ -51,12 +95,14 @@ jobs:
           echo "preview_url=$PREVIEW_URL" >> "$GITHUB_OUTPUT"
 
       - name: Add preview URL to summary
+        if: always() && steps.vercel_deploy.outputs.preview_url != ''
         run: |
           echo "## Preview Deployment" >> "$GITHUB_STEP_SUMMARY"
           echo "- PR: #${{ github.event.pull_request.number }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- URL: ${{ steps.vercel_deploy.outputs.preview_url }}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Comment preview URL on PR
+        if: always() && steps.vercel_deploy.outputs.preview_url != ''
         continue-on-error: true
         uses: actions/github-script@v7
         with:
@@ -69,3 +115,113 @@ jobs:
               issue_number: context.issue.number,
               body
             });
+
+      - name: Confirm Production client keeps MANUAL_MIRROR off
+        if: github.head_ref == 'chore/j3-preview-mirror-pilot'
+        run: |
+          set -euo pipefail
+          html=$(curl -sS -L --max-time 30 "https://edu-team-tms-ten.vercel.app/")
+          js=$(printf '%s' "$html" | grep -Eo '/assets/index-[^"]+\.js' | head -n 1)
+          test -n "$js"
+          body=$(curl -sS -L --max-time 60 "https://edu-team-tms-ten.vercel.app$js")
+          # Flag false → disabled toast string remains; mirror toolbar gated off at build time
+          echo "$body" | grep -q 'Preview 파일럿에서만 켭니다'
+          echo "Production client still ships MANUAL_MIRROR disabled message (expected)."
+
+      - name: J3 verify journal_snapshots via service role (soft until GRANT applied)
+        if: github.head_ref == 'chore/j3-preview-mirror-pilot'
+        continue-on-error: true
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          # Requires supabase/j3-grant-service-role-journal.sql applied once.
+          # Soft-fail so Preview URL / Production checks still complete.
+          test -f .vercel/.env.preview.local
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+
+          function readEnvKey(fileText, key) {
+            const re = new RegExp(
+              `(?:^|\\n)${key}=("(?:\\\\.|[^"])*"|'(?:\\\\.|[^'])*'|[^\\r\\n]*)`,
+              'm'
+            );
+            const m = fileText.match(re);
+            if (!m) return '';
+            let val = m[1].trim();
+            if (
+              (val.startsWith('"') && val.endsWith('"')) ||
+              (val.startsWith("'") && val.endsWith("'"))
+            ) {
+              val = val.slice(1, -1);
+            }
+            if (
+              (val.startsWith('"') && val.endsWith('"')) ||
+              (val.startsWith("'") && val.endsWith("'"))
+            ) {
+              val = val.slice(1, -1);
+            }
+            return val;
+          }
+
+          const fileText = readFileSync('.vercel/.env.preview.local', 'utf8');
+          const url = (
+            readEnvKey(fileText, 'SUPABASE_URL') || readEnvKey(fileText, 'VITE_SUPABASE_URL')
+          ).replace(/\/$/, '');
+          const serviceRoleKey = readEnvKey(fileText, 'SUPABASE_SERVICE_ROLE_KEY');
+          console.log(`env lens: supabaseUrl=${url.length} serviceRole=${serviceRoleKey.length}`);
+          if (!url || !serviceRoleKey) {
+            console.error('ERROR: SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY missing in Preview env');
+            process.exit(1);
+          }
+
+          const stamp = new Date().toISOString();
+          const headers = {
+            apikey: serviceRoleKey,
+            Authorization: `Bearer ${serviceRoleKey}`,
+            'Content-Type': 'application/json',
+            Prefer: 'resolution=merge-duplicates,return=representation',
+          };
+
+          for (const memberCode of ['J3A', 'J3B', 'J3C']) {
+            const payload = {
+              j3Pilot: true,
+              memberCode,
+              stampedAt: stamp,
+              note: 'J3 Preview pilot verification payload',
+            };
+            const upsertRes = await fetch(`${url}/rest/v1/journal_snapshots`, {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({
+                member_code: memberCode,
+                payload,
+                payload_version: 1,
+                updated_at: stamp,
+              }),
+            });
+            const upsertBody = await upsertRes.json().catch(() => ({}));
+            console.log(`UPSERT ${memberCode}`, upsertRes.status);
+            if (!upsertRes.ok) {
+              throw new Error(`upsert ${memberCode}: ${upsertRes.status} ${JSON.stringify(upsertBody)}`);
+            }
+
+            const getRes = await fetch(
+              `${url}/rest/v1/journal_snapshots?member_code=eq.${encodeURIComponent(memberCode)}&select=member_code,payload,updated_at`,
+              {
+                headers: {
+                  apikey: serviceRoleKey,
+                  Authorization: `Bearer ${serviceRoleKey}`,
+                },
+              }
+            );
+            const rows = await getRes.json().catch(() => []);
+            console.log(`GET ${memberCode}`, getRes.status, Array.isArray(rows) ? rows[0]?.updated_at : null);
+            if (!getRes.ok || !Array.isArray(rows) || !rows[0]?.payload?.j3Pilot) {
+              throw new Error(`get ${memberCode}: ${getRes.status} ${JSON.stringify(rows)}`);
+            }
+          }
+          console.log('J3 J3A/J3B/J3C journal_snapshots service-role verification OK');
+          NODE

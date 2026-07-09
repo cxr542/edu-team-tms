@@ -1,0 +1,63 @@
+# One-shot ops helper for J3 Preview pilot.
+# Sets VITE_SUPABASE_MANUAL_MIRROR_ENABLED=true for Preview only.
+# Does not change Production.
+name: Set Preview Mirror Env
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  set_preview_env:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Link Vercel project
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npx vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+
+      - name: Set Preview MANUAL_MIRROR=true (leave Production alone)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          echo "## Before" >> "$GITHUB_STEP_SUMMARY"
+          npx vercel env ls --token="$VERCEL_TOKEN" | tee /tmp/vercel-env-before.txt
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/vercel-env-before.txt >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+          npx vercel env add VITE_SUPABASE_MANUAL_MIRROR_ENABLED preview \
+            --value true \
+            --yes \
+            --force \
+            --non-interactive \
+            --token="$VERCEL_TOKEN"
+
+          echo "## After" >> "$GITHUB_STEP_SUMMARY"
+          npx vercel env ls --token="$VERCEL_TOKEN" | tee /tmp/vercel-env-after.txt
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/vercel-env-after.txt >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+          # Guard: Production must not show true for this key (allow false/absent)
+          if grep -E 'VITE_SUPABASE_MANUAL_MIRROR_ENABLED' /tmp/vercel-env-after.txt | grep -i 'Production' | grep -Eiq '\btrue\b'; then
+            echo "ERROR: Production MANUAL_MIRROR appears true" >&2
+            exit 1
+          fi
+          echo "Preview MANUAL_MIRROR set to true; Production not true."

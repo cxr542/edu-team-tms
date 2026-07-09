@@ -105,20 +105,22 @@ VITE_SUPABASE_URL=... VITE_SUPABASE_ANON_KEY=... npm run verify:supabase
 
 ---
 
-## 6. J3 Preview 파일럿 체크리스트 (다음 운영 작업)
+## 6. J3 Preview 파일럿 체크리스트 (2026-07-09)
 
-Production에는 켜지 않는다. Preview(또는 로컬)만:
+Production에는 켜지 않는다. Preview(또는 로컬)만.
 
-| # | 확인 | 기대 |
+| # | 확인 | 상태 |
 |---|------|------|
-| 1 | Preview env `VITE_SUPABASE_MANUAL_MIRROR_ENABLED=true` + Redeploy | 빌드 반영 |
-| 2 | Preview `/admin` 비밀번호 로그인 | admin-session 쿠키 |
-| 3 | `/admin?module=journal` 리더 툴바에 「Supabase 업무일지 저장」「저장소 비교」 | 버튼 표시 |
-| 4 | 구성원 A → 저장 → toast 성공 | `journal_snapshots` upsert |
-| 5 | 구성원 B, C 동일 | 동일 |
-| 6 | 「저장소 비교」 | 로컬 vs 원격 `updated_at` 표시 |
-| 7 | 세션 만료 후 저장 | 403 → `/admin` 재로그인 유도 |
-| 8 | Production은 계속 `false` | 미러 버튼 미노출 |
+| 1 | Preview env `VITE_SUPABASE_MANUAL_MIRROR_ENABLED=true` | ✅ Deploy Preview에서 설정·확인 |
+| 2 | Preview 배포 성공 (Hobby Function 한도 이슈 없음) | ✅ |
+| 3 | Production 클라이언트에 미러 비활성 메시지 유지 | ✅ CI 확인 |
+| 4 | Preview origin allowlist (`publishOrigin`) | ✅ |
+| 5 | `service_role` → `journal_snapshots` GRANT | ⏳ [`supabase/j3-grant-service-role-journal.sql`](../supabase/j3-grant-service-role-journal.sql) SQL Editor 1회 |
+| 6 | Preview `/admin?module=journal` 미러 버튼·A/B/C 저장 | ⏳ GRANT 후 + Vercel SSO로 Preview 접속 |
+| 7 | 「저장소 비교」 | ⏳ 6과 동일 |
+| 8 | Production 미러 버튼 미노출 | ✅ |
+
+**블로커:** `permission denied for table journal_snapshots` (service_role에 table GRANT 없음). RLS bypass만으로는 부족하고 `GRANT SELECT, INSERT, UPDATE … TO service_role` 필요.
 
 통과 후: J4 신선도 UI → J5 복구 → J6 dual-write → J7 Realtime·Blob 축소 ([`operations-backlog.md`](./operations-backlog.md) §9).
 

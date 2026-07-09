@@ -275,6 +275,11 @@ grant select on table public.announcements to anon;
 grant select, insert, update on table public.announcements to authenticated;
 grant select, insert, update on table public.csr_requests to anon;
 
+-- Admin API paths use SUPABASE_SERVICE_ROLE_KEY (bypasses RLS but still needs table grants)
+grant select, insert, update on table public.journal_snapshots to service_role;
+grant select, insert, update on table public.kpi_operational_snapshots to service_role;
+grant select, insert, update on table public.announcements to service_role;
+
 -- tms_profiles
 drop policy if exists "tms_profiles_read_self" on public.tms_profiles;
 create policy "tms_profiles_read_self"
