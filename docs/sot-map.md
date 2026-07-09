@@ -18,7 +18,7 @@
 | Product overview | `README.md` | 첫 진입점. 상세 운영 규칙은 별도 문서 참조 |
 | Design | `DESIGN.md` | 현재 제품 설계 기준. 오래된 내용 발견 시 갱신 필요 |
 | URL and access rules | `docs/reference-source/TMS-접속URL-북마크.md` | 팀장/구성원/문서/일지 진입점 기준 |
-| Release history | `docs/reference-source/TMS-릴리즈노트.md` | 변경 이력 기준. 현재 운영 규칙과 구분 필요 |
+| Release history | `docs/reference-source/TMS-릴리즈노트.md` | 변경 이력 기준. main 머지 시 PR 기반 자동 prepend 후 `sync:docs`. 현재 운영 규칙과 구분 필요 |
 | Ledger/live sync | `docs/ledger-live-sync.md` | ledger, localStorage, Blob 관련 운영 기준 |
 | Deployment | `docs/deployment-process.md` | GitHub/Vercel 배포 및 smoke check 기준 |
 | KPI-journal linkage | `docs/reference-source/KPI-일지-TMS-연계-가이드.md` | 업무일지와 KPI 연결 설명 |
