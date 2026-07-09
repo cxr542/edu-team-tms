@@ -17,6 +17,7 @@ import {
 } from '../constants/announcements.js';
 import { useAnnouncements } from '../hooks/useAnnouncements.js';
 import { resolveAnnouncementAuthorIdentity } from '../utils/announcementAuthorIdentity.js';
+import { markAnnouncementsSeen } from '../utils/announcementsUnreadBadge.js';
 import './AnnouncementsPage.css';
 
 function formatDate(value) {
@@ -228,6 +229,11 @@ export default function AnnouncementsPage({
       return next;
     });
   }, [announcements]);
+
+  useEffect(() => {
+    if (loading) return;
+    markAnnouncementsSeen();
+  }, [loading, announcements]);
 
   const visibleAnnouncements = useMemo(() => sortAnnouncements(announcements), [announcements]);
 

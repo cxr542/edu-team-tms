@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import LeaderKpiApprovalBell from './LeaderKpiApprovalBell';
 import { useLeaderKpiPendingBadge } from '../hooks/useLeaderKpiPendingBadge';
+import { useAnnouncementsUnreadBadge } from '../hooks/useAnnouncementsUnreadBadge';
 import { formatKpiMemberLabel, findKpiMember } from '../constants/kpiMembers';
 import {
   NAV_GROUP_COMMON,
@@ -123,6 +124,8 @@ export default function AppShell({
   const showExperimentalNav = !isViewer && isAdminShell;
   const showLeaderApprovalBadge = showLeaderNav && teamAccess?.isAdmin && !teamAccess?.isMemberScope;
   const leaderPending = useLeaderKpiPendingBadge(showLeaderApprovalBadge);
+  const showAnnouncementsBadge = showGeneralNav || showTeamCommonNav;
+  const announcementsUnread = useAnnouncementsUnreadBadge(showAnnouncementsBadge);
   const canUseCompetencyPilotNav = canUseCompetencyPilot(teamAccess);
   const competencyPreviewMessage =
     '역량 평가는 기능 개선 중이라 아직 공개 전입니다. 먼저 A 구성원과 팀장/관리자 화면에서 테스트 후 순차 공개할 예정입니다.';
@@ -275,7 +278,10 @@ export default function AppShell({
                   {showGeneralNav && (
                     <NavGroup title={NAV_GROUP_COMMON}>
                       {navBtn('ledger', FileSpreadsheet)}
-                      {navBtn('announcements', Megaphone)}
+                      {navBtn('announcements', Megaphone, {
+                        badgeCount: announcementsUnread.count,
+                      })}
+                      {navBtn('idea-bank', Lightbulb)}
                       {navBtn('academizer', Presentation)}
                       {navBtn('lunch', UtensilsCrossed)}
                     </NavGroup>
@@ -283,7 +289,9 @@ export default function AppShell({
                   {showTeamCommonNav && (
                     <NavGroup title={NAV_GROUP_TEAM_COMMON}>
                       {navBtn('ledger', FileSpreadsheet)}
-                      {navBtn('announcements', Megaphone)}
+                      {navBtn('announcements', Megaphone, {
+                        badgeCount: announcementsUnread.count,
+                      })}
                       {navBtn('lunch', UtensilsCrossed)}
                       {navBtn('idea-bank', Lightbulb)}
                     </NavGroup>
@@ -340,7 +348,6 @@ export default function AppShell({
                   <span className="nav-item__label project-nav-item__label">접속 안내</span>
                 </a>
               )}
-              {showGeneralNav && navBtn('idea-bank', Lightbulb)}
               {(canShowEditModule('docs') || (isViewer && showInViewer('docs'))) &&
                 navBtn('docs', BookOpen, isViewer ? { viewer: true } : undefined)}
             </nav>
