@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { sortAnnouncements } from '../src/constants/announcements.js';
-import { hasValidAdminSession } from './utils/adminSession.js';
-import { isAllowedPublishOrigin } from './utils/publishOrigin.js';
-import { isAdminRouteReferer } from './utils/requestScope.js';
+import { hasValidAdminSession } from '../server/api-utils/adminSession.js';
+import { isAllowedPublishOrigin } from '../server/api-utils/publishOrigin.js';
+import { isAdminRouteReferer } from '../server/api-utils/requestScope.js';
 
 const ANNOUNCEMENTS_TABLE = 'announcements';
 const PAYLOAD_VERSION = 1;

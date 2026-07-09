@@ -3,7 +3,7 @@ import {
   isAdminOrSameMemberRouteReferer,
   isAdminRouteReferer,
   memberCodeFromReferer,
-} from '../api/utils/requestScope.js';
+} from '../server/api-utils/requestScope.js';
 
 function req(referer) {
   return { headers: { referer } };

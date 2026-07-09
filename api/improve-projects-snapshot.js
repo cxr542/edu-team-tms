@@ -4,14 +4,14 @@ import {
   IMPROVE_PROJECTS_BLOB_KEY,
   normalizeImproveProjectsSnapshot,
   validateImproveProjectsPayload,
-} from './utils/improveProjectsSnapshotCore.js';
-import { isAllowedPublishOrigin } from './utils/publishOrigin.js';
-import { isAdminRouteReferer } from './utils/requestScope.js';
+} from '../server/api-utils/improveProjectsSnapshotCore.js';
+import { isAllowedPublishOrigin } from '../server/api-utils/publishOrigin.js';
+import { isAdminRouteReferer } from '../server/api-utils/requestScope.js';
 import {
   assertBlobConfigured,
   getBlobSdkOptions,
   isBlobConfigured,
-} from './utils/blobClient.js';
+} from '../server/api-utils/blobClient.js';
 
 function canUse(req) {
   const referer = req.headers.referer || req.headers.origin || '';

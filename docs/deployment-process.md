@@ -50,6 +50,7 @@ Repository Settings -> Environments 에 `production` 환경 생성:
 - 배포 실패 시 Actions 로그 확인
 - Vercel 최근 정상 배포로 재배포(rollback) 수행
 - Secrets/Environment Variables 누락 여부 재확인
+- Hobby 플랜은 Serverless Function **12개** 한도. `api/*.js`만 엔드포인트로 두고, 공유 헬퍼는 `server/api-utils/`에 둔다 (`api/utils/`에 두면 Function으로 잡혀 한도를 넘길 수 있음)
 
 ## 5. 운영 원칙
 - 로컬에서 직접 `vercel --prod` 실행은 비상 상황으로 제한

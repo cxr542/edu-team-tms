@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createAdminSessionCookie } from '../api/utils/adminSession.js';
+import { createAdminSessionCookie } from '../server/api-utils/adminSession.js';
 
 const fromMock = vi.fn();
 const upsertMock = vi.fn();

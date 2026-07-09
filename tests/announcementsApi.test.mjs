@@ -3,7 +3,7 @@ import {
   ADMIN_SESSION_COOKIE,
   createAdminSessionCookie,
   hasValidAdminSession,
-} from '../api/utils/adminSession.js';
+} from '../server/api-utils/adminSession.js';
 
 const fromMock = vi.fn();
 const upsertMock = vi.fn();
