@@ -1,0 +1,85 @@
+name: Release Notes On Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+concurrency:
+  group: release-notes-main
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  append_release_note:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip bot release-note commits
+        id: guard
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_USER: ${{ github.event.pull_request.user.login }}
+        run: |
+          skip=false
+          if [[ "$PR_TITLE" == docs\(release\):* ]]; then
+            skip=true
+            echo "Skipping: PR title starts with docs(release):"
+          fi
+          if [[ "$PR_USER" == "github-actions[bot]" ]]; then
+            skip=true
+            echo "Skipping: PR author is github-actions[bot]"
+          fi
+          echo "skip=$skip" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout main
+        if: steps.guard.outputs.skip != 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          # Prefer PAT so the bot push can retrigger Deploy Production.
+          # GITHUB_TOKEN pushes do not start new workflow runs.
+          token: ${{ secrets.RELEASE_NOTES_PUSH_TOKEN || github.token }}
+
+      - name: Setup Node
+        if: steps.guard.outputs.skip != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Append release note
+        if: steps.guard.outputs.skip != 'true'
+        id: append
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          body_file="$(mktemp)"
+          printf '%s' "$PR_BODY" >"$body_file"
+          node scripts/append-release-note.mjs \
+            --title "$PR_TITLE" \
+            --number "$PR_NUMBER" \
+            --url "$PR_URL" \
+            --body-file "$body_file"
+          rm -f "$body_file"
+
+      - name: Commit and push
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          SOT="docs/reference-source/TMS-릴리즈노트.md"
+          PUB="public/docs/reference/TMS-릴리즈노트.md"
+          git add -- "$SOT" "$PUB"
+          if git diff --cached --quiet; then
+            echo "No release-note file changes; nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "docs(release): append PR #${{ github.event.pull_request.number }}"
+          git pull --rebase origin main
+          git push origin main
