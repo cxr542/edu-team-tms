@@ -986,11 +986,30 @@
 
 .journal-task-item {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   gap: 0.35rem;
   padding: 0.3rem 0;
   font-size: 0.9375rem;
   border-radius: 4px;
+}
+
+.journal-task-body {
+  flex: 1 1 8rem;
+  min-width: 0;
+}
+
+.journal-task-title {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.journal-task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
 }
 
 .journal-task-item:hover {

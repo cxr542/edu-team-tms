@@ -914,10 +914,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               }}
             >
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: memberCategoryView.cats[t.cat]?.color, flexShrink: 0, marginTop: 5 }} />
-              <span style={{ flex: 1 }}>
+              <span className="journal-task-body">
                 <span className="journal-task-title-row">
                   {slotLabel && <span className={`journal-task-slot slot-${normalizeTaskSlot(t.slot)}`}>{slotLabel}</span>}
-                  <span>{t.title}</span>
+                  <span className="journal-task-title">{t.title}</span>
                 </span>
                 {hoursLine && (
                   <small
@@ -928,22 +928,24 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   </small>
                 )}
               </span>
-              <TaskKpiBadge task={t} dayKey={key} improveProjects={journal.improveProjects} />
-              <TaskMmPill task={t} />
-              <button
-                type="button"
-                className={`journal-task-memo-btn${t.note ? ' has-memo' : ''}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openTaskMemo(t, key);
-                }}
-                aria-label={`${t.title} 업무 메모 ${t.note ? '보기' : '작성'}`}
-                title={t.note ? '메모 있음' : '메모 작성'}
-              >
-                <MessageSquare size={13} aria-hidden />
-                {t.note ? '메모 있음' : '메모'}
-              </button>
-              {t.done && <span className="journal-task-done">✓</span>}
+              <span className="journal-task-meta">
+                <TaskKpiBadge task={t} dayKey={key} improveProjects={journal.improveProjects} />
+                <TaskMmPill task={t} />
+                <button
+                  type="button"
+                  className={`journal-task-memo-btn${t.note ? ' has-memo' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openTaskMemo(t, key);
+                  }}
+                  aria-label={`${t.title} 업무 메모 ${t.note ? '보기' : '작성'}`}
+                  title={t.note ? '메모 있음' : '메모 작성'}
+                >
+                  <MessageSquare size={13} aria-hidden />
+                  {t.note ? '메모 있음' : '메모'}
+                </button>
+                {t.done && <span className="journal-task-done">✓</span>}
+              </span>
             </li>
             );
           })}
