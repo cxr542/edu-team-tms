@@ -32,6 +32,19 @@ jobs:
       - name: Build app
         run: npm run build
 
+      - name: Ensure Preview MANUAL_MIRROR=true (J3 pilot; Production untouched)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          npx vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+          # Idempotent Preview-only flag for journal Supabase mirror UI
+          npx vercel env rm VITE_SUPABASE_MANUAL_MIRROR_ENABLED preview --yes --token="$VERCEL_TOKEN" || true
+          printf 'true' | npx vercel env add VITE_SUPABASE_MANUAL_MIRROR_ENABLED preview --token="$VERCEL_TOKEN"
+          npx vercel env ls --token="$VERCEL_TOKEN" | tee "$GITHUB_STEP_SUMMARY"
+
       - name: Deploy preview to Vercel
         id: vercel_deploy
         env:
@@ -39,6 +52,7 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
+          # Re-pull so the just-set Preview env is present for the Vite build
           npx vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
           npx vercel build --token="$VERCEL_TOKEN"
           DEPLOY_OUTPUT="$(npx vercel deploy --prebuilt --token="$VERCEL_TOKEN")"
