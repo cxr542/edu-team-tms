@@ -36,6 +36,26 @@ export function seoulDateKey(now = new Date()) {
 }
 
 /**
+ * Keep PR-provided release-note text as plain Markdown text.
+ * Raw HTML would later be rendered through the in-app Markdown viewer.
+ * @param {string} value
+ */
+export function sanitizeReleaseNoteText(value) {
+  return String(value || '')
+    .replace(/\r\n?/g, '\n')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, ' ')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .trim();
+}
+
+/**
  * Extract bullet lines under ## 릴리즈 or ## Release notes.
  * @param {string} body
  * @returns {string[]}
@@ -58,7 +78,9 @@ export function extractReleaseBullets(body) {
     const trimmed = line.trim();
     if (!trimmed) continue;
     if (/^[-*+]\s+/.test(trimmed) || /^\d+\.\s+/.test(trimmed)) {
-      const content = trimmed.replace(/^[-*+]\s+/, '').replace(/^\d+\.\s+/, '').trim();
+      const content = sanitizeReleaseNoteText(
+        trimmed.replace(/^[-*+]\s+/, '').replace(/^\d+\.\s+/, '').trim()
+      );
       // Skip empty template placeholders
       if (!content || /^\(.*\)$/.test(content)) continue;
       bullets.push(`- ${content}`);
@@ -83,7 +105,7 @@ export function alreadyHasPrEntry(markdown, pr) {
  * @param {{ title: string, number: number|string, url: string, body?: string, date?: string }} pr
  */
 export function buildReleaseSection(pr) {
-  const title = String(pr.title || '').trim();
+  const title = sanitizeReleaseNoteText(pr.title || '');
   const number = String(pr.number || '').trim();
   const url = String(pr.url || '').trim();
   const date = String(pr.date || seoulDateKey()).trim();

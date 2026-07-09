@@ -44,6 +44,16 @@ function normalizeSnapshotRow(row) {
   };
 }
 
+function isSnapshotWriteStale(currentUpdatedAt, clientUpdatedAt) {
+  if (!currentUpdatedAt) return false;
+  if (!clientUpdatedAt) return true;
+  const currentMs = new Date(currentUpdatedAt).getTime();
+  const clientMs = new Date(clientUpdatedAt).getTime();
+  if (!Number.isFinite(currentMs)) return false;
+  if (!Number.isFinite(clientMs)) return true;
+  return currentMs > clientMs;
+}
+
 export default async function handler(req, res) {
   const client = getServiceClient();
   if (!client) {
@@ -114,7 +124,8 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     const memberCode = normalizeMemberCode(req.body?.memberCode);
     const payload = req.body?.payload;
-    const updatedAt = req.body?.updatedAt || new Date().toISOString();
+    const clientUpdatedAt = typeof req.body?.updatedAt === 'string' ? req.body.updatedAt : null;
+    const updatedAt = clientUpdatedAt || new Date().toISOString();
 
     if (!memberCode) {
       return json(res, 400, {
@@ -133,6 +144,31 @@ export default async function handler(req, res) {
     }
 
     try {
+      const { data: currentRow, error: readError } = await client
+        .from(JOURNAL_SNAPSHOTS_TABLE)
+        .select('member_code, payload, payload_version, updated_at')
+        .eq('member_code', memberCode)
+        .maybeSingle();
+
+      if (readError) {
+        return json(res, 500, {
+          ok: false,
+          status: 'error',
+          message: readError.message,
+        });
+      }
+
+      const current = normalizeSnapshotRow(currentRow);
+      if (isSnapshotWriteStale(current?.updated_at, clientUpdatedAt)) {
+        return json(res, 409, {
+          ok: false,
+          status: 'conflict',
+          message:
+            'Supabase에 더 최신 업무일지 스냅샷이 있습니다. 최신 원격 상태를 확인한 뒤 다시 저장해 주세요.',
+          data: current,
+        });
+      }
+
       const { data, error } = await client
         .from(JOURNAL_SNAPSHOTS_TABLE)
         .upsert(

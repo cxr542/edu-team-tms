@@ -80,6 +80,22 @@ describe('supabaseJournalSnapshot admin API client', () => {
     });
   });
 
+  it('omits updatedAt when the caller has no member-specific timestamp', async () => {
+    const mod = await loadModule();
+    await mod.saveJournalSnapshotToSupabase({
+      memberCode: 'B',
+      payload: { days: {} },
+      updatedAt: null,
+    });
+
+    const body = JSON.parse(fetch.mock.calls[0][1].body);
+    expect(body).toMatchObject({
+      memberCode: 'B',
+      payload: { days: {} },
+    });
+    expect(body).not.toHaveProperty('updatedAt');
+  });
+
   it('GETs /api/journal-snapshots?memberCode=', async () => {
     fetch.mockResolvedValueOnce({
       ok: true,

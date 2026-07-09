@@ -9,7 +9,7 @@ import {
 import { isRemoteNewer } from '../src/utils/journalSnapshot.js';
 
 describe('journalSupabaseFreshness', () => {
-  it('resolves per-member local updatedAt with global fallback', () => {
+  it('resolves per-member local updatedAt without borrowing another member update', () => {
     expect(
       resolveLocalMemberUpdatedAt(
         { updatedAt: '2026-07-01T00:00:00.000Z', memberUpdatedAt: { A: '2026-07-09T00:00:00.000Z' } },
@@ -18,7 +18,10 @@ describe('journalSupabaseFreshness', () => {
     ).toBe('2026-07-09T00:00:00.000Z');
     expect(
       resolveLocalMemberUpdatedAt({ updatedAt: '2026-07-01T00:00:00.000Z', memberUpdatedAt: {} }, 'B')
-    ).toBe('2026-07-01T00:00:00.000Z');
+    ).toBe(null);
+    expect(resolveLocalMemberUpdatedAt({ updatedAt: '2026-07-01T00:00:00.000Z' }, '')).toBe(
+      '2026-07-01T00:00:00.000Z'
+    );
     expect(resolveLocalMemberUpdatedAt(null, 'A')).toBe(null);
   });
 

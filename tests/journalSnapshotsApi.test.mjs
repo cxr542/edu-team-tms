@@ -67,10 +67,16 @@ describe('journal-snapshots API admin session', () => {
       payload_version: 1,
       updated_at: '2026-07-09T00:00:00.000Z',
     };
+    maybeSingleMock.mockResolvedValue({ data: null, error: null });
+    eqMock.mockReturnValue({ maybeSingle: maybeSingleMock });
     singleMock.mockResolvedValue({ data: saved, error: null });
-    selectMock.mockReturnValue({ single: singleMock });
+    selectMock
+      .mockReturnValueOnce({ eq: eqMock })
+      .mockReturnValueOnce({ single: singleMock });
     upsertMock.mockReturnValue({ select: selectMock });
-    fromMock.mockReturnValue({ upsert: upsertMock });
+    fromMock
+      .mockReturnValueOnce({ select: selectMock })
+      .mockReturnValueOnce({ upsert: upsertMock });
 
     const cookie = createAdminSessionCookie();
     const handler = await loadHandler();
@@ -105,6 +111,44 @@ describe('journal-snapshots API admin session', () => {
       },
       { onConflict: 'member_code' }
     );
+  });
+
+  it('rejects a stale snapshot write when Supabase has a newer row', async () => {
+    const current = {
+      member_code: 'B',
+      payload: { days: { '2026-07-09': { tasks: [{ id: 'remote' }] } } },
+      payload_version: 1,
+      updated_at: '2026-07-09T12:00:00.000Z',
+    };
+    maybeSingleMock.mockResolvedValue({ data: current, error: null });
+    eqMock.mockReturnValue({ maybeSingle: maybeSingleMock });
+    selectMock.mockReturnValue({ eq: eqMock });
+    fromMock.mockReturnValue({ select: selectMock });
+
+    const cookie = createAdminSessionCookie();
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: {
+        referer: 'https://edu-team-tms-ten.vercel.app/admin?module=journal',
+        cookie,
+      },
+      body: {
+        memberCode: 'B',
+        payload: { days: {} },
+        updatedAt: '2026-07-09T11:59:59.000Z',
+      },
+    };
+    const res = createRes();
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(409);
+    expect(JSON.parse(res.body)).toMatchObject({
+      ok: false,
+      status: 'conflict',
+      data: { member_code: 'B', updated_at: current.updated_at },
+    });
+    expect(upsertMock).not.toHaveBeenCalled();
   });
 
   it('loads a snapshot with a valid admin session', async () => {

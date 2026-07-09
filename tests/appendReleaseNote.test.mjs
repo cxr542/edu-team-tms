@@ -5,6 +5,7 @@ import {
   buildReleaseSection,
   extractReleaseBullets,
   prependReleaseSection,
+  sanitizeReleaseNoteText,
   seoulDateKey,
 } from '../scripts/append-release-note.mjs';
 
@@ -40,6 +41,15 @@ describe('append-release-note helpers', () => {
     expect(extractReleaseBullets(body)).toEqual(['- Real change']);
   });
 
+  it('escapes PR-provided HTML before writing release notes', () => {
+    expect(sanitizeReleaseNoteText('<img src=x onerror=alert(1)> & ok')).toBe(
+      '&lt;img src=x onerror=alert(1)&gt; &amp; ok'
+    );
+    expect(extractReleaseBullets('## 릴리즈\n\n- <script>alert(1)</script>\n')).toEqual([
+      '- &lt;script&gt;alert(1)&lt;/script&gt;',
+    ]);
+  });
+
   it('returns empty when release section missing', () => {
     expect(extractReleaseBullets('## Summary\n\n- only')).toEqual([]);
   });
@@ -73,6 +83,20 @@ describe('append-release-note helpers', () => {
     });
     expect(section).toContain('- Fix deploy');
     expect(section).toContain('- PR #82:');
+  });
+
+  it('collapses unsafe title markup into a single escaped heading', () => {
+    const section = buildReleaseSection({
+      title: 'Fix docs\n\n## Injected\n<img src=x onerror=alert(1)>',
+      number: 101,
+      url: 'https://example.com/pull/101',
+      date: '2026-07-09',
+    });
+    expect(section).toContain(
+      '## 2026-07-09 — Fix docs ## Injected &lt;img src=x onerror=alert(1)&gt;'
+    );
+    expect(section).not.toContain('\n## Injected');
+    expect(section).not.toContain('<img');
   });
 
   it('prepends after intro separator and keeps footer', () => {

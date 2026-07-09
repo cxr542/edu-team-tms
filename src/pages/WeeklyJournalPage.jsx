@@ -537,7 +537,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     const result = await saveJournalSnapshotToSupabase({
       memberCode: saveCode,
       payload,
-      updatedAt: journal.meta?.memberUpdatedAt?.[saveCode] || journal.meta?.updatedAt,
+      updatedAt: journal.meta?.memberUpdatedAt?.[saveCode] || null,
     });
 
     if (result.ok) {
@@ -548,7 +548,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         journal.meta?.updatedAt ||
         null;
       const localUpdatedAt =
-        journal.meta?.memberUpdatedAt?.[saveCode] || journal.meta?.updatedAt || null;
+        journal.meta?.memberUpdatedAt?.[saveCode] || null;
       setSupabaseFreshness({
         status: classifyJournalFreshness({ localUpdatedAt, remoteUpdatedAt }),
         remoteUpdatedAt,

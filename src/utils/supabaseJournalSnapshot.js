@@ -17,21 +17,22 @@ async function callJournalSnapshotsApi({ method = 'GET', memberCode, payload, up
     method === 'GET'
       ? `${JOURNAL_SNAPSHOTS_API}?memberCode=${encodeURIComponent(code)}`
       : JOURNAL_SNAPSHOTS_API;
+  const postBody =
+    method === 'POST'
+      ? {
+          memberCode: code,
+          payload,
+          payloadVersion: PAYLOAD_VERSION,
+          ...(updatedAt ? { updatedAt } : {}),
+        }
+      : null;
 
   try {
     const response = await fetch(path, {
       method,
       credentials: 'include',
       headers: method === 'POST' ? { 'Content-Type': 'application/json' } : undefined,
-      body:
-        method === 'POST'
-          ? JSON.stringify({
-              memberCode: code,
-              payload,
-              updatedAt: updatedAt || new Date().toISOString(),
-              payloadVersion: PAYLOAD_VERSION,
-            })
-          : undefined,
+      body: postBody ? JSON.stringify(postBody) : undefined,
     });
     const body = await response.json().catch(() => ({}));
 
