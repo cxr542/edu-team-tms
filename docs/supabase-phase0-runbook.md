@@ -120,7 +120,7 @@ Production에는 켜지 않는다. Preview(또는 로컬)만.
 | 7 | 「저장소 비교」 | ✅ (선택 확인) |
 | 8 | Production 미러 버튼 미노출 | ✅ |
 
-다음: J4 신선도 UI → J5 복구 → J6 dual-write → J7 Realtime·Blob 축소 ([`operations-backlog.md`](./operations-backlog.md) §9).
+다음: J5 수동 가져오기·충돌 UX → J6 dual-write → J7 Realtime·Blob 축소 ([`operations-backlog.md`](./operations-backlog.md) §9). J4 신선도 UI 완료.
 
 ---
 

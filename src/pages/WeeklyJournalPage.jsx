@@ -89,6 +89,13 @@ import {
   SUPABASE_MANUAL_MIRROR_ENABLED,
 } from '../constants/supabaseSync';
 import { compareJournalSnapshots } from '../utils/journalStorageComparison';
+import {
+  JOURNAL_FRESHNESS_STATUS,
+  classifyJournalFreshness,
+  formatJournalFreshnessLabel,
+  resolveLocalMemberUpdatedAt,
+  resolveRemoteSnapshotUpdatedAt,
+} from '../utils/journalSupabaseFreshness';
 import './WeeklyJournalPage.css';
 
 const MEMBER_IMPROVE_PROJECT_CODES = new Set(['B', 'C']);
@@ -243,6 +250,11 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const [supabaseJournalSaveStatus, setSupabaseJournalSaveStatus] = useState('idle');
   const [storageComparisonStatus, setStorageComparisonStatus] = useState('idle');
   const [storageComparison, setStorageComparison] = useState(null);
+  const [supabaseFreshness, setSupabaseFreshness] = useState({
+    status: JOURNAL_FRESHNESS_STATUS.idle,
+    remoteUpdatedAt: null,
+    message: '',
+  });
 
   const memberCategoryView = useMemo(
     () => resolveMemberCategories(journal.memberJournals?.[memberCode]?.prefs),
@@ -308,6 +320,69 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   useEffect(() => {
     setSupabaseJournalSaveStatus('idle');
   }, [memberCode]);
+
+  useEffect(() => {
+    if (!showSupabaseMirrorTools) {
+      setSupabaseFreshness({
+        status: JOURNAL_FRESHNESS_STATUS.idle,
+        remoteUpdatedAt: null,
+        message: '',
+      });
+      return undefined;
+    }
+
+    let cancelled = false;
+    const localUpdatedAt = resolveLocalMemberUpdatedAt(journal.meta, memberCode);
+
+    setSupabaseFreshness((prev) => ({
+      ...prev,
+      status: JOURNAL_FRESHNESS_STATUS.loading,
+      message: '',
+    }));
+
+    (async () => {
+      const result = await getJournalSnapshotFromSupabase(memberCode);
+      if (cancelled) return;
+
+      if (!result.ok) {
+        const status =
+          result.status === 'disabled'
+            ? JOURNAL_FRESHNESS_STATUS.disabled
+            : JOURNAL_FRESHNESS_STATUS.error;
+        setSupabaseFreshness({
+          status,
+          remoteUpdatedAt: null,
+          message: result.message || '',
+        });
+        return;
+      }
+
+      if (result.status === 'empty' || !result.data) {
+        setSupabaseFreshness({
+          status: JOURNAL_FRESHNESS_STATUS.empty,
+          remoteUpdatedAt: null,
+          message: '',
+        });
+        return;
+      }
+
+      const remoteUpdatedAt = resolveRemoteSnapshotUpdatedAt(result.data);
+      setSupabaseFreshness({
+        status: classifyJournalFreshness({ localUpdatedAt, remoteUpdatedAt }),
+        remoteUpdatedAt,
+        message: '',
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    showSupabaseMirrorTools,
+    memberCode,
+    journal.meta?.updatedAt,
+    journal.meta?.memberUpdatedAt?.[memberCode],
+  ]);
 
   const showToast = (msg) => {
     setToast(msg);
@@ -430,6 +505,14 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const localSavedAtLabel = journal.meta?.updatedAt
     ? new Date(journal.meta.updatedAt).toLocaleString('ko-KR')
     : null;
+  const localMemberSavedAtLabel = (() => {
+    const at = resolveLocalMemberUpdatedAt(journal.meta, memberCode);
+    return at ? new Date(at).toLocaleString('ko-KR') : null;
+  })();
+  const remoteFreshnessLabel = formatJournalFreshnessLabel(supabaseFreshness.status);
+  const remoteSavedAtLabel = supabaseFreshness.remoteUpdatedAt
+    ? new Date(supabaseFreshness.remoteUpdatedAt).toLocaleString('ko-KR')
+    : null;
 
   const openPresetLeave = () => {
     const key =
@@ -459,6 +542,18 @@ export default function WeeklyJournalPage({ readOnly = false }) {
 
     if (result.ok) {
       setSupabaseJournalSaveStatus('ok');
+      const remoteUpdatedAt =
+        resolveRemoteSnapshotUpdatedAt(result.data) ||
+        journal.meta?.memberUpdatedAt?.[saveCode] ||
+        journal.meta?.updatedAt ||
+        null;
+      const localUpdatedAt =
+        journal.meta?.memberUpdatedAt?.[saveCode] || journal.meta?.updatedAt || null;
+      setSupabaseFreshness({
+        status: classifyJournalFreshness({ localUpdatedAt, remoteUpdatedAt }),
+        remoteUpdatedAt,
+        message: '',
+      });
       showToast('Supabase 저장 완료');
       return result;
     }
@@ -1317,6 +1412,28 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   <>저장은 이 브라우저에 먼저 반영됩니다.</>
                 )}
               </p>
+              {showSupabaseMirrorTools && remoteFreshnessLabel && (
+                <p
+                  className={`journal-sync-hint journal-freshness-hint${
+                    supabaseFreshness.status === JOURNAL_FRESHNESS_STATUS.remoteNewer ||
+                    supabaseFreshness.status === JOURNAL_FRESHNESS_STATUS.error ||
+                    supabaseFreshness.status === JOURNAL_FRESHNESS_STATUS.disabled
+                      ? ' journal-sync-hint--warn'
+                      : ''
+                  }`}
+                  aria-live="polite"
+                >
+                  {remoteFreshnessLabel}
+                  {remoteSavedAtLabel ? ` · 원격 ${remoteSavedAtLabel}` : ''}
+                  {localMemberSavedAtLabel &&
+                  supabaseFreshness.status !== JOURNAL_FRESHNESS_STATUS.loading
+                    ? ` · 로컬(구성원) ${localMemberSavedAtLabel}`
+                    : ''}
+                  {supabaseFreshness.status === JOURNAL_FRESHNESS_STATUS.remoteNewer
+                    ? ' · 가져오기는 이후 단계(J5)'
+                    : ''}
+                </p>
+              )}
             </section>
           )}
 
