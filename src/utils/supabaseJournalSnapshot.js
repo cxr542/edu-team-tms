@@ -1,6 +1,6 @@
-import { getSupabaseClient, isSupabaseConfigured } from './supabaseClient';
+import { lockAdminGate } from '../constants/adminGate.js';
 
-const JOURNAL_SNAPSHOTS_TABLE = 'journal_snapshots';
+const JOURNAL_SNAPSHOTS_API = '/api/journal-snapshots';
 const PAYLOAD_VERSION = 1;
 
 function result({ ok, status, message, data = null }) {
@@ -11,23 +11,76 @@ function hasMemberCode(memberCode) {
   return typeof memberCode === 'string' && memberCode.trim().length > 0;
 }
 
-function supabaseDisabledResult() {
-  return result({
-    ok: false,
-    status: 'disabled',
-    message: 'Supabase environment variables are not configured.',
-  });
+async function callJournalSnapshotsApi({ method = 'GET', memberCode, payload, updatedAt } = {}) {
+  const code = String(memberCode || '').trim();
+  const path =
+    method === 'GET'
+      ? `${JOURNAL_SNAPSHOTS_API}?memberCode=${encodeURIComponent(code)}`
+      : JOURNAL_SNAPSHOTS_API;
+
+  try {
+    const response = await fetch(path, {
+      method,
+      credentials: 'include',
+      headers: method === 'POST' ? { 'Content-Type': 'application/json' } : undefined,
+      body:
+        method === 'POST'
+          ? JSON.stringify({
+              memberCode: code,
+              payload,
+              updatedAt: updatedAt || new Date().toISOString(),
+              payloadVersion: PAYLOAD_VERSION,
+            })
+          : undefined,
+    });
+    const body = await response.json().catch(() => ({}));
+
+    if (response.status === 403) {
+      lockAdminGate();
+      return result({
+        ok: false,
+        status: 'forbidden',
+        message:
+          body.message ||
+          '관리자 세션이 만료되었습니다. /admin 에서 비밀번호를 다시 입력하세요.',
+      });
+    }
+
+    if (response.status === 501) {
+      return result({
+        ok: false,
+        status: 'disabled',
+        message: body.message || 'Supabase service role is not configured on the server.',
+      });
+    }
+
+    if (!response.ok) {
+      return result({
+        ok: false,
+        status: body.status || 'error',
+        message: body.message || `Journal snapshots API failed (${response.status}).`,
+      });
+    }
+
+    return result({
+      ok: Boolean(body.ok),
+      status: body.status || 'ok',
+      message: body.message || 'ok',
+      data: body.data ?? null,
+    });
+  } catch (error) {
+    return result({
+      ok: false,
+      status: 'error',
+      message: error instanceof Error ? error.message : 'Journal snapshots API request failed.',
+    });
+  }
 }
 
-function unexpectedErrorResult(error, operation) {
-  return result({
-    ok: false,
-    status: 'error',
-    message:
-      error instanceof Error ? error.message : `Unknown Supabase journal snapshot ${operation} error.`,
-  });
-}
-
+/**
+ * Save member journal snapshot via /api/journal-snapshots (admin-session + service role).
+ * Does not use browser Supabase Auth.
+ */
 export async function saveJournalSnapshotToSupabase({ memberCode, payload, updatedAt } = {}) {
   if (!hasMemberCode(memberCode)) {
     return result({ ok: false, status: 'error', message: 'memberCode is required.' });
@@ -37,73 +90,21 @@ export async function saveJournalSnapshotToSupabase({ memberCode, payload, updat
     return result({ ok: false, status: 'error', message: 'payload is required.' });
   }
 
-  if (!isSupabaseConfigured) return supabaseDisabledResult();
-
-  const client = getSupabaseClient();
-  if (!client) return supabaseDisabledResult();
-
-  try {
-    const { data, error } = await client
-      .from(JOURNAL_SNAPSHOTS_TABLE)
-      .upsert(
-        {
-          member_code: memberCode.trim(),
-          payload,
-          payload_version: PAYLOAD_VERSION,
-          updated_at: updatedAt || new Date().toISOString(),
-        },
-        { onConflict: 'member_code' },
-      )
-      .select()
-      .single();
-
-    if (error) {
-      return result({ ok: false, status: 'error', message: error.message });
-    }
-
-    return result({
-      ok: true,
-      status: 'ok',
-      message: 'Journal snapshot saved to Supabase.',
-      data,
-    });
-  } catch (error) {
-    return unexpectedErrorResult(error, 'save');
-  }
+  return callJournalSnapshotsApi({
+    method: 'POST',
+    memberCode,
+    payload,
+    updatedAt,
+  });
 }
 
+/**
+ * Load member journal snapshot via /api/journal-snapshots (admin-session required).
+ */
 export async function getJournalSnapshotFromSupabase(memberCode) {
   if (!hasMemberCode(memberCode)) {
     return result({ ok: false, status: 'error', message: 'memberCode is required.' });
   }
 
-  if (!isSupabaseConfigured) return supabaseDisabledResult();
-
-  const client = getSupabaseClient();
-  if (!client) return supabaseDisabledResult();
-
-  try {
-    const { data, error } = await client
-      .from(JOURNAL_SNAPSHOTS_TABLE)
-      .select('member_code, payload, payload_version, updated_at')
-      .eq('member_code', memberCode.trim())
-      .maybeSingle();
-
-    if (error) {
-      return result({ ok: false, status: 'error', message: error.message });
-    }
-
-    if (!data) {
-      return result({ ok: true, status: 'empty', message: 'Journal snapshot was not found.' });
-    }
-
-    return result({
-      ok: true,
-      status: 'ok',
-      message: 'Journal snapshot loaded from Supabase.',
-      data,
-    });
-  } catch (error) {
-    return unexpectedErrorResult(error, 'read');
-  }
+  return callJournalSnapshotsApi({ method: 'GET', memberCode });
 }

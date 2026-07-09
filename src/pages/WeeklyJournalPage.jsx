@@ -84,6 +84,10 @@ import { buildMemberJournalSavePayload } from '../utils/journalSnapshot';
 import { fetchJournalSnapshot } from '../utils/journalSnapshot';
 import { saveJournalSnapshotToSupabase } from '../utils/supabaseJournalSnapshot';
 import { getJournalSnapshotFromSupabase } from '../utils/supabaseJournalSnapshot';
+import {
+  SUPABASE_MANUAL_MIRROR_DISABLED_MESSAGE,
+  SUPABASE_MANUAL_MIRROR_ENABLED,
+} from '../constants/supabaseSync';
 import { compareJournalSnapshots } from '../utils/journalStorageComparison';
 import './WeeklyJournalPage.css';
 
@@ -265,6 +269,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       : { ownMemberCode: memberCode };
   const showJournalLeaderToolbar = teamAccess.isLeader && !teamAccess.isMemberScope;
   const showJournalBackupToolbar = showJournalLeaderToolbar && !journalReadOnly;
+  const showSupabaseMirrorTools = showJournalLeaderToolbar && SUPABASE_MANUAL_MIRROR_ENABLED;
   const showViewOnlyJsonImport =
     canImportViewOnlyJournalBackup && !showMemberTeamSharePull;
   const linkableImproveProjects = useMemo(
@@ -434,6 +439,11 @@ export default function WeeklyJournalPage({ readOnly = false }) {
 
   const saveSelectedMemberToSupabase = useCallback(async () => {
     if (journalReadOnly || supabaseJournalSaveStatus === 'saving') return;
+    if (!SUPABASE_MANUAL_MIRROR_ENABLED) {
+      setSupabaseJournalSaveStatus('disabled');
+      showToast(SUPABASE_MANUAL_MIRROR_DISABLED_MESSAGE);
+      return { ok: false, status: 'disabled', message: SUPABASE_MANUAL_MIRROR_DISABLED_MESSAGE };
+    }
     const saveCode = memberCode;
     setSupabaseJournalSaveStatus('saving');
     const payload = buildMemberJournalSavePayload(
@@ -459,12 +469,23 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       return result;
     }
 
+    if (result.status === 'forbidden') {
+      setSupabaseJournalSaveStatus('error');
+      showToast(result.message || '관리자 세션이 필요합니다');
+      return result;
+    }
+
     setSupabaseJournalSaveStatus('error');
     showToast(result.message || 'Supabase 저장 실패');
     return result;
   }, [journal, journalReadOnly, memberCode, showToast, supabaseJournalSaveStatus]);
 
   const runStorageComparison = useCallback(async () => {
+    if (!SUPABASE_MANUAL_MIRROR_ENABLED) {
+      setStorageComparisonStatus('idle');
+      showToast(SUPABASE_MANUAL_MIRROR_DISABLED_MESSAGE);
+      return;
+    }
     setStorageComparisonStatus('loading');
     try {
       const [blobResult, supabaseResult] = await Promise.all([
@@ -527,7 +548,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       });
       setStorageComparisonStatus('error');
     }
-  }, []);
+  }, [showToast]);
 
   const [scrollTick, setScrollTick] = useState(0);
 
@@ -1036,13 +1057,16 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   팀 KPI 관리 →
                 </AppModuleLink>
               )}
-              {showJournalLeaderToolbar && (
+              {showSupabaseMirrorTools && (
                 <button
                   type="button"
                   className="btn btn-secondary journal-member-tool-btn"
                   onClick={runStorageComparison}
                   disabled={storageComparisonStatus === 'loading'}
-                  {...uiTooltip('Blob 팀 공유본과 Supabase journal snapshot을 읽기 전용으로 비교합니다.', undefined, {
+                  {...uiTooltip(
+                    'Blob 팀 공유본과 Supabase journal snapshot을 읽기 전용으로 비교합니다. /admin 세션으로 API 경유합니다.',
+                    undefined,
+                    {
                     wrap: true,
                   })}
                 >
@@ -1050,14 +1074,14 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   {storageComparisonStatus === 'loading' ? '저장소 점검 중…' : '저장소 비교'}
                 </button>
               )}
-              {showJournalLeaderToolbar && !journalReadOnly && (
+              {showSupabaseMirrorTools && !journalReadOnly && (
                 <button
                   type="button"
                   className="btn btn-secondary journal-member-tool-btn"
                   disabled={supabaseJournalSaveStatus === 'saving'}
                   onClick={saveSelectedMemberToSupabase}
                   {...uiTooltip(
-                    '현재 선택한 구성원의 업무일지를 Supabase journal_snapshots에 수동 저장합니다. 자동 저장은 사용하지 않습니다.',
+                    '현재 선택한 구성원의 업무일지를 /api/journal-snapshots(admin 세션)로 Supabase에 수동 저장합니다. 자동 저장은 사용하지 않습니다.',
                     undefined,
                     { wrap: true }
                   )}
@@ -1296,7 +1320,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             </section>
           )}
 
-          {showJournalLeaderToolbar && storageComparison && (
+          {showSupabaseMirrorTools && storageComparison && (
             <section className="journal-storage-compare-panel" aria-label="Blob과 Supabase 저장소 비교">
               <h3 className="journal-storage-compare-panel__title">저장소 비교</h3>
               <p className="journal-field-help">
