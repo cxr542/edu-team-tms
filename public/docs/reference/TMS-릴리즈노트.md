@@ -5,6 +5,12 @@
 
 ---
 
+## 2026-07-09 — Add PR-merge automation for TMS release notes md
+
+- main 머지 시 참고문서 릴리즈 노트(md)가 PR 제목/`## 릴리즈` 불릿으로 자동 갱신됩니다
+- PR 템플릿에 `## 릴리즈` 섹션을 추가했습니다
+- PR #87: https://github.com/cxr542/edu-team-tms/pull/87
+
 ## 2026-06-17 — ten 파일럿·이전 가이드 보강
 
 - [운영 URL 이전 가이드](./TMS-운영URL-이전-가이드.md) 전면 갱신: localStorage vs Blob, A 파일럿 단계, Safari 검증(`/admin`), Blob 덮어쓰기·용량, B/C 역할(관리자 백업 가져오기)
