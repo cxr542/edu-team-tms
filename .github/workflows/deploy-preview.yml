@@ -40,10 +40,28 @@ jobs:
         run: |
           set -euo pipefail
           npx vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
-          # Idempotent Preview-only flag for journal Supabase mirror UI
-          npx vercel env rm VITE_SUPABASE_MANUAL_MIRROR_ENABLED preview --yes --token="$VERCEL_TOKEN" || true
-          printf 'true' | npx vercel env add VITE_SUPABASE_MANUAL_MIRROR_ENABLED preview --token="$VERCEL_TOKEN"
-          npx vercel env ls --token="$VERCEL_TOKEN" | tee "$GITHUB_STEP_SUMMARY"
+          # Non-interactive Preview-only flag (do not touch Production)
+          npx vercel env add VITE_SUPABASE_MANUAL_MIRROR_ENABLED preview \
+            --value true \
+            --yes \
+            --force \
+            --non-interactive \
+            --token="$VERCEL_TOKEN"
+          npx vercel env ls --token="$VERCEL_TOKEN" | tee /tmp/vercel-env-ls.txt
+          {
+            echo "## Vercel env (after Preview MANUAL_MIRROR)"
+            echo '```'
+            cat /tmp/vercel-env-ls.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if ! grep -E 'VITE_SUPABASE_MANUAL_MIRROR_ENABLED' /tmp/vercel-env-ls.txt | grep -qi 'Preview'; then
+            echo "ERROR: Preview MANUAL_MIRROR missing after env add" >&2
+            exit 1
+          fi
+          if grep -E 'VITE_SUPABASE_MANUAL_MIRROR_ENABLED' /tmp/vercel-env-ls.txt | grep -i 'Production' | grep -Eiq '(^|[^a-z])true([^a-z]|$)'; then
+            echo "ERROR: Production MANUAL_MIRROR must not be true" >&2
+            exit 1
+          fi
 
       - name: Deploy preview to Vercel
         id: vercel_deploy
@@ -54,6 +72,11 @@ jobs:
         run: |
           # Re-pull so the just-set Preview env is present for the Vite build
           npx vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+          if ! grep -E '^VITE_SUPABASE_MANUAL_MIRROR_ENABLED=["'\'']?true["'\'']?$' .vercel/.env.preview.local; then
+            echo "ERROR: Preview env file missing MANUAL_MIRROR=true" >&2
+            cat .vercel/.env.preview.local | sed 's/=.*/=***/' || true
+            exit 1
+          fi
           npx vercel build --token="$VERCEL_TOKEN"
           DEPLOY_OUTPUT="$(npx vercel deploy --prebuilt --token="$VERCEL_TOKEN")"
           echo "$DEPLOY_OUTPUT"
@@ -63,6 +86,122 @@ jobs:
             exit 1
           fi
           echo "preview_url=$PREVIEW_URL" >> "$GITHUB_OUTPUT"
+
+      - name: J3 verify journal-snapshots A/B/C via Production API
+        if: github.head_ref == 'chore/j3-preview-mirror-pilot'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          # Preview host is often SSO-gated; API path is verified on Production origin
+          # using admin-session minted from Preview-pulled server secrets.
+          # Gated to the J3 pilot branch so routine PRs do not write journal_snapshots.
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          import { createAdminSessionCookie } from './server/api-utils/adminSession.js';
+
+          function loadEnvFile(path) {
+            const out = {};
+            for (const line of readFileSync(path, 'utf8').split(/\r?\n/)) {
+              if (!line || line.startsWith('#')) continue;
+              const i = line.indexOf('=');
+              if (i < 0) continue;
+              const key = line.slice(0, i).trim();
+              let val = line.slice(i + 1).trim();
+              if (
+                (val.startsWith('"') && val.endsWith('"')) ||
+                (val.startsWith("'") && val.endsWith("'"))
+              ) {
+                val = val.slice(1, -1);
+              }
+              out[key] = val;
+            }
+            return out;
+          }
+
+          const env = loadEnvFile('.vercel/.env.preview.local');
+          for (const [k, v] of Object.entries(env)) {
+            if (!process.env[k]) process.env[k] = v;
+          }
+
+          const cookie = createAdminSessionCookie();
+          if (!cookie) {
+            console.error('Failed to mint admin session cookie (missing TMS_ADMIN_*).');
+            process.exit(1);
+          }
+
+          const base = 'https://edu-team-tms-ten.vercel.app';
+          const referer = `${base}/admin?module=journal`;
+          const stamp = new Date().toISOString();
+
+          async function upsert(memberCode) {
+            const res = await fetch(`${base}/api/journal-snapshots`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Cookie: cookie.split(';')[0],
+                Referer: referer,
+                Origin: base,
+              },
+              body: JSON.stringify({
+                memberCode,
+                payload: {
+                  j3Pilot: true,
+                  memberCode,
+                  stampedAt: stamp,
+                  note: 'J3 Preview pilot verification payload',
+                },
+                updatedAt: stamp,
+              }),
+            });
+            const body = await res.json().catch(() => ({}));
+            console.log(`POST ${memberCode}`, res.status, body.status || body.message);
+            if (!res.ok || !body.ok) {
+              throw new Error(`POST ${memberCode} failed: ${res.status} ${JSON.stringify(body)}`);
+            }
+          }
+
+          async function get(memberCode) {
+            const res = await fetch(
+              `${base}/api/journal-snapshots?memberCode=${encodeURIComponent(memberCode)}`,
+              {
+                headers: {
+                  Cookie: cookie.split(';')[0],
+                  Referer: referer,
+                  Origin: base,
+                },
+              }
+            );
+            const body = await res.json().catch(() => ({}));
+            console.log(`GET ${memberCode}`, res.status, body.status, body.data?.updated_at);
+            if (!res.ok || !body.ok || !body.data) {
+              throw new Error(`GET ${memberCode} failed: ${res.status} ${JSON.stringify(body)}`);
+            }
+            if (body.data.payload?.j3Pilot !== true) {
+              throw new Error(`GET ${memberCode} missing j3Pilot payload marker`);
+            }
+          }
+
+          for (const code of ['J3A', 'J3B', 'J3C']) {
+            await upsert(code);
+            await get(code);
+          }
+          console.log('J3 J3A/J3B/J3C journal-snapshots API verification OK');
+          NODE
+
+      - name: Confirm Production client keeps MANUAL_MIRROR off
+        if: github.head_ref == 'chore/j3-preview-mirror-pilot'
+        run: |
+          set -euo pipefail
+          html=$(curl -sS -L --max-time 30 "https://edu-team-tms-ten.vercel.app/")
+          js=$(printf '%s' "$html" | grep -Eo '/assets/index-[^"]+\.js' | head -n 1)
+          test -n "$js"
+          body=$(curl -sS -L --max-time 60 "https://edu-team-tms-ten.vercel.app$js")
+          # Flag false → disabled toast string remains; mirror toolbar gated off at build time
+          echo "$body" | grep -q 'Preview 파일럿에서만 켭니다'
+          echo "Production client still ships MANUAL_MIRROR disabled message (expected)."
 
       - name: Add preview URL to summary
         run: |

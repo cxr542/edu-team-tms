@@ -9,6 +9,19 @@ describe('isAllowedPublishOrigin', () => {
     expect(isAllowedPublishOrigin('https://edu-team-tms.vercel.app/?mode=edit')).toBe(true);
   });
 
+  it('allows edu-team-tms Vercel Preview deployment origins', () => {
+    expect(
+      isAllowedPublishOrigin(
+        'https://edu-team-tms-aioe1cjkb-okestro-edu-tms-v2-s-projects.vercel.app/admin'
+      )
+    ).toBe(true);
+    expect(
+      isAllowedPublishOrigin(
+        'https://edu-team-tms-ten-git-chore-76fd64-okestro-edu-tms-v2-s-projects.vercel.app/admin?module=journal'
+      )
+    ).toBe(true);
+  });
+
   it('blocks unknown origins', () => {
     expect(isAllowedPublishOrigin('https://evil.example.com')).toBe(false);
     expect(isAllowedPublishOrigin('https://edu-team-tms-abc123.vercel.app')).toBe(false);

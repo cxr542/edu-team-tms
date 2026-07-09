@@ -42,10 +42,12 @@ jobs:
           cat /tmp/vercel-env-before.txt >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
-          # Remove Preview-scoped value if present (ignore failure when missing)
-          npx vercel env rm VITE_SUPABASE_MANUAL_MIRROR_ENABLED preview --yes --token="$VERCEL_TOKEN" || true
-
-          printf 'true' | npx vercel env add VITE_SUPABASE_MANUAL_MIRROR_ENABLED preview --token="$VERCEL_TOKEN"
+          npx vercel env add VITE_SUPABASE_MANUAL_MIRROR_ENABLED preview \
+            --value true \
+            --yes \
+            --force \
+            --non-interactive \
+            --token="$VERCEL_TOKEN"
 
           echo "## After" >> "$GITHUB_STEP_SUMMARY"
           npx vercel env ls --token="$VERCEL_TOKEN" | tee /tmp/vercel-env-after.txt
