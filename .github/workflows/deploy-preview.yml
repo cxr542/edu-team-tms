@@ -104,44 +104,50 @@ jobs:
           # Preview host is often SSO-gated; API path is verified on Production origin
           # using admin-session minted from Preview-pulled server secrets.
           # Gated to the J3 pilot branch so routine PRs do not write journal_snapshots.
-          ENV_FILE=.vercel/.env.preview.local
-          test -f "$ENV_FILE"
-          # Export TMS/Supabase keys into this step without printing values
-          eval "$(python3 - <<'PY'
-          import shlex
-          from pathlib import Path
-          path = Path('.vercel/.env.preview.local')
-          wanted = {
+          test -f .vercel/.env.preview.local
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+
+          function readEnvKey(fileText, key) {
+            // Match KEY=value on its own line; support optional single/double quotes.
+            // Avoid line-by-line dotenv parse (BLOB PEM multiline breaks naive parsers).
+            const re = new RegExp(
+              `^${key}=("(?:\\\\.|[^"])*"|'(?:\\\\.|[^'])*'|[^\\r\\n]*)`,
+              'm'
+            );
+            const m = fileText.match(re);
+            if (!m) return '';
+            let val = m[1].trim();
+            if (
+              (val.startsWith('"') && val.endsWith('"')) ||
+              (val.startsWith("'") && val.endsWith("'"))
+            ) {
+              val = val.slice(1, -1);
+            }
+            return val;
+          }
+
+          const fileText = readFileSync('.vercel/.env.preview.local', 'utf8');
+          for (const key of [
             'TMS_ADMIN_GATE_PASSWORD',
             'TMS_ADMIN_SESSION_SECRET',
             'SUPABASE_URL',
             'SUPABASE_SERVICE_ROLE_KEY',
             'VITE_SUPABASE_URL',
+          ]) {
+            const val = readEnvKey(fileText, key);
+            if (val) process.env[key] = val;
           }
-          for line in path.read_text().splitlines():
-            if not line or line.startswith('#') or '=' not in line:
-              continue
-            key, val = line.split('=', 1)
-            key = key.strip()
-            if key not in wanted:
-              continue
-            val = val.strip()
-            if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
-              val = val[1:-1]
-            print(f'export {key}={shlex.quote(val)}')
-          PY
-          )"
-          if [ -z "${TMS_ADMIN_GATE_PASSWORD:-}" ] || [ -z "${TMS_ADMIN_SESSION_SECRET:-}" ]; then
-            echo "ERROR: TMS_ADMIN_* missing after loading Preview env file" >&2
-            cut -d= -f1 "$ENV_FILE" | head -n 40 >&2
-            exit 1
-          fi
-          node --input-type=module <<'NODE'
-          import { createAdminSessionCookie } from './server/api-utils/adminSession.js';
 
+          if (!process.env.TMS_ADMIN_GATE_PASSWORD || !process.env.TMS_ADMIN_SESSION_SECRET) {
+            console.error('ERROR: TMS_ADMIN_* missing/empty in Preview env file');
+            process.exit(1);
+          }
+
+          const { createAdminSessionCookie } = await import('./server/api-utils/adminSession.js');
           const cookie = createAdminSessionCookie();
           if (!cookie) {
-            console.error('Failed to mint admin session cookie (missing TMS_ADMIN_*).');
+            console.error('Failed to mint admin session cookie.');
             process.exit(1);
           }
 
