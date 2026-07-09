@@ -136,7 +136,7 @@ J5~J7 가져오기·자동화  ░░░░░░░░░░
 
 | 단계 | 작업 | 담당 | 완료 기준 |
 |------|------|------|-----------|
-| **J3** | Preview만 `VITE_SUPABASE_MANUAL_MIRROR_ENABLED=true` | 운영 | `/admin?module=journal` 백업 A/B/C 성공 |
+| **J3** | Preview만 `VITE_SUPABASE_MANUAL_MIRROR_ENABLED=true` | 운영 | 🔄 파일럿 진행 중 (Preview env + 검증) |
 | **J4** | 신선도 비교 UI (가져오기 없음) | 개발 | 「원격이 더 최신」표시 |
 | **J5** | 수동 가져오기·충돌 확인 UX | 개발 | 팀장 복구 1회 검증 |
 | **J6** | local 저장 시 자동 미러 (debounce, admin 세션) | 개발 | 수동 버튼 없이 upsert |

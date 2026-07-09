@@ -105,7 +105,7 @@ VITE_SUPABASE_URL=... VITE_SUPABASE_ANON_KEY=... npm run verify:supabase
 
 ---
 
-## 6. J3 Preview 파일럿 체크리스트 (다음 운영 작업)
+## 6. J3 Preview 파일럿 체크리스트 (진행 중)
 
 Production에는 켜지 않는다. Preview(또는 로컬)만:
 
