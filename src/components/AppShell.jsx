@@ -24,6 +24,7 @@ import {
 import LeaderKpiApprovalBell from './LeaderKpiApprovalBell';
 import { useLeaderKpiPendingBadge } from '../hooks/useLeaderKpiPendingBadge';
 import { useAnnouncementsUnreadBadge } from '../hooks/useAnnouncementsUnreadBadge';
+import { useCsrRequestsUnreadBadge } from '../hooks/useCsrRequestsUnreadBadge';
 import { formatKpiMemberLabel, findKpiMember } from '../constants/kpiMembers';
 import {
   NAV_GROUP_COMMON,
@@ -126,6 +127,8 @@ export default function AppShell({
   const leaderPending = useLeaderKpiPendingBadge(showLeaderApprovalBadge);
   const showAnnouncementsBadge = showGeneralNav || showTeamCommonNav;
   const announcementsUnread = useAnnouncementsUnreadBadge(showAnnouncementsBadge);
+  const showCsrRequestsBadge = showGeneralNav;
+  const csrRequestsUnread = useCsrRequestsUnreadBadge(showCsrRequestsBadge);
   const canUseCompetencyPilotNav = canUseCompetencyPilot(teamAccess);
   const competencyPreviewMessage =
     '역량 평가는 기능 개선 중이라 아직 공개 전입니다. 먼저 A 구성원과 팀장/관리자 화면에서 테스트 후 순차 공개할 예정입니다.';
@@ -281,7 +284,9 @@ export default function AppShell({
                       {navBtn('announcements', Megaphone, {
                         badgeCount: announcementsUnread.count,
                       })}
-                      {navBtn('idea-bank', Lightbulb)}
+                      {navBtn('idea-bank', Lightbulb, {
+                        badgeCount: csrRequestsUnread.count,
+                      })}
                       {navBtn('academizer', Presentation)}
                       {navBtn('lunch', UtensilsCrossed)}
                     </NavGroup>
