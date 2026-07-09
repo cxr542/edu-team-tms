@@ -7,6 +7,10 @@ describe('journal UX guidance', () => {
     path.join(process.cwd(), 'src/pages/WeeklyJournalPage.jsx'),
     'utf8'
   );
+  const freshnessSource = readFileSync(
+    path.join(process.cwd(), 'src/utils/journalSupabaseFreshness.js'),
+    'utf8'
+  );
   const appSource = readFileSync(path.join(process.cwd(), 'src/App.jsx'), 'utf8');
   const cssSource = readFileSync(
     path.join(process.cwd(), 'src/pages/WeeklyJournalPage.css'),
@@ -35,6 +39,9 @@ describe('journal UX guidance', () => {
     expect(journalSource).toContain('Supabase 미설정');
     expect(journalSource).toContain('saveJournalSnapshotToSupabase');
     expect(journalSource).toContain('buildMemberJournalSavePayload');
+    expect(freshnessSource).toContain('원격이 더 최신');
+    expect(journalSource).toContain('journal-freshness-hint');
+    expect(journalSource).toContain('classifyJournalFreshness');
     expect(journalSource).toContain('showJournalLeaderToolbar && !journalReadOnly');
     expect(journalSource).toContain('aria-label="저장"');
     expect(journalSource).toContain('저장은 이 브라우저에 먼저 반영됩니다.');
