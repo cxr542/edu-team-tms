@@ -70,13 +70,19 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          # Re-pull so the just-set Preview env is present for the Vite build
+          # Re-pull so Preview env (incl. MANUAL_MIRROR) is present for the Vite build
           npx vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
-          if ! grep -E '^VITE_SUPABASE_MANUAL_MIRROR_ENABLED=["'\'']?true["'\'']?$' .vercel/.env.preview.local; then
-            echo "ERROR: Preview env file missing MANUAL_MIRROR=true" >&2
-            cat .vercel/.env.preview.local | sed 's/=.*/=***/' || true
+          ENV_FILE=.vercel/.env.preview.local
+          if ! grep -q '^VITE_SUPABASE_MANUAL_MIRROR_ENABLED=' "$ENV_FILE"; then
+            echo "ERROR: Preview env file missing MANUAL_MIRROR key after pull" >&2
+            cut -d= -f1 "$ENV_FILE" || true
             exit 1
           fi
+          # Normalize value for this build (Vercel pull may quote/escape; Vite needs true)
+          grep -v '^VITE_SUPABASE_MANUAL_MIRROR_ENABLED=' "$ENV_FILE" > /tmp/env.preview.local
+          printf 'VITE_SUPABASE_MANUAL_MIRROR_ENABLED=true\n' >> /tmp/env.preview.local
+          mv /tmp/env.preview.local "$ENV_FILE"
+          export VITE_SUPABASE_MANUAL_MIRROR_ENABLED=true
           npx vercel build --token="$VERCEL_TOKEN"
           DEPLOY_OUTPUT="$(npx vercel deploy --prebuilt --token="$VERCEL_TOKEN")"
           echo "$DEPLOY_OUTPUT"
