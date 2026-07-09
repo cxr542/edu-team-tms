@@ -5,6 +5,9 @@ export const ANNOUNCEMENT_CATEGORY_LABELS = {
   guide: '사용안내',
 };
 
+/** New posts default to release-note style updates. */
+export const DEFAULT_ANNOUNCEMENT_CATEGORY = 'release';
+
 export const ANNOUNCEMENT_CATEGORY_LIST = Object.entries(ANNOUNCEMENT_CATEGORY_LABELS).map(
   ([value, label]) => ({ value, label })
 );
@@ -18,11 +21,47 @@ export const ANNOUNCEMENT_CATEGORY_COLORS = {
 
 export const ANNOUNCEMENT_SUMMARY_WINDOW_DAYS = 7;
 
-const DEFAULT_ANNOUNCEMENT_CATEGORY = 'notice';
-
 function toTime(value) {
   const time = new Date(value || 0).getTime();
   return Number.isFinite(time) ? time : 0;
+}
+
+export function announcementFeedTimestamp(announcement) {
+  return toTime(
+    announcement?.publishedAt || announcement?.updatedAt || announcement?.createdAt
+  );
+}
+
+/** YYYY-MM-DD for changelog day headers (local timezone). */
+export function announcementFeedDayKey(announcement) {
+  const time = announcementFeedTimestamp(announcement);
+  if (!time) return '미정';
+  const d = new Date(time);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * Group sorted announcements by local calendar day for a release-note timeline.
+ * @param {Array} items already sorted preferred
+ * @returns {Array<{ dayKey: string, items: Array }>}
+ */
+export function groupAnnouncementsByFeedDay(items) {
+  const groups = [];
+  const indexByDay = new Map();
+  for (const item of items || []) {
+    const dayKey = announcementFeedDayKey(item);
+    let group = indexByDay.get(dayKey);
+    if (!group) {
+      group = { dayKey, items: [] };
+      indexByDay.set(dayKey, group);
+      groups.push(group);
+    }
+    group.items.push(item);
+  }
+  return groups;
 }
 
 export function normalizeAnnouncementCategory(value) {
