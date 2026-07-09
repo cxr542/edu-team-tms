@@ -107,7 +107,6 @@ jobs:
           test -f .vercel/.env.preview.local
           node --input-type=module <<'NODE'
           import { readFileSync } from 'node:fs';
-          import { createClient } from '@supabase/supabase-js';
 
           function readEnvKey(fileText, key) {
             const re = new RegExp(
@@ -123,7 +122,6 @@ jobs:
             ) {
               val = val.slice(1, -1);
             }
-            // Vercel sometimes wraps as `"\"value\""` — unwrap once more if needed
             if (
               (val.startsWith('"') && val.endsWith('"')) ||
               (val.startsWith("'") && val.endsWith("'"))
@@ -134,23 +132,23 @@ jobs:
           }
 
           const fileText = readFileSync('.vercel/.env.preview.local', 'utf8');
-          const url =
-            readEnvKey(fileText, 'SUPABASE_URL') || readEnvKey(fileText, 'VITE_SUPABASE_URL');
+          const url = (
+            readEnvKey(fileText, 'SUPABASE_URL') || readEnvKey(fileText, 'VITE_SUPABASE_URL')
+          ).replace(/\/$/, '');
           const serviceRoleKey = readEnvKey(fileText, 'SUPABASE_SERVICE_ROLE_KEY');
-          const gateLen = readEnvKey(fileText, 'TMS_ADMIN_GATE_PASSWORD').length;
-          const secretLen = readEnvKey(fileText, 'TMS_ADMIN_SESSION_SECRET').length;
-          console.log(
-            `env lens: supabaseUrl=${url.length} serviceRole=${serviceRoleKey.length} gate=${gateLen} secret=${secretLen}`
-          );
+          console.log(`env lens: supabaseUrl=${url.length} serviceRole=${serviceRoleKey.length}`);
           if (!url || !serviceRoleKey) {
             console.error('ERROR: SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY missing in Preview env');
             process.exit(1);
           }
 
-          const client = createClient(url, serviceRoleKey, {
-            auth: { persistSession: false, autoRefreshToken: false },
-          });
           const stamp = new Date().toISOString();
+          const headers = {
+            apikey: serviceRoleKey,
+            Authorization: `Bearer ${serviceRoleKey}`,
+            'Content-Type': 'application/json',
+            Prefer: 'resolution=merge-duplicates,return=representation',
+          };
 
           for (const memberCode of ['J3A', 'J3B', 'J3C']) {
             const payload = {
@@ -159,32 +157,36 @@ jobs:
               stampedAt: stamp,
               note: 'J3 Preview pilot verification payload',
             };
-            const { data: saved, error: upErr } = await client
-              .from('journal_snapshots')
-              .upsert(
-                {
-                  member_code: memberCode,
-                  payload,
-                  payload_version: 1,
-                  updated_at: stamp,
-                },
-                { onConflict: 'member_code' }
-              )
-              .select('member_code, payload, updated_at')
-              .single();
-            if (upErr) throw new Error(`upsert ${memberCode}: ${upErr.message}`);
-            console.log(`UPSERT ${memberCode}`, saved?.updated_at);
-
-            const { data: loaded, error: getErr } = await client
-              .from('journal_snapshots')
-              .select('member_code, payload, updated_at')
-              .eq('member_code', memberCode)
-              .maybeSingle();
-            if (getErr) throw new Error(`get ${memberCode}: ${getErr.message}`);
-            if (!loaded?.payload?.j3Pilot) {
-              throw new Error(`get ${memberCode}: missing j3Pilot marker`);
+            const upsertRes = await fetch(`${url}/rest/v1/journal_snapshots`, {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({
+                member_code: memberCode,
+                payload,
+                payload_version: 1,
+                updated_at: stamp,
+              }),
+            });
+            const upsertBody = await upsertRes.json().catch(() => ({}));
+            console.log(`UPSERT ${memberCode}`, upsertRes.status);
+            if (!upsertRes.ok) {
+              throw new Error(`upsert ${memberCode}: ${upsertRes.status} ${JSON.stringify(upsertBody)}`);
             }
-            console.log(`GET ${memberCode}`, loaded.updated_at);
+
+            const getRes = await fetch(
+              `${url}/rest/v1/journal_snapshots?member_code=eq.${encodeURIComponent(memberCode)}&select=member_code,payload,updated_at`,
+              {
+                headers: {
+                  apikey: serviceRoleKey,
+                  Authorization: `Bearer ${serviceRoleKey}`,
+                },
+              }
+            );
+            const rows = await getRes.json().catch(() => []);
+            console.log(`GET ${memberCode}`, getRes.status, Array.isArray(rows) ? rows[0]?.updated_at : null);
+            if (!getRes.ok || !Array.isArray(rows) || !rows[0]?.payload?.j3Pilot) {
+              throw new Error(`get ${memberCode}: ${getRes.status} ${JSON.stringify(rows)}`);
+            }
           }
           console.log('J3 J3A/J3B/J3C journal_snapshots service-role verification OK');
           NODE
