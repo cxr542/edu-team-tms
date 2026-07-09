@@ -104,33 +104,40 @@ jobs:
           # Preview host is often SSO-gated; API path is verified on Production origin
           # using admin-session minted from Preview-pulled server secrets.
           # Gated to the J3 pilot branch so routine PRs do not write journal_snapshots.
+          ENV_FILE=.vercel/.env.preview.local
+          test -f "$ENV_FILE"
+          # Export TMS/Supabase keys into this step without printing values
+          eval "$(python3 - <<'PY'
+          import shlex
+          from pathlib import Path
+          path = Path('.vercel/.env.preview.local')
+          wanted = {
+            'TMS_ADMIN_GATE_PASSWORD',
+            'TMS_ADMIN_SESSION_SECRET',
+            'SUPABASE_URL',
+            'SUPABASE_SERVICE_ROLE_KEY',
+            'VITE_SUPABASE_URL',
+          }
+          for line in path.read_text().splitlines():
+            if not line or line.startswith('#') or '=' not in line:
+              continue
+            key, val = line.split('=', 1)
+            key = key.strip()
+            if key not in wanted:
+              continue
+            val = val.strip()
+            if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+              val = val[1:-1]
+            print(f'export {key}={shlex.quote(val)}')
+          PY
+          )"
+          if [ -z "${TMS_ADMIN_GATE_PASSWORD:-}" ] || [ -z "${TMS_ADMIN_SESSION_SECRET:-}" ]; then
+            echo "ERROR: TMS_ADMIN_* missing after loading Preview env file" >&2
+            cut -d= -f1 "$ENV_FILE" | head -n 40 >&2
+            exit 1
+          fi
           node --input-type=module <<'NODE'
-          import { readFileSync } from 'node:fs';
           import { createAdminSessionCookie } from './server/api-utils/adminSession.js';
-
-          function loadEnvFile(path) {
-            const out = {};
-            for (const line of readFileSync(path, 'utf8').split(/\r?\n/)) {
-              if (!line || line.startsWith('#')) continue;
-              const i = line.indexOf('=');
-              if (i < 0) continue;
-              const key = line.slice(0, i).trim();
-              let val = line.slice(i + 1).trim();
-              if (
-                (val.startsWith('"') && val.endsWith('"')) ||
-                (val.startsWith("'") && val.endsWith("'"))
-              ) {
-                val = val.slice(1, -1);
-              }
-              out[key] = val;
-            }
-            return out;
-          }
-
-          const env = loadEnvFile('.vercel/.env.preview.local');
-          for (const [k, v] of Object.entries(env)) {
-            if (!process.env[k]) process.env[k] = v;
-          }
 
           const cookie = createAdminSessionCookie();
           if (!cookie) {
