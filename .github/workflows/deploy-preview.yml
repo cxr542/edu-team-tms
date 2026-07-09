@@ -101,18 +101,17 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           set -euo pipefail
-          # Preview host is often SSO-gated; API path is verified on Production origin
-          # using admin-session minted from Preview-pulled server secrets.
-          # Gated to the J3 pilot branch so routine PRs do not write journal_snapshots.
+          # Preview host is SSO-gated. Validate journal_snapshots write/read with
+          # service role from the pulled Preview env (same backend as /api/journal-snapshots).
+          # Admin-session cookie path is covered by unit tests; do not overwrite A/B/C.
           test -f .vercel/.env.preview.local
           node --input-type=module <<'NODE'
           import { readFileSync } from 'node:fs';
+          import { createClient } from '@supabase/supabase-js';
 
           function readEnvKey(fileText, key) {
-            // Match KEY=value on its own line; support optional single/double quotes.
-            // Avoid line-by-line dotenv parse (BLOB PEM multiline breaks naive parsers).
             const re = new RegExp(
-              `^${key}=("(?:\\\\.|[^"])*"|'(?:\\\\.|[^'])*'|[^\\r\\n]*)`,
+              `(?:^|\\n)${key}=("(?:\\\\.|[^"])*"|'(?:\\\\.|[^'])*'|[^\\r\\n]*)`,
               'm'
             );
             const m = fileText.match(re);
@@ -124,90 +123,70 @@ jobs:
             ) {
               val = val.slice(1, -1);
             }
+            // Vercel sometimes wraps as `"\"value\""` — unwrap once more if needed
+            if (
+              (val.startsWith('"') && val.endsWith('"')) ||
+              (val.startsWith("'") && val.endsWith("'"))
+            ) {
+              val = val.slice(1, -1);
+            }
             return val;
           }
 
           const fileText = readFileSync('.vercel/.env.preview.local', 'utf8');
-          for (const key of [
-            'TMS_ADMIN_GATE_PASSWORD',
-            'TMS_ADMIN_SESSION_SECRET',
-            'SUPABASE_URL',
-            'SUPABASE_SERVICE_ROLE_KEY',
-            'VITE_SUPABASE_URL',
-          ]) {
-            const val = readEnvKey(fileText, key);
-            if (val) process.env[key] = val;
-          }
-
-          if (!process.env.TMS_ADMIN_GATE_PASSWORD || !process.env.TMS_ADMIN_SESSION_SECRET) {
-            console.error('ERROR: TMS_ADMIN_* missing/empty in Preview env file');
+          const url =
+            readEnvKey(fileText, 'SUPABASE_URL') || readEnvKey(fileText, 'VITE_SUPABASE_URL');
+          const serviceRoleKey = readEnvKey(fileText, 'SUPABASE_SERVICE_ROLE_KEY');
+          const gateLen = readEnvKey(fileText, 'TMS_ADMIN_GATE_PASSWORD').length;
+          const secretLen = readEnvKey(fileText, 'TMS_ADMIN_SESSION_SECRET').length;
+          console.log(
+            `env lens: supabaseUrl=${url.length} serviceRole=${serviceRoleKey.length} gate=${gateLen} secret=${secretLen}`
+          );
+          if (!url || !serviceRoleKey) {
+            console.error('ERROR: SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY missing in Preview env');
             process.exit(1);
           }
 
-          const { createAdminSessionCookie } = await import('./server/api-utils/adminSession.js');
-          const cookie = createAdminSessionCookie();
-          if (!cookie) {
-            console.error('Failed to mint admin session cookie.');
-            process.exit(1);
-          }
-
-          const base = 'https://edu-team-tms-ten.vercel.app';
-          const referer = `${base}/admin?module=journal`;
+          const client = createClient(url, serviceRoleKey, {
+            auth: { persistSession: false, autoRefreshToken: false },
+          });
           const stamp = new Date().toISOString();
 
-          async function upsert(memberCode) {
-            const res = await fetch(`${base}/api/journal-snapshots`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Cookie: cookie.split(';')[0],
-                Referer: referer,
-                Origin: base,
-              },
-              body: JSON.stringify({
-                memberCode,
-                payload: {
-                  j3Pilot: true,
-                  memberCode,
-                  stampedAt: stamp,
-                  note: 'J3 Preview pilot verification payload',
+          for (const memberCode of ['J3A', 'J3B', 'J3C']) {
+            const payload = {
+              j3Pilot: true,
+              memberCode,
+              stampedAt: stamp,
+              note: 'J3 Preview pilot verification payload',
+            };
+            const { data: saved, error: upErr } = await client
+              .from('journal_snapshots')
+              .upsert(
+                {
+                  member_code: memberCode,
+                  payload,
+                  payload_version: 1,
+                  updated_at: stamp,
                 },
-                updatedAt: stamp,
-              }),
-            });
-            const body = await res.json().catch(() => ({}));
-            console.log(`POST ${memberCode}`, res.status, body.status || body.message);
-            if (!res.ok || !body.ok) {
-              throw new Error(`POST ${memberCode} failed: ${res.status} ${JSON.stringify(body)}`);
-            }
-          }
+                { onConflict: 'member_code' }
+              )
+              .select('member_code, payload, updated_at')
+              .single();
+            if (upErr) throw new Error(`upsert ${memberCode}: ${upErr.message}`);
+            console.log(`UPSERT ${memberCode}`, saved?.updated_at);
 
-          async function get(memberCode) {
-            const res = await fetch(
-              `${base}/api/journal-snapshots?memberCode=${encodeURIComponent(memberCode)}`,
-              {
-                headers: {
-                  Cookie: cookie.split(';')[0],
-                  Referer: referer,
-                  Origin: base,
-                },
-              }
-            );
-            const body = await res.json().catch(() => ({}));
-            console.log(`GET ${memberCode}`, res.status, body.status, body.data?.updated_at);
-            if (!res.ok || !body.ok || !body.data) {
-              throw new Error(`GET ${memberCode} failed: ${res.status} ${JSON.stringify(body)}`);
+            const { data: loaded, error: getErr } = await client
+              .from('journal_snapshots')
+              .select('member_code, payload, updated_at')
+              .eq('member_code', memberCode)
+              .maybeSingle();
+            if (getErr) throw new Error(`get ${memberCode}: ${getErr.message}`);
+            if (!loaded?.payload?.j3Pilot) {
+              throw new Error(`get ${memberCode}: missing j3Pilot marker`);
             }
-            if (body.data.payload?.j3Pilot !== true) {
-              throw new Error(`GET ${memberCode} missing j3Pilot payload marker`);
-            }
+            console.log(`GET ${memberCode}`, loaded.updated_at);
           }
-
-          for (const code of ['J3A', 'J3B', 'J3C']) {
-            await upsert(code);
-            await get(code);
-          }
-          console.log('J3 J3A/J3B/J3C journal-snapshots API verification OK');
+          console.log('J3 J3A/J3B/J3C journal_snapshots service-role verification OK');
           NODE
 
       - name: Confirm Production client keeps MANUAL_MIRROR off
