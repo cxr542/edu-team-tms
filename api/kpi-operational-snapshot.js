@@ -7,12 +7,12 @@ import {
   mergeMemberIntoCompetencyCloudSnapshot,
   normalizeCompetencyCloudSnapshot,
 } from '../src/utils/kpiOperationalCloudSnapshot.js';
-import { isAllowedPublishOrigin } from './utils/publishOrigin.js';
-import { isAdminOrSameMemberRouteReferer } from './utils/requestScope.js';
+import { isAllowedPublishOrigin } from '../server/api-utils/publishOrigin.js';
+import { isAdminOrSameMemberRouteReferer } from '../server/api-utils/requestScope.js';
 import {
   assertBlobConfigured,
   getBlobSdkOptions,
-} from './utils/blobClient.js';
+} from '../server/api-utils/blobClient.js';
 
 const LIVE_LATEST_PATH = 'kpi-operational/live-latest.json';
 

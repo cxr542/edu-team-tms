@@ -5,11 +5,11 @@ import {
   mergeMemberIntoJournalSnapshot,
   normalizeJournalCloudSnapshot,
 } from '../src/utils/journalCloudSnapshot.js';
-import { isAllowedPublishOrigin } from './utils/publishOrigin.js';
+import { isAllowedPublishOrigin } from '../server/api-utils/publishOrigin.js';
 import {
   assertBlobConfigured,
   getBlobSdkOptions,
-} from './utils/blobClient.js';
+} from '../server/api-utils/blobClient.js';
 
 const LIVE_LATEST_PATH = 'journal/live-latest.json';
 const MEMBER_ROUTE_SLUG_TO_CODE = {

@@ -3,7 +3,7 @@ import {
   getBlobReadWriteToken,
   getBlobSdkOptions,
   isBlobConfigured,
-} from '../api/utils/blobClient.js';
+} from '../server/api-utils/blobClient.js';
 
 describe('blobClient', () => {
   it('uses static token when BLOB_READ_WRITE_TOKEN is set', () => {

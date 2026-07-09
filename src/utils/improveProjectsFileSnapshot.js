@@ -3,7 +3,7 @@ import {
   mergeImproveProjects,
   normalizeImproveProjectsSnapshot,
   validateImproveProjectsPayload,
-} from '../../api/utils/improveProjectsSnapshotCore.js';
+} from '../../server/api-utils/improveProjectsSnapshotCore.js';
 
 export const IMPROVE_PROJECTS_FILE_SNAPSHOT_SOURCE = 'team-kpi-improve-projects-file';
 

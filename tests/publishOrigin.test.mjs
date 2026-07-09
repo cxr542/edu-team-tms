@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isAllowedPublishOrigin } from '../api/utils/publishOrigin.js';
+import { isAllowedPublishOrigin } from '../server/api-utils/publishOrigin.js';
 
 describe('isAllowedPublishOrigin', () => {
   it('allows localhost and known TMS deployment origins', () => {

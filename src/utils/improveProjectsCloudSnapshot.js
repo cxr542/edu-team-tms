@@ -15,7 +15,7 @@ import {
   normalizeImproveProjectsSnapshot,
   validateImproveProjectsPayload,
   improveProjectStableKey,
-} from '../../api/utils/improveProjectsSnapshotCore.js';
+} from '../../server/api-utils/improveProjectsSnapshotCore.js';
 
 export const IMPROVE_PROJECTS_API_PATH = '/api/improve-projects-snapshot';
 export const IMPROVE_PROJECTS_LIVE_PATH = IMPROVE_PROJECTS_BLOB_KEY;

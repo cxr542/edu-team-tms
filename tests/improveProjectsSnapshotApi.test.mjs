@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   IMPROVE_PROJECTS_BLOB_KEY,
   normalizeImproveProjectsSnapshot,
-} from '../api/utils/improveProjectsSnapshotCore.js';
+} from '../server/api-utils/improveProjectsSnapshotCore.js';
 
 const headMock = vi.fn();
 const putMock = vi.fn();
@@ -39,7 +39,7 @@ describe('improve-projects-snapshot API', () => {
     'utf8'
   );
   const coreSource = readFileSync(
-    path.join(process.cwd(), 'api/utils/improveProjectsSnapshotCore.js'),
+    path.join(process.cwd(), 'server/api-utils/improveProjectsSnapshotCore.js'),
     'utf8'
   );
 
@@ -62,7 +62,7 @@ describe('improve-projects-snapshot API', () => {
   });
 
   it('imports server core only, not client snapshot utilities', () => {
-    expect(apiSource).toContain('./utils/improveProjectsSnapshotCore.js');
+    expect(apiSource).toContain('../server/api-utils/improveProjectsSnapshotCore.js');
     expect(apiSource).not.toContain('src/utils/improveProjectsCloudSnapshot');
     expect(apiSource).not.toContain('cloudHealth');
     expect(apiSource).not.toContain('appEnv');

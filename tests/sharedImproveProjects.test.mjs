@@ -6,7 +6,7 @@ import {
   normalizeImproveProjectEntry,
   normalizeImproveProjectsSnapshot,
   validateImproveProjectsPayload,
-} from '../api/utils/improveProjectsSnapshotCore.js';
+} from '../server/api-utils/improveProjectsSnapshotCore.js';
 import { IMPROVE_PROJECTS_LIVE_PATH } from '../src/utils/improveProjectsCloudSnapshot.js';
 
 describe('improveProjectsCloudSnapshot utilities', () => {
@@ -75,7 +75,7 @@ describe('improveProjectsCloudSnapshot utilities', () => {
     const { readFileSync } = await import('node:fs');
     const { join } = await import('node:path');
     const core = readFileSync(
-      join(process.cwd(), 'api/utils/improveProjectsSnapshotCore.js'),
+      join(process.cwd(), 'server/api-utils/improveProjectsSnapshotCore.js'),
       'utf8'
     );
     expect(core).not.toMatch(/\bwindow\b|\blocalStorage\b|\bnavigator\b/);

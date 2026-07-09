@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
-import { hasValidAdminSession } from './utils/adminSession.js';
-import { isAllowedPublishOrigin } from './utils/publishOrigin.js';
-import { isAdminRouteReferer } from './utils/requestScope.js';
+import { hasValidAdminSession } from '../server/api-utils/adminSession.js';
+import { isAllowedPublishOrigin } from '../server/api-utils/publishOrigin.js';
+import { isAdminRouteReferer } from '../server/api-utils/requestScope.js';
 
 const JOURNAL_SNAPSHOTS_TABLE = 'journal_snapshots';
 const PAYLOAD_VERSION = 1;

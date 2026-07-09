@@ -1,5 +1,5 @@
-import { createAdminSessionCookie, verifyAdminPassword } from './utils/adminSession.js';
-import { isAllowedPublishOrigin } from './utils/publishOrigin.js';
+import { createAdminSessionCookie, verifyAdminPassword } from '../server/api-utils/adminSession.js';
+import { isAllowedPublishOrigin } from '../server/api-utils/publishOrigin.js';
 
 function json(res, status, body) {
   res.statusCode = status;

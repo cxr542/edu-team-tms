@@ -4,12 +4,12 @@
  */
 import { readFile } from 'fs/promises';
 import path from 'path';
-import { isAllowedPublishOrigin } from './utils/publishOrigin.js';
-import { isAdminRouteReferer } from './utils/requestScope.js';
+import { isAllowedPublishOrigin } from '../server/api-utils/publishOrigin.js';
+import { isAdminRouteReferer } from '../server/api-utils/requestScope.js';
 import {
   assertBlobConfigured,
   getBlobSdkOptions,
-} from './utils/blobClient.js';
+} from '../server/api-utils/blobClient.js';
 
 const LIVE_LATEST_PATH = 'ledger/live-latest.json';
 
