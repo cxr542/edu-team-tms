@@ -33,8 +33,12 @@ import {
 } from '../utils/journalCloudSnapshot';
 import {
   buildMemberRemoteSnapshotFromSupabase,
+  fetchTeamJournalSnapshotFromSupabase,
 } from '../utils/supabaseJournalSnapshot';
-import { JOURNAL_SUPABASE_AUTO_MIRROR_DEBOUNCE_MS } from '../constants/supabaseSync';
+import {
+  JOURNAL_SUPABASE_AUTO_MIRROR_DEBOUNCE_MS,
+  SUPABASE_MANUAL_MIRROR_ENABLED,
+} from '../constants/supabaseSync';
 import {
   apply2026PublicHolidaysToDays,
   defaultDayForKey,
@@ -299,7 +303,20 @@ export function useWeeklyJournal({
     async ({ ownMemberCode, includeOwnMember = false } = {}) => {
       setSyncStatus('checking');
       try {
-        const result = await fetchJournalSnapshot();
+        let result = null;
+
+        // J7c: Preview MANUAL_MIRROR → Supabase team snapshot first, Blob fallback.
+        if (SUPABASE_MANUAL_MIRROR_ENABLED) {
+          const supabase = await fetchTeamJournalSnapshotFromSupabase();
+          if (supabase?.ok && supabase.snapshot) {
+            result = { snapshot: supabase.snapshot, source: 'supabase' };
+          }
+        }
+
+        if (!result?.snapshot) {
+          result = await fetchJournalSnapshot();
+        }
+
         if (!result?.snapshot) {
           setSyncStatus('idle');
           return { ok: false, reason: 'no-remote' };

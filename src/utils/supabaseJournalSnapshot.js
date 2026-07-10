@@ -13,12 +13,22 @@ function hasMemberCode(memberCode) {
   return typeof memberCode === 'string' && memberCode.trim().length > 0;
 }
 
-async function callJournalSnapshotsApi({ method = 'GET', memberCode, payload, updatedAt } = {}) {
+async function callJournalSnapshotsApi({
+  method = 'GET',
+  memberCode,
+  scope,
+  payload,
+  updatedAt,
+} = {}) {
   const code = String(memberCode || '').trim();
-  const path =
-    method === 'GET'
-      ? `${JOURNAL_SNAPSHOTS_API}?memberCode=${encodeURIComponent(code)}`
-      : JOURNAL_SNAPSHOTS_API;
+  let path = JOURNAL_SNAPSHOTS_API;
+  if (method === 'GET') {
+    if (scope === 'team') {
+      path = `${JOURNAL_SNAPSHOTS_API}?scope=team`;
+    } else {
+      path = `${JOURNAL_SNAPSHOTS_API}?memberCode=${encodeURIComponent(code)}`;
+    }
+  }
   const postBody =
     method === 'POST'
       ? {
@@ -125,7 +135,7 @@ export async function saveJournalSnapshotToSupabase({ memberCode, payload, updat
 }
 
 /**
- * Load member journal snapshot via /api/journal-snapshots (admin-session required).
+ * Load member journal snapshot via /api/journal-snapshots (admin-session or same-member referer).
  */
 export async function getJournalSnapshotFromSupabase(memberCode) {
   if (!hasMemberCode(memberCode)) {
@@ -153,4 +163,75 @@ export function buildMemberRemoteSnapshotFromSupabase(memberCode, data) {
       [code]: payload,
     },
   });
+}
+
+/**
+ * Merge A/B/C Supabase rows into a team cloud snapshot (J7c).
+ * @param {Array<object>|null|undefined} rows
+ * @returns {object|null}
+ */
+export function buildTeamJournalCloudSnapshotFromSupabaseRows(rows) {
+  const list = Array.isArray(rows) ? rows : [];
+  const memberJournals = {};
+  const memberUpdatedAt = {};
+  let updatedAt = null;
+
+  list.forEach((row) => {
+    const code = String(row?.member_code || row?.memberCode || '').trim();
+    if (!code) return;
+    const at = resolveRemoteSnapshotUpdatedAt(row);
+    const payload = row?.payload && typeof row.payload === 'object' ? row.payload : {};
+    memberJournals[code] = {
+      ...payload,
+      updatedAt: at || payload.updatedAt || null,
+      savedAt: at || payload.savedAt || null,
+    };
+    if (at) {
+      memberUpdatedAt[code] = at;
+      if (!updatedAt || new Date(at).getTime() > new Date(updatedAt).getTime()) {
+        updatedAt = at;
+      }
+    }
+  });
+
+  if (!Object.keys(memberJournals).length) return null;
+
+  return normalizeJournalCloudSnapshot({
+    publishedAt: updatedAt,
+    meta: { updatedAt, memberUpdatedAt },
+    memberJournals,
+  });
+}
+
+/**
+ * J7c: load team journal snapshot via GET ?scope=team (admin or member referer).
+ * @returns {Promise<{ ok: boolean, status: string, message: string, data?: object|null, snapshot: object|null, source: 'supabase' }>}
+ */
+export async function fetchTeamJournalSnapshotFromSupabase() {
+  const apiResult = await callJournalSnapshotsApi({ method: 'GET', scope: 'team' });
+  if (!apiResult.ok) {
+    return { ...apiResult, snapshot: null, source: 'supabase' };
+  }
+
+  const rows = Array.isArray(apiResult.data?.rows) ? apiResult.data.rows : [];
+  if (!rows.length || apiResult.status === 'empty') {
+    return {
+      ok: true,
+      status: 'empty',
+      message: apiResult.message || 'No journal snapshots found.',
+      data: apiResult.data,
+      snapshot: null,
+      source: 'supabase',
+    };
+  }
+
+  const snapshot = buildTeamJournalCloudSnapshotFromSupabaseRows(rows);
+  return {
+    ok: true,
+    status: snapshot ? 'ok' : 'empty',
+    message: apiResult.message || 'ok',
+    data: apiResult.data,
+    snapshot,
+    source: 'supabase',
+  };
 }

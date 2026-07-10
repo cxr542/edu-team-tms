@@ -442,4 +442,58 @@ describe('journal-snapshots API member referer (J7b)', () => {
       data: { member_code: 'B' },
     });
   });
+
+  it('allows B member route to GET team scope for peer pull (J7c)', async () => {
+    const rows = [
+      {
+        member_code: 'A',
+        payload: { days: { '2026-07-01': { tasks: [{ id: 'a1' }] } } },
+        payload_version: 1,
+        updated_at: '2026-07-01T00:00:00.000Z',
+      },
+      {
+        member_code: 'B',
+        payload: { days: { '2026-07-02': { tasks: [{ id: 'b1' }] } } },
+        payload_version: 1,
+        updated_at: '2026-07-02T00:00:00.000Z',
+      },
+    ];
+    const inMock = vi.fn().mockResolvedValue({ data: rows, error: null });
+    selectMock.mockReturnValue({ in: inMock });
+    fromMock.mockReturnValue({ select: selectMock });
+
+    const handler = await loadHandler();
+    const req = {
+      method: 'GET',
+      query: { scope: 'team' },
+      headers: {
+        referer: 'https://edu-team-tms-ten.vercel.app/wschoi?module=journal',
+      },
+    };
+    const res = createRes();
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body).toMatchObject({ ok: true, status: 'ok' });
+    expect(body.data.rows).toHaveLength(2);
+    expect(body.data.rows.map((r) => r.member_code).sort()).toEqual(['A', 'B']);
+    expect(inMock).toHaveBeenCalledWith('member_code', ['A', 'B', 'C']);
+  });
+
+  it('rejects team scope from non-member non-admin referer', async () => {
+    const handler = await loadHandler();
+    const req = {
+      method: 'GET',
+      query: { scope: 'team' },
+      headers: {
+        referer: 'https://edu-team-tms-ten.vercel.app/',
+      },
+    };
+    const res = createRes();
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(403);
+    expect(fromMock).not.toHaveBeenCalled();
+  });
 });
