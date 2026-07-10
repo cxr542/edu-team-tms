@@ -9,3 +9,6 @@ export const SUPABASE_MANUAL_MIRROR_ENABLED =
 
 export const SUPABASE_MANUAL_MIRROR_DISABLED_MESSAGE =
   'Supabase 수동 미러는 Preview 파일럿에서만 켭니다 (VITE_SUPABASE_MANUAL_MIRROR_ENABLED).';
+
+/** J6: debounce after local persist before auto upsert to Supabase. */
+export const JOURNAL_SUPABASE_AUTO_MIRROR_DEBOUNCE_MS = 8000;

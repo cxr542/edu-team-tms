@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   JOURNAL_SEED_ACADEMIZER_SCENARIO,
   KPI_WEEK_MEMOS_ACADEMIZER_SCENARIO,
@@ -34,6 +34,7 @@ import {
 import {
   buildMemberRemoteSnapshotFromSupabase,
 } from '../utils/supabaseJournalSnapshot';
+import { JOURNAL_SUPABASE_AUTO_MIRROR_DEBOUNCE_MS } from '../constants/supabaseSync';
 import {
   apply2026PublicHolidaysToDays,
   defaultDayForKey,
@@ -145,11 +146,28 @@ function updateMemberJournal(prev, memberCode, updater) {
   };
 }
 
-export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {}) {
+export function useWeeklyJournal({
+  readOnly = false,
+  autoSyncCloud = false,
+  autoMirrorSupabase = false,
+  mirrorMemberToSupabase = null,
+} = {}) {
   const [store, setStore] = useState(loadStore);
   const [syncStatus, setSyncStatus] = useState('idle');
   const [cloudSaveStatus, setCloudSaveStatus] = useState('idle');
   const [pendingCloudMembers, setPendingCloudMembers] = useState([]);
+  const [pendingSupabaseMembers, setPendingSupabaseMembers] = useState([]);
+  const [supabaseMirrorSaveStatus, setSupabaseMirrorSaveStatus] = useState('idle');
+  const storeRef = useRef(store);
+  const mirrorFnRef = useRef(mirrorMemberToSupabase);
+
+  useEffect(() => {
+    storeRef.current = store;
+  }, [store]);
+
+  useEffect(() => {
+    mirrorFnRef.current = mirrorMemberToSupabase;
+  }, [mirrorMemberToSupabase]);
 
   const cacheStore = useCallback(
     (next) => {
@@ -180,9 +198,13 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
         setCloudSaveStatus('queued');
         setPendingCloudMembers((prev) => uniqueMembers([...prev, ...touched]));
       }
+      if (!readOnly && autoMirrorSupabase && touched.length > 0) {
+        setSupabaseMirrorSaveStatus('queued');
+        setPendingSupabaseMembers((prev) => uniqueMembers([...prev, ...touched]));
+      }
       return withMeta;
     },
-    [autoSyncCloud, readOnly]
+    [autoMirrorSupabase, autoSyncCloud, readOnly]
   );
 
   useEffect(() => {
@@ -583,6 +605,51 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
     return () => window.clearTimeout(timer);
   }, [applyMemberCloudSave, autoSyncCloud, pendingCloudMembers, readOnly, store]);
 
+  useEffect(() => {
+    if (readOnly || !autoMirrorSupabase || pendingSupabaseMembers.length === 0) {
+      return undefined;
+    }
+    if (typeof mirrorFnRef.current !== 'function') {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(async () => {
+      const members = pendingSupabaseMembers;
+      setPendingSupabaseMembers((prev) => prev.filter((code) => !members.includes(code)));
+      setSupabaseMirrorSaveStatus('saving');
+      let hadConflict = false;
+      let hadError = false;
+      const currentStore = storeRef.current;
+
+      for (const memberCode of members) {
+        try {
+          const result = await mirrorFnRef.current(memberCode, currentStore);
+          if (!result?.ok) {
+            if (result?.status === 'conflict') {
+              hadConflict = true;
+            } else if (result?.status === 'forbidden' || result?.status === 'disabled') {
+              hadError = true;
+              setPendingSupabaseMembers([]);
+              break;
+            } else {
+              hadError = true;
+            }
+          }
+        } catch {
+          hadError = true;
+        }
+      }
+
+      if (hadError) {
+        setSupabaseMirrorSaveStatus(hadConflict ? 'conflict' : 'error');
+      } else {
+        setSupabaseMirrorSaveStatus(hadConflict ? 'conflict' : 'saved');
+      }
+    }, JOURNAL_SUPABASE_AUTO_MIRROR_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [autoMirrorSupabase, pendingSupabaseMembers, readOnly]);
+
   const linkedDays = useMemo(
     () => getMemberDays(JOURNAL_LINKED_MEMBER_CODE),
     [getMemberDays]
@@ -598,6 +665,7 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
     meta: store.meta,
     syncStatus,
     cloudSaveStatus,
+    supabaseMirrorSaveStatus,
     getDayData,
     updateDay,
     setWeekSummary,

@@ -4,16 +4,47 @@ import { useImproveProjects } from '../hooks/useImproveProjects';
 import { useKpiOperational } from '../hooks/useKpiOperational';
 import { computeTeamKpi } from '../utils/computeTeamKpi';
 import { JOURNAL_LINKED_MEMBER_CODE } from '../constants/kpiMembers';
-import { mergeJournalKpiApprovalImport } from '../utils/journalKpiApprovalSlice';
 import { buildMemberJournalSavePayload } from '../utils/journalSnapshot';
+import { saveJournalSnapshotToSupabase } from '../utils/supabaseJournalSnapshot';
 
 const JournalContext = createContext(null);
 
-export function JournalProvider({ children, readOnly = false, autoSyncCloud = false }) {
-  const journal = useWeeklyJournal({ readOnly, autoSyncCloud });
+export function JournalProvider({
+  children,
+  readOnly = false,
+  autoSyncCloud = false,
+  autoMirrorSupabase = false,
+}) {
   const kpiApi = useKpiOperational({ readOnly });
   const improveProjectsApi = useImproveProjects({ readOnly });
   const migratedMemos = useRef(false);
+  const kpiOperationalRef = useRef(kpiApi.kpiOperational);
+
+  useEffect(() => {
+    kpiOperationalRef.current = kpiApi.kpiOperational;
+  }, [kpiApi.kpiOperational]);
+
+  const mirrorMemberToSupabase = useCallback(async (memberCode, storeSnapshot) => {
+    const code = String(memberCode || '').trim();
+    const memberJournal = storeSnapshot?.memberJournals?.[code] || null;
+    const payload = buildMemberJournalSavePayload(
+      memberJournal,
+      kpiOperationalRef.current,
+      code
+    );
+    return saveJournalSnapshotToSupabase({
+      memberCode: code,
+      payload,
+      updatedAt: storeSnapshot?.meta?.memberUpdatedAt?.[code] || null,
+    });
+  }, []);
+
+  const journal = useWeeklyJournal({
+    readOnly,
+    autoSyncCloud,
+    autoMirrorSupabase,
+    mirrorMemberToSupabase,
+  });
 
   /** legacy: global operational 주간메모 → A 구성원 일지 슬라이스로 1회 이전 */
   useEffect(() => {
