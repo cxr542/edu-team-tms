@@ -281,8 +281,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       ? { ownMemberCode: teamAccess.scopedMember }
       : { ownMemberCode: memberCode };
   const showJournalLeaderToolbar = teamAccess.isLeader && !teamAccess.isMemberScope;
-  const showJournalBackupToolbar = showJournalLeaderToolbar && !journalReadOnly;
+  // Leader /admin: backup + Supabase mirror stay available even when journal body is read-only.
+  const showJournalBackupToolbar = showJournalLeaderToolbar;
   const showSupabaseMirrorTools = showJournalLeaderToolbar && SUPABASE_MANUAL_MIRROR_ENABLED;
+  const showJournalStatusPanel = !journalReadOnly || showJournalLeaderToolbar;
   const showViewOnlyJsonImport =
     canImportViewOnlyJournalBackup && !showMemberTeamSharePull;
   const linkableImproveProjects = useMemo(
@@ -523,7 +525,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   };
 
   const saveSelectedMemberToSupabase = useCallback(async () => {
-    if (journalReadOnly || supabaseJournalSaveStatus === 'saving') return;
+    if (!showSupabaseMirrorTools || supabaseJournalSaveStatus === 'saving') return;
     if (!SUPABASE_MANUAL_MIRROR_ENABLED) {
       setSupabaseJournalSaveStatus('disabled');
       showToast(SUPABASE_MANUAL_MIRROR_DISABLED_MESSAGE);
@@ -588,10 +590,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     setSupabaseJournalSaveStatus('error');
     showToast(result.message || 'Supabase 저장 실패');
     return result;
-  }, [journal, journalReadOnly, memberCode, showToast, supabaseJournalSaveStatus]);
+  }, [journal, memberCode, showSupabaseMirrorTools, showToast, supabaseJournalSaveStatus]);
 
   const pullSelectedMemberFromSupabase = useCallback(async () => {
-    if (journalReadOnly || supabaseJournalPullStatus === 'loading') return;
+    if (!showSupabaseMirrorTools || supabaseJournalPullStatus === 'loading') return;
     if (!SUPABASE_MANUAL_MIRROR_ENABLED) {
       setSupabaseJournalPullStatus('disabled');
       showToast(SUPABASE_MANUAL_MIRROR_DISABLED_MESSAGE);
@@ -669,8 +671,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     return { ok: true, status: 'ok', changed: applied.changed };
   }, [
     journal,
-    journalReadOnly,
     memberCode,
+    showSupabaseMirrorTools,
     showToast,
     supabaseJournalPullStatus,
   ]);
@@ -1269,7 +1271,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   {storageComparisonStatus === 'loading' ? '저장소 점검 중…' : '저장소 비교'}
                 </button>
               )}
-              {showSupabaseMirrorTools && !journalReadOnly && (
+              {showSupabaseMirrorTools && (
                 <button
                   type="button"
                   className="btn btn-secondary journal-member-tool-btn"
@@ -1285,7 +1287,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   {supabaseJournalSaveStatus === 'saving' ? '저장 중…' : 'Supabase 업무일지 저장'}
                 </button>
               )}
-              {showSupabaseMirrorTools && !journalReadOnly && (
+              {showSupabaseMirrorTools && (
                 <button
                   type="button"
                   className="btn btn-secondary journal-member-tool-btn"
@@ -1498,11 +1500,13 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             </div>
           </header>
 
-          {!journalReadOnly && (
+          {showJournalStatusPanel && (
             <section className="journal-status-panel" aria-label="선택 날짜 및 저장 상태">
               <h2 className="journal-status-panel__title">{formatJournalDayHeading(focusDayKey)}</h2>
               <p className="journal-status-panel__meta">
-                {focusIsToday ? (
+                {journalReadOnly ? (
+                  <span>관리자 조회 · 일지 본문 수정은 구성원 URL에서만 가능합니다</span>
+                ) : focusIsToday ? (
                   <span className="journal-status-panel__today">오늘 작성 중</span>
                 ) : (
                   <span>선택한 날짜 · 표에서 날짜 셀을 눌러 변경</span>

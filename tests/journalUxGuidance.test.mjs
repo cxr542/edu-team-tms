@@ -46,7 +46,7 @@ describe('journal UX guidance', () => {
     expect(journalSource).toContain('journal-freshness-hint');
     expect(journalSource).toContain('classifyJournalFreshness');
     expect(journalSource).toContain('「Supabase에서 가져오기」로 복구할 수 있습니다');
-    expect(journalSource).toContain('showJournalLeaderToolbar && !journalReadOnly');
+    expect(journalSource).toContain('showJournalBackupToolbar = showJournalLeaderToolbar');
     expect(journalSource).toContain('aria-label="저장"');
     expect(journalSource).toContain('저장은 이 브라우저에 먼저 반영됩니다.');
     expect(journalSource).toContain('현재 자동 클라우드 동기화는 꺼져 있으며, 공유 저장은 수동으로 실행할 때만 반영됩니다.');

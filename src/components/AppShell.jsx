@@ -231,8 +231,8 @@ export default function AppShell({
         className={`app-shell project-shell${collapsed ? ' is-sidebar-collapsed' : ''}`}
         id="app-shell"
       >
-        <aside className="sidebar project-sidebar" id="sidebar" aria-label="서비스 메뉴">
-          <div className="sidebar__head project-sidebar__head">
+        <aside className="project-sidebar" id="sidebar" aria-label="서비스 메뉴">
+          <div className="project-sidebar__head">
             <div className="logo-block project-logo">
               <h1>
                 <span className="logo-block__icon project-logo__mark" aria-hidden="true">
@@ -246,7 +246,7 @@ export default function AppShell({
             </div>
             <button
               type="button"
-              className="sidebar-rail project-sidebar-rail"
+              className="project-sidebar-rail"
               id="sidebar-toggle"
               aria-expanded={!collapsed}
               aria-controls="sidebar"
@@ -255,15 +255,15 @@ export default function AppShell({
               title={railTitle}
               onClick={toggleSidebar}
             >
-              <span className="sidebar-rail__icon project-sidebar-rail__icon" aria-hidden="true">
+              <span className="project-sidebar-rail__icon" aria-hidden="true">
                 ‹
               </span>
-              <span className="sidebar-rail__label project-sidebar-rail__label">{railLabel}</span>
+              <span className="project-sidebar-rail__label">{railLabel}</span>
             </button>
           </div>
 
           {!viewerLedgerOnly && !isPublicViewerScope && (
-            <nav className="sidebar-nav project-sidebar-nav" aria-label="주 메뉴">
+            <nav className="project-sidebar-nav" aria-label="주 메뉴">
               {isViewer ? (
                 <>
                   <NavGroup title={NAV_GROUP_VIEWER}>
@@ -341,7 +341,7 @@ export default function AppShell({
           )}
 
           {!viewerLedgerOnly && !isPublicViewerScope && (showGeneralNav || showTeamCommonNav || isMemberShell || isViewer) && (
-            <nav className="sidebar-nav sidebar-nav--footer project-sidebar-nav-footer" aria-label="도구·참고">
+            <nav className="project-sidebar-nav-footer" aria-label="도구·참고">
               {isAdminShell && (
                 <a
                   className="nav-item project-nav-item project-nav-item--hub"
