@@ -5,6 +5,12 @@
 
 ---
 
+## 2026-07-10 — Add J5 Supabase journal pull with conflict confirm
+
+- 팀장 「Supabase에서 가져오기」로 원격 일지 → 로컬 복구
+- 「원격이 더 최신」 안내에서 가져오기 안내로 문구 갱신
+- PR #90: https://github.com/cxr542/edu-team-tms/pull/90
+
 ## 2026-07-10 — Fix Supabase journal stale-write protection
 
 - Supabase 업무일지 수동 저장이 더 최신 원격 스냅샷을 덮어쓰지 않도록 충돌 검사를 추가했습니다.
