@@ -5,6 +5,12 @@
 
 ---
 
+## 2026-07-10 — Admin journal read-only + Safari sidebar fix
+
+- Safari에서 관리자 사이드바(팀 빌딩 관리)가 숨겨질 수 있던 CSS 충돌 수정
+- 관리자 일지 화면은 조회·미러만, 본문 편집은 구성원 URL
+- PR #92: https://github.com/cxr542/edu-team-tms/pull/92
+
 ## 2026-07-10 — Add J5 Supabase journal pull with conflict confirm
 
 - 팀장 「Supabase에서 가져오기」로 원격 일지 → 로컬 복구
