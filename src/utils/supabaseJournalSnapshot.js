@@ -17,21 +17,22 @@ async function callJournalSnapshotsApi({ method = 'GET', memberCode, payload, up
     method === 'GET'
       ? `${JOURNAL_SNAPSHOTS_API}?memberCode=${encodeURIComponent(code)}`
       : JOURNAL_SNAPSHOTS_API;
+  const postBody =
+    method === 'POST'
+      ? {
+          memberCode: code,
+          payload,
+          payloadVersion: PAYLOAD_VERSION,
+          ...(updatedAt ? { updatedAt } : {}),
+        }
+      : null;
 
   try {
     const response = await fetch(path, {
       method,
       credentials: 'include',
       headers: method === 'POST' ? { 'Content-Type': 'application/json' } : undefined,
-      body:
-        method === 'POST'
-          ? JSON.stringify({
-              memberCode: code,
-              payload,
-              updatedAt: updatedAt || new Date().toISOString(),
-              payloadVersion: PAYLOAD_VERSION,
-            })
-          : undefined,
+      body: postBody ? JSON.stringify(postBody) : undefined,
     });
     const body = await response.json().catch(() => ({}));
 
@@ -54,11 +55,23 @@ async function callJournalSnapshotsApi({ method = 'GET', memberCode, payload, up
       });
     }
 
+    if (response.status === 409) {
+      return result({
+        ok: false,
+        status: 'conflict',
+        message:
+          body.message ||
+          'Supabase에 더 최신 업무일지 스냅샷이 있습니다. 최신 원격 상태를 확인한 뒤 다시 저장해 주세요.',
+        data: body.data ?? null,
+      });
+    }
+
     if (!response.ok) {
       return result({
         ok: false,
         status: body.status || 'error',
         message: body.message || `Journal snapshots API failed (${response.status}).`,
+        data: body.data ?? null,
       });
     }
 

@@ -44,6 +44,128 @@ function normalizeSnapshotRow(row) {
   };
 }
 
+export function isSnapshotWriteStale(currentUpdatedAt, clientUpdatedAt) {
+  if (!currentUpdatedAt) return false;
+  if (!clientUpdatedAt) return true;
+  const currentMs = new Date(currentUpdatedAt).getTime();
+  const clientMs = new Date(clientUpdatedAt).getTime();
+  if (!Number.isFinite(currentMs)) return false;
+  if (!Number.isFinite(clientMs)) return true;
+  return currentMs > clientMs;
+}
+
+function isUniqueViolation(error) {
+  if (!error) return false;
+  if (error.code === '23505') return true;
+  return /duplicate|unique/i.test(String(error.message || ''));
+}
+
+async function readSnapshotRow(client, memberCode) {
+  const { data, error } = await client
+    .from(JOURNAL_SNAPSHOTS_TABLE)
+    .select('member_code, payload, payload_version, updated_at')
+    .eq('member_code', memberCode)
+    .maybeSingle();
+  return { row: normalizeSnapshotRow(data), error };
+}
+
+/**
+ * Insert or update with optimistic locking on updated_at to close
+ * check-then-write races between concurrent POSTs.
+ */
+async function writeSnapshotAtomically(client, { memberCode, payload, clientUpdatedAt, updatedAt }) {
+  const { row: current, error: readError } = await readSnapshotRow(client, memberCode);
+  if (readError) {
+    return { ok: false, status: 'error', message: readError.message };
+  }
+
+  if (isSnapshotWriteStale(current?.updated_at, clientUpdatedAt)) {
+    return {
+      ok: false,
+      status: 'conflict',
+      message:
+        'Supabase에 더 최신 업무일지 스냅샷이 있습니다. 최신 원격 상태를 확인한 뒤 다시 저장해 주세요.',
+      data: current,
+    };
+  }
+
+  if (!current) {
+    const { data, error } = await client
+      .from(JOURNAL_SNAPSHOTS_TABLE)
+      .insert({
+        member_code: memberCode,
+        payload,
+        payload_version: PAYLOAD_VERSION,
+        updated_at: updatedAt,
+      })
+      .select('member_code, payload, payload_version, updated_at')
+      .single();
+
+    if (error) {
+      if (isUniqueViolation(error)) {
+        const raced = await readSnapshotRow(client, memberCode);
+        return {
+          ok: false,
+          status: 'conflict',
+          message:
+            'Supabase에 더 최신 업무일지 스냅샷이 있습니다. 최신 원격 상태를 확인한 뒤 다시 저장해 주세요.',
+          data: raced.row,
+        };
+      }
+      return { ok: false, status: 'error', message: error.message };
+    }
+
+    return {
+      ok: true,
+      status: 'ok',
+      message: 'Journal snapshot saved to Supabase.',
+      data: normalizeSnapshotRow(data),
+    };
+  }
+
+  // Optimistic lock: only overwrite if the row is still the version we just read.
+  let updateQuery = client
+    .from(JOURNAL_SNAPSHOTS_TABLE)
+    .update({
+      payload,
+      payload_version: PAYLOAD_VERSION,
+      updated_at: updatedAt,
+    })
+    .eq('member_code', memberCode);
+
+  if (current.updated_at == null) {
+    updateQuery = updateQuery.is('updated_at', null);
+  } else {
+    updateQuery = updateQuery.eq('updated_at', current.updated_at);
+  }
+
+  const { data, error } = await updateQuery
+    .select('member_code, payload, payload_version, updated_at')
+    .maybeSingle();
+
+  if (error) {
+    return { ok: false, status: 'error', message: error.message };
+  }
+
+  if (!data) {
+    const raced = await readSnapshotRow(client, memberCode);
+    return {
+      ok: false,
+      status: 'conflict',
+      message:
+        'Supabase에 더 최신 업무일지 스냅샷이 있습니다. 최신 원격 상태를 확인한 뒤 다시 저장해 주세요.',
+      data: raced.row || current,
+    };
+  }
+
+  return {
+    ok: true,
+    status: 'ok',
+    message: 'Journal snapshot saved to Supabase.',
+    data: normalizeSnapshotRow(data),
+  };
+}
+
 export default async function handler(req, res) {
   const client = getServiceClient();
   if (!client) {
@@ -114,7 +236,8 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     const memberCode = normalizeMemberCode(req.body?.memberCode);
     const payload = req.body?.payload;
-    const updatedAt = req.body?.updatedAt || new Date().toISOString();
+    const clientUpdatedAt = typeof req.body?.updatedAt === 'string' ? req.body.updatedAt : null;
+    const updatedAt = clientUpdatedAt || new Date().toISOString();
 
     if (!memberCode) {
       return json(res, 400, {
@@ -133,33 +256,28 @@ export default async function handler(req, res) {
     }
 
     try {
-      const { data, error } = await client
-        .from(JOURNAL_SNAPSHOTS_TABLE)
-        .upsert(
-          {
-            member_code: memberCode,
-            payload,
-            payload_version: PAYLOAD_VERSION,
-            updated_at: updatedAt,
-          },
-          { onConflict: 'member_code' }
-        )
-        .select('member_code, payload, payload_version, updated_at')
-        .single();
+      const writeResult = await writeSnapshotAtomically(client, {
+        memberCode,
+        payload,
+        clientUpdatedAt,
+        updatedAt,
+      });
 
-      if (error) {
-        return json(res, 500, {
+      if (!writeResult.ok) {
+        const statusCode = writeResult.status === 'conflict' ? 409 : 500;
+        return json(res, statusCode, {
           ok: false,
-          status: 'error',
-          message: error.message,
+          status: writeResult.status,
+          message: writeResult.message,
+          ...(writeResult.data ? { data: writeResult.data } : {}),
         });
       }
 
       return json(res, 200, {
         ok: true,
         status: 'ok',
-        message: 'Journal snapshot saved to Supabase.',
-        data: normalizeSnapshotRow(data),
+        message: writeResult.message,
+        data: writeResult.data,
       });
     } catch (error) {
       return json(res, 500, {

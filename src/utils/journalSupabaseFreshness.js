@@ -22,7 +22,7 @@ export const JOURNAL_FRESHNESS_STATUS = {
 export function resolveLocalMemberUpdatedAt(meta, memberCode) {
   const code = String(memberCode || '').trim();
   if (!code) return meta?.updatedAt || null;
-  return meta?.memberUpdatedAt?.[code] || meta?.updatedAt || null;
+  return meta?.memberUpdatedAt?.[code] || null;
 }
 
 /**

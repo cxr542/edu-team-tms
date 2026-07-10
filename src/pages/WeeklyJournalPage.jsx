@@ -537,7 +537,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     const result = await saveJournalSnapshotToSupabase({
       memberCode: saveCode,
       payload,
-      updatedAt: journal.meta?.memberUpdatedAt?.[saveCode] || journal.meta?.updatedAt,
+      updatedAt: journal.meta?.memberUpdatedAt?.[saveCode] || null,
     });
 
     if (result.ok) {
@@ -548,7 +548,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         journal.meta?.updatedAt ||
         null;
       const localUpdatedAt =
-        journal.meta?.memberUpdatedAt?.[saveCode] || journal.meta?.updatedAt || null;
+        journal.meta?.memberUpdatedAt?.[saveCode] || null;
       setSupabaseFreshness({
         status: classifyJournalFreshness({ localUpdatedAt, remoteUpdatedAt }),
         remoteUpdatedAt,
@@ -567,6 +567,19 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     if (result.status === 'forbidden') {
       setSupabaseJournalSaveStatus('error');
       showToast(result.message || '관리자 세션이 필요합니다');
+      return result;
+    }
+
+    if (result.status === 'conflict') {
+      setSupabaseJournalSaveStatus('error');
+      const remoteUpdatedAt = resolveRemoteSnapshotUpdatedAt(result.data);
+      const localUpdatedAt = journal.meta?.memberUpdatedAt?.[saveCode] || null;
+      setSupabaseFreshness({
+        status: classifyJournalFreshness({ localUpdatedAt, remoteUpdatedAt }),
+        remoteUpdatedAt,
+        message: result.message || '',
+      });
+      showToast(result.message || '원격이 더 최신이라 저장하지 않았습니다');
       return result;
     }
 

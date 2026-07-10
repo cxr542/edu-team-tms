@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createAdminSessionCookie } from '../server/api-utils/adminSession.js';
 
 const fromMock = vi.fn();
-const upsertMock = vi.fn();
+const insertMock = vi.fn();
+const updateMock = vi.fn();
 const selectMock = vi.fn();
 const eqMock = vi.fn();
 const maybeSingleMock = vi.fn();
@@ -32,11 +33,42 @@ async function loadHandler() {
   return mod.default;
 }
 
+function mockEmptyReadThenInsert(saved) {
+  const readMaybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
+  const readEq = vi.fn().mockReturnValue({ maybeSingle: readMaybeSingle });
+  const insertSingle = vi.fn().mockResolvedValue({ data: saved, error: null });
+  const insertSelect = vi.fn().mockReturnValue({ single: insertSingle });
+  insertMock.mockReturnValue({ select: insertSelect });
+
+  fromMock
+    .mockReturnValueOnce({ select: vi.fn().mockReturnValue({ eq: readEq }) })
+    .mockReturnValueOnce({ insert: insertMock });
+
+  return { readMaybeSingle, insertSingle };
+}
+
+function mockCurrentReadThenUpdate(current, saved) {
+  const readMaybeSingle = vi.fn().mockResolvedValue({ data: current, error: null });
+  const readEq = vi.fn().mockReturnValue({ maybeSingle: readMaybeSingle });
+  const updateMaybeSingle = vi.fn().mockResolvedValue({ data: saved, error: null });
+  const updateSelect = vi.fn().mockReturnValue({ maybeSingle: updateMaybeSingle });
+  const updateEqUpdatedAt = vi.fn().mockReturnValue({ select: updateSelect });
+  const updateEqMember = vi.fn().mockReturnValue({ eq: updateEqUpdatedAt });
+  updateMock.mockReturnValue({ eq: updateEqMember });
+
+  fromMock
+    .mockReturnValueOnce({ select: vi.fn().mockReturnValue({ eq: readEq }) })
+    .mockReturnValueOnce({ update: updateMock });
+
+  return { updateEqMember, updateEqUpdatedAt, updateMaybeSingle };
+}
+
 describe('journal-snapshots API admin session', () => {
   beforeEach(() => {
     vi.resetModules();
     fromMock.mockReset();
-    upsertMock.mockReset();
+    insertMock.mockReset();
+    updateMock.mockReset();
     selectMock.mockReset();
     eqMock.mockReset();
     maybeSingleMock.mockReset();
@@ -60,17 +92,14 @@ describe('journal-snapshots API admin session', () => {
     expect(JSON.parse(res.body).status).toBe('forbidden');
   });
 
-  it('saves a snapshot with a valid admin session', async () => {
+  it('inserts a snapshot when no remote row exists', async () => {
     const saved = {
       member_code: 'A',
       payload: { days: {} },
       payload_version: 1,
       updated_at: '2026-07-09T00:00:00.000Z',
     };
-    singleMock.mockResolvedValue({ data: saved, error: null });
-    selectMock.mockReturnValue({ single: singleMock });
-    upsertMock.mockReturnValue({ select: selectMock });
-    fromMock.mockReturnValue({ upsert: upsertMock });
+    mockEmptyReadThenInsert(saved);
 
     const cookie = createAdminSessionCookie();
     const handler = await loadHandler();
@@ -96,15 +125,153 @@ describe('journal-snapshots API admin session', () => {
       data: { member_code: 'A' },
     });
     expect(fromMock).toHaveBeenCalledWith('journal_snapshots');
-    expect(upsertMock).toHaveBeenCalledWith(
-      {
-        member_code: 'A',
-        payload: { days: {} },
-        payload_version: 1,
-        updated_at: saved.updated_at,
+    expect(insertMock).toHaveBeenCalledWith({
+      member_code: 'A',
+      payload: { days: {} },
+      payload_version: 1,
+      updated_at: saved.updated_at,
+    });
+    expect(updateMock).not.toHaveBeenCalled();
+  });
+
+  it('updates with optimistic lock when remote row exists and is not newer', async () => {
+    const current = {
+      member_code: 'A',
+      payload: { days: { old: true } },
+      payload_version: 1,
+      updated_at: '2026-07-09T00:00:00.000Z',
+    };
+    const saved = {
+      ...current,
+      payload: { days: { new: true } },
+      updated_at: '2026-07-09T01:00:00.000Z',
+    };
+    const { updateEqMember, updateEqUpdatedAt } = mockCurrentReadThenUpdate(current, saved);
+
+    const cookie = createAdminSessionCookie();
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: {
+        referer: 'https://edu-team-tms-ten.vercel.app/admin?module=journal',
+        cookie,
       },
-      { onConflict: 'member_code' }
-    );
+      body: {
+        memberCode: 'A',
+        payload: { days: { new: true } },
+        updatedAt: saved.updated_at,
+      },
+    };
+    const res = createRes();
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body)).toMatchObject({
+      ok: true,
+      status: 'ok',
+      data: { member_code: 'A', updated_at: saved.updated_at },
+    });
+    expect(updateMock).toHaveBeenCalledWith({
+      payload: { days: { new: true } },
+      payload_version: 1,
+      updated_at: saved.updated_at,
+    });
+    expect(updateEqMember).toHaveBeenCalledWith('member_code', 'A');
+    expect(updateEqUpdatedAt).toHaveBeenCalledWith('updated_at', current.updated_at);
+    expect(insertMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects a stale snapshot write when Supabase has a newer row', async () => {
+    const current = {
+      member_code: 'B',
+      payload: { days: { '2026-07-09': { tasks: [{ id: 'remote' }] } } },
+      payload_version: 1,
+      updated_at: '2026-07-09T12:00:00.000Z',
+    };
+    maybeSingleMock.mockResolvedValue({ data: current, error: null });
+    eqMock.mockReturnValue({ maybeSingle: maybeSingleMock });
+    selectMock.mockReturnValue({ eq: eqMock });
+    fromMock.mockReturnValue({ select: selectMock });
+
+    const cookie = createAdminSessionCookie();
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: {
+        referer: 'https://edu-team-tms-ten.vercel.app/admin?module=journal',
+        cookie,
+      },
+      body: {
+        memberCode: 'B',
+        payload: { days: {} },
+        updatedAt: '2026-07-09T11:59:59.000Z',
+      },
+    };
+    const res = createRes();
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(409);
+    expect(JSON.parse(res.body)).toMatchObject({
+      ok: false,
+      status: 'conflict',
+      data: { member_code: 'B', updated_at: current.updated_at },
+    });
+    expect(insertMock).not.toHaveBeenCalled();
+    expect(updateMock).not.toHaveBeenCalled();
+  });
+
+  it('returns conflict when optimistic lock update matches zero rows', async () => {
+    const current = {
+      member_code: 'A',
+      payload: { days: { old: true } },
+      payload_version: 1,
+      updated_at: '2026-07-09T00:00:00.000Z',
+    };
+    const raced = {
+      ...current,
+      payload: { days: { winner: true } },
+      updated_at: '2026-07-09T02:00:00.000Z',
+    };
+
+    const readMaybeSingle = vi
+      .fn()
+      .mockResolvedValueOnce({ data: current, error: null })
+      .mockResolvedValueOnce({ data: raced, error: null });
+    const readEq = vi.fn().mockReturnValue({ maybeSingle: readMaybeSingle });
+    const updateMaybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
+    const updateSelect = vi.fn().mockReturnValue({ maybeSingle: updateMaybeSingle });
+    const updateEqUpdatedAt = vi.fn().mockReturnValue({ select: updateSelect });
+    const updateEqMember = vi.fn().mockReturnValue({ eq: updateEqUpdatedAt });
+    updateMock.mockReturnValue({ eq: updateEqMember });
+
+    fromMock
+      .mockReturnValueOnce({ select: vi.fn().mockReturnValue({ eq: readEq }) })
+      .mockReturnValueOnce({ update: updateMock })
+      .mockReturnValueOnce({ select: vi.fn().mockReturnValue({ eq: readEq }) });
+
+    const cookie = createAdminSessionCookie();
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: {
+        referer: 'https://edu-team-tms-ten.vercel.app/admin?module=journal',
+        cookie,
+      },
+      body: {
+        memberCode: 'A',
+        payload: { days: { loser: true } },
+        updatedAt: '2026-07-09T01:00:00.000Z',
+      },
+    };
+    const res = createRes();
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(409);
+    expect(JSON.parse(res.body)).toMatchObject({
+      ok: false,
+      status: 'conflict',
+      data: { member_code: 'A', updated_at: raced.updated_at },
+    });
   });
 
   it('loads a snapshot with a valid admin session', async () => {

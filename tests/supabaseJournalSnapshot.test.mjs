@@ -80,6 +80,22 @@ describe('supabaseJournalSnapshot admin API client', () => {
     });
   });
 
+  it('omits updatedAt when the caller has no member-specific timestamp', async () => {
+    const mod = await loadModule();
+    await mod.saveJournalSnapshotToSupabase({
+      memberCode: 'B',
+      payload: { days: {} },
+      updatedAt: null,
+    });
+
+    const body = JSON.parse(fetch.mock.calls[0][1].body);
+    expect(body).toMatchObject({
+      memberCode: 'B',
+      payload: { days: {} },
+    });
+    expect(body).not.toHaveProperty('updatedAt');
+  });
+
   it('GETs /api/journal-snapshots?memberCode=', async () => {
     fetch.mockResolvedValueOnce({
       ok: true,
@@ -115,6 +131,37 @@ describe('supabaseJournalSnapshot admin API client', () => {
     ).resolves.toMatchObject({
       ok: false,
       status: 'forbidden',
+    });
+  });
+
+  it('maps 409 to conflict with remote data', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: false,
+      status: 409,
+      json: async () => ({
+        ok: false,
+        status: 'conflict',
+        message: 'remote newer',
+        data: {
+          member_code: 'A',
+          payload: { days: {} },
+          payload_version: 1,
+          updated_at: '2026-07-09T12:00:00.000Z',
+        },
+      }),
+    });
+    const mod = await loadModule();
+    await expect(
+      mod.saveJournalSnapshotToSupabase({
+        memberCode: 'A',
+        payload: { days: {} },
+        updatedAt: '2026-07-09T11:00:00.000Z',
+      })
+    ).resolves.toMatchObject({
+      ok: false,
+      status: 'conflict',
+      message: 'remote newer',
+      data: { member_code: 'A', updated_at: '2026-07-09T12:00:00.000Z' },
     });
   });
 });
