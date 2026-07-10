@@ -1,8 +1,9 @@
 # TMS 접속 URL · 북마크 (운영)
 
-> **운영 URL:** https://edu-team-tms-ten.vercel.app — 경로 URL(`/admin`, `/yhkim` …), 접속 안내 랜딩, 관리자 비밀번호 게이트, Blob 팀 공유  
+> **운영 URL:** https://edu-team-tms-ten.vercel.app — 경로 URL(`/admin`, `/yhkim` …), 접속 안내 랜딩, 관리자 비밀번호 게이트, 팀 공유  
+> **Preview 일지 팀 공유 SoT:** Supabase (`MANUAL_MIRROR`) — journal Blob POST demote(J7d). Production은 기존 Blob 팀 공유 유지.  
 > 로그인 없음 — **아래 §2~§5 URL을 그대로 북마크**하세요.  
-> 마지막 갱신: 2026-06-17  
+> 마지막 갱신: 2026-07-10  
 > **옛 URL** (`okestro-edu-team-tms.vercel.app`, `edu-team-tms.vercel.app`) 은 **데이터 origin이 분리**됩니다. 일지 이전은 §9 참고.  
 > **예비 hostname** `okestro-edu-tms-v2.vercel.app` — Vercel 도메인 확보 전까지 **미사용**.
 
