@@ -5,6 +5,11 @@
 
 ---
 
+## 2026-07-10 — Document J7-0 journal Realtime and Blob shrink roadmap
+
+- (문서만) 일지 J7 Realtime·Blob 축소 로드맵을 설계 문서로 고정했습니다
+- PR #94: https://github.com/cxr542/edu-team-tms/pull/94
+
 ## 2026-07-10 — Add J7a journal freshness poll (Preview)
 
 - Preview 일지: 「원격이 더 최신」 신선도 표시가 주기적으로 자동 갱신됩니다
