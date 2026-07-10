@@ -54,6 +54,40 @@ export function classifyJournalFreshness({ localUpdatedAt = null, remoteUpdatedA
 }
 
 /**
+ * Map getJournalSnapshotFromSupabase result → UI freshness state (no import/pull).
+ * @param {{ ok?: boolean, status?: string, message?: string, data?: object|null }} result
+ * @param {string|null|undefined} localUpdatedAt
+ */
+export function buildJournalFreshnessState(result, localUpdatedAt = null) {
+  if (!result?.ok) {
+    const status =
+      result?.status === 'disabled'
+        ? JOURNAL_FRESHNESS_STATUS.disabled
+        : JOURNAL_FRESHNESS_STATUS.error;
+    return {
+      status,
+      remoteUpdatedAt: null,
+      message: result?.message || '',
+    };
+  }
+
+  if (result.status === 'empty' || !result.data) {
+    return {
+      status: JOURNAL_FRESHNESS_STATUS.empty,
+      remoteUpdatedAt: null,
+      message: '',
+    };
+  }
+
+  const remoteUpdatedAt = resolveRemoteSnapshotUpdatedAt(result.data);
+  return {
+    status: classifyJournalFreshness({ localUpdatedAt, remoteUpdatedAt }),
+    remoteUpdatedAt,
+    message: '',
+  };
+}
+
+/**
  * User-facing Korean label for freshness status.
  * @param {string} status
  */
