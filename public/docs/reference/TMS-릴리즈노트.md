@@ -5,6 +5,11 @@
 
 ---
 
+## 2026-07-10 — Fix Supabase journal stale-write protection
+
+- Supabase 업무일지 수동 저장이 더 최신 원격 스냅샷을 덮어쓰지 않도록 충돌 검사를 추가했습니다.
+- PR #89: https://github.com/cxr542/edu-team-tms/pull/89
+
 ## 2026-07-09 — Add J4 journal Supabase freshness UI (read-only)
 
 - 일지 상태 패널에 「원격이 더 최신」 등 Supabase 신선도 힌트 표시 (Preview `MANUAL_MIRROR` + 팀장)
