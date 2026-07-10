@@ -5,6 +5,11 @@
 
 ---
 
+## 2026-07-10 — Fix J7c storage-compare test expectations
+
+- (테스트만) 사용자 대면 변경 없음
+- PR #97: https://github.com/cxr542/edu-team-tms/pull/97
+
 ## 2026-07-10 — Add J7c Supabase-first journal team-share pull
 
 - Preview: 팀 공유본 가져오기가 Supabase를 우선 사용합니다 (Blob은 fallback)
