@@ -41,6 +41,9 @@ describe('journal-snapshot API', () => {
     putMock.mockReset();
     process.env.BLOB_READ_WRITE_TOKEN = 'test-token';
     delete process.env.BLOB_STORE_ID;
+    delete process.env.VITE_SUPABASE_MANUAL_MIRROR_ENABLED;
+    delete process.env.VITE_JOURNAL_BLOB_POST_ENABLED;
+    delete process.env.JOURNAL_BLOB_POST_ENABLED;
   });
 
   it('does not return bundled static data when configured Blob is empty', async () => {
@@ -122,5 +125,50 @@ describe('journal-snapshot API', () => {
     expect(res.statusCode).toBe(400);
     expect(JSON.parse(res.body).error).toBe('journal-empty-payload');
     expect(putMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects Blob POST when MANUAL_MIRROR demotes writes (J7d)', async () => {
+    process.env.VITE_SUPABASE_MANUAL_MIRROR_ENABLED = 'true';
+    headMock.mockRejectedValue(new Error('not found'));
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: { referer: 'http://localhost:4173/wschoi' },
+      body: {
+        memberCode: 'B',
+        updatedAt: '2026-06-15T09:00:00.000Z',
+        journal: { days: bDay },
+      },
+    };
+    const res = createRes();
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(501);
+    expect(JSON.parse(res.body).error).toBe('journal-blob-post-disabled');
+    expect(putMock).not.toHaveBeenCalled();
+  });
+
+  it('allows Blob POST rollback via JOURNAL_BLOB_POST_ENABLED=true (J7d)', async () => {
+    process.env.VITE_SUPABASE_MANUAL_MIRROR_ENABLED = 'true';
+    process.env.JOURNAL_BLOB_POST_ENABLED = 'true';
+    headMock.mockRejectedValue(new Error('not found'));
+    putMock.mockResolvedValue({ url: 'https://blob.example/journal/live-latest.json' });
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: { referer: 'http://localhost:4173/wschoi' },
+      body: {
+        memberCode: 'B',
+        updatedAt: '2026-06-15T09:00:00.000Z',
+        journal: { days: bDay },
+      },
+    };
+    const res = createRes();
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(putMock).toHaveBeenCalledTimes(1);
   });
 });

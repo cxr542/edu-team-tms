@@ -91,6 +91,10 @@ import {
   SUPABASE_MANUAL_MIRROR_DISABLED_MESSAGE,
   SUPABASE_MANUAL_MIRROR_ENABLED,
 } from '../constants/supabaseSync';
+import {
+  JOURNAL_BLOB_POST_DISABLED_MESSAGE,
+  JOURNAL_BLOB_POST_ENABLED,
+} from '../constants/journalBlobShare';
 import { compareJournalSnapshots } from '../utils/journalStorageComparison';
 import {
   JOURNAL_FRESHNESS_STATUS,
@@ -1338,7 +1342,9 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                         className="btn btn-primary"
                         aria-label="팀 공유 저장"
                         {...uiTooltip(
-                          '본인 일지를 팀 공유 저장소에 수동 업로드합니다. 자동 저장은 사용하지 않습니다.',
+                          JOURNAL_BLOB_POST_ENABLED
+                            ? '본인 일지를 팀 공유 저장소에 수동 업로드합니다. 자동 저장은 사용하지 않습니다.'
+                            : '본인 일지를 Supabase 팀 공유 저장소에 수동 업로드합니다. Blob POST는 비활성(J7d)입니다.',
                           undefined,
                           { wrap: true }
                         )}
@@ -1347,7 +1353,9 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                           const r = await journal.saveMemberToCloud(saveCode);
                           if (r.ok) {
                             const mirror = r.supabaseMirror;
-                            if (
+                            if (r.source === 'supabase') {
+                              showToast(`${saveCode} 일지를 Supabase 팀 공유 저장소에 저장했습니다`);
+                            } else if (
                               SUPABASE_MANUAL_MIRROR_ENABLED &&
                               mirror &&
                               !mirror.ok &&
@@ -1365,6 +1373,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                             );
                           } else if (r.reason === 'empty-payload') {
                             showToast(r.error?.message || '빈 일지로는 팀 공유 저장할 수 없습니다');
+                          } else if (r.reason === 'blob-demoted') {
+                            showToast(r.error?.message || JOURNAL_BLOB_POST_DISABLED_MESSAGE);
                           } else {
                             showToast(r.error?.message || '팀 공유 저장 실패 — 이 브라우저에는 임시 저장됨');
                           }

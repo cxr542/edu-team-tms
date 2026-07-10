@@ -12,6 +12,8 @@ import {
   assertBlobConfigured,
   getBlobSdkOptions,
 } from '../server/api-utils/blobClient.js';
+import { isJournalBlobPostEnabled } from '../server/api-utils/journalBlobPost.js';
+import { JOURNAL_BLOB_POST_DISABLED_MESSAGE } from '../src/constants/journalBlobShare.js';
 
 const LIVE_LATEST_PATH = 'journal/live-latest.json';
 
@@ -142,6 +144,13 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
+    if (!isJournalBlobPostEnabled()) {
+      return json(res, 501, {
+        error: 'journal-blob-post-disabled',
+        message: JOURNAL_BLOB_POST_DISABLED_MESSAGE,
+      });
+    }
+
     try {
       const body = requestBody(req);
       if (!body || !body.memberCode || !body.journal) {

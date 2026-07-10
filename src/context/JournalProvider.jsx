@@ -7,6 +7,10 @@ import { JOURNAL_LINKED_MEMBER_CODE } from '../constants/kpiMembers';
 import { buildMemberJournalSavePayload } from '../utils/journalSnapshot';
 import { saveJournalSnapshotToSupabase } from '../utils/supabaseJournalSnapshot';
 import { SUPABASE_MANUAL_MIRROR_ENABLED } from '../constants/supabaseSync';
+import {
+  JOURNAL_BLOB_POST_DISABLED_MESSAGE,
+  JOURNAL_BLOB_POST_ENABLED,
+} from '../constants/journalBlobShare';
 import { isMemberJournalEmpty } from '../utils/journalCloudSnapshot';
 
 const JournalContext = createContext(null);
@@ -83,6 +87,7 @@ export function JournalProvider({
     const code = String(memberCode || '').trim() || JOURNAL_LINKED_MEMBER_CODE;
     const memberJournal = journal.memberJournals?.[code];
     const payload = buildMemberJournalSavePayload(memberJournal, kpiApi.kpiOperational, code);
+    const updatedAt = journal.meta?.memberUpdatedAt?.[code] || journal.meta?.updatedAt || null;
 
     if (isMemberJournalEmpty(payload)) {
       return {
@@ -92,19 +97,43 @@ export function JournalProvider({
       };
     }
 
-    const result = await journal.saveMemberToCloud(code, payload);
-    if (!result?.ok || !SUPABASE_MANUAL_MIRROR_ENABLED) {
-      return result;
+    // J7d: when Blob POST is demoted, Supabase is the primary team-share write.
+    if (!JOURNAL_BLOB_POST_ENABLED) {
+      if (!SUPABASE_MANUAL_MIRROR_ENABLED) {
+        return {
+          ok: false,
+          reason: 'blob-demoted',
+          error: new Error(JOURNAL_BLOB_POST_DISABLED_MESSAGE),
+        };
+      }
+      const supabaseMirror = await saveJournalSnapshotToSupabase({
+        memberCode: code,
+        payload,
+        updatedAt,
+      });
+      if (!supabaseMirror.ok) {
+        return {
+          ok: false,
+          reason: supabaseMirror.status || 'error',
+          error: new Error(supabaseMirror.message || 'Supabase 팀 공유 저장 실패'),
+          supabaseMirror,
+        };
+      }
+      return { ok: true, source: 'supabase', supabaseMirror };
     }
 
-    // J7b: best-effort Supabase dual-write after Blob success (Preview MANUAL_MIRROR).
-    const updatedAt = journal.meta?.memberUpdatedAt?.[code] || journal.meta?.updatedAt || null;
+    const result = await journal.saveMemberToCloud(code, payload);
+    if (!result?.ok || !SUPABASE_MANUAL_MIRROR_ENABLED) {
+      return result ? { ...result, source: result.source || 'blob' } : result;
+    }
+
+    // J7b: best-effort Supabase dual-write after Blob success (when Blob POST still enabled).
     const supabaseMirror = await saveJournalSnapshotToSupabase({
       memberCode: code,
       payload,
       updatedAt,
     });
-    return { ...result, supabaseMirror };
+    return { ...result, source: 'blob', supabaseMirror };
   }, [journal, kpiApi.kpiOperational]);
 
   const pullFromCloud = useCallback(async (options) => {

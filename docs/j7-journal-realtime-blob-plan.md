@@ -139,13 +139,15 @@ Blob live-latest ─(GET only / disaster)→ localStorage
 
 **완료 기준:** Preview에서 Blob을 무시해도 Supabase만으로 peer pull 가능.
 
-### J7d — Blob demote
+### J7d — Blob demote ✅
 
 - Feature flag로 journal Blob **POST off** (GET은 재해 복구용 유지)
-- 북마크/runbook SoT 문구: 팀 공유 = Supabase
+- 기본: Preview `VITE_SUPABASE_MANUAL_MIRROR_ENABLED=true`이면 Blob POST demote → 「팀 공유 저장」은 Supabase 주 경로
+- 롤백: `VITE_JOURNAL_BLOB_POST_ENABLED=true` (Functions는 `JOURNAL_BLOB_POST_ENABLED=true`)
+- 북마크/runbook SoT 문구: Preview 팀 공유 = Supabase
 - improve-projects Blob·ledger Blob **미변경**
 
-**완료 기준:** Preview 1주 파일럿 후 flag 기본 demote. 문제 시 flag로 Blob POST 즉시 복구.
+**완료 기준:** Preview에서 journal Blob POST가 꺼지고 Supabase 저장으로 팀 공유 가능. flag로 즉시 복구 가능.
 
 ### J7e — Realtime/알림 (얇게)
 
@@ -243,4 +245,5 @@ Blob live-latest ─(GET only / disaster)→ localStorage
 1. ~~본 문서 머지 (J7-0)~~ ✅
 2. ~~**J7b** member-scoped API + dual-write + empty guard~~ ✅
 3. ~~**J7c** Pull SoT flip (Supabase-first, Blob fallback)~~ ✅
-4. **J7d** Journal Blob POST demote
+4. ~~**J7d** Journal Blob POST demote~~ ✅
+5. **J7e** `sync_events` 감사 + 알림(폴링 연동)
