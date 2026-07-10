@@ -96,6 +96,7 @@ import {
   resolveLocalMemberUpdatedAt,
   resolveRemoteSnapshotUpdatedAt,
 } from '../utils/journalSupabaseFreshness';
+import { useJournalSupabaseFreshness } from '../hooks/useJournalSupabaseFreshness';
 import './WeeklyJournalPage.css';
 
 const MEMBER_IMPROVE_PROJECT_CODES = new Set(['B', 'C']);
@@ -260,11 +261,6 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const [supabaseJournalPullStatus, setSupabaseJournalPullStatus] = useState('idle');
   const [storageComparisonStatus, setStorageComparisonStatus] = useState('idle');
   const [storageComparison, setStorageComparison] = useState(null);
-  const [supabaseFreshness, setSupabaseFreshness] = useState({
-    status: JOURNAL_FRESHNESS_STATUS.idle,
-    remoteUpdatedAt: null,
-    message: '',
-  });
 
   const memberCategoryView = useMemo(
     () => resolveMemberCategories(journal.memberJournals?.[memberCode]?.prefs),
@@ -296,6 +292,15 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const showJournalStatusPanel = !journalReadOnly || showJournalLeaderToolbar;
   const showViewOnlyJsonImport =
     canImportViewOnlyJournalBackup && !showMemberTeamSharePull;
+  const localMemberUpdatedAt = resolveLocalMemberUpdatedAt(journal.meta, memberCode);
+  const {
+    freshness: supabaseFreshness,
+    setFreshness: setSupabaseFreshness,
+  } = useJournalSupabaseFreshness({
+    enabled: showSupabaseMirrorTools,
+    memberCode,
+    localUpdatedAt: localMemberUpdatedAt,
+  });
   const linkableImproveProjects = useMemo(
     () => filterImproveProjectsForMember(journal.improveProjects, memberCode),
     [journal.improveProjects, memberCode]
@@ -333,69 +338,6 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     setSupabaseJournalSaveStatus('idle');
     setSupabaseJournalPullStatus('idle');
   }, [memberCode]);
-
-  useEffect(() => {
-    if (!showSupabaseMirrorTools) {
-      setSupabaseFreshness({
-        status: JOURNAL_FRESHNESS_STATUS.idle,
-        remoteUpdatedAt: null,
-        message: '',
-      });
-      return undefined;
-    }
-
-    let cancelled = false;
-    const localUpdatedAt = resolveLocalMemberUpdatedAt(journal.meta, memberCode);
-
-    setSupabaseFreshness((prev) => ({
-      ...prev,
-      status: JOURNAL_FRESHNESS_STATUS.loading,
-      message: '',
-    }));
-
-    (async () => {
-      const result = await getJournalSnapshotFromSupabase(memberCode);
-      if (cancelled) return;
-
-      if (!result.ok) {
-        const status =
-          result.status === 'disabled'
-            ? JOURNAL_FRESHNESS_STATUS.disabled
-            : JOURNAL_FRESHNESS_STATUS.error;
-        setSupabaseFreshness({
-          status,
-          remoteUpdatedAt: null,
-          message: result.message || '',
-        });
-        return;
-      }
-
-      if (result.status === 'empty' || !result.data) {
-        setSupabaseFreshness({
-          status: JOURNAL_FRESHNESS_STATUS.empty,
-          remoteUpdatedAt: null,
-          message: '',
-        });
-        return;
-      }
-
-      const remoteUpdatedAt = resolveRemoteSnapshotUpdatedAt(result.data);
-      setSupabaseFreshness({
-        status: classifyJournalFreshness({ localUpdatedAt, remoteUpdatedAt }),
-        remoteUpdatedAt,
-        message: '',
-      });
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    showSupabaseMirrorTools,
-    memberCode,
-    journal.meta?.updatedAt,
-    journal.meta?.memberUpdatedAt?.[memberCode],
-  ]);
 
   const showToast = (msg) => {
     setToast(msg);

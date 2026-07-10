@@ -12,3 +12,9 @@ export const SUPABASE_MANUAL_MIRROR_DISABLED_MESSAGE =
 
 /** J6: debounce after local persist before auto upsert to Supabase. */
 export const JOURNAL_SUPABASE_AUTO_MIRROR_DEBOUNCE_MS = 8000;
+
+/**
+ * J7a: poll GET /api/journal-snapshots for freshness UI only (no auto-pull).
+ * Matches announcements unread badge cadence.
+ */
+export const JOURNAL_SUPABASE_FRESHNESS_POLL_MS = 30000;

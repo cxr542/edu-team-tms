@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   JOURNAL_FRESHNESS_STATUS,
+  buildJournalFreshnessState,
   classifyJournalFreshness,
   formatJournalFreshnessLabel,
   resolveLocalMemberUpdatedAt,
@@ -80,5 +81,35 @@ describe('journalSupabaseFreshness', () => {
 
   it('formats the J4 acceptance label', () => {
     expect(formatJournalFreshnessLabel(JOURNAL_FRESHNESS_STATUS.remoteNewer)).toBe('원격이 더 최신');
+  });
+
+  it('builds freshness state from API result without pulling', () => {
+    expect(
+      buildJournalFreshnessState(
+        { ok: true, status: 'ok', data: { updated_at: '2026-07-09T01:00:00.000Z' } },
+        '2026-07-09T00:00:00.000Z'
+      )
+    ).toEqual({
+      status: JOURNAL_FRESHNESS_STATUS.remoteNewer,
+      remoteUpdatedAt: '2026-07-09T01:00:00.000Z',
+      message: '',
+    });
+
+    expect(buildJournalFreshnessState({ ok: true, status: 'empty', data: null }, null)).toEqual({
+      status: JOURNAL_FRESHNESS_STATUS.empty,
+      remoteUpdatedAt: null,
+      message: '',
+    });
+
+    expect(
+      buildJournalFreshnessState(
+        { ok: false, status: 'disabled', message: 'off' },
+        '2026-07-09T00:00:00.000Z'
+      )
+    ).toEqual({
+      status: JOURNAL_FRESHNESS_STATUS.disabled,
+      remoteUpdatedAt: null,
+      message: 'off',
+    });
   });
 });
