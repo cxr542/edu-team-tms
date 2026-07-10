@@ -5,6 +5,11 @@
 
 ---
 
+## 2026-07-10 — Add J7b member-scoped journal Supabase dual-write
+
+- Preview: 구성원 팀 공유 저장 시 Supabase에도 병행 반영됩니다 (빈 일지 저장은 거부)
+- PR #95: https://github.com/cxr542/edu-team-tms/pull/95
+
 ## 2026-07-10 — Document J7-0 journal Realtime and Blob shrink roadmap
 
 - (문서만) 일지 J7 Realtime·Blob 축소 로드맵을 설계 문서로 고정했습니다
