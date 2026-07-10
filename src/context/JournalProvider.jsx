@@ -6,6 +6,8 @@ import { computeTeamKpi } from '../utils/computeTeamKpi';
 import { JOURNAL_LINKED_MEMBER_CODE } from '../constants/kpiMembers';
 import { buildMemberJournalSavePayload } from '../utils/journalSnapshot';
 import { saveJournalSnapshotToSupabase } from '../utils/supabaseJournalSnapshot';
+import { SUPABASE_MANUAL_MIRROR_ENABLED } from '../constants/supabaseSync';
+import { isMemberJournalEmpty } from '../utils/journalCloudSnapshot';
 
 const JournalContext = createContext(null);
 
@@ -77,10 +79,32 @@ export function JournalProvider({
     return journal.importViewOnlyFromFile(file, ownMemberCode);
   };
 
-  const saveMemberToCloud = useCallback((memberCode = JOURNAL_LINKED_MEMBER_CODE) => {
-    const memberJournal = journal.memberJournals?.[memberCode];
-    const payload = buildMemberJournalSavePayload(memberJournal, kpiApi.kpiOperational, memberCode);
-    return journal.saveMemberToCloud(memberCode, payload);
+  const saveMemberToCloud = useCallback(async (memberCode = JOURNAL_LINKED_MEMBER_CODE) => {
+    const code = String(memberCode || '').trim() || JOURNAL_LINKED_MEMBER_CODE;
+    const memberJournal = journal.memberJournals?.[code];
+    const payload = buildMemberJournalSavePayload(memberJournal, kpiApi.kpiOperational, code);
+
+    if (isMemberJournalEmpty(payload)) {
+      return {
+        ok: false,
+        reason: 'empty-payload',
+        error: new Error('빈 일지로는 팀 공유 저장소를 덮어쓸 수 없습니다.'),
+      };
+    }
+
+    const result = await journal.saveMemberToCloud(code, payload);
+    if (!result?.ok || !SUPABASE_MANUAL_MIRROR_ENABLED) {
+      return result;
+    }
+
+    // J7b: best-effort Supabase dual-write after Blob success (Preview MANUAL_MIRROR).
+    const updatedAt = journal.meta?.memberUpdatedAt?.[code] || journal.meta?.updatedAt || null;
+    const supabaseMirror = await saveJournalSnapshotToSupabase({
+      memberCode: code,
+      payload,
+      updatedAt,
+    });
+    return { ...result, supabaseMirror };
   }, [journal, kpiApi.kpiOperational]);
 
   const pullFromCloud = useCallback(async (options) => {

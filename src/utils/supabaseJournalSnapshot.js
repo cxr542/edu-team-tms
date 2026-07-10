@@ -39,13 +39,24 @@ async function callJournalSnapshotsApi({ method = 'GET', memberCode, payload, up
     const body = await response.json().catch(() => ({}));
 
     if (response.status === 403) {
-      lockAdminGate();
+      // Only lock the admin gate for /admin session failures — not member-route 403s (J7b).
+      if (/관리자 세션/.test(String(body.message || ''))) {
+        lockAdminGate();
+      }
       return result({
         ok: false,
         status: 'forbidden',
         message:
           body.message ||
           '관리자 세션이 만료되었습니다. /admin 에서 비밀번호를 다시 입력하세요.',
+      });
+    }
+
+    if (response.status === 400 && body.status === 'empty-payload') {
+      return result({
+        ok: false,
+        status: 'empty-payload',
+        message: body.message || '빈 일지로는 원격 스냅샷을 덮어쓸 수 없습니다.',
       });
     }
 

@@ -93,9 +93,10 @@ describe('journal-snapshots API admin session', () => {
   });
 
   it('inserts a snapshot when no remote row exists', async () => {
+    const payload = { days: { '2026-07-09': { tasks: [{ id: 'a1', title: 'task' }] } } };
     const saved = {
       member_code: 'A',
-      payload: { days: {} },
+      payload,
       payload_version: 1,
       updated_at: '2026-07-09T00:00:00.000Z',
     };
@@ -111,7 +112,7 @@ describe('journal-snapshots API admin session', () => {
       },
       body: {
         memberCode: 'A',
-        payload: { days: {} },
+        payload,
         updatedAt: saved.updated_at,
       },
     };
@@ -127,7 +128,7 @@ describe('journal-snapshots API admin session', () => {
     expect(fromMock).toHaveBeenCalledWith('journal_snapshots');
     expect(insertMock).toHaveBeenCalledWith({
       member_code: 'A',
-      payload: { days: {} },
+      payload,
       payload_version: 1,
       updated_at: saved.updated_at,
     });
@@ -203,7 +204,7 @@ describe('journal-snapshots API admin session', () => {
       },
       body: {
         memberCode: 'B',
-        payload: { days: {} },
+        payload: { days: { '2026-07-09': { tasks: [{ id: 'local' }] } } },
         updatedAt: '2026-07-09T11:59:59.000Z',
       },
     };
@@ -306,5 +307,139 @@ describe('journal-snapshots API admin session', () => {
       data: { member_code: 'B' },
     });
     expect(eqMock).toHaveBeenCalledWith('member_code', 'B');
+  });
+});
+
+describe('journal-snapshots API member referer (J7b)', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    fromMock.mockReset();
+    insertMock.mockReset();
+    updateMock.mockReset();
+    selectMock.mockReset();
+    eqMock.mockReset();
+    maybeSingleMock.mockReset();
+    singleMock.mockReset();
+    process.env.SUPABASE_URL = 'https://example.supabase.co';
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role-key';
+    process.env.TMS_ADMIN_GATE_PASSWORD = 'secret-gate';
+    process.env.TMS_ADMIN_SESSION_SECRET = 'session-secret';
+  });
+
+  it('allows B member route to insert own snapshot without admin session', async () => {
+    const payload = {
+      days: { '2026-07-09': { tasks: [{ id: 'b1', title: 'B share' }] } },
+    };
+    const saved = {
+      member_code: 'B',
+      payload,
+      payload_version: 1,
+      updated_at: '2026-07-09T03:00:00.000Z',
+    };
+    mockEmptyReadThenInsert(saved);
+
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: {
+        referer: 'https://edu-team-tms-ten.vercel.app/wschoi?module=journal',
+      },
+      body: {
+        memberCode: 'B',
+        payload,
+        updatedAt: saved.updated_at,
+      },
+    };
+    const res = createRes();
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body)).toMatchObject({
+      ok: true,
+      status: 'ok',
+      data: { member_code: 'B' },
+    });
+    expect(insertMock).toHaveBeenCalled();
+  });
+
+  it('rejects B member route writing C snapshot', async () => {
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: {
+        referer: 'https://edu-team-tms-ten.vercel.app/wschoi?module=journal',
+      },
+      body: {
+        memberCode: 'C',
+        payload: { days: { '2026-07-09': { tasks: [{ id: 'c1' }] } } },
+        updatedAt: '2026-07-09T03:00:00.000Z',
+      },
+    };
+    const res = createRes();
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(403);
+    expect(JSON.parse(res.body)).toMatchObject({
+      ok: false,
+      status: 'forbidden',
+    });
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects empty payload writes', async () => {
+    const cookie = createAdminSessionCookie();
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: {
+        referer: 'https://edu-team-tms-ten.vercel.app/admin?module=journal',
+        cookie,
+      },
+      body: {
+        memberCode: 'A',
+        payload: { days: {} },
+        updatedAt: '2026-07-09T00:00:00.000Z',
+      },
+    };
+    const res = createRes();
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(JSON.parse(res.body)).toMatchObject({
+      ok: false,
+      status: 'empty-payload',
+    });
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it('allows B member route to GET own snapshot', async () => {
+    const row = {
+      member_code: 'B',
+      payload: { days: { '2026-07-01': { tasks: [] } } },
+      payload_version: 1,
+      updated_at: '2026-07-01T00:00:00.000Z',
+    };
+    maybeSingleMock.mockResolvedValue({ data: row, error: null });
+    eqMock.mockReturnValue({ maybeSingle: maybeSingleMock });
+    selectMock.mockReturnValue({ eq: eqMock });
+    fromMock.mockReturnValue({ select: selectMock });
+
+    const handler = await loadHandler();
+    const req = {
+      method: 'GET',
+      query: { memberCode: 'B' },
+      headers: {
+        referer: 'https://edu-team-tms-ten.vercel.app/wschoi',
+      },
+    };
+    const res = createRes();
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body)).toMatchObject({
+      ok: true,
+      status: 'ok',
+      data: { member_code: 'B' },
+    });
   });
 });

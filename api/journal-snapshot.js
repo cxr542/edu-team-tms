@@ -1,36 +1,23 @@
 import { readFile } from 'fs/promises';
 import path from 'path';
 import {
+  isMemberJournalEmpty,
   isMemberJournalWriteStale,
   mergeMemberIntoJournalSnapshot,
   normalizeJournalCloudSnapshot,
 } from '../src/utils/journalCloudSnapshot.js';
 import { isAllowedPublishOrigin } from '../server/api-utils/publishOrigin.js';
+import { memberCodeFromReferer as memberCodeFromRequest } from '../server/api-utils/requestScope.js';
 import {
   assertBlobConfigured,
   getBlobSdkOptions,
 } from '../server/api-utils/blobClient.js';
 
 const LIVE_LATEST_PATH = 'journal/live-latest.json';
-const MEMBER_ROUTE_SLUG_TO_CODE = {
-  yhkim: 'A',
-  wschoi: 'B',
-  hwshin: 'C',
-};
 
 function canUse(req) {
   const referer = req.headers.referer || req.headers.origin || '';
   return isAllowedPublishOrigin(referer);
-}
-
-function memberCodeFromReferer(referer = '') {
-  try {
-    const url = new URL(String(referer || ''));
-    const segment = url.pathname.split('/').filter(Boolean)[0] || '';
-    return MEMBER_ROUTE_SLUG_TO_CODE[segment] || null;
-  } catch {
-    return null;
-  }
 }
 
 function json(res, status, body) {
@@ -160,11 +147,18 @@ export default async function handler(req, res) {
       if (!body || !body.memberCode || !body.journal) {
         return json(res, 400, { error: 'memberCode와 journal이 필요합니다.' });
       }
-      const routeMemberCode = memberCodeFromReferer(req.headers.referer);
+      const routeMemberCode = memberCodeFromRequest(req);
       if (routeMemberCode !== body.memberCode) {
         return json(res, 403, {
           error: 'journal-member-forbidden',
           message: '현재 구성원 URL과 다른 일지는 팀 공유 저장할 수 없습니다.',
+        });
+      }
+
+      if (isMemberJournalEmpty(body.journal)) {
+        return json(res, 400, {
+          error: 'journal-empty-payload',
+          message: '빈 일지로는 팀 공유 저장소를 덮어쓸 수 없습니다.',
         });
       }
 
