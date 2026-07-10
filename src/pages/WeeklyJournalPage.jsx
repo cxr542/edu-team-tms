@@ -309,6 +309,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const {
     freshness: supabaseFreshness,
     setFreshness: setSupabaseFreshness,
+    remoteUpdateNotified,
+    clearRemoteUpdateNotice,
   } = useJournalSupabaseFreshness({
     enabled: showSupabaseMirrorTools,
     memberCode,
@@ -633,6 +635,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       remoteUpdatedAt,
       message: '',
     });
+    clearRemoteUpdateNotice();
     showToast(`${memberLabel} 일지를 Supabase에서 가져왔습니다`);
     return { ok: true, status: 'ok', changed: applied.changed };
   }, [
@@ -641,6 +644,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     showSupabaseMirrorTools,
     showToast,
     supabaseJournalPullStatus,
+    clearRemoteUpdateNotice,
   ]);
 
   const runStorageComparison = useCallback(async () => {
@@ -1529,6 +1533,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 <p
                   className={`journal-sync-hint journal-freshness-hint${
                     supabaseFreshness.status === JOURNAL_FRESHNESS_STATUS.remoteNewer ||
+                    remoteUpdateNotified ||
                     supabaseFreshness.status === JOURNAL_FRESHNESS_STATUS.error ||
                     supabaseFreshness.status === JOURNAL_FRESHNESS_STATUS.disabled
                       ? ' journal-sync-hint--warn'

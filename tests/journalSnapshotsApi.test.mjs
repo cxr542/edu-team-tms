@@ -33,6 +33,12 @@ async function loadHandler() {
   return mod.default;
 }
 
+function mockSyncEventInsert() {
+  const syncInsert = vi.fn().mockResolvedValue({ data: null, error: null });
+  fromMock.mockReturnValueOnce({ insert: syncInsert });
+  return syncInsert;
+}
+
 function mockEmptyReadThenInsert(saved) {
   const readMaybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
   const readEq = vi.fn().mockReturnValue({ maybeSingle: readMaybeSingle });
@@ -44,7 +50,8 @@ function mockEmptyReadThenInsert(saved) {
     .mockReturnValueOnce({ select: vi.fn().mockReturnValue({ eq: readEq }) })
     .mockReturnValueOnce({ insert: insertMock });
 
-  return { readMaybeSingle, insertSingle };
+  const syncInsert = mockSyncEventInsert();
+  return { readMaybeSingle, insertSingle, syncInsert };
 }
 
 function mockCurrentReadThenUpdate(current, saved) {
@@ -60,7 +67,8 @@ function mockCurrentReadThenUpdate(current, saved) {
     .mockReturnValueOnce({ select: vi.fn().mockReturnValue({ eq: readEq }) })
     .mockReturnValueOnce({ update: updateMock });
 
-  return { updateEqMember, updateEqUpdatedAt, updateMaybeSingle };
+  const syncInsert = mockSyncEventInsert();
+  return { updateEqMember, updateEqUpdatedAt, updateMaybeSingle, syncInsert };
 }
 
 describe('journal-snapshots API admin session', () => {
@@ -132,7 +140,55 @@ describe('journal-snapshots API admin session', () => {
       payload_version: 1,
       updated_at: saved.updated_at,
     });
+    expect(fromMock).toHaveBeenCalledWith('sync_events');
     expect(updateMock).not.toHaveBeenCalled();
+  });
+
+  it('still saves when sync_events audit insert fails (J7e best-effort)', async () => {
+    const payload = { days: { '2026-07-09': { tasks: [{ id: 'a2', title: 'task' }] } } };
+    const saved = {
+      member_code: 'A',
+      payload,
+      payload_version: 1,
+      updated_at: '2026-07-09T04:00:00.000Z',
+    };
+    const readMaybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
+    const readEq = vi.fn().mockReturnValue({ maybeSingle: readMaybeSingle });
+    const insertSingle = vi.fn().mockResolvedValue({ data: saved, error: null });
+    const insertSelect = vi.fn().mockReturnValue({ single: insertSingle });
+    insertMock.mockReturnValue({ select: insertSelect });
+    const syncInsert = vi.fn().mockResolvedValue({ data: null, error: { message: 'no grant' } });
+
+    fromMock
+      .mockReturnValueOnce({ select: vi.fn().mockReturnValue({ eq: readEq }) })
+      .mockReturnValueOnce({ insert: insertMock })
+      .mockReturnValueOnce({ insert: syncInsert });
+
+    const cookie = createAdminSessionCookie();
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: {
+        referer: 'https://edu-team-tms-ten.vercel.app/admin?module=journal',
+        cookie,
+      },
+      body: {
+        memberCode: 'A',
+        payload,
+        updatedAt: saved.updated_at,
+      },
+    };
+    const res = createRes();
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body).ok).toBe(true);
+    expect(syncInsert).toHaveBeenCalledWith({
+      source: 'journal',
+      member_code: 'A',
+      event_type: 'snapshot_updated',
+      payload: { updated_at: saved.updated_at },
+    });
   });
 
   it('updates with optimistic lock when remote row exists and is not newer', async () => {

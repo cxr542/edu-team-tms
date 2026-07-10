@@ -79,8 +79,12 @@ describe('journalSupabaseFreshness', () => {
     );
   });
 
-  it('formats the J4 acceptance label', () => {
-    expect(formatJournalFreshnessLabel(JOURNAL_FRESHNESS_STATUS.remoteNewer)).toBe('원격이 더 최신');
+  it('formats the J4/J7e acceptance label', () => {
+    expect(formatJournalFreshnessLabel(JOURNAL_FRESHNESS_STATUS.remoteNewer)).toBe(
+      '원격 갱신됨 · 원격이 더 최신'
+    );
+    expect(formatJournalFreshnessLabel(JOURNAL_FRESHNESS_STATUS.remoteNewer)).toContain('원격이 더 최신');
+    expect(formatJournalFreshnessLabel(JOURNAL_FRESHNESS_STATUS.remoteNewer)).toContain('원격 갱신됨');
   });
 
   it('builds freshness state from API result without pulling', () => {
