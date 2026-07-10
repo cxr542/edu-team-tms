@@ -17,7 +17,7 @@ describe('journal team access visibility', () => {
       'showSupabaseMirrorTools = showJournalLeaderToolbar && SUPABASE_MANUAL_MIRROR_ENABLED'
     );
     expect(journalSource).toContain('showSupabaseMirrorTools && storageComparison');
-    expect(journalSource).toContain('Blob과 Supabase 저장소 비교');
+    expect(journalSource).toContain('Supabase와 Blob 저장소 비교');
     expect(journalSource).toContain('저장소 비교');
     expect(appShellSource).toContain('Supabase 오류');
   });

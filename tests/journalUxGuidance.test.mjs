@@ -30,7 +30,8 @@ describe('journal UX guidance', () => {
     expect(journalSource).toContain('팀 공유 저장');
     expect(journalSource).toContain('저장소 비교');
     expect(journalSource).toContain('Blob 팀 공유본과 Supabase journal snapshot을 읽기 전용으로 비교합니다.');
-    expect(journalSource).toContain('Blob과 Supabase 저장소 비교');
+    expect(journalSource).toContain('Supabase와 Blob 저장소 비교');
+    expect(journalSource).toContain('Supabase (팀 공유 SoT)');
     expect(journalSource).toContain('includeOwnMember: true');
     expect(journalSource).toContain('includeOwnMember: false');
     expect(journalSource).toContain('Supabase 업무일지 저장');
