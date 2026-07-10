@@ -239,4 +239,29 @@ describe('journalCloudSnapshot', () => {
     expect(next.memberJournals.B.days['2026-06-09'].tasks[0].title).toBe('B remote forced');
     expect(next.meta.memberUpdatedAt.B).toBe('2026-06-11T08:00:00.000Z');
   });
+
+  it('applyRemoteMemberJournalSave does not treat global updatedAt as member freshness', () => {
+    const local = {
+      memberJournals: {
+        A: { days: day('A local') },
+        B: { days: day('B local older content') },
+        C: { days: {} },
+      },
+      meta: {
+        updatedAt: '2026-06-12T00:00:00.000Z',
+        memberUpdatedAt: { A: '2026-06-12T00:00:00.000Z' },
+      },
+    };
+    const remote = normalizeJournalCloudSnapshot({
+      publishedAt: '2026-06-11T08:00:00.000Z',
+      meta: { memberUpdatedAt: { B: '2026-06-11T08:00:00.000Z' } },
+      memberJournals: { B: { days: day('B remote newer for B') } },
+    });
+
+    const next = applyRemoteMemberJournalSave(local, remote, 'B');
+
+    expect(next.memberJournals.B.days['2026-06-09'].tasks[0].title).toBe('B remote newer for B');
+    expect(next.meta.memberUpdatedAt.B).toBe('2026-06-11T08:00:00.000Z');
+    expect(next.memberJournals.A.days['2026-06-09'].tasks[0].title).toBe('A local');
+  });
 });

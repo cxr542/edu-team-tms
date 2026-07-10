@@ -647,7 +647,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     }
 
     const applied = journal.applyMemberFromSupabase(pullCode, remoteResult.data, {
-      force: needsConfirm,
+      // Explicit pull always applies the remote slice; confirm already covered local-newer/equal.
+      force: true,
     });
     if (!applied?.ok) {
       setSupabaseJournalPullStatus('error');
@@ -656,20 +657,15 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     }
 
     setSupabaseJournalPullStatus('ok');
-    const nextLocalAt = resolveLocalMemberUpdatedAt(applied.store?.meta || journal.meta, pullCode);
     setSupabaseFreshness({
       status: classifyJournalFreshness({
-        localUpdatedAt: nextLocalAt || remoteUpdatedAt,
+        localUpdatedAt: remoteUpdatedAt,
         remoteUpdatedAt,
       }),
       remoteUpdatedAt,
       message: '',
     });
-    showToast(
-      applied.changed
-        ? `${memberLabel} 일지를 Supabase에서 가져왔습니다`
-        : `${memberLabel} 일지는 이미 원격과 같습니다`
-    );
+    showToast(`${memberLabel} 일지를 Supabase에서 가져왔습니다`);
     return { ok: true, status: 'ok', changed: applied.changed };
   }, [
     journal,

@@ -72,7 +72,9 @@ export function applyRemoteMemberJournalSave(localStore, remoteSnapshot, memberC
     meta: localStore?.meta || {},
     memberJournals: localStore?.memberJournals || createEmptyMemberJournals(),
   });
-  if (!force && isNewer(memberTime(local, memberCode), remoteMemberAt)) {
+  // Compare member-specific timestamps only (do not fall back to global updatedAt).
+  const localMemberAt = localStore?.meta?.memberUpdatedAt?.[memberCode] || null;
+  if (!force && isNewer(localMemberAt, remoteMemberAt)) {
     return localStore;
   }
   const remoteSlice = remote.memberJournals[memberCode];
