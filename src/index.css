@@ -112,8 +112,8 @@ h1, h2, h3, h4, h5, h6 {
   display: none;
 }
 
-.sidebar {
-  /* legacy — AppShell uses .project-sidebar */
+/* Legacy hide target only. Live AppShell uses .project-sidebar (do not combine with .sidebar). */
+.sidebar:not(.project-sidebar) {
   display: none;
 }
 
