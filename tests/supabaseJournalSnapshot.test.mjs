@@ -164,4 +164,23 @@ describe('supabaseJournalSnapshot admin API client', () => {
       data: { member_code: 'A', updated_at: '2026-07-09T12:00:00.000Z' },
     });
   });
+
+  it('builds a single-member remote snapshot from Supabase row data', async () => {
+    const mod = await loadModule();
+    const snapshot = mod.buildMemberRemoteSnapshotFromSupabase('B', {
+      member_code: 'B',
+      payload: {
+        days: {
+          '2026-07-09': {
+            tasks: [{ id: 't1', title: 'from supabase', hours: 1 }],
+          },
+        },
+      },
+      updated_at: '2026-07-09T12:00:00.000Z',
+    });
+
+    expect(snapshot.meta.memberUpdatedAt.B).toBe('2026-07-09T12:00:00.000Z');
+    expect(snapshot.memberJournals.B.days['2026-07-09'].tasks[0].title).toBe('from supabase');
+    expect(snapshot.memberJournals.A.days).toEqual({});
+  });
 });

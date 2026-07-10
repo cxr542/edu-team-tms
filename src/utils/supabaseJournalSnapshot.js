@@ -1,4 +1,6 @@
 import { lockAdminGate } from '../constants/adminGate.js';
+import { normalizeJournalCloudSnapshot } from './journalCloudSnapshot.js';
+import { resolveRemoteSnapshotUpdatedAt } from './journalSupabaseFreshness.js';
 
 const JOURNAL_SNAPSHOTS_API = '/api/journal-snapshots';
 const PAYLOAD_VERSION = 1;
@@ -120,4 +122,24 @@ export async function getJournalSnapshotFromSupabase(memberCode) {
   }
 
   return callJournalSnapshotsApi({ method: 'GET', memberCode });
+}
+
+/**
+ * Shape a Supabase journal_snapshots row into the cloud-snapshot form used by
+ * applyRemoteMemberJournalSave (selected member slice only).
+ */
+export function buildMemberRemoteSnapshotFromSupabase(memberCode, data) {
+  const code = String(memberCode || '').trim();
+  const updatedAt = resolveRemoteSnapshotUpdatedAt(data);
+  const payload = data?.payload && typeof data.payload === 'object' ? data.payload : {};
+  return normalizeJournalCloudSnapshot({
+    publishedAt: updatedAt || new Date().toISOString(),
+    meta: {
+      updatedAt: updatedAt || null,
+      memberUpdatedAt: updatedAt ? { [code]: updatedAt } : {},
+    },
+    memberJournals: {
+      [code]: payload,
+    },
+  });
 }

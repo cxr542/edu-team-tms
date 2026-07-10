@@ -222,4 +222,21 @@ describe('journalCloudSnapshot', () => {
     expect(next.memberJournals.B.days['2026-06-09'].tasks[0].title).toBe('B local newer');
     expect(next.meta.memberUpdatedAt.B).toBe('2026-06-11T09:00:00.000Z');
   });
+
+  it('applyRemoteMemberJournalSave force overwrites a newer local edit', () => {
+    const local = {
+      memberJournals: { A: { days: {} }, B: { days: day('B local newer') }, C: { days: {} } },
+      meta: { memberUpdatedAt: { B: '2026-06-11T09:00:00.000Z' } },
+    };
+    const remote = normalizeJournalCloudSnapshot({
+      publishedAt: '2026-06-11T08:00:00.000Z',
+      meta: { memberUpdatedAt: { B: '2026-06-11T08:00:00.000Z' } },
+      memberJournals: { B: { days: day('B remote forced') } },
+    });
+
+    const next = applyRemoteMemberJournalSave(local, remote, 'B', { force: true });
+
+    expect(next.memberJournals.B.days['2026-06-09'].tasks[0].title).toBe('B remote forced');
+    expect(next.meta.memberUpdatedAt.B).toBe('2026-06-11T08:00:00.000Z');
+  });
 });

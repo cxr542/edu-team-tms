@@ -34,6 +34,9 @@ describe('journal UX guidance', () => {
     expect(journalSource).toContain('includeOwnMember: true');
     expect(journalSource).toContain('includeOwnMember: false');
     expect(journalSource).toContain('Supabase 업무일지 저장');
+    expect(journalSource).toContain('Supabase에서 가져오기');
+    expect(journalSource).toContain('pullSelectedMemberFromSupabase');
+    expect(journalSource).toContain('applyMemberFromSupabase');
     expect(journalSource).toContain('Supabase 저장 중');
     expect(journalSource).toContain('Supabase 저장 완료');
     expect(journalSource).toContain('Supabase 미설정');
@@ -42,6 +45,7 @@ describe('journal UX guidance', () => {
     expect(freshnessSource).toContain('원격이 더 최신');
     expect(journalSource).toContain('journal-freshness-hint');
     expect(journalSource).toContain('classifyJournalFreshness');
+    expect(journalSource).toContain('「Supabase에서 가져오기」로 복구할 수 있습니다');
     expect(journalSource).toContain('showJournalLeaderToolbar && !journalReadOnly');
     expect(journalSource).toContain('aria-label="저장"');
     expect(journalSource).toContain('저장은 이 브라우저에 먼저 반영됩니다.');

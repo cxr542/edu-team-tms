@@ -56,11 +56,15 @@ export function isMemberJournalWriteStale(snapshot, memberCode, clientUpdatedAt)
   return clientTime < serverTime;
 }
 
-/** 단일 멤버 cloud 저장 응답을 로컬 store에 반영 — 다른 멤버 slice/meta는 유지 */
-export function applyRemoteMemberJournalSave(localStore, remoteSnapshot, memberCode) {
+/**
+ * 단일 멤버 cloud/Supabase 응답을 로컬 store에 반영 — 다른 멤버 slice/meta는 유지.
+ * @param {{ force?: boolean }} [options] force=true면 로컬이 더 최신이어도 원격으로 덮어씀 (J5 수동 가져오기)
+ */
+export function applyRemoteMemberJournalSave(localStore, remoteSnapshot, memberCode, options = {}) {
   if (!isValidMemberCode(memberCode)) {
     throw new Error('A/B/C 구성원 코드가 필요합니다.');
   }
+  const force = Boolean(options?.force);
   const remote = normalizeJournalCloudSnapshot(remoteSnapshot);
   const remoteMemberAt = remote.meta.memberUpdatedAt?.[memberCode] || remote.meta.updatedAt || null;
   const local = normalizeJournalCloudSnapshot({
@@ -68,7 +72,7 @@ export function applyRemoteMemberJournalSave(localStore, remoteSnapshot, memberC
     meta: localStore?.meta || {},
     memberJournals: localStore?.memberJournals || createEmptyMemberJournals(),
   });
-  if (isNewer(memberTime(local, memberCode), remoteMemberAt)) {
+  if (!force && isNewer(memberTime(local, memberCode), remoteMemberAt)) {
     return localStore;
   }
   const remoteSlice = remote.memberJournals[memberCode];

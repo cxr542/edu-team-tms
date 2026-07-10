@@ -248,6 +248,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const [kpiApprovalModalOpen, setKpiApprovalModalOpen] = useState(false);
   const [shareImportChoiceOpen, setShareImportChoiceOpen] = useState(false);
   const [supabaseJournalSaveStatus, setSupabaseJournalSaveStatus] = useState('idle');
+  const [supabaseJournalPullStatus, setSupabaseJournalPullStatus] = useState('idle');
   const [storageComparisonStatus, setStorageComparisonStatus] = useState('idle');
   const [storageComparison, setStorageComparison] = useState(null);
   const [supabaseFreshness, setSupabaseFreshness] = useState({
@@ -319,6 +320,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
 
   useEffect(() => {
     setSupabaseJournalSaveStatus('idle');
+    setSupabaseJournalPullStatus('idle');
   }, [memberCode]);
 
   useEffect(() => {
@@ -587,6 +589,95 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     showToast(result.message || 'Supabase 저장 실패');
     return result;
   }, [journal, journalReadOnly, memberCode, showToast, supabaseJournalSaveStatus]);
+
+  const pullSelectedMemberFromSupabase = useCallback(async () => {
+    if (journalReadOnly || supabaseJournalPullStatus === 'loading') return;
+    if (!SUPABASE_MANUAL_MIRROR_ENABLED) {
+      setSupabaseJournalPullStatus('disabled');
+      showToast(SUPABASE_MANUAL_MIRROR_DISABLED_MESSAGE);
+      return { ok: false, status: 'disabled' };
+    }
+
+    const pullCode = memberCode;
+    const member = findKpiMember(pullCode);
+    const memberLabel = member ? formatKpiMemberLabel(member) : pullCode;
+    setSupabaseJournalPullStatus('loading');
+
+    const remoteResult = await getJournalSnapshotFromSupabase(pullCode);
+    if (!remoteResult.ok) {
+      setSupabaseJournalPullStatus('error');
+      showToast(remoteResult.message || 'Supabase 조회 실패');
+      return remoteResult;
+    }
+
+    if (remoteResult.status === 'empty' || !remoteResult.data) {
+      setSupabaseJournalPullStatus('empty');
+      setSupabaseFreshness({
+        status: JOURNAL_FRESHNESS_STATUS.empty,
+        remoteUpdatedAt: null,
+        message: '',
+      });
+      showToast('원격(Supabase) 스냅샷이 없습니다');
+      return { ok: false, status: 'empty' };
+    }
+
+    const remoteUpdatedAt = resolveRemoteSnapshotUpdatedAt(remoteResult.data);
+    const localUpdatedAt = resolveLocalMemberUpdatedAt(journal.meta, pullCode);
+    const freshness = classifyJournalFreshness({ localUpdatedAt, remoteUpdatedAt });
+    setSupabaseFreshness({
+      status: freshness,
+      remoteUpdatedAt,
+      message: '',
+    });
+
+    const needsConfirm =
+      freshness === JOURNAL_FRESHNESS_STATUS.localNewer ||
+      freshness === JOURNAL_FRESHNESS_STATUS.equal;
+    if (needsConfirm) {
+      const confirmed = window.confirm(
+        freshness === JOURNAL_FRESHNESS_STATUS.localNewer
+          ? `${memberLabel} 로컬 일지가 원격보다 더 최신입니다. Supabase 내용으로 덮어쓸까요?`
+          : `${memberLabel} 로컬과 원격 시각이 같습니다. Supabase 내용으로 다시 가져올까요?`
+      );
+      if (!confirmed) {
+        setSupabaseJournalPullStatus('idle');
+        showToast('가져오기를 취소했습니다');
+        return { ok: false, status: 'cancelled' };
+      }
+    }
+
+    const applied = journal.applyMemberFromSupabase(pullCode, remoteResult.data, {
+      force: needsConfirm,
+    });
+    if (!applied?.ok) {
+      setSupabaseJournalPullStatus('error');
+      showToast('로컬 반영에 실패했습니다');
+      return { ok: false, status: 'error' };
+    }
+
+    setSupabaseJournalPullStatus('ok');
+    const nextLocalAt = resolveLocalMemberUpdatedAt(applied.store?.meta || journal.meta, pullCode);
+    setSupabaseFreshness({
+      status: classifyJournalFreshness({
+        localUpdatedAt: nextLocalAt || remoteUpdatedAt,
+        remoteUpdatedAt,
+      }),
+      remoteUpdatedAt,
+      message: '',
+    });
+    showToast(
+      applied.changed
+        ? `${memberLabel} 일지를 Supabase에서 가져왔습니다`
+        : `${memberLabel} 일지는 이미 원격과 같습니다`
+    );
+    return { ok: true, status: 'ok', changed: applied.changed };
+  }, [
+    journal,
+    journalReadOnly,
+    memberCode,
+    showToast,
+    supabaseJournalPullStatus,
+  ]);
 
   const runStorageComparison = useCallback(async () => {
     if (!SUPABASE_MANUAL_MIRROR_ENABLED) {
@@ -1198,6 +1289,24 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   {supabaseJournalSaveStatus === 'saving' ? '저장 중…' : 'Supabase 업무일지 저장'}
                 </button>
               )}
+              {showSupabaseMirrorTools && !journalReadOnly && (
+                <button
+                  type="button"
+                  className="btn btn-secondary journal-member-tool-btn"
+                  disabled={supabaseJournalPullStatus === 'loading'}
+                  onClick={pullSelectedMemberFromSupabase}
+                  {...uiTooltip(
+                    '현재 선택한 구성원의 Supabase 스냅샷을 이 브라우저 로컬 일지로 가져옵니다. 로컬이 더 최신이면 확인 후 덮어씁니다.',
+                    undefined,
+                    { wrap: true }
+                  )}
+                >
+                  <Import size={16} />
+                  {supabaseJournalPullStatus === 'loading'
+                    ? '가져오는 중…'
+                    : 'Supabase에서 가져오기'}
+                </button>
+              )}
               <button
                 type="button"
                 className="btn btn-secondary"
@@ -1443,7 +1552,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                     ? ` · 로컬(구성원) ${localMemberSavedAtLabel}`
                     : ''}
                   {supabaseFreshness.status === JOURNAL_FRESHNESS_STATUS.remoteNewer
-                    ? ' · 가져오기는 이후 단계(J5)'
+                    ? ' · 「Supabase에서 가져오기」로 복구할 수 있습니다'
                     : ''}
                 </p>
               )}
