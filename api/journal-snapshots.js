@@ -1,7 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import { hasValidAdminSession } from '../server/api-utils/adminSession.js';
 import { isAllowedPublishOrigin } from '../server/api-utils/publishOrigin.js';
-import { isAdminRouteReferer } from '../server/api-utils/requestScope.js';
+import {
+  isAdminRouteReferer,
+  isSameMemberRouteReferer,
+} from '../server/api-utils/requestScope.js';
+import { isMemberJournalEmpty } from '../src/utils/journalCloudSnapshot.js';
 
 const JOURNAL_SNAPSHOTS_TABLE = 'journal_snapshots';
 const PAYLOAD_VERSION = 1;
@@ -30,6 +34,62 @@ function canUseAdminWrite(req) {
 
 function normalizeMemberCode(value) {
   return String(value || '').trim();
+}
+
+/**
+ * J7b: admin-session (/admin) or same-member referer (B/C team-share dual-write).
+ * @returns {{ ok: true, mode: 'admin'|'member' } | { ok: false, status: number, message: string, kind?: string }}
+ */
+export function resolveJournalSnapshotsAccess(req, memberCode) {
+  const referer = req.headers.referer || req.headers.origin || '';
+  if (!isAllowedPublishOrigin(referer)) {
+    return {
+      ok: false,
+      status: 403,
+      kind: 'origin',
+      message: '허용되지 않은 origin 입니다.',
+    };
+  }
+
+  if (canUseAdminWrite(req)) {
+    return { ok: true, mode: 'admin' };
+  }
+
+  // /admin without a valid session must not fall through to the member path.
+  if (isAdminRouteReferer(req)) {
+    return {
+      ok: false,
+      status: 403,
+      kind: 'admin',
+      message: '관리자 세션이 필요합니다. /admin 에서 비밀번호를 다시 입력하세요.',
+    };
+  }
+
+  const code = normalizeMemberCode(memberCode);
+  if (!code) {
+    return {
+      ok: false,
+      status: 400,
+      kind: 'member-code',
+      message: 'memberCode is required.',
+    };
+  }
+
+  if (!isSameMemberRouteReferer(req, code)) {
+    return {
+      ok: false,
+      status: 403,
+      kind: 'member',
+      message: '현재 구성원 URL과 다른 일지는 접근할 수 없습니다.',
+    };
+  }
+
+  return { ok: true, mode: 'member' };
+}
+
+/** Reject empty journal slices so team share cannot wipe a remote row. */
+export function isEmptyJournalSnapshotPayload(payload) {
+  return isMemberJournalEmpty(payload);
 }
 
 function normalizeSnapshotRow(row) {
@@ -166,6 +226,11 @@ async function writeSnapshotAtomically(client, { memberCode, payload, clientUpda
   };
 }
 
+function forbiddenMessage(access) {
+  if (access.kind === 'member' || access.kind === 'origin') return access.message;
+  return access.message || '관리자 세션이 필요합니다. /admin 에서 비밀번호를 다시 입력하세요.';
+}
+
 export default async function handler(req, res) {
   const client = getServiceClient();
   if (!client) {
@@ -176,16 +241,17 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!canUseAdminWrite(req)) {
-    return json(res, 403, {
-      ok: false,
-      status: 'forbidden',
-      message: '관리자 세션이 필요합니다. /admin 에서 비밀번호를 다시 입력하세요.',
-    });
-  }
-
   if (req.method === 'GET') {
     const memberCode = normalizeMemberCode(req.query?.memberCode);
+    const access = resolveJournalSnapshotsAccess(req, memberCode);
+    if (!access.ok) {
+      return json(res, access.status, {
+        ok: false,
+        status: access.status === 400 ? 'error' : 'forbidden',
+        message: forbiddenMessage(access),
+      });
+    }
+
     if (!memberCode) {
       return json(res, 400, {
         ok: false,
@@ -239,6 +305,15 @@ export default async function handler(req, res) {
     const clientUpdatedAt = typeof req.body?.updatedAt === 'string' ? req.body.updatedAt : null;
     const updatedAt = clientUpdatedAt || new Date().toISOString();
 
+    const access = resolveJournalSnapshotsAccess(req, memberCode);
+    if (!access.ok) {
+      return json(res, access.status, {
+        ok: false,
+        status: access.status === 400 ? 'error' : 'forbidden',
+        message: forbiddenMessage(access),
+      });
+    }
+
     if (!memberCode) {
       return json(res, 400, {
         ok: false,
@@ -252,6 +327,14 @@ export default async function handler(req, res) {
         ok: false,
         status: 'error',
         message: 'payload is required.',
+      });
+    }
+
+    if (isEmptyJournalSnapshotPayload(payload)) {
+      return json(res, 400, {
+        ok: false,
+        status: 'empty-payload',
+        message: '빈 일지로는 원격 스냅샷을 덮어쓸 수 없습니다.',
       });
     }
 

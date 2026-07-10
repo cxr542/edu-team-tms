@@ -1345,11 +1345,26 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                         onClick={async () => {
                           const saveCode = teamAccess.scopedMember || memberCode;
                           const r = await journal.saveMemberToCloud(saveCode);
-                          if (r.ok) showToast(`${saveCode} 일지를 팀 공유 저장소에 저장했습니다`);
-                          else if (r.reason === 'conflict') {
+                          if (r.ok) {
+                            const mirror = r.supabaseMirror;
+                            if (
+                              SUPABASE_MANUAL_MIRROR_ENABLED &&
+                              mirror &&
+                              !mirror.ok &&
+                              mirror.status !== 'disabled'
+                            ) {
+                              showToast(
+                                `${saveCode} 일지를 팀 공유 저장소에 저장했습니다 (Supabase 미러 실패)`
+                              );
+                            } else {
+                              showToast(`${saveCode} 일지를 팀 공유 저장소에 저장했습니다`);
+                            }
+                          } else if (r.reason === 'conflict') {
                             showToast(
                               '이 저널은 다른 곳에서 더 최신 내용으로 업데이트되었습니다. 최신 내용을 불러오거나 변경 내용을 확인한 뒤 다시 저장해 주세요.'
                             );
+                          } else if (r.reason === 'empty-payload') {
+                            showToast(r.error?.message || '빈 일지로는 팀 공유 저장할 수 없습니다');
                           } else {
                             showToast(r.error?.message || '팀 공유 저장 실패 — 이 브라우저에는 임시 저장됨');
                           }

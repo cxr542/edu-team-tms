@@ -120,11 +120,11 @@ Blob live-latest ─(GET only / disaster)→ localStorage
 
 산출물: 본 파일 + backlog / sync-plan / sot-map 링크. **코드 변경 없음.**
 
-### J7b — Member-scoped Supabase API + dual-write (Preview)
+### J7b — Member-scoped Supabase API + dual-write (Preview) ✅
 
 - `api/journal-snapshots.js`에 member referer 허용 경로 추가
 - B/C 「팀 공유 저장」: **Blob POST 유지 + Supabase member upsert 병행**
-  - Gate: Preview `VITE_SUPABASE_MANUAL_MIRROR_ENABLED` 또는 전용 `JOURNAL_SUPABASE_TEAM_SHARE` (구현 시 하나로 확정)
+  - Gate: Preview `VITE_SUPABASE_MANUAL_MIRROR_ENABLED` (전용 flag 없이 기존 gate 재사용)
 - Empty overwrite 가드를 Supabase·Blob 양쪽에 동일 적용
 - 테스트: API auth 매트릭스, empty guard, optimistic lock 409
 
@@ -239,5 +239,6 @@ Blob live-latest ─(GET only / disaster)→ localStorage
 
 ## 10. 다음 작업
 
-1. 본 문서 머지 (J7-0)
-2. **J7b** 구현 브랜치 착수 (member-scoped API + dual-write + empty guard)
+1. ~~본 문서 머지 (J7-0)~~ ✅
+2. ~~**J7b** member-scoped API + dual-write + empty guard~~ ✅
+3. **J7c** Pull SoT flip (Supabase-first, Blob fallback)

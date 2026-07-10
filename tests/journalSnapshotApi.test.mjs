@@ -102,4 +102,25 @@ describe('journal-snapshot API', () => {
     expect(headMock).not.toHaveBeenCalled();
     expect(putMock).not.toHaveBeenCalled();
   });
+
+  it('rejects empty journal team-share saves (J7b)', async () => {
+    headMock.mockRejectedValue(new Error('not found'));
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: { referer: 'http://localhost:4173/wschoi' },
+      body: {
+        memberCode: 'B',
+        updatedAt: '2026-06-15T09:00:00.000Z',
+        journal: { days: {} },
+      },
+    };
+    const res = createRes();
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(JSON.parse(res.body).error).toBe('journal-empty-payload');
+    expect(putMock).not.toHaveBeenCalled();
+  });
 });
