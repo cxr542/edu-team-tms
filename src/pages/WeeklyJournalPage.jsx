@@ -107,6 +107,15 @@ const SUPABASE_JOURNAL_SAVE_STATUS_LABEL = {
   error: ' · Supabase 저장 실패',
 };
 
+const SUPABASE_AUTO_MIRROR_STATUS_LABEL = {
+  idle: '',
+  queued: ' · Supabase 자동 미러 대기',
+  saving: ' · Supabase 자동 미러 중',
+  saved: ' · Supabase 자동 미러 완료',
+  conflict: ' · Supabase 자동 미러 충돌 — 원격이 더 최신',
+  error: ' · Supabase 자동 미러 실패',
+};
+
 const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 
 function formatSummaryPct(value) {
@@ -402,6 +411,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   }[journal.cloudSaveStatus] || '';
   const cloudHealthMessage = getCloudHealthUserMessage();
   const supabaseJournalSaveHint = SUPABASE_JOURNAL_SAVE_STATUS_LABEL[supabaseJournalSaveStatus] || '';
+  const supabaseAutoMirrorHint =
+    SUPABASE_AUTO_MIRROR_STATUS_LABEL[journal.supabaseMirrorSaveStatus] || '';
 
   const memberDays = journal.getMemberDays(memberCode);
 
@@ -1278,7 +1289,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   disabled={supabaseJournalSaveStatus === 'saving'}
                   onClick={saveSelectedMemberToSupabase}
                   {...uiTooltip(
-                    '현재 선택한 구성원의 업무일지를 /api/journal-snapshots(admin 세션)로 Supabase에 수동 저장합니다. 자동 저장은 사용하지 않습니다.',
+                    '현재 선택한 구성원의 업무일지를 /api/journal-snapshots(admin 세션)로 Supabase에 수동 저장합니다. Preview에서는 로컬 저장 후 자동 미러(debounce)도 동작합니다.',
                     undefined,
                     { wrap: true }
                   )}
@@ -1525,6 +1536,19 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   }`}
                 >
                   {supabaseJournalSaveHint}
+                </p>
+              )}
+              {showSupabaseMirrorTools && supabaseAutoMirrorHint && (
+                <p
+                  className={`journal-sync-hint${
+                    journal.supabaseMirrorSaveStatus === 'conflict' ||
+                    journal.supabaseMirrorSaveStatus === 'error'
+                      ? ' journal-sync-hint--warn'
+                      : ''
+                  }`}
+                  aria-live="polite"
+                >
+                  {supabaseAutoMirrorHint}
                 </p>
               )}
               <p className="journal-status-panel__save">

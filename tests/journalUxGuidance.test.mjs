@@ -86,6 +86,7 @@ describe('journal UX guidance', () => {
   it('keeps journal auto cloud sync disabled', () => {
     expect(appSource).toContain('autoSyncCloud={false}');
     expect(appSource).not.toMatch(/autoSyncCloud=\{true\}/);
+    expect(appSource).toContain('autoMirrorSupabase={autoMirrorSupabase}');
   });
 
   it('preserves kpi2Effect save path and member ledger/public viewer policies', () => {

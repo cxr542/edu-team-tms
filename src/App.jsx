@@ -90,6 +90,7 @@ import PublicViewerGuidePage from './pages/PublicViewerGuidePage';
 import { isProductionEnvironment } from './constants/appEnv';
 import { uiTooltip } from './utils/uiTooltip';
 import { JournalProvider } from './context/JournalProvider';
+import { SUPABASE_MANUAL_MIRROR_ENABLED } from './constants/supabaseSync';
 import { isKpiRelatedModule, useAppModule } from './hooks/useAppModule';
 import { findReferenceDoc } from './constants/referenceDocs';
 import { useNavLabels } from './hooks/useNavLabels';
@@ -235,6 +236,12 @@ export default function App() {
   /** 공개 조회(?mode=view)만 상세 접기 — 구성원 B/C 장부는 거래 목록 항상 표시 */
   const ledgerDetailsCollapsible = isViewer && !teamAccess.isMemberScope;
   const isAdminEditAccess = teamAccess.isAdmin && !teamAccess.isMemberScope;
+  /** Preview leader /admin only — never enable Blob autoSyncCloud. */
+  const autoMirrorSupabase =
+    SUPABASE_MANUAL_MIRROR_ENABLED &&
+    teamAccess.isLeader &&
+    !teamAccess.isMemberScope &&
+    !isViewer;
   /** 관리자(/admin) 장부에서만 엑셀보내기 */
   const canExportLedgerExcel = !isViewer && isAdminEditAccess;
   const {
@@ -1112,7 +1119,11 @@ export default function App() {
         />
       ) : isKpiRelatedModule(displayModule) &&
         (!isViewer || displayModule === 'kpi-approve' || displayModule === 'kpi-report') ? (
-        <JournalProvider readOnly={isViewer && displayModule !== 'kpi-approve'} autoSyncCloud={false}>
+        <JournalProvider
+          readOnly={isViewer && displayModule !== 'kpi-approve'}
+          autoSyncCloud={false}
+          autoMirrorSupabase={autoMirrorSupabase}
+        >
           {displayModule === 'journal' && <WeeklyJournalPage readOnly={false} />}
           {displayModule === 'competency' && <CompetencyPage />}
           {displayModule === 'kpi' && <TeamKpiPage />}
