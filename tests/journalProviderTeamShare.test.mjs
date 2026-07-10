@@ -27,4 +27,13 @@ describe('JournalProvider team-share orchestration', () => {
     expect(journalPageSource).toContain('includeOwnMember: true');
     expect(journalPageSource).toContain('includeOwnMember: false');
   });
+
+  it('pulls Supabase-first when MANUAL_MIRROR is enabled (J7c)', () => {
+    expect(weeklyHookSource).toContain('SUPABASE_MANUAL_MIRROR_ENABLED');
+    expect(weeklyHookSource).toContain('fetchTeamJournalSnapshotFromSupabase');
+    expect(weeklyHookSource).toContain("source: 'supabase'");
+    expect(weeklyHookSource).toContain('fetchJournalSnapshot()');
+    expect(journalPageSource).toContain("result.source === 'supabase'");
+    expect(journalPageSource).toContain('Supabase (팀 공유 SoT)');
+  });
 });

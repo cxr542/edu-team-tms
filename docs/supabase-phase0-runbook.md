@@ -120,7 +120,7 @@ Production에는 켜지 않는다. Preview(또는 로컬)만.
 | 7 | 「저장소 비교」 | ✅ (선택 확인) |
 | 8 | Production 미러 버튼 미노출 | ✅ |
 
-다음: **J7c** Pull SoT flip ([`j7-journal-realtime-blob-plan.md`](./j7-journal-realtime-blob-plan.md)). J4~J6·J7a·J7-0·**J7b**(member dual-write) 완료. Production `MANUAL_MIRROR`는 계속 false.
+다음: **J7d** Blob demote ([`j7-journal-realtime-blob-plan.md`](./j7-journal-realtime-blob-plan.md)). J4~J6·J7a·J7-0·J7b·**J7c**(pull SoT flip) 완료. Production `MANUAL_MIRROR`는 계속 false.
 
 **J7a:** Preview `/admin` 미러 도구가 보일 때 `GET /api/journal-snapshots`를 ~30초·window focus로 폴링해 「원격이 더 최신」 라벨만 갱신. 자동 pull/쓰기·Blob 변경 없음.
 

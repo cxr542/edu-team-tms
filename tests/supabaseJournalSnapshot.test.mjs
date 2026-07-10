@@ -183,4 +183,57 @@ describe('supabaseJournalSnapshot admin API client', () => {
     expect(snapshot.memberJournals.B.days['2026-07-09'].tasks[0].title).toBe('from supabase');
     expect(snapshot.memberJournals.A.days).toEqual({});
   });
+
+  it('builds a team cloud snapshot from Supabase rows (J7c)', async () => {
+    const mod = await loadModule();
+    const snapshot = mod.buildTeamJournalCloudSnapshotFromSupabaseRows([
+      {
+        member_code: 'A',
+        payload: { days: { '2026-07-01': { tasks: [{ id: 'a1' }] } } },
+        updated_at: '2026-07-01T00:00:00.000Z',
+      },
+      {
+        member_code: 'C',
+        payload: { days: { '2026-07-03': { tasks: [{ id: 'c1' }] } } },
+        updated_at: '2026-07-03T00:00:00.000Z',
+      },
+    ]);
+
+    expect(snapshot.meta.memberUpdatedAt.A).toBe('2026-07-01T00:00:00.000Z');
+    expect(snapshot.meta.memberUpdatedAt.C).toBe('2026-07-03T00:00:00.000Z');
+    expect(snapshot.meta.updatedAt).toBe('2026-07-03T00:00:00.000Z');
+    expect(snapshot.memberJournals.A.days['2026-07-01'].tasks[0].id).toBe('a1');
+    expect(snapshot.memberJournals.C.days['2026-07-03'].tasks[0].id).toBe('c1');
+  });
+
+  it('fetches team snapshot via scope=team', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url) => {
+        expect(String(url)).toContain('scope=team');
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            ok: true,
+            status: 'ok',
+            data: {
+              rows: [
+                {
+                  member_code: 'B',
+                  payload: { days: { '2026-07-02': { tasks: [{ id: 'b1' }] } } },
+                  updated_at: '2026-07-02T00:00:00.000Z',
+                },
+              ],
+            },
+          }),
+        };
+      })
+    );
+    const mod = await loadModule();
+    const team = await mod.fetchTeamJournalSnapshotFromSupabase();
+    expect(team.ok).toBe(true);
+    expect(team.source).toBe('supabase');
+    expect(team.snapshot.memberJournals.B.days['2026-07-02'].tasks[0].id).toBe('b1');
+  });
 });

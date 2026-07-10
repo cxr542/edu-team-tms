@@ -4,11 +4,13 @@ import { isAllowedPublishOrigin } from '../server/api-utils/publishOrigin.js';
 import {
   isAdminRouteReferer,
   isSameMemberRouteReferer,
+  memberCodeFromReferer,
 } from '../server/api-utils/requestScope.js';
 import { isMemberJournalEmpty } from '../src/utils/journalCloudSnapshot.js';
 
 const JOURNAL_SNAPSHOTS_TABLE = 'journal_snapshots';
 const PAYLOAD_VERSION = 1;
+const TEAM_MEMBER_CODES = ['A', 'B', 'C'];
 
 function json(res, status, body) {
   res.statusCode = status;
@@ -85,6 +87,46 @@ export function resolveJournalSnapshotsAccess(req, memberCode) {
   }
 
   return { ok: true, mode: 'member' };
+}
+
+/**
+ * J7c: team read for peer pull — admin-session or any A/B/C member referer.
+ * Write path remains own-member-only (resolveJournalSnapshotsAccess).
+ */
+export function resolveJournalSnapshotsTeamReadAccess(req) {
+  const referer = req.headers.referer || req.headers.origin || '';
+  if (!isAllowedPublishOrigin(referer)) {
+    return {
+      ok: false,
+      status: 403,
+      kind: 'origin',
+      message: '허용되지 않은 origin 입니다.',
+    };
+  }
+
+  if (canUseAdminWrite(req)) {
+    return { ok: true, mode: 'admin' };
+  }
+
+  if (isAdminRouteReferer(req)) {
+    return {
+      ok: false,
+      status: 403,
+      kind: 'admin',
+      message: '관리자 세션이 필요합니다. /admin 에서 비밀번호를 다시 입력하세요.',
+    };
+  }
+
+  if (memberCodeFromReferer(req)) {
+    return { ok: true, mode: 'member' };
+  }
+
+  return {
+    ok: false,
+    status: 403,
+    kind: 'member',
+    message: '구성원 URL 또는 관리자 세션이 필요합니다.',
+  };
 }
 
 /** Reject empty journal slices so team share cannot wipe a remote row. */
@@ -242,6 +284,60 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'GET') {
+    const scope = String(req.query?.scope || '').trim().toLowerCase();
+
+    if (scope === 'team') {
+      const access = resolveJournalSnapshotsTeamReadAccess(req);
+      if (!access.ok) {
+        return json(res, access.status, {
+          ok: false,
+          status: access.status === 400 ? 'error' : 'forbidden',
+          message: forbiddenMessage(access),
+        });
+      }
+
+      try {
+        const { data, error } = await client
+          .from(JOURNAL_SNAPSHOTS_TABLE)
+          .select('member_code, payload, payload_version, updated_at')
+          .in('member_code', TEAM_MEMBER_CODES);
+
+        if (error) {
+          return json(res, 500, {
+            ok: false,
+            status: 'error',
+            message: error.message,
+          });
+        }
+
+        const rows = (Array.isArray(data) ? data : [])
+          .map(normalizeSnapshotRow)
+          .filter(Boolean);
+
+        if (!rows.length) {
+          return json(res, 200, {
+            ok: true,
+            status: 'empty',
+            message: 'No journal snapshots found.',
+            data: { rows: [] },
+          });
+        }
+
+        return json(res, 200, {
+          ok: true,
+          status: 'ok',
+          message: 'Team journal snapshots loaded from Supabase.',
+          data: { rows },
+        });
+      } catch (error) {
+        return json(res, 500, {
+          ok: false,
+          status: 'error',
+          message: error instanceof Error ? error.message : 'Team journal snapshot read failed.',
+        });
+      }
+    }
+
     const memberCode = normalizeMemberCode(req.query?.memberCode);
     const access = resolveJournalSnapshotsAccess(req, memberCode);
     if (!access.ok) {

@@ -130,11 +130,12 @@ Blob live-latest ─(GET only / disaster)→ localStorage
 
 **완료 기준:** Preview에서 B/C 저장 후 Supabase row와 Blob 모두 갱신. 교차 저장 시 Supabase rows는 서로 덮지 않음.
 
-### J7c — Pull SoT flip (Supabase-first, Blob fallback)
+### J7c — Pull SoT flip (Supabase-first, Blob fallback) ✅
 
 - 「팀 공유본 가져오기」: A/B/C rows merge → localStorage; Blob은 fallback
-- `/admin` 비교 UI에 Supabase-first 표시
-- J7a freshness를 팀 공유 pull 전 비교에도 재사용
+- `GET /api/journal-snapshots?scope=team` — admin 또는 구성원 referer 팀 읽기
+- `/admin` 비교 UI Supabase-first 표시
+- Gate: Preview `MANUAL_MIRROR` (Production은 Blob-only 유지)
 
 **완료 기준:** Preview에서 Blob을 무시해도 Supabase만으로 peer pull 가능.
 
@@ -241,4 +242,5 @@ Blob live-latest ─(GET only / disaster)→ localStorage
 
 1. ~~본 문서 머지 (J7-0)~~ ✅
 2. ~~**J7b** member-scoped API + dual-write + empty guard~~ ✅
-3. **J7c** Pull SoT flip (Supabase-first, Blob fallback)
+3. ~~**J7c** Pull SoT flip (Supabase-first, Blob fallback)~~ ✅
+4. **J7d** Journal Blob POST demote
