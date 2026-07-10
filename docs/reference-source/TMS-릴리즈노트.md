@@ -5,6 +5,12 @@
 
 ---
 
+## 2026-07-10 — Add J6 Preview Supabase auto-mirror on local journal save
+
+- Preview 팀장 일지: 편집 후 잠시 대기하면 Supabase 자동 미러
+- Production 운영 데이터 경로 변경 없음
+- PR #91: https://github.com/cxr542/edu-team-tms/pull/91
+
 ## 2026-07-10 — Admin journal read-only + Safari sidebar fix
 
 - Safari에서 관리자 사이드바(팀 빌딩 관리)가 숨겨질 수 있던 CSS 충돌 수정
