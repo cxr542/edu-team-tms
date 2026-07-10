@@ -32,6 +32,9 @@ import {
   normalizeJournalCloudSnapshot,
 } from '../utils/journalCloudSnapshot';
 import {
+  buildMemberRemoteSnapshotFromSupabase,
+} from '../utils/supabaseJournalSnapshot';
+import {
   apply2026PublicHolidaysToDays,
   defaultDayForKey,
   resolveJournalDay,
@@ -198,16 +201,46 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
   }, [readOnly]);
 
   const applyMemberCloudSave = useCallback(
-    (memberCode, snapshot) => {
+    (memberCode, snapshot, options = {}) => {
       let merged;
+      let previous;
       setStore((prev) => {
-        merged = cacheStore(applyRemoteMemberJournalSave(prev, snapshot, memberCode));
+        previous = prev;
+        merged = cacheStore(applyRemoteMemberJournalSave(prev, snapshot, memberCode, options));
         return merged;
       });
       setSyncStatus('synced');
-      return merged;
+      const prevSlice = previous?.memberJournals?.[memberCode];
+      const nextSlice = merged?.memberJournals?.[memberCode];
+      const prevAt = previous?.meta?.memberUpdatedAt?.[memberCode] || null;
+      const nextAt = merged?.meta?.memberUpdatedAt?.[memberCode] || null;
+      const changed =
+        JSON.stringify(prevSlice) !== JSON.stringify(nextSlice) || prevAt !== nextAt;
+      return { merged, changed };
     },
     [cacheStore]
+  );
+
+  /**
+   * Apply a Supabase journal_snapshots row onto the selected member local slice.
+   * @param {{ force?: boolean }} [options]
+   */
+  const applyMemberFromSupabaseSnapshot = useCallback(
+    (memberCode, data, options = {}) => {
+      if (!data) {
+        return { ok: false, reason: 'empty', changed: false, snapshot: null };
+      }
+      const remoteSnapshot = buildMemberRemoteSnapshotFromSupabase(memberCode, data);
+      const { merged, changed } = applyMemberCloudSave(memberCode, remoteSnapshot, options);
+      return {
+        ok: true,
+        changed,
+        reason: changed ? 'applied' : 'unchanged',
+        snapshot: remoteSnapshot,
+        store: merged,
+      };
+    },
+    [applyMemberCloudSave]
   );
 
   const applyRemoteSnapshot = useCallback(
@@ -581,6 +614,7 @@ export function useWeeklyJournal({ readOnly = false, autoSyncCloud = false } = {
     resetToSeed,
     pullFromCloud,
     saveMemberToCloud,
+    applyMemberFromSupabaseSnapshot,
     importFromFile,
     importViewOnlyFromFile,
     getStore: () => store,
