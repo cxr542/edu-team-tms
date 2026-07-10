@@ -5,6 +5,11 @@
 
 ---
 
+## 2026-07-10 — Add J7a journal freshness poll (Preview)
+
+- Preview 일지: 「원격이 더 최신」 신선도 표시가 주기적으로 자동 갱신됩니다
+- PR #93: https://github.com/cxr542/edu-team-tms/pull/93
+
 ## 2026-07-10 — Add J6 Preview Supabase auto-mirror on local journal save
 
 - Preview 팀장 일지: 편집 후 잠시 대기하면 Supabase 자동 미러
