@@ -55,11 +55,23 @@ async function callJournalSnapshotsApi({ method = 'GET', memberCode, payload, up
       });
     }
 
+    if (response.status === 409) {
+      return result({
+        ok: false,
+        status: 'conflict',
+        message:
+          body.message ||
+          'Supabase에 더 최신 업무일지 스냅샷이 있습니다. 최신 원격 상태를 확인한 뒤 다시 저장해 주세요.',
+        data: body.data ?? null,
+      });
+    }
+
     if (!response.ok) {
       return result({
         ok: false,
         status: body.status || 'error',
         message: body.message || `Journal snapshots API failed (${response.status}).`,
+        data: body.data ?? null,
       });
     }
 

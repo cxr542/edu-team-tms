@@ -133,4 +133,35 @@ describe('supabaseJournalSnapshot admin API client', () => {
       status: 'forbidden',
     });
   });
+
+  it('maps 409 to conflict with remote data', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: false,
+      status: 409,
+      json: async () => ({
+        ok: false,
+        status: 'conflict',
+        message: 'remote newer',
+        data: {
+          member_code: 'A',
+          payload: { days: {} },
+          payload_version: 1,
+          updated_at: '2026-07-09T12:00:00.000Z',
+        },
+      }),
+    });
+    const mod = await loadModule();
+    await expect(
+      mod.saveJournalSnapshotToSupabase({
+        memberCode: 'A',
+        payload: { days: {} },
+        updatedAt: '2026-07-09T11:00:00.000Z',
+      })
+    ).resolves.toMatchObject({
+      ok: false,
+      status: 'conflict',
+      message: 'remote newer',
+      data: { member_code: 'A', updated_at: '2026-07-09T12:00:00.000Z' },
+    });
+  });
 });

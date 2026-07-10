@@ -570,6 +570,19 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       return result;
     }
 
+    if (result.status === 'conflict') {
+      setSupabaseJournalSaveStatus('error');
+      const remoteUpdatedAt = resolveRemoteSnapshotUpdatedAt(result.data);
+      const localUpdatedAt = journal.meta?.memberUpdatedAt?.[saveCode] || null;
+      setSupabaseFreshness({
+        status: classifyJournalFreshness({ localUpdatedAt, remoteUpdatedAt }),
+        remoteUpdatedAt,
+        message: result.message || '',
+      });
+      showToast(result.message || '원격이 더 최신이라 저장하지 않았습니다');
+      return result;
+    }
+
     setSupabaseJournalSaveStatus('error');
     showToast(result.message || 'Supabase 저장 실패');
     return result;
