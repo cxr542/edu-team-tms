@@ -26,6 +26,9 @@
 | KPI operating model | `docs/reference-source/KPI-TMS-운영모델-v2.md` | KPI 운영 모델 참고 |
 | Traceability | `docs/reference-source/KPI-TMS-traceability-tms.md` | TMS/Excel 필드 추적 참고 |
 | Workspace guide | `docs/workspace-guide.md` | workspace/repo 구조 안내 |
+| Journal J7 Realtime·Blob | `docs/j7-journal-realtime-blob-plan.md` | 일지 팀 공유 SoT를 Supabase로 이전·Realtime 알림 단계 (J7-0…J7e) |
+| Journal Supabase sync | `docs/journal-supabase-sync-plan.md` | 일지 Supabase 전환 원칙·단계 |
+| Operations backlog | `docs/operations-backlog.md` | 운영 후속 작업·일지 J-track 진행률 |
 
 ## Non-SoT Copies and Build Outputs
 다음 파일들은 원본 문서가 아니라 복제본 또는 산출물로 취급한다.
