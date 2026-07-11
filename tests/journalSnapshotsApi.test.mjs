@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createAdminSessionCookie } from '../server/api-utils/adminSession.js';
 
 const fromMock = vi.fn();
@@ -72,6 +72,10 @@ function mockCurrentReadThenUpdate(current, saved) {
 }
 
 describe('journal-snapshots API admin session', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   beforeEach(() => {
     vi.resetModules();
     fromMock.mockReset();
@@ -367,6 +371,10 @@ describe('journal-snapshots API admin session', () => {
 });
 
 describe('journal-snapshots API member referer (J7b)', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   beforeEach(() => {
     vi.resetModules();
     fromMock.mockReset();
@@ -416,6 +424,78 @@ describe('journal-snapshots API member referer (J7b)', () => {
       data: { member_code: 'B' },
     });
     expect(insertMock).toHaveBeenCalled();
+  });
+
+  it('rejects member writes with far-future updatedAt before touching Supabase', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-09T03:00:00.000Z'));
+
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: {
+        referer: 'https://edu-team-tms-ten.vercel.app/wschoi?module=journal',
+      },
+      body: {
+        memberCode: 'B',
+        payload: { days: { '2026-07-09': { tasks: [{ id: 'b-future' }] } } },
+        updatedAt: '2099-01-01T00:00:00.000Z',
+      },
+    };
+    const res = createRes();
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(JSON.parse(res.body)).toMatchObject({
+      ok: false,
+      status: 'invalid-updated-at',
+    });
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it('clamps slightly future member updatedAt to server time when saving', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-09T03:00:00.000Z'));
+
+    const payload = {
+      days: { '2026-07-09': { tasks: [{ id: 'b-clock-skew', title: 'B share' }] } },
+    };
+    const saved = {
+      member_code: 'B',
+      payload,
+      payload_version: 1,
+      updated_at: '2026-07-09T03:00:00.000Z',
+    };
+    const { syncInsert } = mockEmptyReadThenInsert(saved);
+
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: {
+        referer: 'https://edu-team-tms-ten.vercel.app/wschoi?module=journal',
+      },
+      body: {
+        memberCode: 'B',
+        payload,
+        updatedAt: '2026-07-09T03:02:00.000Z',
+      },
+    };
+    const res = createRes();
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(insertMock).toHaveBeenCalledWith({
+      member_code: 'B',
+      payload,
+      payload_version: 1,
+      updated_at: '2026-07-09T03:00:00.000Z',
+    });
+    expect(syncInsert).toHaveBeenCalledWith({
+      source: 'journal',
+      member_code: 'B',
+      event_type: 'snapshot_updated',
+      payload: { updated_at: '2026-07-09T03:00:00.000Z' },
+    });
   });
 
   it('rejects B member route writing C snapshot', async () => {
