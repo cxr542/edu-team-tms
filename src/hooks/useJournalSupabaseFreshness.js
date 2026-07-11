@@ -13,8 +13,8 @@ const IDLE_FRESHNESS = {
 };
 
 /**
- * J7a: poll journal_snapshots freshness for Preview mirror tools.
- * Does not auto-import remote into local — UI label only.
+ * J7a/J7e: poll journal_snapshots freshness for Preview mirror tools.
+ * Does not auto-import remote into local — UI label / 「원격 갱신됨」 badge only.
  *
  * @param {{
  *   enabled: boolean,
@@ -30,12 +30,16 @@ export function useJournalSupabaseFreshness({
   pollMs = JOURNAL_SUPABASE_FRESHNESS_POLL_MS,
 } = {}) {
   const [freshness, setFreshness] = useState(IDLE_FRESHNESS);
+  const [remoteUpdateNotified, setRemoteUpdateNotified] = useState(false);
   const requestIdRef = useRef(0);
+  const lastRemoteUpdatedAtRef = useRef(null);
 
   const refresh = useCallback(
     async ({ silent = false } = {}) => {
       if (!enabled) {
         setFreshness(IDLE_FRESHNESS);
+        setRemoteUpdateNotified(false);
+        lastRemoteUpdatedAtRef.current = null;
         return IDLE_FRESHNESS;
       }
 
@@ -58,6 +62,21 @@ export function useJournalSupabaseFreshness({
       if (requestId !== requestIdRef.current) return null;
 
       const next = buildJournalFreshnessState(result, localUpdatedAt);
+      const prevRemote = lastRemoteUpdatedAtRef.current;
+      const nextRemote = next.remoteUpdatedAt || null;
+      if (
+        silent &&
+        nextRemote &&
+        prevRemote &&
+        nextRemote !== prevRemote &&
+        next.status === JOURNAL_FRESHNESS_STATUS.remoteNewer
+      ) {
+        setRemoteUpdateNotified(true);
+      }
+      if (next.status !== JOURNAL_FRESHNESS_STATUS.remoteNewer) {
+        setRemoteUpdateNotified(false);
+      }
+      lastRemoteUpdatedAtRef.current = nextRemote;
       setFreshness(next);
       return next;
     },
@@ -67,6 +86,8 @@ export function useJournalSupabaseFreshness({
   useEffect(() => {
     if (!enabled) {
       setFreshness(IDLE_FRESHNESS);
+      setRemoteUpdateNotified(false);
+      lastRemoteUpdatedAtRef.current = null;
       return undefined;
     }
 
@@ -88,5 +109,9 @@ export function useJournalSupabaseFreshness({
     };
   }, [enabled, memberCode, pollMs, refresh]);
 
-  return { freshness, setFreshness, refresh };
+  const clearRemoteUpdateNotice = useCallback(() => {
+    setRemoteUpdateNotified(false);
+  }, []);
+
+  return { freshness, setFreshness, refresh, remoteUpdateNotified, clearRemoteUpdateNotice };
 }

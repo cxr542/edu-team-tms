@@ -9,8 +9,11 @@ import {
 import { isMemberJournalEmpty } from '../src/utils/journalCloudSnapshot.js';
 
 const JOURNAL_SNAPSHOTS_TABLE = 'journal_snapshots';
+const SYNC_EVENTS_TABLE = 'sync_events';
 const PAYLOAD_VERSION = 1;
 const TEAM_MEMBER_CODES = ['A', 'B', 'C'];
+const JOURNAL_SYNC_EVENT_SOURCE = 'journal';
+const JOURNAL_SYNC_EVENT_TYPE = 'snapshot_updated';
 
 function json(res, status, body) {
   res.statusCode = status;
@@ -268,6 +271,33 @@ async function writeSnapshotAtomically(client, { memberCode, payload, clientUpda
   };
 }
 
+/**
+ * J7e: best-effort audit row. Never fails the journal upsert.
+ * payload holds only { updated_at } — not the journal body.
+ */
+export async function recordJournalSyncEvent(client, { memberCode, updatedAt } = {}) {
+  const code = normalizeMemberCode(memberCode);
+  if (!client || !code) return { ok: false, skipped: true };
+
+  try {
+    const { error } = await client.from(SYNC_EVENTS_TABLE).insert({
+      source: JOURNAL_SYNC_EVENT_SOURCE,
+      member_code: code,
+      event_type: JOURNAL_SYNC_EVENT_TYPE,
+      payload: updatedAt ? { updated_at: updatedAt } : {},
+    });
+    if (error) {
+      return { ok: false, message: error.message };
+    }
+    return { ok: true };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : 'sync_events insert failed',
+    };
+  }
+}
+
 function forbiddenMessage(access) {
   if (access.kind === 'member' || access.kind === 'origin') return access.message;
   return access.message || '관리자 세션이 필요합니다. /admin 에서 비밀번호를 다시 입력하세요.';
@@ -451,6 +481,12 @@ export default async function handler(req, res) {
           ...(writeResult.data ? { data: writeResult.data } : {}),
         });
       }
+
+      // J7e: audit trail only — do not fail the save if sync_events insert fails.
+      await recordJournalSyncEvent(client, {
+        memberCode,
+        updatedAt: writeResult.data?.updated_at || updatedAt,
+      });
 
       return json(res, 200, {
         ok: true,

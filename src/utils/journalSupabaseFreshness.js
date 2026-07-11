@@ -102,7 +102,7 @@ export function formatJournalFreshnessLabel(status) {
     case JOURNAL_FRESHNESS_STATUS.localNewer:
       return '로컬이 더 최신';
     case JOURNAL_FRESHNESS_STATUS.remoteNewer:
-      return '원격이 더 최신';
+      return '원격 갱신됨 · 원격이 더 최신';
     case JOURNAL_FRESHNESS_STATUS.error:
       return '원격 신선도를 확인하지 못했습니다';
     case JOURNAL_FRESHNESS_STATUS.disabled:

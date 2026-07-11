@@ -120,9 +120,11 @@ Production에는 켜지 않는다. Preview(또는 로컬)만.
 | 7 | 「저장소 비교」 | ✅ (선택 확인) |
 | 8 | Production 미러 버튼 미노출 | ✅ |
 
-다음: **J7e** sync_events 알림 ([`j7-journal-realtime-blob-plan.md`](./j7-journal-realtime-blob-plan.md)). J4~J6·J7a·J7-0·J7b·J7c·**J7d**(Blob POST demote) 완료. Production `MANUAL_MIRROR`는 계속 false (Blob POST는 Production에서 유지).
+다음: J7 트랙 코드 완료. Production `MANUAL_MIRROR` cutover는 별도 승인. J4~J7e 완료. Production `MANUAL_MIRROR`는 계속 false (Blob POST는 Production에서 유지).
 
 **J7d:** Preview `MANUAL_MIRROR=true`이면 journal Blob POST 기본 off. 「팀 공유 저장」→ Supabase. 롤백 `VITE_JOURNAL_BLOB_POST_ENABLED=true`. GET Blob은 재해 복구용 유지.
+
+**J7e:** journal upsert 후 `sync_events` 감사(best-effort). UI 「원격 갱신됨」은 J7a 폴링. 운영 DB에 [`j7e-grant-service-role-sync-events.sql`](../supabase/j7e-grant-service-role-sync-events.sql) 적용.
 
 **J7a:** Preview `/admin` 미러 도구가 보일 때 `GET /api/journal-snapshots`를 ~30초·window focus로 폴링해 「원격이 더 최신」 라벨만 갱신. 자동 pull/쓰기·Blob 변경 없음.
 

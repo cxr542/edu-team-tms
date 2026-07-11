@@ -149,12 +149,13 @@ Blob live-latest ─(GET only / disaster)→ localStorage
 
 **완료 기준:** Preview에서 journal Blob POST가 꺼지고 Supabase 저장으로 팀 공유 가능. flag로 즉시 복구 가능.
 
-### J7e — Realtime/알림 (얇게)
+### J7e — Realtime/알림 (얇게) ✅
 
 - `POST /api/journal-snapshots` 성공 시 `sync_events` insert  
-  (`source=journal`, `member_code`, `updated_at`만 — **payload 전체 미포함**)
-- UI: 「원격 갱신됨」 배지 → 기존 J5 pull CTA (자동 반영 없음)
-- 구독: **당분간 J7a 폴링으로 배지 트리거** (Auth 없이). 진짜 websocket은 Auth/SSE 결정 후 별 PR
+  (`source=journal`, `member_code`, `event_type=snapshot_updated`, `payload={ updated_at }`만 — **일지 body 미포함**)
+- UI: 「원격 갱신됨 · 원격이 더 최신」 → 기존 J5 「Supabase에서 가져오기」 CTA (자동 반영 없음)
+- 구독: **J7a 폴링**으로 배지 트리거 (Auth/websocket 없음)
+- 운영 GRANT: [`supabase/j7e-grant-service-role-sync-events.sql`](../supabase/j7e-grant-service-role-sync-events.sql)
 
 **완료 기준:** 이벤트 테이블에 감사 흔적 + UI 알림이 폴링과 연동. Production Realtime publication 강제 아님.
 
@@ -246,4 +247,7 @@ Blob live-latest ─(GET only / disaster)→ localStorage
 2. ~~**J7b** member-scoped API + dual-write + empty guard~~ ✅
 3. ~~**J7c** Pull SoT flip (Supabase-first, Blob fallback)~~ ✅
 4. ~~**J7d** Journal Blob POST demote~~ ✅
-5. **J7e** `sync_events` 감사 + 알림(폴링 연동)
+5. ~~**J7e** `sync_events` 감사 + 알림(폴링 연동)~~ ✅
+
+J7 트랙(설계~알림) 코드 완료. Production `MANUAL_MIRROR` cutover는 **별도 승인**.
+운영 DB에 J7e GRANT SQL 적용 여부 확인.
