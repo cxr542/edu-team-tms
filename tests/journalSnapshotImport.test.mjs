@@ -119,6 +119,42 @@ describe('journal snapshot import', () => {
     expect(imported.memberJournals.B.days['2026-06-08'].tasks[0].title).toBe('B 월 업무');
   });
 
+  it('does not replace newer local member days with stale team-share import data', () => {
+    const local = {
+      memberJournals: {
+        A: { days: {} },
+        B: {
+          days: {
+            '2026-06-08': {
+              holiday: false,
+              mm: { work: 2, improve: 0, leave: 0 },
+              tasks: [{ id: 'b-newer', cat: 'other', title: 'B newer local', plan: 2, actual: 2, done: true }],
+            },
+          },
+        },
+        C: { days: {} },
+      },
+      meta: {
+        updatedAt: '2026-06-11T12:00:00.000Z',
+        memberUpdatedAt: { B: '2026-06-11T12:00:00.000Z' },
+      },
+    };
+
+    const staleTeamSnapshot = {
+      ...remoteSnapshot,
+      meta: {
+        updatedAt: '2026-06-10T08:00:00.000Z',
+        memberUpdatedAt: { B: '2026-06-10T08:00:00.000Z' },
+      },
+    };
+
+    const imported = applyJournalSnapshotImport(local, staleTeamSnapshot);
+
+    expect(imported.memberJournals.B.days['2026-06-08'].tasks[0].title).toBe('B newer local');
+    expect(imported.memberJournals.B.days['2026-06-09'].tasks[0].title).toBe('B 화 업무');
+    expect(imported.meta.memberUpdatedAt.B).toBe('2026-06-11T12:00:00.000Z');
+  });
+
   it('rejects malformed snapshots safely', () => {
     expect(isJournalSnapshotImportable(null)).toBe(false);
     expect(isJournalSnapshotImportable({ version: 1 })).toBe(false);

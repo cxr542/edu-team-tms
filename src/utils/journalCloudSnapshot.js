@@ -156,21 +156,25 @@ function maxIso(left, right) {
   return isNewer(left, right) ? left : right;
 }
 
-/** 공유 일지 가져오기 — remote의 day/week 필드를 local에 병합(remote 우선), local-only 키 유지 */
-export function mergeMemberJournalSlicesImport(localSlice, remoteSlice) {
+/** 공유 일지 가져오기 — day/week 필드를 병합하고, 최신 로컬 slice는 겹치는 키를 보호한다. */
+export function mergeMemberJournalSlicesImport(localSlice, remoteSlice, { preferLocalOverlaps = false } = {}) {
   const local = normalizeMemberJournalSlice(localSlice);
   const remote = normalizeMemberJournalSlice(remoteSlice);
   if (isMemberJournalEmpty(remote)) {
     return clone(local);
   }
+  const mergeMap = (localMap, remoteMap) =>
+    preferLocalOverlaps ? { ...remoteMap, ...localMap } : { ...localMap, ...remoteMap };
   const merged = {
-    days: { ...local.days, ...remote.days },
-    weekSummaries: { ...local.weekSummaries, ...remote.weekSummaries },
-    nextWeekPlans: { ...local.nextWeekPlans, ...remote.nextWeekPlans },
-    kpiWeekMemos: { ...local.kpiWeekMemos, ...remote.kpiWeekMemos },
-    prefs: remote.prefs ?? local.prefs,
+    days: mergeMap(local.days, remote.days),
+    weekSummaries: mergeMap(local.weekSummaries, remote.weekSummaries),
+    nextWeekPlans: mergeMap(local.nextWeekPlans, remote.nextWeekPlans),
+    kpiWeekMemos: mergeMap(local.kpiWeekMemos, remote.kpiWeekMemos),
+    prefs: preferLocalOverlaps ? (local.prefs ?? remote.prefs) : (remote.prefs ?? local.prefs),
   };
-  if (remote.kpiApproval) {
+  if (preferLocalOverlaps && local.kpiApproval) {
+    merged.kpiApproval = clone(local.kpiApproval);
+  } else if (remote.kpiApproval) {
     merged.kpiApproval = clone(remote.kpiApproval);
   } else if (local.kpiApproval) {
     merged.kpiApproval = clone(local.kpiApproval);
@@ -193,7 +197,9 @@ export function mergeJournalSnapshotsByMember(
     const remoteSlice = remote.memberJournals[code] || emptyMemberJournal();
 
     if (importRemote) {
-      const merged = mergeMemberJournalSlicesImport(localSlice, remoteSlice);
+      const merged = mergeMemberJournalSlicesImport(localSlice, remoteSlice, {
+        preferLocalOverlaps: isNewer(memberTime(local, code), memberTime(remote, code)),
+      });
       memberJournals[code] = merged;
       if (!isMemberJournalEmpty(merged)) {
         memberUpdatedAt[code] = maxIso(memberTime(local, code), memberTime(remote, code)) || remote.publishedAt;
@@ -239,7 +245,9 @@ export function mergeJournalSnapshotsViewOnlyImport(localSnapshot, remoteSnapsho
     }
     const localSlice = local.memberJournals[code] || emptyMemberJournal();
     const remoteSlice = remote.memberJournals[code] || emptyMemberJournal();
-    const merged = mergeMemberJournalSlicesImport(localSlice, remoteSlice);
+    const merged = mergeMemberJournalSlicesImport(localSlice, remoteSlice, {
+      preferLocalOverlaps: isNewer(memberTime(local, code), memberTime(remote, code)),
+    });
     memberJournals[code] = merged;
     if (!isMemberJournalEmpty(merged)) {
       memberUpdatedAt[code] =
