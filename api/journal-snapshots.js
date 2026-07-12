@@ -14,6 +14,7 @@ const PAYLOAD_VERSION = 1;
 const TEAM_MEMBER_CODES = ['A', 'B', 'C'];
 const JOURNAL_SYNC_EVENT_SOURCE = 'journal';
 const JOURNAL_SYNC_EVENT_TYPE = 'snapshot_updated';
+const MAX_CLIENT_UPDATED_AT_FUTURE_MS = 5 * 60 * 1000;
 
 function json(res, status, body) {
   res.statusCode = status;
@@ -157,6 +158,41 @@ export function isSnapshotWriteStale(currentUpdatedAt, clientUpdatedAt) {
   if (!Number.isFinite(currentMs)) return false;
   if (!Number.isFinite(clientMs)) return true;
   return currentMs > clientMs;
+}
+
+export function resolveSnapshotWriteTimestamps(clientUpdatedAt, now = new Date()) {
+  const nowMs = now.getTime();
+  const serverUpdatedAt = Number.isFinite(nowMs)
+    ? now.toISOString()
+    : new Date().toISOString();
+
+  if (!clientUpdatedAt) {
+    return { ok: true, clientUpdatedAt: null, updatedAt: serverUpdatedAt };
+  }
+
+  const clientMs = new Date(clientUpdatedAt).getTime();
+  if (!Number.isFinite(clientMs)) {
+    return {
+      ok: false,
+      status: 400,
+      message: 'updatedAt must be a valid ISO timestamp.',
+    };
+  }
+
+  if (clientMs > nowMs + MAX_CLIENT_UPDATED_AT_FUTURE_MS) {
+    return {
+      ok: false,
+      status: 400,
+      message: 'updatedAt is too far in the future.',
+    };
+  }
+
+  const effectiveUpdatedAt = new Date(Math.min(clientMs, nowMs)).toISOString();
+  return {
+    ok: true,
+    clientUpdatedAt: effectiveUpdatedAt,
+    updatedAt: effectiveUpdatedAt,
+  };
 }
 
 function isUniqueViolation(error) {
@@ -429,7 +465,6 @@ export default async function handler(req, res) {
     const memberCode = normalizeMemberCode(req.body?.memberCode);
     const payload = req.body?.payload;
     const clientUpdatedAt = typeof req.body?.updatedAt === 'string' ? req.body.updatedAt : null;
-    const updatedAt = clientUpdatedAt || new Date().toISOString();
 
     const access = resolveJournalSnapshotsAccess(req, memberCode);
     if (!access.ok) {
@@ -456,6 +491,15 @@ export default async function handler(req, res) {
       });
     }
 
+    const timestamps = resolveSnapshotWriteTimestamps(clientUpdatedAt);
+    if (!timestamps.ok) {
+      return json(res, timestamps.status, {
+        ok: false,
+        status: 'invalid-updated-at',
+        message: timestamps.message,
+      });
+    }
+
     if (isEmptyJournalSnapshotPayload(payload)) {
       return json(res, 400, {
         ok: false,
@@ -468,8 +512,8 @@ export default async function handler(req, res) {
       const writeResult = await writeSnapshotAtomically(client, {
         memberCode,
         payload,
-        clientUpdatedAt,
-        updatedAt,
+        clientUpdatedAt: timestamps.clientUpdatedAt,
+        updatedAt: timestamps.updatedAt,
       });
 
       if (!writeResult.ok) {
@@ -485,7 +529,7 @@ export default async function handler(req, res) {
       // J7e: audit trail only — do not fail the save if sync_events insert fails.
       await recordJournalSyncEvent(client, {
         memberCode,
-        updatedAt: writeResult.data?.updated_at || updatedAt,
+        updatedAt: writeResult.data?.updated_at || timestamps.updatedAt,
       });
 
       return json(res, 200, {
