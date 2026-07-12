@@ -144,6 +144,14 @@ function memberTime(snapshot, code) {
   );
 }
 
+function explicitMemberTime(snapshot, code) {
+  const source = snapshot && typeof snapshot === 'object' ? snapshot : {};
+  const meta = source.meta && typeof source.meta === 'object' ? source.meta : {};
+  const memberUpdatedAt =
+    meta.memberUpdatedAt && typeof meta.memberUpdatedAt === 'object' ? meta.memberUpdatedAt : {};
+  return typeof memberUpdatedAt[code] === 'string' ? memberUpdatedAt[code] : null;
+}
+
 function isNewer(left, right) {
   if (!left) return false;
   if (!right) return true;
@@ -197,12 +205,16 @@ export function mergeJournalSnapshotsByMember(
     const remoteSlice = remote.memberJournals[code] || emptyMemberJournal();
 
     if (importRemote) {
+      const localMemberAt = explicitMemberTime(localSnapshot, code);
+      const remoteMemberAt = memberTime(remoteSnapshot, code);
+      const localMetaAt =
+        localMemberAt || (isMemberJournalEmpty(remoteSlice) ? memberTime(localSnapshot, code) : null);
       const merged = mergeMemberJournalSlicesImport(localSlice, remoteSlice, {
-        preferLocalOverlaps: isNewer(memberTime(local, code), memberTime(remote, code)),
+        preferLocalOverlaps: isNewer(localMemberAt, remoteMemberAt),
       });
       memberJournals[code] = merged;
       if (!isMemberJournalEmpty(merged)) {
-        memberUpdatedAt[code] = maxIso(memberTime(local, code), memberTime(remote, code)) || remote.publishedAt;
+        memberUpdatedAt[code] = maxIso(localMetaAt, remoteMemberAt) || remote.publishedAt;
       }
       return;
     }
@@ -245,13 +257,17 @@ export function mergeJournalSnapshotsViewOnlyImport(localSnapshot, remoteSnapsho
     }
     const localSlice = local.memberJournals[code] || emptyMemberJournal();
     const remoteSlice = remote.memberJournals[code] || emptyMemberJournal();
+    const localMemberAt = explicitMemberTime(localSnapshot, code);
+    const remoteMemberAt = memberTime(remoteSnapshot, code);
+    const localMetaAt =
+      localMemberAt || (isMemberJournalEmpty(remoteSlice) ? memberTime(localSnapshot, code) : null);
     const merged = mergeMemberJournalSlicesImport(localSlice, remoteSlice, {
-      preferLocalOverlaps: isNewer(memberTime(local, code), memberTime(remote, code)),
+      preferLocalOverlaps: isNewer(localMemberAt, remoteMemberAt),
     });
     memberJournals[code] = merged;
     if (!isMemberJournalEmpty(merged)) {
       memberUpdatedAt[code] =
-        maxIso(memberTime(local, code), memberTime(remote, code)) || remote.publishedAt;
+        maxIso(localMetaAt, remoteMemberAt) || remote.publishedAt;
     }
   });
 

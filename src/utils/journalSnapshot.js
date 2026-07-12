@@ -220,11 +220,11 @@ export function parseJournalSnapshotForImport(raw) {
 
 /** local store({ memberJournals, meta }) + remote snapshot → import 병합 결과 store */
 export function applyJournalSnapshotImport(localStore, remoteSnapshot) {
-  const localSnapshot = normalizeJournalCloudSnapshot({
+  const localSnapshot = {
     publishedAt: localStore?.meta?.updatedAt || null,
     meta: localStore?.meta || {},
     memberJournals: localStore?.memberJournals || createEmptyMemberJournals(),
-  });
+  };
   const merged = mergeJournalSnapshotsByMember(localSnapshot, remoteSnapshot, { importRemote: true });
   return {
     memberJournals: merged.memberJournals,
@@ -234,11 +234,11 @@ export function applyJournalSnapshotImport(localStore, remoteSnapshot) {
 
 /** 구성원 조회용 — 본인 슬라이스는 유지, 타인만 remote 병합 */
 export function applyJournalSnapshotViewOnlyImport(localStore, remoteSnapshot, ownMemberCode) {
-  const localSnapshot = normalizeJournalCloudSnapshot({
+  const localSnapshot = {
     publishedAt: localStore?.meta?.updatedAt || null,
     meta: localStore?.meta || {},
     memberJournals: localStore?.memberJournals || createEmptyMemberJournals(),
-  });
+  };
   const merged = mergeJournalSnapshotsViewOnlyImport(localSnapshot, remoteSnapshot, ownMemberCode);
   return {
     memberJournals: merged.memberJournals,

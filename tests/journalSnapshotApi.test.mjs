@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const headMock = vi.fn();
 const putMock = vi.fn();
@@ -35,6 +35,10 @@ const bDay = {
 };
 
 describe('journal-snapshot API', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   beforeEach(() => {
     vi.resetModules();
     headMock.mockReset();
@@ -125,6 +129,56 @@ describe('journal-snapshot API', () => {
     expect(res.statusCode).toBe(400);
     expect(JSON.parse(res.body).error).toBe('journal-empty-payload');
     expect(putMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects far-future updatedAt before reading or writing Blob', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-09T03:00:00.000Z'));
+
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: { referer: 'http://localhost:4173/wschoi' },
+      body: {
+        memberCode: 'B',
+        updatedAt: '2099-01-01T00:00:00.000Z',
+        journal: { days: bDay },
+      },
+    };
+    const res = createRes();
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(JSON.parse(res.body).error).toBe('invalid-updated-at');
+    expect(headMock).not.toHaveBeenCalled();
+    expect(putMock).not.toHaveBeenCalled();
+  });
+
+  it('clamps slightly future updatedAt to server time before saving Blob', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-09T03:00:00.000Z'));
+    headMock.mockRejectedValue(new Error('not found'));
+    putMock.mockResolvedValue({ url: 'https://blob.example/journal/live-latest.json' });
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: { referer: 'http://localhost:4173/wschoi' },
+      body: {
+        memberCode: 'B',
+        updatedAt: '2026-07-09T03:02:00.000Z',
+        journal: { days: bDay },
+      },
+    };
+    const res = createRes();
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(200);
+    const [, content] = putMock.mock.calls[0];
+    const saved = JSON.parse(content);
+    expect(saved.meta.updatedAt).toBe('2026-07-09T03:00:00.000Z');
+    expect(saved.meta.memberUpdatedAt.B).toBe('2026-07-09T03:00:00.000Z');
   });
 
   it('rejects Blob POST when MANUAL_MIRROR demotes writes (J7d)', async () => {

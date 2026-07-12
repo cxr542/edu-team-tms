@@ -119,6 +119,33 @@ describe('journal snapshot import', () => {
     expect(imported.memberJournals.B.days['2026-06-08'].tasks[0].title).toBe('B 월 업무');
   });
 
+  it('does not let global local updatedAt protect stale same-day member data on import', () => {
+    const local = {
+      memberJournals: {
+        A: { days: { '2026-06-11': { holiday: false, mm: {}, tasks: [] } } },
+        B: {
+          days: {
+            '2026-06-08': {
+              holiday: false,
+              mm: { work: 1, improve: 0, leave: 0 },
+              tasks: [{ id: 'b-stale', cat: 'other', title: 'B stale local', plan: 1, actual: 1, done: true }],
+            },
+          },
+        },
+        C: { days: {} },
+      },
+      meta: {
+        updatedAt: '2026-06-11T12:00:00.000Z',
+        memberUpdatedAt: { A: '2026-06-11T12:00:00.000Z' },
+      },
+    };
+
+    const imported = applyJournalSnapshotImport(local, remoteSnapshot);
+
+    expect(imported.memberJournals.B.days['2026-06-08'].tasks[0].title).toBe('B 월 업무');
+    expect(imported.meta.memberUpdatedAt.B).toBe('2026-06-10T08:00:00.000Z');
+  });
+
   it('does not replace newer local member days with stale team-share import data', () => {
     const local = {
       memberJournals: {
@@ -251,6 +278,52 @@ describe('journal snapshot import', () => {
     expect(merged.memberJournals.B.days['2026-06-08']).toBeUndefined();
     expect(merged.memberJournals.A.days['2026-06-03'].tasks[0].title).toBe('A 팀장 공유');
     expect(merged.memberJournals.C.days['2026-06-04'].tasks[0].title).toBe('C 팀장 공유');
+  });
+
+  it('view-only import does not let global local updatedAt protect stale peer data', () => {
+    const local = {
+      memberJournals: {
+        A: { days: { '2026-06-11': { holiday: false, mm: {}, tasks: [] } } },
+        B: { days: {} },
+        C: {
+          days: {
+            '2026-06-08': {
+              holiday: false,
+              mm: { work: 1, improve: 0, leave: 0 },
+              tasks: [{ id: 'c-stale', cat: 'other', title: 'C stale local', plan: 1, actual: 1, done: true }],
+            },
+          },
+        },
+      },
+      meta: {
+        updatedAt: '2026-06-11T12:00:00.000Z',
+        memberUpdatedAt: { A: '2026-06-11T12:00:00.000Z' },
+      },
+    };
+    const teamBackup = {
+      version: 1,
+      publishedAt: '2026-06-10T08:00:00.000Z',
+      meta: {
+        updatedAt: '2026-06-10T08:00:00.000Z',
+        memberUpdatedAt: { C: '2026-06-10T08:00:00.000Z' },
+      },
+      memberJournals: {
+        C: {
+          days: {
+            '2026-06-08': {
+              holiday: false,
+              mm: { work: 1, improve: 0, leave: 0 },
+              tasks: [{ id: 'c-remote', cat: 'other', title: 'C remote newer', plan: 1, actual: 1, done: true }],
+            },
+          },
+        },
+      },
+    };
+
+    const merged = applyJournalSnapshotViewOnlyImport(local, teamBackup, 'B');
+
+    expect(merged.memberJournals.C.days['2026-06-08'].tasks[0].title).toBe('C remote newer');
+    expect(merged.meta.memberUpdatedAt.C).toBe('2026-06-10T08:00:00.000Z');
   });
 
   it('saving one member keeps unrelated local member slices even if remote has newer copies', () => {
