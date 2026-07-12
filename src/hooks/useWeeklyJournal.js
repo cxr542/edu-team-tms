@@ -29,7 +29,6 @@ import {
 import {
   applyRemoteMemberJournalSave,
   mergeJournalSnapshotsByMember,
-  normalizeJournalCloudSnapshot,
 } from '../utils/journalCloudSnapshot';
 import {
   buildMemberRemoteSnapshotFromSupabase,
@@ -105,11 +104,11 @@ function toStore(snapshot) {
 }
 
 function storeToSnapshot(store) {
-  return normalizeJournalCloudSnapshot({
+  return {
     publishedAt: store.meta?.updatedAt || OLD_AT,
     meta: store.meta || {},
     memberJournals: store.memberJournals || createEmptyMemberJournals(),
-  });
+  };
 }
 
 function mergeRemoteIntoStore(store, remote, options) {

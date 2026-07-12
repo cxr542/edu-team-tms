@@ -16,6 +16,7 @@ import { isJournalBlobPostEnabled } from '../server/api-utils/journalBlobPost.js
 import { JOURNAL_BLOB_POST_DISABLED_MESSAGE } from '../src/constants/journalBlobShare.js';
 
 const LIVE_LATEST_PATH = 'journal/live-latest.json';
+const MAX_CLIENT_UPDATED_AT_FUTURE_MS = 5 * 60 * 1000;
 
 function canUse(req) {
   const referer = req.headers.referer || req.headers.origin || '';
@@ -120,6 +121,41 @@ function requestBody(req) {
   return typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
 }
 
+function resolveSnapshotWriteTimestamps(clientUpdatedAt, now = new Date()) {
+  const nowMs = now.getTime();
+  const serverUpdatedAt = Number.isFinite(nowMs)
+    ? now.toISOString()
+    : new Date().toISOString();
+
+  if (!clientUpdatedAt) {
+    return { ok: true, clientUpdatedAt: null, updatedAt: serverUpdatedAt };
+  }
+
+  const clientMs = new Date(clientUpdatedAt).getTime();
+  if (!Number.isFinite(clientMs)) {
+    return {
+      ok: false,
+      status: 400,
+      message: 'updatedAt must be a valid ISO timestamp.',
+    };
+  }
+
+  if (clientMs > nowMs + MAX_CLIENT_UPDATED_AT_FUTURE_MS) {
+    return {
+      ok: false,
+      status: 400,
+      message: 'updatedAt is too far in the future.',
+    };
+  }
+
+  const effectiveUpdatedAt = new Date(Math.min(clientMs, nowMs)).toISOString();
+  return {
+    ok: true,
+    clientUpdatedAt: effectiveUpdatedAt,
+    updatedAt: effectiveUpdatedAt,
+  };
+}
+
 export default async function handler(req, res) {
   if (!canUse(req)) {
     return json(res, 403, { error: 'forbidden' });
@@ -171,11 +207,19 @@ export default async function handler(req, res) {
         });
       }
 
-      const { snapshot: currentSnapshot } = await readLatestSnapshot({ failOnBlobReadError: true });
-      const current = currentSnapshot || normalizeJournalCloudSnapshot({});
       const clientUpdatedAt =
         typeof body.updatedAt === 'string' ? body.updatedAt : null;
-      if (isMemberJournalWriteStale(current, body.memberCode, clientUpdatedAt)) {
+      const timestamps = resolveSnapshotWriteTimestamps(clientUpdatedAt);
+      if (!timestamps.ok) {
+        return json(res, timestamps.status, {
+          error: 'invalid-updated-at',
+          message: timestamps.message,
+        });
+      }
+
+      const { snapshot: currentSnapshot } = await readLatestSnapshot({ failOnBlobReadError: true });
+      const current = currentSnapshot || normalizeJournalCloudSnapshot({});
+      if (isMemberJournalWriteStale(current, body.memberCode, timestamps.clientUpdatedAt)) {
         return json(res, 409, {
           error: 'journal-write-conflict',
           message:
@@ -183,10 +227,8 @@ export default async function handler(req, res) {
           snapshot: current,
         });
       }
-      const updatedAt =
-        typeof body.updatedAt === 'string' ? body.updatedAt : new Date().toISOString();
       const next = mergeMemberIntoJournalSnapshot(current, body.memberCode, body.journal, {
-        updatedAt,
+        updatedAt: timestamps.updatedAt,
       });
       const pathname = await writeLiveBlob(next);
       return json(res, 200, { ok: true, pathname, snapshot: next });
