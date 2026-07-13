@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   alreadyHasPrEntry,
   applyReleaseNote,
+  buildReleaseEntry,
   buildReleaseSection,
   extractReleaseBullets,
+  mergeReleaseEntryForDate,
   prependReleaseSection,
+  regroupReleaseNotesByDay,
   sanitizeReleaseNoteText,
   seoulDateKey,
 } from '../scripts/append-release-note.mjs';
@@ -60,7 +63,7 @@ describe('append-release-note helpers', () => {
     expect(alreadyHasPrEntry('PR #85 only', { number: 86 })).toBe(false);
   });
 
-  it('builds section with body bullets and PR link', () => {
+  it('builds day section with ### entry, body bullets and PR link', () => {
     const section = buildReleaseSection({
       title: 'Restyle announcements',
       number: 86,
@@ -68,7 +71,8 @@ describe('append-release-note helpers', () => {
       body: '## 릴리즈\n\n- 타임라인 피드\n',
       date: '2026-07-09',
     });
-    expect(section).toContain('## 2026-07-09 — Restyle announcements');
+    expect(section).toContain('## 2026-07-09\n');
+    expect(section).toContain('### Restyle announcements');
     expect(section).toContain('- 타임라인 피드');
     expect(section).toContain('- PR #86: https://github.com/cxr542/edu-team-tms/pull/86');
   });
@@ -81,22 +85,22 @@ describe('append-release-note helpers', () => {
       body: 'no section',
       date: '2026-07-01',
     });
+    expect(section).toContain('### Fix deploy');
     expect(section).toContain('- Fix deploy');
     expect(section).toContain('- PR #82:');
   });
 
   it('collapses unsafe title markup into a single escaped heading', () => {
-    const section = buildReleaseSection({
+    const entry = buildReleaseEntry({
       title: 'Fix docs\n\n## Injected\n<img src=x onerror=alert(1)>',
       number: 101,
       url: 'https://example.com/pull/101',
-      date: '2026-07-09',
     });
-    expect(section).toContain(
-      '## 2026-07-09 — Fix docs ## Injected &lt;img src=x onerror=alert(1)&gt;'
+    expect(entry).toContain(
+      '### Fix docs ## Injected &lt;img src=x onerror=alert(1)&gt;'
     );
-    expect(section).not.toContain('\n## Injected');
-    expect(section).not.toContain('<img');
+    expect(entry).not.toContain('\n## Injected');
+    expect(entry).not.toContain('<img');
   });
 
   it('prepends after intro separator and keeps footer', () => {
@@ -107,9 +111,52 @@ describe('append-release-note helpers', () => {
       date: '2026-07-09',
     });
     const next = prependReleaseSection(FIXTURE, section);
-    expect(next.indexOf('## 2026-07-09 — New')).toBeLessThan(next.indexOf('## 2026-06-17 — 기존 항목'));
+    expect(next.indexOf('## 2026-07-09')).toBeLessThan(next.indexOf('## 2026-06-17'));
     expect(next).toContain('### 문서 수정 방법');
     expect(next).toContain('교육팀 TMS');
+  });
+
+  it('merges two PRs on the same day under one H2 with newest first', () => {
+    const first = applyReleaseNote(FIXTURE, {
+      title: 'First',
+      number: 100,
+      url: 'https://example.com/pull/100',
+      body: '## 릴리즈\n\n- first\n',
+      date: '2026-07-09',
+    });
+    expect(first.status).toBe('updated');
+    const second = applyReleaseNote(first.markdown, {
+      title: 'Second',
+      number: 101,
+      url: 'https://example.com/pull/101',
+      body: '## 릴리즈\n\n- second\n',
+      date: '2026-07-09',
+    });
+    expect(second.status).toBe('updated');
+    const md = second.markdown;
+    expect(md.match(/## 2026-07-09/g)?.length).toBe(1);
+    expect(md.indexOf('### Second')).toBeLessThan(md.indexOf('### First'));
+    expect(md).toContain('## 2026-06-17');
+    expect(md).toContain('### 기존 항목');
+  });
+
+  it('keeps separate day H2s for different dates', () => {
+    const a = applyReleaseNote(FIXTURE, {
+      title: 'A',
+      number: 200,
+      url: 'https://example.com/pull/200',
+      date: '2026-07-10',
+    });
+    const b = applyReleaseNote(a.markdown, {
+      title: 'B',
+      number: 201,
+      url: 'https://example.com/pull/201',
+      date: '2026-07-09',
+    });
+    expect(b.markdown).toContain('## 2026-07-10');
+    expect(b.markdown).toContain('## 2026-07-09');
+    // Newest applied day (07-09) is prepended ahead of earlier day (07-10)
+    expect(b.markdown.indexOf('## 2026-07-09')).toBeLessThan(b.markdown.indexOf('## 2026-07-10'));
   });
 
   it('applyReleaseNote updates then skips duplicates', () => {
@@ -136,5 +183,60 @@ describe('append-release-note helpers', () => {
   it('skips when title or number missing', () => {
     expect(applyReleaseNote(FIXTURE, { title: '', number: 1 }).status).toBe('skipped');
     expect(applyReleaseNote(FIXTURE, { title: 'x', number: '' }).status).toBe('skipped');
+  });
+
+  it('regroupReleaseNotesByDay collapses legacy same-day H2s', () => {
+    const legacy = `# Title
+
+intro
+
+---
+
+## 2026-07-10 — Alpha
+
+- a
+- PR #1: https://example.com/1
+
+## 2026-07-10 — Beta
+
+- b
+- PR #2: https://example.com/2
+
+## 2026-07-09 — Gamma
+
+- c
+
+## 2026-06 — Month summary
+
+- old
+
+---
+
+### 문서 수정 방법
+
+1. edit
+`;
+    const next = regroupReleaseNotesByDay(legacy);
+    expect(next.match(/## 2026-07-10\n/g)?.length).toBe(1);
+    expect(next).toContain('### Alpha');
+    expect(next).toContain('### Beta');
+    expect(next.indexOf('### Alpha')).toBeLessThan(next.indexOf('### Beta'));
+    expect(next).toContain('## 2026-07-09');
+    expect(next).toContain('### Gamma');
+    expect(next).toContain('## 2026-06 — Month summary');
+    expect(next).toContain('### 문서 수정 방법');
+    expect(regroupReleaseNotesByDay(next)).toContain('## 2026-07-10\n');
+  });
+
+  it('mergeReleaseEntryForDate inserts at top of existing day', () => {
+    const grouped = regroupReleaseNotesByDay(FIXTURE);
+    const entry = buildReleaseEntry({
+      title: 'Fresh',
+      number: 55,
+      url: 'https://example.com/pull/55',
+    });
+    const next = mergeReleaseEntryForDate(grouped, '2026-06-17', entry);
+    expect(next.match(/## 2026-06-17\n/g)?.length).toBe(1);
+    expect(next.indexOf('### Fresh')).toBeLessThan(next.indexOf('### 기존 항목'));
   });
 });

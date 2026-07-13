@@ -5,78 +5,86 @@
 
 ---
 
-## 2026-07-10 — Fix J7c storage-compare test expectations
+## 2026-07-10
+
+### Fix J7c storage-compare test expectations
 
 - (테스트만) 사용자 대면 변경 없음
 - PR #97: https://github.com/cxr542/edu-team-tms/pull/97
 
-## 2026-07-10 — Add J7c Supabase-first journal team-share pull
+### Add J7c Supabase-first journal team-share pull
 
 - Preview: 팀 공유본 가져오기가 Supabase를 우선 사용합니다 (Blob은 fallback)
 - PR #96: https://github.com/cxr542/edu-team-tms/pull/96
 
-## 2026-07-10 — Add J7b member-scoped journal Supabase dual-write
+### Add J7b member-scoped journal Supabase dual-write
 
 - Preview: 구성원 팀 공유 저장 시 Supabase에도 병행 반영됩니다 (빈 일지 저장은 거부)
 - PR #95: https://github.com/cxr542/edu-team-tms/pull/95
 
-## 2026-07-10 — Document J7-0 journal Realtime and Blob shrink roadmap
+### Document J7-0 journal Realtime and Blob shrink roadmap
 
 - (문서만) 일지 J7 Realtime·Blob 축소 로드맵을 설계 문서로 고정했습니다
 - PR #94: https://github.com/cxr542/edu-team-tms/pull/94
 
-## 2026-07-10 — Add J7a journal freshness poll (Preview)
+### Add J7a journal freshness poll (Preview)
 
 - Preview 일지: 「원격이 더 최신」 신선도 표시가 주기적으로 자동 갱신됩니다
 - PR #93: https://github.com/cxr542/edu-team-tms/pull/93
 
-## 2026-07-10 — Add J6 Preview Supabase auto-mirror on local journal save
+### Add J6 Preview Supabase auto-mirror on local journal save
 
 - Preview 팀장 일지: 편집 후 잠시 대기하면 Supabase 자동 미러
 - Production 운영 데이터 경로 변경 없음
 - PR #91: https://github.com/cxr542/edu-team-tms/pull/91
 
-## 2026-07-10 — Admin journal read-only + Safari sidebar fix
+### Admin journal read-only + Safari sidebar fix
 
 - Safari에서 관리자 사이드바(팀 빌딩 관리)가 숨겨질 수 있던 CSS 충돌 수정
 - 관리자 일지 화면은 조회·미러만, 본문 편집은 구성원 URL
 - PR #92: https://github.com/cxr542/edu-team-tms/pull/92
 
-## 2026-07-10 — Add J5 Supabase journal pull with conflict confirm
+### Add J5 Supabase journal pull with conflict confirm
 
 - 팀장 「Supabase에서 가져오기」로 원격 일지 → 로컬 복구
 - 「원격이 더 최신」 안내에서 가져오기 안내로 문구 갱신
 - PR #90: https://github.com/cxr542/edu-team-tms/pull/90
 
-## 2026-07-10 — Fix Supabase journal stale-write protection
+### Fix Supabase journal stale-write protection
 
 - Supabase 업무일지 수동 저장이 더 최신 원격 스냅샷을 덮어쓰지 않도록 충돌 검사를 추가했습니다.
 - PR #89: https://github.com/cxr542/edu-team-tms/pull/89
 
-## 2026-07-09 — Add J4 journal Supabase freshness UI (read-only)
+## 2026-07-09
+
+### Add J4 journal Supabase freshness UI (read-only)
 
 - 일지 상태 패널에 「원격이 더 최신」 등 Supabase 신선도 힌트 표시 (Preview `MANUAL_MIRROR` + 팀장)
 - 가져오기/충돌 복구는 아직 없음 (J5)
 - PR #88: https://github.com/cxr542/edu-team-tms/pull/88
 
-## 2026-07-09 — Add PR-merge automation for TMS release notes md
+### Add PR-merge automation for TMS release notes md
 
 - main 머지 시 참고문서 릴리즈 노트(md)가 PR 제목/`## 릴리즈` 불릿으로 자동 갱신됩니다
 - PR 템플릿에 `## 릴리즈` 섹션을 추가했습니다
 - PR #87: https://github.com/cxr542/edu-team-tms/pull/87
 
-## 2026-06-17 — ten 파일럿·이전 가이드 보강
+## 2026-06-17
+
+### ten 파일럿·이전 가이드 보강
 
 - [운영 URL 이전 가이드](./TMS-운영URL-이전-가이드.md) 전면 갱신: localStorage vs Blob, A 파일럿 단계, Safari 검증(`/admin`), Blob 덮어쓰기·용량, B/C 역할(관리자 백업 가져오기)
 - [접속 URL · 북마크](./TMS-접속URL-북마크.md) §9 요약 표 정리
 
-## 2026-06-17 — 북마크·기본 origin (`edu-team-tms-ten` 확정)
+### 북마크·기본 origin (`edu-team-tms-ten` 확정)
 
 - **운영 URL 확정:** https://edu-team-tms-ten.vercel.app — §2~§5 북마크·`TMS_ORIGIN` 기본값 정리
 - **예비 v2 hostname** `okestro-edu-tms-v2.vercel.app` — 도메인 claim 보류 · 문서에서 미사용 표기
 - 참고문서 **「TMS 접속 URL · 북마크」** 전면 갱신
 
-## 2026-06-15 — 새 Vercel·Blob (`edu-team-tms-ten`)
+## 2026-06-15
+
+### 새 Vercel·Blob (`edu-team-tms-ten`)
 
 - **운영 URL:** https://edu-team-tms-ten.vercel.app (옛 `okestro-edu-team-tms` 사용 중단)
 - **Blob:** 새 스토어 `edu-team-tms-blob` — 일지·향상 과제·장부 수동 팀 공유 재개
@@ -84,40 +92,44 @@
 - **향상 과제:** JSON 대신 Blob 「팀 공유 저장/가져오기」
 - **파일럿:** 안정화 전까지 팀장만 새 URL — 구성원은 팀장 안내 후 이전 ([북마크](./TMS-접속URL-북마크.md) §0)
 
-## 2026-06-10 — 구성원 조회용 JSON 가져오기
+## 2026-06-10
+
+### 구성원 조회용 JSON 가져오기
 
 - B/C 일지 화면에 **「조회용 JSON 가져오기」** 추가 — 팀장이 보낸 백업에서 **타인 일지만** 반영, **본인 일지는 유지**.
 - KPI 승인 상태(`kpiApproval`)는 구성원 조회 import 시 반영하지 않음.
 
-## 2026-06-10 — 구성원 일지 A/B/C 탭 조회
+### 구성원 일지 A/B/C 탭 조회
 
 - 구성원(B/C)도 일일 업무일지에서 **A · B · C** 탭으로 팀원 일지를 **조회**할 수 있습니다. **본인 탭만** 편집·승인 요청 가능, 타인 탭은 **조회 전용**(`조회` 배지).
 - 데이터는 **이 브라우저 localStorage** 기준 — 팀원 PC에는 대개 본인 일지만 저장됩니다. 전체 팀 일지 확인·병합은 팀장 `백업 가져오기` 후 팀장 브라우저에서 합니다.
 - 가이드: [TMS 접속 URL · 북마크](./TMS-접속URL-북마크.md), [Blob 중단 — 장부·일지 운영](./TMS-Blob중단-장부일지-운영가이드.md) §6.
 
-## 2026-06-12 — KPI2 향상 과제 JSON 공유 UX 정리
-
-- Vercel Blob 사용량 제한 기간에는 KPI2 향상 과제 공유 UI에서 **JSON 파일 공유**를 전면에 표시하고, 서버 공유 버튼은 숨김 처리했습니다.
-- 팀장 화면 문구를 **구성원 전달용 JSON 다운로드** 중심으로, 구성원 화면은 **팀장에게 받은 JSON 가져오기** 중심으로 정리했습니다.
-
-## 2026-06-12 — KPI2 향상 과제 JSON 다운로드/가져오기 fallback
-
-- Vercel Blob 사용량 제한 상황에서도 KPI2 향상 과제 운영 목록을 공유할 수 있도록 **JSON 다운로드/가져오기 fallback**을 추가했습니다.
-
-## 2026-06-12 — KPI2 향상 과제 팀 공유 API hotfix
-
-- KPI2 향상 과제 팀 공유 snapshot API가 서버리스 환경에서 client-only 의존성을 불러오지 않도록 **서버 전용 유틸**로 분리했습니다.
-
-## 2026-06-12 — KPI2 향상 과제 운영 목록 팀 공유 1차
-
-- KPI2 향상 과제 운영 목록을 팀 공유 snapshot으로 **수동 저장/가져오기** 할 수 있는 기반을 추가했습니다. 자동 동기화는 사용하지 않습니다.
-
-## 2026-06-10 — KPI2 운영 목록·구성원 일지 연결 1차
+### KPI2 운영 목록·구성원 일지 연결 1차
 
 - KPI2 운영 목록에 등록된 생산성향상 과제를 **구성원 일일 업무일지**에서 확인하고, 관련 업무 항목에 연결할 수 있도록 보강했습니다.
 - 팀장 KPI2 화면에 향상 과제 **담당/출처** 표시와 브라우저 기준 운영 목록 안내를 추가했습니다.
 
-## 2026-06-12 — 공개 조회 랜딩 축소·역할 URL 정리
+## 2026-06-12
+
+### KPI2 향상 과제 JSON 공유 UX 정리
+
+- Vercel Blob 사용량 제한 기간에는 KPI2 향상 과제 공유 UI에서 **JSON 파일 공유**를 전면에 표시하고, 서버 공유 버튼은 숨김 처리했습니다.
+- 팀장 화면 문구를 **구성원 전달용 JSON 다운로드** 중심으로, 구성원 화면은 **팀장에게 받은 JSON 가져오기** 중심으로 정리했습니다.
+
+### KPI2 향상 과제 JSON 다운로드/가져오기 fallback
+
+- Vercel Blob 사용량 제한 상황에서도 KPI2 향상 과제 운영 목록을 공유할 수 있도록 **JSON 다운로드/가져오기 fallback**을 추가했습니다.
+
+### KPI2 향상 과제 팀 공유 API hotfix
+
+- KPI2 향상 과제 팀 공유 snapshot API가 서버리스 환경에서 client-only 의존성을 불러오지 않도록 **서버 전용 유틸**로 분리했습니다.
+
+### KPI2 향상 과제 운영 목록 팀 공유 1차
+
+- KPI2 향상 과제 운영 목록을 팀 공유 snapshot으로 **수동 저장/가져오기** 할 수 있는 기반을 추가했습니다. 자동 동기화는 사용하지 않습니다.
+
+### 공개 조회 랜딩 축소·역할 URL 정리
 
 - **`member` 없는 `?mode=view`** (루트·`module=ledger`·런치·이것도?·KPI·docs 등) → **역할별 접속 안내 화면**으로 대체. 장부·공개 메뉴 직접 노출 없음.
 - **공식 URL 유지:** 팀장 `?mode=edit&access=leader` · 구성원 일지 `?mode=edit&module=journal&member=B|C` · 구성원 장부 조회 `?mode=view&module=ledger&member=B|C&year=2026&month=6`
@@ -127,7 +139,7 @@
 - 생산성향상 도구/과제 관리 화면에서 **후보, 운영 목록, KPI2 효과 제출** 의미를 더 명확히 안내했습니다.
 - KPI2/생산성향상 상세 화면에 **구성원 개요로 돌아가기** 버튼과 KPI2 안내 문구를 보강했습니다.
 
-## 2026-06-11 — Blob 트래픽 절감·구성원 운영·배포 복구
+## 2026-06-11
 
 **대표 운영 URL:** https://okestro-edu-team-tms.vercel.app
 (보조 alias: https://edu-team-tms.vercel.app — 동일 콘텐츠)
@@ -169,7 +181,9 @@ Vercel Blob 무료 한도(Simple/Advanced 100%) 대응:
 - KPI2 탭 발견성·향상 과제 안내·M/M 완료 체크 UX
 - Jira 1~5월 일지 이관
 
-## 2026-06-05 — 역량·메뉴·접속 URL
+## 2026-06-05
+
+### 역량·메뉴·접속 URL
 
 - **역량 평가**: 구성원별 전용 페이지 (`?member=`), 4탭(레벨·다면·리더·실전)
 - **팀원 메뉴**: 팀 공통(장부 조회·점심·이것도?) · 실험 버전은 **팀장 전용**
@@ -177,7 +191,9 @@ Vercel Blob 무료 한도(Simple/Advanced 100%) 대응:
 - **KPI 리포트**: 월 선택·등급 기준 접기
 - **참고문서**: 사이드바 **「TMS 접속 URL · 북마크」** 추가 (구성원별 운영 URL)
 
-## 2026-06-02 — 오늘 뭐 먹지
+## 2026-06-02
+
+### 오늘 뭐 먹지
 
 - 사이드바 **오늘 뭐 먹지** (`module=lunch`, edit 모드만)
 - 기준 위치 **오케스트로(파크원타워2)** 기본, 프리셋·직접 지정 변경 (`tms-lunch-origin-v1`)
@@ -185,14 +201,14 @@ Vercel Blob 무료 한도(Simple/Advanced 100%) 대응:
 - 필터·추천·방문 기록(localStorage), 식대 13,000원 기준
 - 카카오 로컬 API 검색 (`KAKAO_REST_API_KEY`, `api/kakao-local.js`)
 
-## 2026-06-02 — PPT 아카데미화·정의서 v5
+### PPT 아카데미화·정의서 v5
 
 - 사이드바 **PPT 아카데미화** (`module=academizer`, edit 모드만) — TMS iframe 내장
 - 참고문서 **세로 스크롤** 개선
 - KPI 정의서: OneDrive `교육팀_KPI_정의서_최종v5.docx` 추출 반영
 - KPI3 가중(다면 15%)·등급 컷(4.3/4.0/3.8/3.5) TMS 계산 동기
 
-## 2026-06-02 — 참고문서·UI
+### 참고문서·UI
 
 - 사이드바 **참고문서** 메뉴 (`module=docs`)
 - **교육팀 KPI 정의서** 원문·TMS 운영 가이드·릴리즈 노트 브라우징
@@ -216,6 +232,7 @@ Vercel Blob 무료 한도(Simple/Advanced 100%) 대응:
 
 ### 문서 수정 방법
 
-1. `docs/reference-source/*.md` 수정 (또는 main 머지 시 `release-notes-on-merge`가 PR 제목/`## 릴리즈` 불릿을 자동 prepend)
-2. `npm run sync:docs` (또는 `build:team` 시 자동; 자동화 워크플로도 sync 실행)
-3. GitHub Actions로 배포 (main 머지 → production 승인)
+1. `docs/reference-source/*.md` 수정 (또는 main 머지 시 `release-notes-on-merge`가 PR 제목/`## 릴리즈` 불릿을 **날짜(`## YYYY-MM-DD`) 아래 `###` 항목**으로 자동 merge)
+2. 형식: 같은 서울 날짜 PR은 하나의 날짜 H2로 묶음. 수동 정리 시 `node scripts/append-release-note.mjs --regroup-only`
+3. `npm run sync:docs` (또는 `build:team` 시 자동; 자동화 워크플로도 sync 실행)
+4. GitHub Actions로 배포 (main 머지 → production 승인)
