@@ -5,16 +5,19 @@
  *
  * Format:
  *   ## YYYY-MM-DD
- *   ### PR title
+ *   ### [업데이트] PR title
  *   - bullets
  *   - PR #N: url
  *
+ * Kind (신규|업데이트|수정|문서|기타): PR body `- 유형: …` under ## 릴리즈,
+ * else inferred from title (Add→신규, Fix→수정, docs→문서, default 업데이트).
+ *
  * Usage:
  *   node scripts/append-release-note.mjs \
- *     --title "..." --number 86 --url "https://..." [--body "..."] [--date YYYY-MM-DD]
+ *     --title "..." --number 86 --url "https://..." [--body "..."] [--date YYYY-MM-DD] [--kind 업데이트]
  *   node scripts/append-release-note.mjs --regroup-only [--no-sync]
  *
- * Env fallbacks: PR_TITLE, PR_NUMBER, PR_URL, PR_BODY, RELEASE_NOTE_DATE
+ * Env fallbacks: PR_TITLE, PR_NUMBER, PR_URL, PR_BODY, RELEASE_NOTE_DATE, RELEASE_NOTE_KIND
  */
 import fs from 'fs';
 import path from 'path';
@@ -30,6 +33,33 @@ const INTRO_SEPARATOR = '\n---\n';
 const FOOTER_MARKER = '### 문서 수정 방법';
 const DAY_H2_RE = /^##\s+(\d{4}-\d{2}-\d{2})\s*$/;
 const LEGACY_DAY_H2_RE = /^##\s+(\d{4}-\d{2}-\d{2})\s*[—–-]\s*(.+)\s*$/;
+
+/** Allowed release-note kind labels (Korean). */
+export const RELEASE_NOTE_KINDS = ['신규', '업데이트', '수정', '문서', '기타'];
+
+const KIND_ALIASES = {
+  신규: '신규',
+  new: '신규',
+  feature: '신규',
+  add: '신규',
+  업데이트: '업데이트',
+  update: '업데이트',
+  change: '업데이트',
+  수정: '수정',
+  fix: '수정',
+  bug: '수정',
+  bugfix: '수정',
+  문서: '문서',
+  docs: '문서',
+  doc: '문서',
+  documentation: '문서',
+  기타: '기타',
+  other: '기타',
+  chore: '기타',
+  test: '기타',
+};
+
+const KIND_BULLET_RE = /^(?:유형|type|kind|category)\s*[:：]\s*(.+)$/i;
 
 /**
  * Asia/Seoul calendar date as YYYY-MM-DD.
@@ -65,7 +95,94 @@ export function sanitizeReleaseNoteText(value) {
 }
 
 /**
+ * Normalize a free-form kind label to a known Korean kind, or null.
+ * @param {string} raw
+ * @returns {string|null}
+ */
+export function normalizeReleaseKind(raw) {
+  const key = String(raw || '')
+    .trim()
+    .toLowerCase()
+    .replace(/^\[|\]$/g, '')
+    .replace(/\s+/g, '');
+  if (!key) return null;
+  if (KIND_ALIASES[key]) return KIND_ALIASES[key];
+  for (const kind of RELEASE_NOTE_KINDS) {
+    if (kind === raw.trim() || kind.toLowerCase() === key) return kind;
+  }
+  return null;
+}
+
+/**
+ * Infer kind from PR title when body has no `- 유형:`.
+ * @param {string} title
+ */
+export function inferReleaseKindFromTitle(title) {
+  const t = String(title || '').trim();
+  if (!t) return '업데이트';
+  if (/^(fix|bug)\b/i.test(t) || /\bfix(es|ed)?\b/i.test(t) || /수정|핫픽스/.test(t)) return '수정';
+  if (/^docs?\b/i.test(t) || /^docs?:/i.test(t) || /^문서/.test(t)) return '문서';
+  if (/^(add|feat)\b/i.test(t) || /^\[?(feat|feature)\]?/i.test(t) || /신규|추가/.test(t)) {
+    return '신규';
+  }
+  if (/^(chore|test|ci)\b/i.test(t) || /\(테스트만\)|\(문서만\)/.test(t)) return '기타';
+  return '업데이트';
+}
+
+/**
+ * Read `- 유형: 업데이트` (or type/kind) from ## 릴리즈 section.
+ * @param {string} body
+ * @returns {string|null}
+ */
+export function extractReleaseKind(body) {
+  const text = String(body || '').replace(/\r\n/g, '\n');
+  if (!text.trim()) return null;
+
+  const headingRe = /^##\s+(릴리즈|Release notes)\s*$/gim;
+  const match = headingRe.exec(text);
+  if (!match) return null;
+
+  const start = match.index + match[0].length;
+  const rest = text.slice(start);
+  const nextHeading = rest.search(/\n##\s+/);
+  const section = nextHeading === -1 ? rest : rest.slice(0, nextHeading);
+
+  for (const line of section.split('\n')) {
+    const trimmed = line.trim().replace(/^[-*+]\s+/, '').replace(/^\d+\.\s+/, '');
+    const kindMatch = trimmed.match(KIND_BULLET_RE);
+    if (!kindMatch) continue;
+    const normalized = normalizeReleaseKind(kindMatch[1]);
+    if (normalized) return normalized;
+  }
+  return null;
+}
+
+/**
+ * Resolve kind: explicit pr.kind → body → title inference → 업데이트.
+ * @param {{ title?: string, body?: string, kind?: string }} pr
+ */
+export function resolveReleaseKind(pr) {
+  const fromArg = normalizeReleaseKind(pr?.kind || '');
+  if (fromArg) return fromArg;
+  const fromBody = extractReleaseKind(pr?.body || '');
+  if (fromBody) return fromBody;
+  return inferReleaseKindFromTitle(pr?.title || '');
+}
+
+/**
+ * `### [업데이트] Title`
+ * @param {string} kind
+ * @param {string} title already sanitized
+ */
+export function formatReleaseEntryHeading(kind, title) {
+  const k = normalizeReleaseKind(kind) || '업데이트';
+  const t = String(title || '').trim();
+  return `### [${k}] ${t}`;
+}
+
+/**
  * Extract bullet lines under ## 릴리즈 or ## Release notes.
+ * Skips placeholders and `- 유형:` / `- type:` meta lines.
  * @param {string} body
  * @returns {string[]}
  */
@@ -87,9 +204,9 @@ export function extractReleaseBullets(body) {
     const trimmed = line.trim();
     if (!trimmed) continue;
     if (/^[-*+]\s+/.test(trimmed) || /^\d+\.\s+/.test(trimmed)) {
-      const content = sanitizeReleaseNoteText(
-        trimmed.replace(/^[-*+]\s+/, '').replace(/^\d+\.\s+/, '').trim()
-      );
+      const raw = trimmed.replace(/^[-*+]\s+/, '').replace(/^\d+\.\s+/, '').trim();
+      if (KIND_BULLET_RE.test(raw)) continue;
+      const content = sanitizeReleaseNoteText(raw);
       if (!content || /^\(.*\)$/.test(content)) continue;
       bullets.push(`- ${content}`);
     }
@@ -109,8 +226,8 @@ export function alreadyHasPrEntry(markdown, pr) {
 }
 
 /**
- * Build one PR entry under a day heading (`### title` + bullets).
- * @param {{ title: string, number: number|string, url: string, body?: string }} pr
+ * Build one PR entry under a day heading (`### [kind] title` + bullets).
+ * @param {{ title: string, number: number|string, url: string, body?: string, kind?: string }} pr
  */
 export function buildReleaseEntry(pr) {
   const title = sanitizeReleaseNoteText(pr.title || '');
@@ -121,10 +238,11 @@ export function buildReleaseEntry(pr) {
     return null;
   }
 
+  const kind = resolveReleaseKind(pr);
   const fromBody = extractReleaseBullets(pr.body || '');
   const bullets = fromBody.length > 0 ? fromBody : [`- ${title}`];
 
-  const lines = [`### ${title}`, '', ...bullets];
+  const lines = [formatReleaseEntryHeading(kind, title), '', ...bullets];
   if (url) {
     lines.push(`- PR #${number}: ${url}`);
   } else {
@@ -375,6 +493,7 @@ function parseArgs(argv) {
     url: process.env.PR_URL || '',
     body: process.env.PR_BODY || '',
     date: process.env.RELEASE_NOTE_DATE || '',
+    kind: process.env.RELEASE_NOTE_KIND || '',
     file: RELEASE_NOTE_SOT,
     sync: true,
     regroupOnly: false,
@@ -399,6 +518,9 @@ function parseArgs(argv) {
       i += 1;
     } else if (arg === '--date' && next) {
       out.date = next;
+      i += 1;
+    } else if (arg === '--kind' && next) {
+      out.kind = next;
       i += 1;
     } else if (arg === '--file' && next) {
       out.file = path.resolve(next);
@@ -453,6 +575,7 @@ export function main(argv = process.argv.slice(2)) {
     url: args.url,
     body: args.body,
     date: args.date || seoulDateKey(),
+    kind: args.kind,
   });
 
   if (result.status === 'skipped') {

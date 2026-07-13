@@ -5,9 +5,14 @@ import {
   buildReleaseEntry,
   buildReleaseSection,
   extractReleaseBullets,
+  extractReleaseKind,
+  formatReleaseEntryHeading,
+  inferReleaseKindFromTitle,
   mergeReleaseEntryForDate,
+  normalizeReleaseKind,
   prependReleaseSection,
   regroupReleaseNotesByDay,
+  resolveReleaseKind,
   sanitizeReleaseNoteText,
   seoulDateKey,
 } from '../scripts/append-release-note.mjs';
@@ -44,6 +49,24 @@ describe('append-release-note helpers', () => {
     expect(extractReleaseBullets(body)).toEqual(['- Real change']);
   });
 
+  it('skips 유형 meta bullets when collecting release lines', () => {
+    const body = `## 릴리즈\n\n- 유형: 신규\n- 타임라인 피드\n`;
+    expect(extractReleaseBullets(body)).toEqual(['- 타임라인 피드']);
+    expect(extractReleaseKind(body)).toBe('신규');
+  });
+
+  it('normalizes and infers release kinds', () => {
+    expect(normalizeReleaseKind('update')).toBe('업데이트');
+    expect(normalizeReleaseKind('Fix')).toBe('수정');
+    expect(inferReleaseKindFromTitle('Add J8 feature')).toBe('신규');
+    expect(inferReleaseKindFromTitle('Fix journal bug')).toBe('수정');
+    expect(inferReleaseKindFromTitle('docs: tweak footer')).toBe('문서');
+    expect(resolveReleaseKind({ title: 'Add X', body: '## 릴리즈\n\n- 유형: 문서\n' })).toBe(
+      '문서'
+    );
+    expect(formatReleaseEntryHeading('업데이트', 'Hello')).toBe('### [업데이트] Hello');
+  });
+
   it('escapes PR-provided HTML before writing release notes', () => {
     expect(sanitizeReleaseNoteText('<img src=x onerror=alert(1)> & ok')).toBe(
       '&lt;img src=x onerror=alert(1)&gt; &amp; ok'
@@ -68,11 +91,12 @@ describe('append-release-note helpers', () => {
       title: 'Restyle announcements',
       number: 86,
       url: 'https://github.com/cxr542/edu-team-tms/pull/86',
-      body: '## 릴리즈\n\n- 타임라인 피드\n',
+      body: '## 릴리즈\n\n- 유형: 업데이트\n- 타임라인 피드\n',
       date: '2026-07-09',
     });
     expect(section).toContain('## 2026-07-09\n');
-    expect(section).toContain('### Restyle announcements');
+    expect(section).toContain('### [업데이트] Restyle announcements');
+    expect(section).not.toContain('- 유형:');
     expect(section).toContain('- 타임라인 피드');
     expect(section).toContain('- PR #86: https://github.com/cxr542/edu-team-tms/pull/86');
   });
@@ -85,7 +109,7 @@ describe('append-release-note helpers', () => {
       body: 'no section',
       date: '2026-07-01',
     });
-    expect(section).toContain('### Fix deploy');
+    expect(section).toContain('### [수정] Fix deploy');
     expect(section).toContain('- Fix deploy');
     expect(section).toContain('- PR #82:');
   });
@@ -95,9 +119,10 @@ describe('append-release-note helpers', () => {
       title: 'Fix docs\n\n## Injected\n<img src=x onerror=alert(1)>',
       number: 101,
       url: 'https://example.com/pull/101',
+      kind: '수정',
     });
     expect(entry).toContain(
-      '### Fix docs ## Injected &lt;img src=x onerror=alert(1)&gt;'
+      '### [수정] Fix docs ## Injected &lt;img src=x onerror=alert(1)&gt;'
     );
     expect(entry).not.toContain('\n## Injected');
     expect(entry).not.toContain('<img');
@@ -135,7 +160,7 @@ describe('append-release-note helpers', () => {
     expect(second.status).toBe('updated');
     const md = second.markdown;
     expect(md.match(/## 2026-07-09/g)?.length).toBe(1);
-    expect(md.indexOf('### Second')).toBeLessThan(md.indexOf('### First'));
+    expect(md.indexOf('### [업데이트] Second')).toBeLessThan(md.indexOf('### [업데이트] First'));
     expect(md).toContain('## 2026-06-17');
     expect(md).toContain('### 기존 항목');
   });
@@ -234,9 +259,10 @@ intro
       title: 'Fresh',
       number: 55,
       url: 'https://example.com/pull/55',
+      kind: '신규',
     });
     const next = mergeReleaseEntryForDate(grouped, '2026-06-17', entry);
     expect(next.match(/## 2026-06-17\n/g)?.length).toBe(1);
-    expect(next.indexOf('### Fresh')).toBeLessThan(next.indexOf('### 기존 항목'));
+    expect(next.indexOf('### [신규] Fresh')).toBeLessThan(next.indexOf('### 기존 항목'));
   });
 });

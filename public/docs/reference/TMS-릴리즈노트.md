@@ -232,7 +232,7 @@ Vercel Blob 무료 한도(Simple/Advanced 100%) 대응:
 
 ### 문서 수정 방법
 
-1. `docs/reference-source/*.md` 수정 (또는 main 머지 시 `release-notes-on-merge`가 PR 제목/`## 릴리즈` 불릿을 **날짜(`## YYYY-MM-DD`) 아래 `###` 항목**으로 자동 merge)
-2. 형식: 같은 서울 날짜 PR은 하나의 날짜 H2로 묶음. 수동 정리 시 `node scripts/append-release-note.mjs --regroup-only`
+1. `docs/reference-source/*.md` 수정 (또는 main 머지 시 `release-notes-on-merge`가 PR 제목/`## 릴리즈` 불릿을 **날짜(`## YYYY-MM-DD`) 아래 `### [유형] 제목`** 으로 자동 merge)
+2. 형식: 같은 서울 날짜 PR은 하나의 날짜 H2로 묶음. 유형은 `신규`·`업데이트`·`수정`·`문서`·`기타` (`## 릴리즈`에 `- 유형: …`, 없으면 제목으로 추정). 수동 정리 시 `node scripts/append-release-note.mjs --regroup-only`
 3. `npm run sync:docs` (또는 `build:team` 시 자동; 자동화 워크플로도 sync 실행)
 4. GitHub Actions로 배포 (main 머지 → production 승인)
