@@ -124,7 +124,7 @@ Production에는 켜지 않는다. Preview(또는 로컬)만.
 
 **J7d:** Preview `MANUAL_MIRROR=true`이면 journal Blob POST 기본 off. 「팀 공유 저장」→ Supabase. 롤백 `VITE_JOURNAL_BLOB_POST_ENABLED=true`. GET Blob은 재해 복구용 유지.
 
-**J7e:** journal upsert 후 `sync_events` 감사(best-effort). UI 「원격 갱신됨」은 J7a 폴링. 운영 DB에 [`j7e-grant-service-role-sync-events.sql`](../supabase/j7e-grant-service-role-sync-events.sql) 적용.
+**J7e:** journal upsert 후 `sync_events` 감사(best-effort). UI 「원격 갱신됨」은 J7a 폴링. 운영 GRANT + Preview 검증 완료 (2026-07-13): [`j7e-grant-service-role-sync-events.sql`](../supabase/j7e-grant-service-role-sync-events.sql). Production `MANUAL_MIRROR`는 계속 false.
 
 **J7a:** Preview `/admin` 미러 도구가 보일 때 `GET /api/journal-snapshots`를 ~30초·window focus로 폴링해 「원격이 더 최신」 라벨만 갱신. 자동 pull/쓰기·Blob 변경 없음.
 

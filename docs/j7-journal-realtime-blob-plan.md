@@ -203,8 +203,9 @@ Blob live-latest ─(GET only / disaster)→ localStorage
 
 ### J7e
 
-- [ ] journal upsert 후 `sync_events` row 존재
-- [ ] UI 배지/라벨이 폴링과 연동, 자동 merge 없음
+- [x] 운영 GRANT: `service_role` → `sync_events` INSERT (2026-07-13)
+- [x] journal upsert 후 `sync_events` row 존재 (Preview 검증 2026-07-13)
+- [x] UI 배지/라벨이 폴링과 연동, 자동 merge 없음 (Preview 검증 2026-07-13)
 
 ### Production cutover (J7 밖 — 별도 승인)
 
@@ -249,5 +250,5 @@ Blob live-latest ─(GET only / disaster)→ localStorage
 4. ~~**J7d** Journal Blob POST demote~~ ✅
 5. ~~**J7e** `sync_events` 감사 + 알림(폴링 연동)~~ ✅
 
-J7 트랙(설계~알림) 코드 완료. Production `MANUAL_MIRROR` cutover는 **별도 승인**.
-운영 DB에 J7e GRANT SQL 적용 여부 확인.
+J7 트랙(설계~알림) **코드·운영 GRANT·Preview 검증** 완료 (2026-07-13).
+다음 코드 작업 없음. Production `MANUAL_MIRROR` cutover만 **별도 승인** 후 진행.
