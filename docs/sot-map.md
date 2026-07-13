@@ -27,6 +27,7 @@
 | Traceability | `docs/reference-source/KPI-TMS-traceability-tms.md` | TMS/Excel 필드 추적 참고 |
 | Workspace guide | `docs/workspace-guide.md` | workspace/repo 구조 안내 |
 | Journal J7 Realtime·Blob | `docs/j7-journal-realtime-blob-plan.md` | 일지 팀 공유 SoT를 Supabase로 이전·Realtime 알림 단계 (J7-0…J7e) |
+| Journal J8 Supabase auto-upload | `docs/j8-journal-supabase-auto-upload-plan.md` | Blob 수동 유지 · Supabase debounce 자동 업로드 (자동 pull 비범위) |
 | Journal Supabase sync | `docs/journal-supabase-sync-plan.md` | 일지 Supabase 전환 원칙·단계 |
 | Operations backlog | `docs/operations-backlog.md` | 운영 후속 작업·일지 J-track 진행률 |
 

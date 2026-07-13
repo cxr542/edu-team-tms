@@ -123,6 +123,10 @@ KPI 운영에서는 월 승인과 행 승인을 별도 row table로 저장하고
 
 improve-projects / ledger Blob은 별 트랙. Production `MANUAL_MIRROR=true`는 J7 완료와 별도 승인.
 
+### J8 — Supabase 자동 업로드 (설계)
+
+Blob `autoSyncCloud`는 켜지 않는다. Preview에서 B/C 로컬 persist → Supabase debounce 자동 upsert는 [`j8-journal-supabase-auto-upload-plan.md`](./j8-journal-supabase-auto-upload-plan.md). 자동 pull/merge는 비범위. Production 자동은 cutover(J8b)와 함께.
+
 ## 롤백 전략
 
 문제가 발생하면 다음 순서로 롤백한다.

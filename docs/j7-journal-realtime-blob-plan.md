@@ -251,4 +251,6 @@ Blob live-latest ─(GET only / disaster)→ localStorage
 5. ~~**J7e** `sync_events` 감사 + 알림(폴링 연동)~~ ✅
 
 J7 트랙(설계~알림) **코드·운영 GRANT·Preview 검증** 완료 (2026-07-13).
-다음 코드 작업 없음. Production `MANUAL_MIRROR` cutover만 **별도 승인** 후 진행.
+Production `MANUAL_MIRROR` cutover는 **별도 승인**.
+
+후속(자동 업로드 UX): [`j8-journal-supabase-auto-upload-plan.md`](./j8-journal-supabase-auto-upload-plan.md) — Blob 수동 유지 · Supabase debounce 자동 upsert · 자동 pull 비범위.
