@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createAdminSessionCookie } from '../server/api-utils/adminSession.js';
+import { KPI_STATUS } from '../src/constants/kpiStatuses.js';
 
 const fromMock = vi.fn();
 const insertMock = vi.fn();
@@ -239,6 +240,90 @@ describe('journal-snapshots API admin session', () => {
     });
     expect(updateEqMember).toHaveBeenCalledWith('member_code', 'A');
     expect(updateEqUpdatedAt).toHaveBeenCalledWith('updated_at', current.updated_at);
+    expect(insertMock).not.toHaveBeenCalled();
+  });
+
+  it('preserves stronger remote KPI approval when updating a newer journal payload', async () => {
+    const current = {
+      member_code: 'B',
+      payload: {
+        days: { '2026-07-09': { tasks: [{ id: 'effect-1', title: 'old task' }] } },
+        kpiApproval: {
+          months: {
+            '2026-07': {
+              monthly01: {
+                status: KPI_STATUS.APPROVED,
+                approvedAt: '2026-07-09T01:00:00.000Z',
+              },
+            },
+          },
+          kpi2RowStatus: {
+            'B|2026-07-09|effect-1': {
+              status: KPI_STATUS.APPROVED,
+              approvedAt: '2026-07-09T01:00:00.000Z',
+            },
+          },
+        },
+      },
+      payload_version: 1,
+      updated_at: '2026-07-09T01:00:00.000Z',
+    };
+    const incomingPayload = {
+      days: { '2026-07-09': { tasks: [{ id: 'effect-1', title: 'new task' }] } },
+      kpiApproval: {
+        months: {
+          '2026-07': {
+            monthly01: {
+              status: KPI_STATUS.SUBMITTED,
+              submittedAt: '2026-07-09T02:00:00.000Z',
+            },
+          },
+        },
+        kpi2RowStatus: {
+          'B|2026-07-09|effect-1': {
+            status: KPI_STATUS.SUBMITTED,
+            submittedAt: '2026-07-09T02:00:00.000Z',
+          },
+        },
+      },
+    };
+    const expectedPayload = {
+      ...incomingPayload,
+      kpiApproval: current.payload.kpiApproval,
+    };
+    const saved = {
+      ...current,
+      payload: expectedPayload,
+      updated_at: '2026-07-09T02:00:00.000Z',
+    };
+    mockCurrentReadThenUpdate(current, saved);
+
+    const cookie = createAdminSessionCookie();
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: {
+        referer: 'https://edu-team-tms-ten.vercel.app/admin?module=journal',
+        cookie,
+      },
+      body: {
+        memberCode: 'B',
+        payload: incomingPayload,
+        updatedAt: saved.updated_at,
+      },
+    };
+    const res = createRes();
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(updateMock).toHaveBeenCalledWith({
+      payload: expectedPayload,
+      payload_version: 1,
+      updated_at: saved.updated_at,
+    });
+    expect(JSON.parse(res.body).data.payload.kpiApproval.months['2026-07'].monthly01.status).toBe(
+      KPI_STATUS.APPROVED
+    );
     expect(insertMock).not.toHaveBeenCalled();
   });
 
