@@ -4,6 +4,18 @@
   "installCommand": "npm install",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "redirects": [
+    {
+      "source": "/hwshin",
+      "destination": "/hyshin",
+      "permanent": true
+    },
+    {
+      "source": "/hwshin/:path*",
+      "destination": "/hyshin/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/((?!api/|assets/|ledger-snapshot\\.json|journal-snapshot\\.json|favicon\\.svg|manifest\\.webmanifest|apple-touch-icon\\.svg|icon-512\\.svg|okestro-logo-white\\.png).*)",

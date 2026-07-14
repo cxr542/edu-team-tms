@@ -24,6 +24,8 @@ describe('requestScope API referer helpers', () => {
   it('recognizes same-member scoped routes', () => {
     expect(isAdminOrSameMemberRouteReferer(req('https://edu-team-tms-ten.vercel.app/wschoi'), 'B')).toBe(true);
     expect(isAdminOrSameMemberRouteReferer(req('https://edu-team-tms-ten.vercel.app/wschoi'), 'C')).toBe(false);
+    expect(isAdminOrSameMemberRouteReferer(req('https://edu-team-tms-ten.vercel.app/hyshin'), 'C')).toBe(true);
+    expect(isAdminOrSameMemberRouteReferer(req('https://edu-team-tms-ten.vercel.app/hwshin'), 'C')).toBe(true);
     expect(isAdminOrSameMemberRouteReferer(req('https://edu-team-tms-ten.vercel.app/?member=C'), 'C')).toBe(true);
   });
 });

@@ -20,6 +20,7 @@ describe('appRoute path scopes', () => {
     expect(parseAppRoute({ pathname: '/admin', search: '?module=kpi&mode=edit' }).scope).toBe('admin');
     expect(parseAppRoute({ pathname: '/yhkim', search: '?module=journal&mode=edit' }).memberCode).toBe('A');
     expect(parseAppRoute({ pathname: '/wschoi', search: '' }).memberCode).toBe('B');
+    expect(parseAppRoute({ pathname: '/hyshin', search: '' }).memberCode).toBe('C');
     expect(parseAppRoute({ pathname: '/hwshin', search: '' }).memberCode).toBe('C');
   });
 
@@ -112,7 +113,22 @@ describe('appRoute path scopes', () => {
   it('maps member slugs', () => {
     expect(MEMBER_ROUTE_SLUG.A).toBe('yhkim');
     expect(MEMBER_ROUTE_SLUG.B).toBe('wschoi');
-    expect(MEMBER_ROUTE_SLUG.C).toBe('hwshin');
+    expect(MEMBER_ROUTE_SLUG.C).toBe('hyshin');
     expect(APP_ROUTE_ADMIN).toBe('admin');
+  });
+
+  it('redirects legacy /hwshin slug to /hyshin', () => {
+    const replaceState = vi.fn();
+    vi.stubGlobal('window', {
+      location: {
+        pathname: '/hwshin',
+        search: '',
+        href: 'https://example.test/hwshin',
+      },
+      history: { replaceState },
+    });
+
+    expect(migrateLegacyAppUrlIfNeeded()).toBe(true);
+    expect(replaceState).toHaveBeenCalledWith({}, '', '/hyshin');
   });
 });

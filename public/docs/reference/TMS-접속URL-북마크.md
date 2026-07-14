@@ -31,7 +31,7 @@
 |------|----------|------|
 | **사용 중단** (안내 화면) | `?mode=view` · `?mode=view&module=ledger` · `?mode=view&module=lunch` 등 | member 없음 |
 | **공식 — 관리자** | `/admin` (`?access=admin` 도 동일) | 장부 편집·KPI·승인·리포트 |
-| **공식 — 사용자 일지** | `/yhkim` · `/wschoi` · `/hwshin` | 본인 작성 · A/B/C 탭 조회 |
+| **공식 — 사용자 일지** | `/yhkim` · `/wschoi` · `/hyshin` | 본인 작성 · A/B/C 탭 조회 |
 | **공식 — 사용자 장부 조회** | `/wschoi?mode=view&module=ledger&year=2026&month=6` 등 | read-only |
 
 운영 사이트 루트(`/`, `mode` 생략)도 조회 모드로 열리지만, **member 없으면 동일하게 안내 화면**입니다.
@@ -104,14 +104,15 @@ B/C와 **동일한 사용자 UI**입니다. KPI 승인 요청·향상 과제는 
 
 | 용도 | URL |
 |------|-----|
-| **★ 일지 (북마크 권장)** | https://edu-team-tms-ten.vercel.app/hwshin |
+| **★ 일지 (북마크 권장)** | https://edu-team-tms-ten.vercel.app/hyshin |
 | 역량 평가 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=competency |
 | 팀 빌딩비 장부 (조회) | https://edu-team-tms-ten.vercel.app/?mode=view&member=C&module=ledger&year=2026&month=6 |
 | 점심 뭐 먹지 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=lunch |
 | 이것도? | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=idea-bank |
 | 참고문서 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=docs |
 
-**일지:** B와 동일 — **A/B/C 탭 조회**, **C 탭만** 편집. 작성 후 **「팀 공유 저장」**, 타인 조회는 **「팀 공유본 가져오기」**.
+**일지:** B와 동일 — **A/B/C 탭 조회**, **C 탭만** 편집. 작성 후 **「팀 공유 저장」**, 타인 조회는 **「팀 공유본 가져오기」**.  
+**URL:** 공식 슬러그는 `/hyshin` (옛 `/hwshin` 은 `/hyshin`으로 리다이렉트).
 
 ---
 

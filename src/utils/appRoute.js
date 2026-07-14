@@ -3,17 +3,23 @@ import { isAdminAccessParam, URL_ACCESS_ADMIN, URL_PARAM_MEMBER } from '../const
 /** 팀 관리(관리자) 경로 */
 export const APP_ROUTE_ADMIN = 'admin';
 
-/** 구성원 코드 → URL 슬러그 */
+/** 구성원 코드 → URL 슬러그 (공식 북마크) */
 export const MEMBER_ROUTE_SLUG = {
   A: 'yhkim',
   B: 'wschoi',
-  C: 'hwshin',
+  C: 'hyshin',
 };
 
-/** URL 슬러그 → 구성원 코드 */
-export const ROUTE_SLUG_TO_MEMBER = Object.fromEntries(
-  Object.entries(MEMBER_ROUTE_SLUG).map(([code, slug]) => [slug, code])
-);
+/** 옛 슬러그 → 구성원 코드 (canonical 경로로 리다이렉트) */
+export const LEGACY_MEMBER_ROUTE_SLUGS = {
+  hwshin: 'C',
+};
+
+/** URL 슬러그 → 구성원 코드 (legacy 포함) */
+export const ROUTE_SLUG_TO_MEMBER = {
+  ...Object.fromEntries(Object.entries(MEMBER_ROUTE_SLUG).map(([code, slug]) => [slug, code])),
+  ...LEGACY_MEMBER_ROUTE_SLUGS,
+};
 
 const APP_MODULES = new Set([
   'ledger',

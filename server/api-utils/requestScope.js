@@ -2,7 +2,8 @@ const ADMIN_ACCESS_PARAMS = new Set(['admin', 'leader']);
 const MEMBER_ROUTE_SLUG_TO_CODE = {
   yhkim: 'A',
   wschoi: 'B',
-  hwshin: 'C',
+  hyshin: 'C',
+  hwshin: 'C', // legacy alias → same member
 };
 const VALID_MEMBER_CODES = new Set(Object.values(MEMBER_ROUTE_SLUG_TO_CODE));
 
