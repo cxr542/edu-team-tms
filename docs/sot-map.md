@@ -27,9 +27,13 @@
 | Traceability | `docs/reference-source/KPI-TMS-traceability-tms.md` | TMS/Excel 필드 추적 참고 |
 | Workspace guide | `docs/workspace-guide.md` | workspace/repo 구조 안내 |
 | Journal J7 Realtime·Blob | `docs/j7-journal-realtime-blob-plan.md` | 일지 팀 공유 SoT를 Supabase로 이전·Realtime 알림 단계 (J7-0…J7e) |
-| Journal J8 Supabase auto-upload | `docs/j8-journal-supabase-auto-upload-plan.md` | Blob 수동 유지 · Supabase debounce 자동 업로드 (자동 pull 비범위) |
-| Journal Supabase sync | `docs/journal-supabase-sync-plan.md` | 일지 Supabase 전환 원칙·단계 |
-| Operations backlog | `docs/operations-backlog.md` | 운영 후속 작업·일지 J-track 진행률 |
+| Journal J8 Supabase auto-upload | `docs/j8-journal-supabase-auto-upload-plan.md` ([[j8-journal-supabase-auto-upload-plan]]) | Blob 수동 유지 · Supabase debounce 자동 업로드 (자동 pull 비범위) |
+| Journal Supabase sync | `docs/journal-supabase-sync-plan.md` ([[journal-supabase-sync-plan]]) | 일지 Supabase 전환 원칙·단계 |
+| Operations backlog | `docs/operations-backlog.md` ([[operations-backlog]]) | 운영 후속 작업·일지 J-track 진행률 |
+| Obsidian / docs graph | `docs/obsidian-graph-poc.md` ([[obsidian-graph-poc]]) | Vault 열기 · `npm run docs:graph` |
+
+## Obsidian Related
+- [[AGENTS]] · [[DESIGN]] · [[obsidian-graph-poc]] · [[j7-journal-realtime-blob-plan]] · [[j8-journal-supabase-auto-upload-plan]] · [[ledger-live-sync]] · [[deployment-process]]
 
 ## Non-SoT Copies and Build Outputs
 다음 파일들은 원본 문서가 아니라 복제본 또는 산출물로 취급한다.
@@ -63,9 +67,9 @@ AI 작업자는 다음 원칙을 따른다.
 - URL, access, role, ledger, journal, Blob 관련 변경은 반드시 관련 SoT 문서를 먼저 확인한다.
 
 ## Obsidian and Graph Notes
-EDU-TMS 문서는 Obsidian Vault처럼 읽을 수 있다.
-다만 Obsidian은 사람이 읽는 지식 지도이고, graph DB/JSON graph는 기계가 분석하는 관계 지도다.
-우선 목표는 외부 graph DB가 아니라 repo 내부 Markdown에서 관계를 추출한 `docs-graph.json` PoC를 만드는 것이다.
+EDU-TMS 문서는 Obsidian Vault처럼 읽을 수 있다 ([[obsidian-graph-poc]]).
+Obsidian은 사람이 읽는 지식 지도이고, `docs/docs-graph.json`은 기계가 분석하는 관계 지도다 (`npm run docs:graph`).
+Vault는 **repo 루트**를 연다. `.obsidian/`은 gitignore. `generatedAt`만 바뀐 graph json은 커밋하지 않는다.
 
 ## Next Cleanup Candidates
 - `AGENTS.md` 보강 또는 신설

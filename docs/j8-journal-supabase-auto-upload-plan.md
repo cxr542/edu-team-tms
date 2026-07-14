@@ -4,7 +4,9 @@
 > **범위:** `MANUAL_MIRROR` 환경에서 일지 로컬 persist 후 **Supabase debounce 자동 upsert** (B/C 포함).  
 > **비범위 (리뷰 고정):** Blob `autoSyncCloud` · **자동 pull/merge** · localStorage 제거 · improve-projects/ledger Blob 자동.
 
-관련: [`j7-journal-realtime-blob-plan.md`](./j7-journal-realtime-blob-plan.md) · [`journal-supabase-sync-plan.md`](./journal-supabase-sync-plan.md) · [`operations-backlog.md`](./operations-backlog.md) · [`supabase-phase0-runbook.md`](./supabase-phase0-runbook.md)
+관련: [[j7-journal-realtime-blob-plan]] · [[journal-supabase-sync-plan]] · [[operations-backlog]] · [[supabase-phase0-runbook]] · [[obsidian-graph-poc]] · [[sot-map]]
+
+([j7-journal-realtime-blob-plan.md](./j7-journal-realtime-blob-plan.md) · [journal-supabase-sync-plan.md](./journal-supabase-sync-plan.md) · [operations-backlog.md](./operations-backlog.md) · [supabase-phase0-runbook.md](./supabase-phase0-runbook.md))
 
 ---
 
@@ -110,7 +112,7 @@ autoMirrorSupabase =
    || 리더 /admin 기존 J6)
 ```
 
-- **B/C** (`/wschoi`, `/hwshin` 등): 본인 탭 편집 시 해당 `member_code`만 pending
+- **B/C** (`/wschoi`, `/hyshin` 등): 본인 탭 편집 시 해당 `member_code`만 pending
 - **리더 `/admin`:** 기존 J6 유지 (선택 구성원 슬라이스)
 - **`autoSyncCloud`:** 계속 `false` (MUST)
 

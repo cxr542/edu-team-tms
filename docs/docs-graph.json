@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-10T09:02:50.025Z",
+  "generatedAt": "2026-07-13T06:34:49.999Z",
   "documents": [
     {
       "id": ".github/pull_request_template.md",
@@ -22,6 +22,7 @@
         }
       ],
       "links": [],
+      "wikilinks": [],
       "keywords": []
     },
     {
@@ -92,6 +93,7 @@
         "https://edu-team-tms-ten.vercel.app/admin`",
         "https://edu-team-tms-ten.vercel.app/yhkim?year=2026&month=6`"
       ],
+      "wikilinks": [],
       "keywords": [
         "Blob",
         "ledger",
@@ -196,6 +198,7 @@
         "https://edu-team-tms-ten.vercel.app/admin`",
         "https://edu-team-tms-ten.vercel.app/yhkim?year=2026&month=6`"
       ],
+      "wikilinks": [],
       "keywords": [
         "Blob",
         "ledger",
@@ -268,6 +271,7 @@
         "workspace-guide.md",
         "https://okestro-edu-team-tms.vercel.app/`"
       ],
+      "wikilinks": [],
       "keywords": [
         "Blob",
         "ledger",
@@ -333,19 +337,19 @@
         },
         {
           "level": 3,
-          "text": "J7b — Member-scoped Supabase API + dual-write (Preview)"
+          "text": "J7b — Member-scoped Supabase API + dual-write (Preview) ✅"
         },
         {
           "level": 3,
-          "text": "J7c — Pull SoT flip (Supabase-first, Blob fallback)"
+          "text": "J7c — Pull SoT flip (Supabase-first, Blob fallback) ✅"
         },
         {
           "level": 3,
-          "text": "J7d — Blob demote"
+          "text": "J7d — Blob demote ✅"
         },
         {
           "level": 3,
-          "text": "J7e — Realtime/알림 (얇게)"
+          "text": "J7e — Realtime/알림 (얇게) ✅"
         },
         {
           "level": 2,
@@ -392,7 +396,18 @@
         "./operations-backlog.md",
         "./journal-supabase-sync-plan.md",
         "./journal-live-latest-concurrency-analysis.md",
-        "./supabase-phase0-runbook.md"
+        "./supabase-phase0-runbook.md",
+        "../supabase/j7e-grant-service-role-sync-events.sql",
+        "./j8-journal-supabase-auto-upload-plan.md"
+      ],
+      "wikilinks": [
+        "operations-backlog",
+        "journal-supabase-sync-plan",
+        "journal-live-latest-concurrency-analysis",
+        "supabase-phase0-runbook",
+        "j8-journal-supabase-auto-upload-plan",
+        "obsidian-graph-poc",
+        "sot-map"
       ],
       "keywords": [
         "Blob",
@@ -402,6 +417,122 @@
         "snapshot",
         "push",
         "업무일지",
+        "improve-projects",
+        "member"
+      ]
+    },
+    {
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "title": "J8 — Journal Supabase 자동 업로드 설계",
+      "sourceKind": "supporting",
+      "headings": [
+        {
+          "level": 1,
+          "text": "J8 — Journal Supabase 자동 업로드 설계"
+        },
+        {
+          "level": 2,
+          "text": "0. 리뷰용 전제 (합의)"
+        },
+        {
+          "level": 2,
+          "text": "1. 배경 · 동기"
+        },
+        {
+          "level": 2,
+          "text": "2. 현재 vs 목표"
+        },
+        {
+          "level": 3,
+          "text": "Today"
+        },
+        {
+          "level": 3,
+          "text": "Goal (J8, `MANUAL_MIRROR=true`일 때)"
+        },
+        {
+          "level": 2,
+          "text": "3. Gate · 대상"
+        },
+        {
+          "level": 3,
+          "text": "재사용"
+        },
+        {
+          "level": 3,
+          "text": "Today gate ([`src/App.jsx`](../src/App.jsx))"
+        },
+        {
+          "level": 3,
+          "text": "J8 목표 gate"
+        },
+        {
+          "level": 2,
+          "text": "4. 안전 규칙 (MUST)"
+        },
+        {
+          "level": 2,
+          "text": "5. UX"
+        },
+        {
+          "level": 2,
+          "text": "6. 롤아웃 · 롤백"
+        },
+        {
+          "level": 3,
+          "text": "롤백"
+        },
+        {
+          "level": 2,
+          "text": "7. 명시적 비범위"
+        },
+        {
+          "level": 2,
+          "text": "8. 코드 앵커 (구현 시)"
+        },
+        {
+          "level": 2,
+          "text": "9. 검증 체크리스트"
+        },
+        {
+          "level": 3,
+          "text": "J8a (Preview)"
+        },
+        {
+          "level": 3,
+          "text": "J8b (승인 후)"
+        },
+        {
+          "level": 2,
+          "text": "10. 다음 작업"
+        }
+      ],
+      "links": [
+        "./j7-journal-realtime-blob-plan.md",
+        "./journal-supabase-sync-plan.md",
+        "./operations-backlog.md",
+        "./supabase-phase0-runbook.md",
+        "../src/constants/supabaseSync.js",
+        "../src/hooks/useWeeklyJournal.js",
+        "../api/journal-snapshots.js",
+        "../src/context/JournalProvider.jsx",
+        "../src/App.jsx"
+      ],
+      "wikilinks": [
+        "j7-journal-realtime-blob-plan",
+        "journal-supabase-sync-plan",
+        "operations-backlog",
+        "supabase-phase0-runbook",
+        "obsidian-graph-poc",
+        "sot-map"
+      ],
+      "keywords": [
+        "Blob",
+        "ledger",
+        "journal",
+        "localStorage",
+        "snapshot",
         "improve-projects",
         "member"
       ]
@@ -442,6 +573,7 @@
         }
       ],
       "links": [],
+      "wikilinks": [],
       "keywords": [
         "Blob",
         "journal",
@@ -513,6 +645,10 @@
           "text": "6단계. Blob 역할 축소 → J7b–J7d"
         },
         {
+          "level": 3,
+          "text": "J8 — Supabase 자동 업로드 (설계)"
+        },
+        {
           "level": 2,
           "text": "롤백 전략"
         },
@@ -539,8 +675,10 @@
       ],
       "links": [
         "./j7-journal-realtime-blob-plan.md",
-        "./journal-live-latest-concurrency-analysis.md"
+        "./journal-live-latest-concurrency-analysis.md",
+        "./j8-journal-supabase-auto-upload-plan.md"
       ],
+      "wikilinks": [],
       "keywords": [
         "Blob",
         "ledger",
@@ -595,6 +733,7 @@
       "links": [
         "https://vercel.com"
       ],
+      "wikilinks": [],
       "keywords": [
         "Blob",
         "ledger",
@@ -657,6 +796,7 @@
         "https://developers.kakao.com/",
         "http://localhost:3000/?mode=edit&module=lunch"
       ],
+      "wikilinks": [],
       "keywords": [
         "localStorage",
         "Vercel",
@@ -698,6 +838,7 @@
         "https://okestro-edu-team-tms.vercel.app/",
         "https://okestro-edu-team-tms.vercel.app/?mode=edit"
       ],
+      "wikilinks": [],
       "keywords": [
         "Vercel",
         "mode=edit"
@@ -752,6 +893,7 @@
         "https://okestro-edu-team-tms.vercel.app/?mode=edit",
         "https://edu-team-tms.vercel.app/"
       ],
+      "wikilinks": [],
       "keywords": [
         "Vercel",
         "mode=edit"
@@ -777,7 +919,19 @@
         },
         {
           "level": 2,
-          "text": "Initial Scope"
+          "text": "Initial Scope (G1 — 완료 목표)"
+        },
+        {
+          "level": 2,
+          "text": "Vault 열기 (권장)"
+        },
+        {
+          "level": 3,
+          "text": "Vault 루트 선택"
+        },
+        {
+          "level": 3,
+          "text": "`.obsidian/` 설정"
         },
         {
           "level": 2,
@@ -793,7 +947,7 @@
         },
         {
           "level": 2,
-          "text": "Non-Goals"
+          "text": "Non-Goals (G1)"
         },
         {
           "level": 2,
@@ -801,10 +955,26 @@
         },
         {
           "level": 2,
-          "text": "Future Ideas"
+          "text": "Commands"
+        },
+        {
+          "level": 2,
+          "text": "Future Ideas (G2+)"
         }
       ],
-      "links": [],
+      "links": [
+        "…",
+        "../AGENTS.md"
+      ],
+      "wikilinks": [
+        "sot-map",
+        "AGENTS",
+        "DESIGN",
+        "j7-journal-realtime-blob-plan",
+        "j8-journal-supabase-auto-upload-plan",
+        "위키링크",
+        "wikilink"
+      ],
       "keywords": [
         "Blob",
         "ledger",
@@ -886,7 +1056,7 @@
         },
         {
           "level": 3,
-          "text": "앞으로 할 일 — **일지 우선** (J3→J7)"
+          "text": "앞으로 할 일 — **일지 우선** (J3→J8)"
         },
         {
           "level": 3,
@@ -963,13 +1133,16 @@
       ],
       "links": [
         "./j7-journal-realtime-blob-plan.md",
+        "./j8-journal-supabase-auto-upload-plan.md",
         "./journal-supabase-sync-plan.md",
         "../supabase/j3-grant-service-role-journal.sql",
+        "../supabase/j7e-grant-service-role-sync-events.sql",
         "./supabase-phase0-runbook.md",
         "./supabase-schema-plan.md",
         "./lunch-pick-setup.md",
         "https://edu-team-tms-ten.vercel.app/admin"
       ],
+      "wikilinks": [],
       "keywords": [
         "Blob",
         "journal",
@@ -1031,6 +1204,7 @@
         "http://localhost:3000/?mode=edit`",
         "http://localhost:3000/?mode=edit&module=kpi`"
       ],
+      "wikilinks": [],
       "keywords": [
         "journal",
         "localStorage",
@@ -1068,6 +1242,7 @@
       "links": [
         "./traceability.md"
       ],
+      "wikilinks": [],
       "keywords": [
         "KPI"
       ]
@@ -1109,6 +1284,7 @@
         "./KPI-TMS-팀KPI메뉴.md",
         "./pilot-checklist-v2-tms.md"
       ],
+      "wikilinks": [],
       "keywords": [
         "journal",
         "localStorage",
@@ -1158,6 +1334,7 @@
         "./KPI-TMS-운영모델-v2.md",
         "./pilot-checklist-v2-tms.md"
       ],
+      "wikilinks": [],
       "keywords": [
         "journal",
         "GitHub Actions",
@@ -1211,6 +1388,7 @@
         "./KPI-TMS-traceability-tms.md",
         "http://localhost:3000/docs/KPI-일지-TMS-연계-가이드.md`"
       ],
+      "wikilinks": [],
       "keywords": [
         "Blob",
         "KPI",
@@ -1246,6 +1424,7 @@
         }
       ],
       "links": [],
+      "wikilinks": [],
       "keywords": [
         "KPI"
       ]
@@ -1262,6 +1441,7 @@
         }
       ],
       "links": [],
+      "wikilinks": [],
       "keywords": [
         "KPI"
       ]
@@ -1305,6 +1485,7 @@
         "../traceability.md",
         "../../config/kpi1_rules.yaml"
       ],
+      "wikilinks": [],
       "keywords": [
         "KPI"
       ]
@@ -1347,6 +1528,7 @@
       "links": [
         "../../config/kpi2_rules.yaml"
       ],
+      "wikilinks": [],
       "keywords": [
         "localStorage",
         "KPI"
@@ -1505,6 +1687,7 @@
         "https://edu-team-tms-ten.vercel.app",
         "https://okestro-edu-team-tms.vercel.app"
       ],
+      "wikilinks": [],
       "keywords": [
         "Blob",
         "ledger",
@@ -1533,79 +1716,119 @@
         },
         {
           "level": 2,
-          "text": "2026-07-10 — Add J7a journal freshness poll (Preview)"
+          "text": "2026-07-10"
+        },
+        {
+          "level": 3,
+          "text": "Fix J7c storage-compare test expectations"
+        },
+        {
+          "level": 3,
+          "text": "Add J7c Supabase-first journal team-share pull"
+        },
+        {
+          "level": 3,
+          "text": "Add J7b member-scoped journal Supabase dual-write"
+        },
+        {
+          "level": 3,
+          "text": "Document J7-0 journal Realtime and Blob shrink roadmap"
+        },
+        {
+          "level": 3,
+          "text": "Add J7a journal freshness poll (Preview)"
+        },
+        {
+          "level": 3,
+          "text": "Add J6 Preview Supabase auto-mirror on local journal save"
+        },
+        {
+          "level": 3,
+          "text": "Admin journal read-only + Safari sidebar fix"
+        },
+        {
+          "level": 3,
+          "text": "Add J5 Supabase journal pull with conflict confirm"
+        },
+        {
+          "level": 3,
+          "text": "Fix Supabase journal stale-write protection"
         },
         {
           "level": 2,
-          "text": "2026-07-10 — Add J6 Preview Supabase auto-mirror on local journal save"
+          "text": "2026-07-09"
+        },
+        {
+          "level": 3,
+          "text": "Add J4 journal Supabase freshness UI (read-only)"
+        },
+        {
+          "level": 3,
+          "text": "Add PR-merge automation for TMS release notes md"
         },
         {
           "level": 2,
-          "text": "2026-07-10 — Admin journal read-only + Safari sidebar fix"
+          "text": "2026-06-17"
+        },
+        {
+          "level": 3,
+          "text": "ten 파일럿·이전 가이드 보강"
+        },
+        {
+          "level": 3,
+          "text": "북마크·기본 origin (`edu-team-tms-ten` 확정)"
         },
         {
           "level": 2,
-          "text": "2026-07-10 — Add J5 Supabase journal pull with conflict confirm"
+          "text": "2026-06-15"
+        },
+        {
+          "level": 3,
+          "text": "새 Vercel·Blob (`edu-team-tms-ten`)"
         },
         {
           "level": 2,
-          "text": "2026-07-10 — Fix Supabase journal stale-write protection"
+          "text": "2026-06-10"
+        },
+        {
+          "level": 3,
+          "text": "구성원 조회용 JSON 가져오기"
+        },
+        {
+          "level": 3,
+          "text": "구성원 일지 A/B/C 탭 조회"
+        },
+        {
+          "level": 3,
+          "text": "KPI2 운영 목록·구성원 일지 연결 1차"
         },
         {
           "level": 2,
-          "text": "2026-07-09 — Add J4 journal Supabase freshness UI (read-only)"
+          "text": "2026-06-12"
+        },
+        {
+          "level": 3,
+          "text": "KPI2 향상 과제 JSON 공유 UX 정리"
+        },
+        {
+          "level": 3,
+          "text": "KPI2 향상 과제 JSON 다운로드/가져오기 fallback"
+        },
+        {
+          "level": 3,
+          "text": "KPI2 향상 과제 팀 공유 API hotfix"
+        },
+        {
+          "level": 3,
+          "text": "KPI2 향상 과제 운영 목록 팀 공유 1차"
+        },
+        {
+          "level": 3,
+          "text": "공개 조회 랜딩 축소·역할 URL 정리"
         },
         {
           "level": 2,
-          "text": "2026-07-09 — Add PR-merge automation for TMS release notes md"
-        },
-        {
-          "level": 2,
-          "text": "2026-06-17 — ten 파일럿·이전 가이드 보강"
-        },
-        {
-          "level": 2,
-          "text": "2026-06-17 — 북마크·기본 origin (`edu-team-tms-ten` 확정)"
-        },
-        {
-          "level": 2,
-          "text": "2026-06-15 — 새 Vercel·Blob (`edu-team-tms-ten`)"
-        },
-        {
-          "level": 2,
-          "text": "2026-06-10 — 구성원 조회용 JSON 가져오기"
-        },
-        {
-          "level": 2,
-          "text": "2026-06-10 — 구성원 일지 A/B/C 탭 조회"
-        },
-        {
-          "level": 2,
-          "text": "2026-06-12 — KPI2 향상 과제 JSON 공유 UX 정리"
-        },
-        {
-          "level": 2,
-          "text": "2026-06-12 — KPI2 향상 과제 JSON 다운로드/가져오기 fallback"
-        },
-        {
-          "level": 2,
-          "text": "2026-06-12 — KPI2 향상 과제 팀 공유 API hotfix"
-        },
-        {
-          "level": 2,
-          "text": "2026-06-12 — KPI2 향상 과제 운영 목록 팀 공유 1차"
-        },
-        {
-          "level": 2,
-          "text": "2026-06-10 — KPI2 운영 목록·구성원 일지 연결 1차"
-        },
-        {
-          "level": 2,
-          "text": "2026-06-12 — 공개 조회 랜딩 축소·역할 URL 정리"
-        },
-        {
-          "level": 2,
-          "text": "2026-06-11 — Blob 트래픽 절감·구성원 운영·배포 복구"
+          "text": "2026-06-11"
         },
         {
           "level": 3,
@@ -1629,19 +1852,27 @@
         },
         {
           "level": 2,
-          "text": "2026-06-05 — 역량·메뉴·접속 URL"
+          "text": "2026-06-05"
+        },
+        {
+          "level": 3,
+          "text": "역량·메뉴·접속 URL"
         },
         {
           "level": 2,
-          "text": "2026-06-02 — 오늘 뭐 먹지"
+          "text": "2026-06-02"
         },
         {
-          "level": 2,
-          "text": "2026-06-02 — PPT 아카데미화·정의서 v5"
+          "level": 3,
+          "text": "오늘 뭐 먹지"
         },
         {
-          "level": 2,
-          "text": "2026-06-02 — 참고문서·UI"
+          "level": 3,
+          "text": "PPT 아카데미화·정의서 v5"
+        },
+        {
+          "level": 3,
+          "text": "참고문서·UI"
         },
         {
           "level": 2,
@@ -1660,6 +1891,10 @@
         "./TMS-운영URL-이전-가이드.md",
         "./TMS-접속URL-북마크.md",
         "./TMS-Blob중단-장부일지-운영가이드.md",
+        "https://github.com/cxr542/edu-team-tms/pull/97",
+        "https://github.com/cxr542/edu-team-tms/pull/96",
+        "https://github.com/cxr542/edu-team-tms/pull/95",
+        "https://github.com/cxr542/edu-team-tms/pull/94",
         "https://github.com/cxr542/edu-team-tms/pull/93",
         "https://github.com/cxr542/edu-team-tms/pull/91",
         "https://github.com/cxr542/edu-team-tms/pull/92",
@@ -1671,6 +1906,7 @@
         "https://okestro-edu-team-tms.vercel.app",
         "https://edu-team-tms.vercel.app"
       ],
+      "wikilinks": [],
       "keywords": [
         "Blob",
         "ledger",
@@ -1833,6 +2069,7 @@
         "https://okestro-edu-team-tms.vercel.app/admin",
         "https://edu-team-tms-ten.vercel.app/admin"
       ],
+      "wikilinks": [],
       "keywords": [
         "Blob",
         "ledger",
@@ -1934,13 +2171,14 @@
         "https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=lunch",
         "https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=idea-bank",
         "https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=docs",
-        "https://edu-team-tms-ten.vercel.app/hwshin",
+        "https://edu-team-tms-ten.vercel.app/hyshin",
         "https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=competency",
         "https://edu-team-tms-ten.vercel.app/?mode=view&member=C&module=ledger&year=2026&month=6",
         "https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=lunch",
         "https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=idea-bank",
         "https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=docs"
       ],
+      "wikilinks": [],
       "keywords": [
         "Blob",
         "ledger",
@@ -2190,6 +2428,7 @@
         }
       ],
       "links": [],
+      "wikilinks": [],
       "keywords": [
         "KPI"
       ]
@@ -2258,6 +2497,7 @@
         }
       ],
       "links": [],
+      "wikilinks": [],
       "keywords": [
         "KPI"
       ]
@@ -2286,6 +2526,10 @@
         },
         {
           "level": 2,
+          "text": "Obsidian Related"
+        },
+        {
+          "level": 2,
           "text": "Non-SoT Copies and Build Outputs"
         },
         {
@@ -2310,6 +2554,17 @@
         }
       ],
       "links": [],
+      "wikilinks": [
+        "j8-journal-supabase-auto-upload-plan",
+        "journal-supabase-sync-plan",
+        "operations-backlog",
+        "obsidian-graph-poc",
+        "AGENTS",
+        "DESIGN",
+        "j7-journal-realtime-blob-plan",
+        "ledger-live-sync",
+        "deployment-process"
+      ],
       "keywords": [
         "Blob",
         "ledger",
@@ -2377,13 +2632,14 @@
         "https://supabase.com/dashboard",
         "../supabase/phase0-apply.sql",
         "../supabase/j3-grant-service-role-journal.sql",
-        "./j7-journal-realtime-blob-plan.md",
+        "../supabase/j7e-grant-service-role-sync-events.sql",
         "./journal-supabase-sync-plan.md",
         "./supabase-schema-plan.md",
         "./operations-backlog.md",
         "https://edu-team-tms-ten.vercel.app/admin",
         "https://xxxx.supabase.co`"
       ],
+      "wikilinks": [],
       "keywords": [
         "Blob",
         "journal",
@@ -2391,8 +2647,7 @@
         "snapshot",
         "Vercel",
         "deploy",
-        "KPI",
-        "member"
+        "KPI"
       ]
     },
     {
@@ -2487,6 +2742,7 @@
         }
       ],
       "links": [],
+      "wikilinks": [],
       "keywords": [
         "Blob",
         "journal",
@@ -2571,6 +2827,7 @@
         "https://edu-team-tms-ten.vercel.app`",
         "https://YOUR-NEW-URL.vercel.app/api/ledger-snapshot"
       ],
+      "wikilinks": [],
       "keywords": [
         "Blob",
         "ledger",
@@ -2639,6 +2896,7 @@
         "https://github.com/cxr542/edu-team-tms.git",
         "https://github.com/cxr542/cxr542-portal.git"
       ],
+      "wikilinks": [],
       "keywords": [
         "Blob",
         "ledger",
@@ -2717,6 +2975,7 @@
         "https://edu-team-tms-ten.vercel.app/?mode=edit",
         "https://github.com/cxr542/edu-team-tms.git"
       ],
+      "wikilinks": [],
       "keywords": [
         "Blob",
         "ledger",
@@ -3187,11 +3446,6 @@
       "path": "docs/deployment-process.md"
     },
     {
-      "id": "url:workspace-guide.md",
-      "type": "url",
-      "label": "workspace-guide.md"
-    },
-    {
       "id": "url:https://okestro-edu-team-tms.vercel.app/`",
       "type": "url",
       "label": "https://okestro-edu-team-tms.vercel.app/`"
@@ -3290,28 +3544,28 @@
     {
       "id": "docs/j7-journal-realtime-blob-plan.md#j7b-member-scoped-supabase-api-dual-write-preview",
       "type": "heading",
-      "title": "J7b — Member-scoped Supabase API + dual-write (Preview)",
+      "title": "J7b — Member-scoped Supabase API + dual-write (Preview) ✅",
       "level": 3,
       "path": "docs/j7-journal-realtime-blob-plan.md"
     },
     {
       "id": "docs/j7-journal-realtime-blob-plan.md#j7c-pull-sot-flip-supabase-first-blob-fallback",
       "type": "heading",
-      "title": "J7c — Pull SoT flip (Supabase-first, Blob fallback)",
+      "title": "J7c — Pull SoT flip (Supabase-first, Blob fallback) ✅",
       "level": 3,
       "path": "docs/j7-journal-realtime-blob-plan.md"
     },
     {
       "id": "docs/j7-journal-realtime-blob-plan.md#j7d-blob-demote",
       "type": "heading",
-      "title": "J7d — Blob demote",
+      "title": "J7d — Blob demote ✅",
       "level": 3,
       "path": "docs/j7-journal-realtime-blob-plan.md"
     },
     {
       "id": "docs/j7-journal-realtime-blob-plan.md#j7e-realtime-알림-얇게",
       "type": "heading",
-      "title": "J7e — Realtime/알림 (얇게)",
+      "title": "J7e — Realtime/알림 (얇게) ✅",
       "level": 3,
       "path": "docs/j7-journal-realtime-blob-plan.md"
     },
@@ -3386,24 +3640,181 @@
       "path": "docs/j7-journal-realtime-blob-plan.md"
     },
     {
-      "id": "url:./operations-backlog.md",
+      "id": "url:../supabase/j7e-grant-service-role-sync-events.sql",
       "type": "url",
-      "label": "./operations-backlog.md"
+      "label": "../supabase/j7e-grant-service-role-sync-events.sql"
     },
     {
-      "id": "url:./journal-supabase-sync-plan.md",
-      "type": "url",
-      "label": "./journal-supabase-sync-plan.md"
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "type": "document",
+      "title": "J8 — Journal Supabase 자동 업로드 설계",
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "sourceKind": "supporting"
     },
     {
-      "id": "url:./journal-live-latest-concurrency-analysis.md",
-      "type": "url",
-      "label": "./journal-live-latest-concurrency-analysis.md"
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md#j8-journal-supabase-자동-업로드-설계",
+      "type": "heading",
+      "title": "J8 — Journal Supabase 자동 업로드 설계",
+      "level": 1,
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md"
     },
     {
-      "id": "url:./supabase-phase0-runbook.md",
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md#0-리뷰용-전제-합의",
+      "type": "heading",
+      "title": "0. 리뷰용 전제 (합의)",
+      "level": 2,
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md"
+    },
+    {
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md#1-배경-동기",
+      "type": "heading",
+      "title": "1. 배경 · 동기",
+      "level": 2,
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md"
+    },
+    {
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md#2-현재-vs-목표",
+      "type": "heading",
+      "title": "2. 현재 vs 목표",
+      "level": 2,
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md"
+    },
+    {
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md#today",
+      "type": "heading",
+      "title": "Today",
+      "level": 3,
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md"
+    },
+    {
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md#goal-j8-manual-mirror-true-일-때",
+      "type": "heading",
+      "title": "Goal (J8, `MANUAL_MIRROR=true`일 때)",
+      "level": 3,
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md"
+    },
+    {
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md#3-gate-대상",
+      "type": "heading",
+      "title": "3. Gate · 대상",
+      "level": 2,
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md"
+    },
+    {
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md#재사용",
+      "type": "heading",
+      "title": "재사용",
+      "level": 3,
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md"
+    },
+    {
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md#today-gate-src-app-jsx-src-app-jsx",
+      "type": "heading",
+      "title": "Today gate ([`src/App.jsx`](../src/App.jsx))",
+      "level": 3,
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md"
+    },
+    {
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md#j8-목표-gate",
+      "type": "heading",
+      "title": "J8 목표 gate",
+      "level": 3,
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md"
+    },
+    {
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md#4-안전-규칙-must",
+      "type": "heading",
+      "title": "4. 안전 규칙 (MUST)",
+      "level": 2,
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md"
+    },
+    {
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md#5-ux",
+      "type": "heading",
+      "title": "5. UX",
+      "level": 2,
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md"
+    },
+    {
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md#6-롤아웃-롤백",
+      "type": "heading",
+      "title": "6. 롤아웃 · 롤백",
+      "level": 2,
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md"
+    },
+    {
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md#롤백",
+      "type": "heading",
+      "title": "롤백",
+      "level": 3,
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md"
+    },
+    {
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md#7-명시적-비범위",
+      "type": "heading",
+      "title": "7. 명시적 비범위",
+      "level": 2,
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md"
+    },
+    {
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md#8-코드-앵커-구현-시",
+      "type": "heading",
+      "title": "8. 코드 앵커 (구현 시)",
+      "level": 2,
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md"
+    },
+    {
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md#9-검증-체크리스트",
+      "type": "heading",
+      "title": "9. 검증 체크리스트",
+      "level": 2,
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md"
+    },
+    {
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md#j8a-preview",
+      "type": "heading",
+      "title": "J8a (Preview)",
+      "level": 3,
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md"
+    },
+    {
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md#j8b-승인-후",
+      "type": "heading",
+      "title": "J8b (승인 후)",
+      "level": 3,
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md"
+    },
+    {
+      "id": "docs/j8-journal-supabase-auto-upload-plan.md#10-다음-작업",
+      "type": "heading",
+      "title": "10. 다음 작업",
+      "level": 2,
+      "path": "docs/j8-journal-supabase-auto-upload-plan.md"
+    },
+    {
+      "id": "url:../src/constants/supabaseSync.js",
       "type": "url",
-      "label": "./supabase-phase0-runbook.md"
+      "label": "../src/constants/supabaseSync.js"
+    },
+    {
+      "id": "url:../src/hooks/useWeeklyJournal.js",
+      "type": "url",
+      "label": "../src/hooks/useWeeklyJournal.js"
+    },
+    {
+      "id": "url:../api/journal-snapshots.js",
+      "type": "url",
+      "label": "../api/journal-snapshots.js"
+    },
+    {
+      "id": "url:../src/context/JournalProvider.jsx",
+      "type": "url",
+      "label": "../src/context/JournalProvider.jsx"
+    },
+    {
+      "id": "url:../src/App.jsx",
+      "type": "url",
+      "label": "../src/App.jsx"
     },
     {
       "id": "docs/journal-live-latest-concurrency-analysis.md",
@@ -3567,6 +3978,13 @@
       "path": "docs/journal-supabase-sync-plan.md"
     },
     {
+      "id": "docs/journal-supabase-sync-plan.md#j8-supabase-자동-업로드-설계",
+      "type": "heading",
+      "title": "J8 — Supabase 자동 업로드 (설계)",
+      "level": 3,
+      "path": "docs/journal-supabase-sync-plan.md"
+    },
+    {
       "id": "docs/journal-supabase-sync-plan.md#롤백-전략",
       "type": "heading",
       "title": "롤백 전략",
@@ -3607,11 +4025,6 @@
       "title": "2026-06-29 저장소 비교 진단 도구 추가",
       "level": 3,
       "path": "docs/journal-supabase-sync-plan.md"
-    },
-    {
-      "id": "url:./j7-journal-realtime-blob-plan.md",
-      "type": "url",
-      "label": "./j7-journal-realtime-blob-plan.md"
     },
     {
       "id": "docs/ledger-live-sync.md",
@@ -3908,11 +4321,6 @@
       "path": "docs/mobile-home-screen.md"
     },
     {
-      "id": "url:./memo-아이폰-홈화면-TMS.md",
-      "type": "url",
-      "label": "./memo-아이폰-홈화면-TMS.md"
-    },
-    {
       "id": "url:https://edu-team-tms.vercel.app/",
       "type": "url",
       "label": "https://edu-team-tms.vercel.app/"
@@ -3946,10 +4354,31 @@
       "path": "docs/obsidian-graph-poc.md"
     },
     {
-      "id": "docs/obsidian-graph-poc.md#initial-scope",
+      "id": "docs/obsidian-graph-poc.md#initial-scope-g1-완료-목표",
       "type": "heading",
-      "title": "Initial Scope",
+      "title": "Initial Scope (G1 — 완료 목표)",
       "level": 2,
+      "path": "docs/obsidian-graph-poc.md"
+    },
+    {
+      "id": "docs/obsidian-graph-poc.md#vault-열기-권장",
+      "type": "heading",
+      "title": "Vault 열기 (권장)",
+      "level": 2,
+      "path": "docs/obsidian-graph-poc.md"
+    },
+    {
+      "id": "docs/obsidian-graph-poc.md#vault-루트-선택",
+      "type": "heading",
+      "title": "Vault 루트 선택",
+      "level": 3,
+      "path": "docs/obsidian-graph-poc.md"
+    },
+    {
+      "id": "docs/obsidian-graph-poc.md#obsidian-설정",
+      "type": "heading",
+      "title": "`.obsidian/` 설정",
+      "level": 3,
       "path": "docs/obsidian-graph-poc.md"
     },
     {
@@ -3974,9 +4403,9 @@
       "path": "docs/obsidian-graph-poc.md"
     },
     {
-      "id": "docs/obsidian-graph-poc.md#non-goals",
+      "id": "docs/obsidian-graph-poc.md#non-goals-g1",
       "type": "heading",
-      "title": "Non-Goals",
+      "title": "Non-Goals (G1)",
       "level": 2,
       "path": "docs/obsidian-graph-poc.md"
     },
@@ -3988,11 +4417,23 @@
       "path": "docs/obsidian-graph-poc.md"
     },
     {
-      "id": "docs/obsidian-graph-poc.md#future-ideas",
+      "id": "docs/obsidian-graph-poc.md#commands",
       "type": "heading",
-      "title": "Future Ideas",
+      "title": "Commands",
       "level": 2,
       "path": "docs/obsidian-graph-poc.md"
+    },
+    {
+      "id": "docs/obsidian-graph-poc.md#future-ideas-g2",
+      "type": "heading",
+      "title": "Future Ideas (G2+)",
+      "level": 2,
+      "path": "docs/obsidian-graph-poc.md"
+    },
+    {
+      "id": "url:…",
+      "type": "url",
+      "label": "…"
     },
     {
       "id": "keyword:access-leader",
@@ -4098,9 +4539,9 @@
       "path": "docs/operations-backlog.md"
     },
     {
-      "id": "docs/operations-backlog.md#앞으로-할-일-일지-우선-j3-j7",
+      "id": "docs/operations-backlog.md#앞으로-할-일-일지-우선-j3-j8",
       "type": "heading",
-      "title": "앞으로 할 일 — **일지 우선** (J3→J7)",
+      "title": "앞으로 할 일 — **일지 우선** (J3→J8)",
       "level": 3,
       "path": "docs/operations-backlog.md"
     },
@@ -4234,16 +4675,6 @@
       "id": "url:../supabase/j3-grant-service-role-journal.sql",
       "type": "url",
       "label": "../supabase/j3-grant-service-role-journal.sql"
-    },
-    {
-      "id": "url:./supabase-schema-plan.md",
-      "type": "url",
-      "label": "./supabase-schema-plan.md"
-    },
-    {
-      "id": "url:./lunch-pick-setup.md",
-      "type": "url",
-      "label": "./lunch-pick-setup.md"
     },
     {
       "id": "url:https://edu-team-tms-ten.vercel.app/admin",
@@ -4427,26 +4858,6 @@
       "path": "docs/reference-source/KPI-TMS-운영모델-v2.md"
     },
     {
-      "id": "url:./KPI-Academizer-TMS-시나리오예시.md",
-      "type": "url",
-      "label": "./KPI-Academizer-TMS-시나리오예시.md"
-    },
-    {
-      "id": "url:./KPI-TMS-traceability-tms.md",
-      "type": "url",
-      "label": "./KPI-TMS-traceability-tms.md"
-    },
-    {
-      "id": "url:./KPI-TMS-팀KPI메뉴.md",
-      "type": "url",
-      "label": "./KPI-TMS-팀KPI메뉴.md"
-    },
-    {
-      "id": "url:./pilot-checklist-v2-tms.md",
-      "type": "url",
-      "label": "./pilot-checklist-v2-tms.md"
-    },
-    {
       "id": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
       "type": "document",
       "title": "TMS 팀 KPI 관리 (v2 · TMS SoT)",
@@ -4501,21 +4912,6 @@
       "title": "관련 문서",
       "level": 2,
       "path": "docs/reference-source/KPI-TMS-팀KPI메뉴.md"
-    },
-    {
-      "id": "url:./TMS-접속URL-북마크.md",
-      "type": "url",
-      "label": "./TMS-접속URL-북마크.md"
-    },
-    {
-      "id": "url:./KPI-일지-TMS-연계-가이드.md",
-      "type": "url",
-      "label": "./KPI-일지-TMS-연계-가이드.md"
-    },
-    {
-      "id": "url:./KPI-TMS-운영모델-v2.md",
-      "type": "url",
-      "label": "./KPI-TMS-운영모델-v2.md"
     },
     {
       "id": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
@@ -5012,21 +5408,6 @@
       "path": "docs/reference-source/TMS-Blob중단-장부일지-운영가이드.md"
     },
     {
-      "id": "url:./TMS-운영URL-이전-가이드.md",
-      "type": "url",
-      "label": "./TMS-운영URL-이전-가이드.md"
-    },
-    {
-      "id": "url:../vercel-new-account-setup.md",
-      "type": "url",
-      "label": "../vercel-new-account-setup.md"
-    },
-    {
-      "id": "url:./TMS-릴리즈노트.md",
-      "type": "url",
-      "label": "./TMS-릴리즈노트.md"
-    },
-    {
       "id": "url:https://edu-team-tms-ten.vercel.app",
       "type": "url",
       "label": "https://edu-team-tms-ten.vercel.app"
@@ -5051,135 +5432,205 @@
       "path": "docs/reference-source/TMS-릴리즈노트.md"
     },
     {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-07-10-add-j7a-journal-freshness-poll-preview",
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-07-10",
       "type": "heading",
-      "title": "2026-07-10 — Add J7a journal freshness poll (Preview)",
+      "title": "2026-07-10",
       "level": 2,
       "path": "docs/reference-source/TMS-릴리즈노트.md"
     },
     {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-07-10-add-j6-preview-supabase-auto-mirror-on-local-journal-save",
+      "id": "docs/reference-source/TMS-릴리즈노트.md#fix-j7c-storage-compare-test-expectations",
       "type": "heading",
-      "title": "2026-07-10 — Add J6 Preview Supabase auto-mirror on local journal save",
+      "title": "Fix J7c storage-compare test expectations",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#add-j7c-supabase-first-journal-team-share-pull",
+      "type": "heading",
+      "title": "Add J7c Supabase-first journal team-share pull",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#add-j7b-member-scoped-journal-supabase-dual-write",
+      "type": "heading",
+      "title": "Add J7b member-scoped journal Supabase dual-write",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#document-j7-0-journal-realtime-and-blob-shrink-roadmap",
+      "type": "heading",
+      "title": "Document J7-0 journal Realtime and Blob shrink roadmap",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#add-j7a-journal-freshness-poll-preview",
+      "type": "heading",
+      "title": "Add J7a journal freshness poll (Preview)",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#add-j6-preview-supabase-auto-mirror-on-local-journal-save",
+      "type": "heading",
+      "title": "Add J6 Preview Supabase auto-mirror on local journal save",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#admin-journal-read-only-safari-sidebar-fix",
+      "type": "heading",
+      "title": "Admin journal read-only + Safari sidebar fix",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#add-j5-supabase-journal-pull-with-conflict-confirm",
+      "type": "heading",
+      "title": "Add J5 Supabase journal pull with conflict confirm",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#fix-supabase-journal-stale-write-protection",
+      "type": "heading",
+      "title": "Fix Supabase journal stale-write protection",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-07-09",
+      "type": "heading",
+      "title": "2026-07-09",
       "level": 2,
       "path": "docs/reference-source/TMS-릴리즈노트.md"
     },
     {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-07-10-admin-journal-read-only-safari-sidebar-fix",
+      "id": "docs/reference-source/TMS-릴리즈노트.md#add-j4-journal-supabase-freshness-ui-read-only",
       "type": "heading",
-      "title": "2026-07-10 — Admin journal read-only + Safari sidebar fix",
+      "title": "Add J4 journal Supabase freshness UI (read-only)",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#add-pr-merge-automation-for-tms-release-notes-md",
+      "type": "heading",
+      "title": "Add PR-merge automation for TMS release notes md",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-17",
+      "type": "heading",
+      "title": "2026-06-17",
       "level": 2,
       "path": "docs/reference-source/TMS-릴리즈노트.md"
     },
     {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-07-10-add-j5-supabase-journal-pull-with-conflict-confirm",
+      "id": "docs/reference-source/TMS-릴리즈노트.md#ten-파일럿-이전-가이드-보강",
       "type": "heading",
-      "title": "2026-07-10 — Add J5 Supabase journal pull with conflict confirm",
+      "title": "ten 파일럿·이전 가이드 보강",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#북마크-기본-origin-edu-team-tms-ten-확정",
+      "type": "heading",
+      "title": "북마크·기본 origin (`edu-team-tms-ten` 확정)",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-15",
+      "type": "heading",
+      "title": "2026-06-15",
       "level": 2,
       "path": "docs/reference-source/TMS-릴리즈노트.md"
     },
     {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-07-10-fix-supabase-journal-stale-write-protection",
+      "id": "docs/reference-source/TMS-릴리즈노트.md#새-vercel-blob-edu-team-tms-ten",
       "type": "heading",
-      "title": "2026-07-10 — Fix Supabase journal stale-write protection",
+      "title": "새 Vercel·Blob (`edu-team-tms-ten`)",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-10",
+      "type": "heading",
+      "title": "2026-06-10",
       "level": 2,
       "path": "docs/reference-source/TMS-릴리즈노트.md"
     },
     {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-07-09-add-j4-journal-supabase-freshness-ui-read-only",
+      "id": "docs/reference-source/TMS-릴리즈노트.md#구성원-조회용-json-가져오기",
       "type": "heading",
-      "title": "2026-07-09 — Add J4 journal Supabase freshness UI (read-only)",
+      "title": "구성원 조회용 JSON 가져오기",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#구성원-일지-a-b-c-탭-조회",
+      "type": "heading",
+      "title": "구성원 일지 A/B/C 탭 조회",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#kpi2-운영-목록-구성원-일지-연결-1차",
+      "type": "heading",
+      "title": "KPI2 운영 목록·구성원 일지 연결 1차",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12",
+      "type": "heading",
+      "title": "2026-06-12",
       "level": 2,
       "path": "docs/reference-source/TMS-릴리즈노트.md"
     },
     {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-07-09-add-pr-merge-automation-for-tms-release-notes-md",
+      "id": "docs/reference-source/TMS-릴리즈노트.md#kpi2-향상-과제-json-공유-ux-정리",
       "type": "heading",
-      "title": "2026-07-09 — Add PR-merge automation for TMS release notes md",
-      "level": 2,
+      "title": "KPI2 향상 과제 JSON 공유 UX 정리",
+      "level": 3,
       "path": "docs/reference-source/TMS-릴리즈노트.md"
     },
     {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-17-ten-파일럿-이전-가이드-보강",
+      "id": "docs/reference-source/TMS-릴리즈노트.md#kpi2-향상-과제-json-다운로드-가져오기-fallback",
       "type": "heading",
-      "title": "2026-06-17 — ten 파일럿·이전 가이드 보강",
-      "level": 2,
+      "title": "KPI2 향상 과제 JSON 다운로드/가져오기 fallback",
+      "level": 3,
       "path": "docs/reference-source/TMS-릴리즈노트.md"
     },
     {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-17-북마크-기본-origin-edu-team-tms-ten-확정",
+      "id": "docs/reference-source/TMS-릴리즈노트.md#kpi2-향상-과제-팀-공유-api-hotfix",
       "type": "heading",
-      "title": "2026-06-17 — 북마크·기본 origin (`edu-team-tms-ten` 확정)",
-      "level": 2,
+      "title": "KPI2 향상 과제 팀 공유 API hotfix",
+      "level": 3,
       "path": "docs/reference-source/TMS-릴리즈노트.md"
     },
     {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-15-새-vercel-blob-edu-team-tms-ten",
+      "id": "docs/reference-source/TMS-릴리즈노트.md#kpi2-향상-과제-운영-목록-팀-공유-1차",
       "type": "heading",
-      "title": "2026-06-15 — 새 Vercel·Blob (`edu-team-tms-ten`)",
-      "level": 2,
+      "title": "KPI2 향상 과제 운영 목록 팀 공유 1차",
+      "level": 3,
       "path": "docs/reference-source/TMS-릴리즈노트.md"
     },
     {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-10-구성원-조회용-json-가져오기",
+      "id": "docs/reference-source/TMS-릴리즈노트.md#공개-조회-랜딩-축소-역할-url-정리",
       "type": "heading",
-      "title": "2026-06-10 — 구성원 조회용 JSON 가져오기",
-      "level": 2,
+      "title": "공개 조회 랜딩 축소·역할 URL 정리",
+      "level": 3,
       "path": "docs/reference-source/TMS-릴리즈노트.md"
     },
     {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-10-구성원-일지-a-b-c-탭-조회",
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-11",
       "type": "heading",
-      "title": "2026-06-10 — 구성원 일지 A/B/C 탭 조회",
-      "level": 2,
-      "path": "docs/reference-source/TMS-릴리즈노트.md"
-    },
-    {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12-kpi2-향상-과제-json-공유-ux-정리",
-      "type": "heading",
-      "title": "2026-06-12 — KPI2 향상 과제 JSON 공유 UX 정리",
-      "level": 2,
-      "path": "docs/reference-source/TMS-릴리즈노트.md"
-    },
-    {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12-kpi2-향상-과제-json-다운로드-가져오기-fallback",
-      "type": "heading",
-      "title": "2026-06-12 — KPI2 향상 과제 JSON 다운로드/가져오기 fallback",
-      "level": 2,
-      "path": "docs/reference-source/TMS-릴리즈노트.md"
-    },
-    {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12-kpi2-향상-과제-팀-공유-api-hotfix",
-      "type": "heading",
-      "title": "2026-06-12 — KPI2 향상 과제 팀 공유 API hotfix",
-      "level": 2,
-      "path": "docs/reference-source/TMS-릴리즈노트.md"
-    },
-    {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12-kpi2-향상-과제-운영-목록-팀-공유-1차",
-      "type": "heading",
-      "title": "2026-06-12 — KPI2 향상 과제 운영 목록 팀 공유 1차",
-      "level": 2,
-      "path": "docs/reference-source/TMS-릴리즈노트.md"
-    },
-    {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-10-kpi2-운영-목록-구성원-일지-연결-1차",
-      "type": "heading",
-      "title": "2026-06-10 — KPI2 운영 목록·구성원 일지 연결 1차",
-      "level": 2,
-      "path": "docs/reference-source/TMS-릴리즈노트.md"
-    },
-    {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12-공개-조회-랜딩-축소-역할-url-정리",
-      "type": "heading",
-      "title": "2026-06-12 — 공개 조회 랜딩 축소·역할 URL 정리",
-      "level": 2,
-      "path": "docs/reference-source/TMS-릴리즈노트.md"
-    },
-    {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-11-blob-트래픽-절감-구성원-운영-배포-복구",
-      "type": "heading",
-      "title": "2026-06-11 — Blob 트래픽 절감·구성원 운영·배포 복구",
+      "title": "2026-06-11",
       "level": 2,
       "path": "docs/reference-source/TMS-릴리즈노트.md"
     },
@@ -5219,31 +5670,45 @@
       "path": "docs/reference-source/TMS-릴리즈노트.md"
     },
     {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-05-역량-메뉴-접속-url",
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-05",
       "type": "heading",
-      "title": "2026-06-05 — 역량·메뉴·접속 URL",
+      "title": "2026-06-05",
       "level": 2,
       "path": "docs/reference-source/TMS-릴리즈노트.md"
     },
     {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-02-오늘-뭐-먹지",
+      "id": "docs/reference-source/TMS-릴리즈노트.md#역량-메뉴-접속-url",
       "type": "heading",
-      "title": "2026-06-02 — 오늘 뭐 먹지",
+      "title": "역량·메뉴·접속 URL",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-02",
+      "type": "heading",
+      "title": "2026-06-02",
       "level": 2,
       "path": "docs/reference-source/TMS-릴리즈노트.md"
     },
     {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-02-ppt-아카데미화-정의서-v5",
+      "id": "docs/reference-source/TMS-릴리즈노트.md#오늘-뭐-먹지",
       "type": "heading",
-      "title": "2026-06-02 — PPT 아카데미화·정의서 v5",
-      "level": 2,
+      "title": "오늘 뭐 먹지",
+      "level": 3,
       "path": "docs/reference-source/TMS-릴리즈노트.md"
     },
     {
-      "id": "docs/reference-source/TMS-릴리즈노트.md#2026-06-02-참고문서-ui",
+      "id": "docs/reference-source/TMS-릴리즈노트.md#ppt-아카데미화-정의서-v5",
       "type": "heading",
-      "title": "2026-06-02 — 참고문서·UI",
-      "level": 2,
+      "title": "PPT 아카데미화·정의서 v5",
+      "level": 3,
+      "path": "docs/reference-source/TMS-릴리즈노트.md"
+    },
+    {
+      "id": "docs/reference-source/TMS-릴리즈노트.md#참고문서-ui",
+      "type": "heading",
+      "title": "참고문서·UI",
+      "level": 3,
       "path": "docs/reference-source/TMS-릴리즈노트.md"
     },
     {
@@ -5268,9 +5733,24 @@
       "path": "docs/reference-source/TMS-릴리즈노트.md"
     },
     {
-      "id": "url:./TMS-Blob중단-장부일지-운영가이드.md",
+      "id": "url:https://github.com/cxr542/edu-team-tms/pull/97",
       "type": "url",
-      "label": "./TMS-Blob중단-장부일지-운영가이드.md"
+      "label": "https://github.com/cxr542/edu-team-tms/pull/97"
+    },
+    {
+      "id": "url:https://github.com/cxr542/edu-team-tms/pull/96",
+      "type": "url",
+      "label": "https://github.com/cxr542/edu-team-tms/pull/96"
+    },
+    {
+      "id": "url:https://github.com/cxr542/edu-team-tms/pull/95",
+      "type": "url",
+      "label": "https://github.com/cxr542/edu-team-tms/pull/95"
+    },
+    {
+      "id": "url:https://github.com/cxr542/edu-team-tms/pull/94",
+      "type": "url",
+      "label": "https://github.com/cxr542/edu-team-tms/pull/94"
     },
     {
       "id": "url:https://github.com/cxr542/edu-team-tms/pull/93",
@@ -5757,9 +6237,9 @@
       "label": "https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=docs"
     },
     {
-      "id": "url:https://edu-team-tms-ten.vercel.app/hwshin",
+      "id": "url:https://edu-team-tms-ten.vercel.app/hyshin",
       "type": "url",
-      "label": "https://edu-team-tms-ten.vercel.app/hwshin"
+      "label": "https://edu-team-tms-ten.vercel.app/hyshin"
     },
     {
       "id": "url:https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=competency",
@@ -6133,6 +6613,13 @@
       "id": "docs/sot-map.md#primary-sot-documents",
       "type": "heading",
       "title": "Primary SoT Documents",
+      "level": 2,
+      "path": "docs/sot-map.md"
+    },
+    {
+      "id": "docs/sot-map.md#obsidian-related",
+      "type": "heading",
+      "title": "Obsidian Related",
       "level": 2,
       "path": "docs/sot-map.md"
     },
@@ -6537,26 +7024,6 @@
       "path": "docs/vercel-new-account-setup.md"
     },
     {
-      "id": "url:./reference-source/TMS-접속URL-북마크.md",
-      "type": "url",
-      "label": "./reference-source/TMS-접속URL-북마크.md"
-    },
-    {
-      "id": "url:./reference-source/TMS-Blob중단-장부일지-운영가이드.md",
-      "type": "url",
-      "label": "./reference-source/TMS-Blob중단-장부일지-운영가이드.md"
-    },
-    {
-      "id": "url:./ledger-live-sync.md",
-      "type": "url",
-      "label": "./ledger-live-sync.md"
-    },
-    {
-      "id": "url:./deployment-process.md",
-      "type": "url",
-      "label": "./deployment-process.md"
-    },
-    {
       "id": "url:https://vercel.com/signup",
       "type": "url",
       "label": "https://vercel.com/signup"
@@ -6659,11 +7126,6 @@
       "title": "4. CI/CD Secrets (repo별)",
       "level": 2,
       "path": "docs/workspace-guide.md"
-    },
-    {
-      "id": "url:deployment-process.md",
-      "type": "url",
-      "label": "deployment-process.md"
     },
     {
       "id": "url:https://github.com/cxr542/edu-team-tms.git",
@@ -6772,31 +7234,6 @@
       "title": "버전",
       "level": 2,
       "path": "README.md"
-    },
-    {
-      "id": "url:docs/workspace-guide.md",
-      "type": "url",
-      "label": "docs/workspace-guide.md"
-    },
-    {
-      "id": "url:docs/sot-map.md",
-      "type": "url",
-      "label": "docs/sot-map.md"
-    },
-    {
-      "id": "url:docs/deployment-process.md",
-      "type": "url",
-      "label": "docs/deployment-process.md"
-    },
-    {
-      "id": "url:docs/ledger-live-sync.md",
-      "type": "url",
-      "label": "docs/ledger-live-sync.md"
-    },
-    {
-      "id": "url:docs/mobile-home-screen.md",
-      "type": "url",
-      "label": "docs/mobile-home-screen.md"
     },
     {
       "id": "url:https://edu-team-tms-ten.vercel.app/",
@@ -7217,7 +7654,7 @@
     },
     {
       "from": "docs/deployment-process.md",
-      "to": "url:workspace-guide.md",
+      "to": "docs/workspace-guide.md",
       "type": "links_to"
     },
     {
@@ -7387,22 +7824,42 @@
     },
     {
       "from": "docs/j7-journal-realtime-blob-plan.md",
-      "to": "url:./operations-backlog.md",
+      "to": "docs/operations-backlog.md",
       "type": "links_to"
     },
     {
       "from": "docs/j7-journal-realtime-blob-plan.md",
-      "to": "url:./journal-supabase-sync-plan.md",
+      "to": "docs/journal-supabase-sync-plan.md",
       "type": "links_to"
     },
     {
       "from": "docs/j7-journal-realtime-blob-plan.md",
-      "to": "url:./journal-live-latest-concurrency-analysis.md",
+      "to": "docs/journal-live-latest-concurrency-analysis.md",
       "type": "links_to"
     },
     {
       "from": "docs/j7-journal-realtime-blob-plan.md",
-      "to": "url:./supabase-phase0-runbook.md",
+      "to": "docs/supabase-phase0-runbook.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/j7-journal-realtime-blob-plan.md",
+      "to": "url:../supabase/j7e-grant-service-role-sync-events.sql",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/j7-journal-realtime-blob-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/j7-journal-realtime-blob-plan.md",
+      "to": "docs/obsidian-graph-poc.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/j7-journal-realtime-blob-plan.md",
+      "to": "docs/sot-map.md",
       "type": "links_to"
     },
     {
@@ -7447,6 +7904,196 @@
     },
     {
       "from": "docs/j7-journal-realtime-blob-plan.md",
+      "to": "keyword:member",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md#j8-journal-supabase-자동-업로드-설계",
+      "type": "documents"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md#0-리뷰용-전제-합의",
+      "type": "documents"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md#1-배경-동기",
+      "type": "documents"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md#2-현재-vs-목표",
+      "type": "documents"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md#today",
+      "type": "documents"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md#goal-j8-manual-mirror-true-일-때",
+      "type": "documents"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md#3-gate-대상",
+      "type": "documents"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md#재사용",
+      "type": "documents"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md#today-gate-src-app-jsx-src-app-jsx",
+      "type": "documents"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md#j8-목표-gate",
+      "type": "documents"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md#4-안전-규칙-must",
+      "type": "documents"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md#5-ux",
+      "type": "documents"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md#6-롤아웃-롤백",
+      "type": "documents"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md#롤백",
+      "type": "documents"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md#7-명시적-비범위",
+      "type": "documents"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md#8-코드-앵커-구현-시",
+      "type": "documents"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md#9-검증-체크리스트",
+      "type": "documents"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md#j8a-preview",
+      "type": "documents"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md#j8b-승인-후",
+      "type": "documents"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md#10-다음-작업",
+      "type": "documents"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/j7-journal-realtime-blob-plan.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/journal-supabase-sync-plan.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/operations-backlog.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/supabase-phase0-runbook.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "url:../src/constants/supabaseSync.js",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "url:../src/hooks/useWeeklyJournal.js",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "url:../api/journal-snapshots.js",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "url:../src/context/JournalProvider.jsx",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "url:../src/App.jsx",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/obsidian-graph-poc.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "docs/sot-map.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "keyword:blob",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "keyword:ledger",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "keyword:journal",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "keyword:localstorage",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "keyword:snapshot",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "to": "keyword:improve-projects",
+      "type": "mentions"
+    },
+    {
+      "from": "docs/j8-journal-supabase-auto-upload-plan.md",
       "to": "keyword:member",
       "type": "mentions"
     },
@@ -7582,6 +8229,11 @@
     },
     {
       "from": "docs/journal-supabase-sync-plan.md",
+      "to": "docs/journal-supabase-sync-plan.md#j8-supabase-자동-업로드-설계",
+      "type": "documents"
+    },
+    {
+      "from": "docs/journal-supabase-sync-plan.md",
       "to": "docs/journal-supabase-sync-plan.md#롤백-전략",
       "type": "documents"
     },
@@ -7612,12 +8264,17 @@
     },
     {
       "from": "docs/journal-supabase-sync-plan.md",
-      "to": "url:./j7-journal-realtime-blob-plan.md",
+      "to": "docs/j7-journal-realtime-blob-plan.md",
       "type": "links_to"
     },
     {
       "from": "docs/journal-supabase-sync-plan.md",
-      "to": "url:./journal-live-latest-concurrency-analysis.md",
+      "to": "docs/journal-live-latest-concurrency-analysis.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/journal-supabase-sync-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md",
       "type": "links_to"
     },
     {
@@ -7922,7 +8579,7 @@
     },
     {
       "from": "docs/mobile-home-screen.md",
-      "to": "url:./memo-아이폰-홈화면-TMS.md",
+      "to": "docs/memo-아이폰-홈화면-TMS.md",
       "type": "links_to"
     },
     {
@@ -7967,7 +8624,22 @@
     },
     {
       "from": "docs/obsidian-graph-poc.md",
-      "to": "docs/obsidian-graph-poc.md#initial-scope",
+      "to": "docs/obsidian-graph-poc.md#initial-scope-g1-완료-목표",
+      "type": "documents"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "docs/obsidian-graph-poc.md#vault-열기-권장",
+      "type": "documents"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "docs/obsidian-graph-poc.md#vault-루트-선택",
+      "type": "documents"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "docs/obsidian-graph-poc.md#obsidian-설정",
       "type": "documents"
     },
     {
@@ -7987,7 +8659,7 @@
     },
     {
       "from": "docs/obsidian-graph-poc.md",
-      "to": "docs/obsidian-graph-poc.md#non-goals",
+      "to": "docs/obsidian-graph-poc.md#non-goals-g1",
       "type": "documents"
     },
     {
@@ -7997,8 +8669,43 @@
     },
     {
       "from": "docs/obsidian-graph-poc.md",
-      "to": "docs/obsidian-graph-poc.md#future-ideas",
+      "to": "docs/obsidian-graph-poc.md#commands",
       "type": "documents"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "docs/obsidian-graph-poc.md#future-ideas-g2",
+      "type": "documents"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "url:…",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "AGENTS.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "docs/sot-map.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "DESIGN.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "docs/j7-journal-realtime-blob-plan.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/obsidian-graph-poc.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "type": "links_to"
     },
     {
       "from": "docs/obsidian-graph-poc.md",
@@ -8157,7 +8864,7 @@
     },
     {
       "from": "docs/operations-backlog.md",
-      "to": "docs/operations-backlog.md#앞으로-할-일-일지-우선-j3-j7",
+      "to": "docs/operations-backlog.md#앞으로-할-일-일지-우선-j3-j8",
       "type": "documents"
     },
     {
@@ -8252,12 +8959,17 @@
     },
     {
       "from": "docs/operations-backlog.md",
-      "to": "url:./j7-journal-realtime-blob-plan.md",
+      "to": "docs/j7-journal-realtime-blob-plan.md",
       "type": "links_to"
     },
     {
       "from": "docs/operations-backlog.md",
-      "to": "url:./journal-supabase-sync-plan.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/operations-backlog.md",
+      "to": "docs/journal-supabase-sync-plan.md",
       "type": "links_to"
     },
     {
@@ -8267,17 +8979,22 @@
     },
     {
       "from": "docs/operations-backlog.md",
-      "to": "url:./supabase-phase0-runbook.md",
+      "to": "url:../supabase/j7e-grant-service-role-sync-events.sql",
       "type": "links_to"
     },
     {
       "from": "docs/operations-backlog.md",
-      "to": "url:./supabase-schema-plan.md",
+      "to": "docs/supabase-phase0-runbook.md",
       "type": "links_to"
     },
     {
       "from": "docs/operations-backlog.md",
-      "to": "url:./lunch-pick-setup.md",
+      "to": "docs/supabase-schema-plan.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/operations-backlog.md",
+      "to": "docs/lunch-pick-setup.md",
       "type": "links_to"
     },
     {
@@ -8482,22 +9199,22 @@
     },
     {
       "from": "docs/reference-source/KPI-TMS-운영모델-v2.md",
-      "to": "url:./KPI-Academizer-TMS-시나리오예시.md",
+      "to": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md",
       "type": "links_to"
     },
     {
       "from": "docs/reference-source/KPI-TMS-운영모델-v2.md",
-      "to": "url:./KPI-TMS-traceability-tms.md",
+      "to": "docs/reference-source/KPI-TMS-traceability-tms.md",
       "type": "links_to"
     },
     {
       "from": "docs/reference-source/KPI-TMS-운영모델-v2.md",
-      "to": "url:./KPI-TMS-팀KPI메뉴.md",
+      "to": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
       "type": "links_to"
     },
     {
       "from": "docs/reference-source/KPI-TMS-운영모델-v2.md",
-      "to": "url:./pilot-checklist-v2-tms.md",
+      "to": "docs/reference-source/pilot-checklist-v2-tms.md",
       "type": "links_to"
     },
     {
@@ -8562,22 +9279,22 @@
     },
     {
       "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
-      "to": "url:./TMS-접속URL-북마크.md",
+      "to": "docs/reference-source/TMS-접속URL-북마크.md",
       "type": "links_to"
     },
     {
       "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
-      "to": "url:./KPI-일지-TMS-연계-가이드.md",
+      "to": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
       "type": "links_to"
     },
     {
       "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
-      "to": "url:./KPI-TMS-운영모델-v2.md",
+      "to": "docs/reference-source/KPI-TMS-운영모델-v2.md",
       "type": "links_to"
     },
     {
       "from": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
-      "to": "url:./pilot-checklist-v2-tms.md",
+      "to": "docs/reference-source/pilot-checklist-v2-tms.md",
       "type": "links_to"
     },
     {
@@ -8662,17 +9379,17 @@
     },
     {
       "from": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
-      "to": "url:./KPI-TMS-운영모델-v2.md",
+      "to": "docs/reference-source/KPI-TMS-운영모델-v2.md",
       "type": "links_to"
     },
     {
       "from": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
-      "to": "url:./KPI-Academizer-TMS-시나리오예시.md",
+      "to": "docs/reference-source/KPI-Academizer-TMS-시나리오예시.md",
       "type": "links_to"
     },
     {
       "from": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
-      "to": "url:./KPI-TMS-traceability-tms.md",
+      "to": "docs/reference-source/KPI-TMS-traceability-tms.md",
       "type": "links_to"
     },
     {
@@ -9012,32 +9729,32 @@
     },
     {
       "from": "docs/reference-source/TMS-Blob중단-장부일지-운영가이드.md",
-      "to": "url:./TMS-접속URL-북마크.md",
+      "to": "docs/reference-source/TMS-접속URL-북마크.md",
       "type": "links_to"
     },
     {
       "from": "docs/reference-source/TMS-Blob중단-장부일지-운영가이드.md",
-      "to": "url:./TMS-운영URL-이전-가이드.md",
+      "to": "docs/reference-source/TMS-운영URL-이전-가이드.md",
       "type": "links_to"
     },
     {
       "from": "docs/reference-source/TMS-Blob중단-장부일지-운영가이드.md",
-      "to": "url:../vercel-new-account-setup.md",
+      "to": "docs/vercel-new-account-setup.md",
       "type": "links_to"
     },
     {
       "from": "docs/reference-source/TMS-Blob중단-장부일지-운영가이드.md",
-      "to": "url:./KPI-일지-TMS-연계-가이드.md",
+      "to": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
       "type": "links_to"
     },
     {
       "from": "docs/reference-source/TMS-Blob중단-장부일지-운영가이드.md",
-      "to": "url:./TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md",
       "type": "links_to"
     },
     {
       "from": "docs/reference-source/TMS-Blob중단-장부일지-운영가이드.md",
-      "to": "url:./KPI-TMS-팀KPI메뉴.md",
+      "to": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
       "type": "links_to"
     },
     {
@@ -9122,97 +9839,147 @@
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-07-10-add-j7a-journal-freshness-poll-preview",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-07-10",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-07-10-add-j6-preview-supabase-auto-mirror-on-local-journal-save",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#fix-j7c-storage-compare-test-expectations",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-07-10-admin-journal-read-only-safari-sidebar-fix",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#add-j7c-supabase-first-journal-team-share-pull",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-07-10-add-j5-supabase-journal-pull-with-conflict-confirm",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#add-j7b-member-scoped-journal-supabase-dual-write",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-07-10-fix-supabase-journal-stale-write-protection",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#document-j7-0-journal-realtime-and-blob-shrink-roadmap",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-07-09-add-j4-journal-supabase-freshness-ui-read-only",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#add-j7a-journal-freshness-poll-preview",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-07-09-add-pr-merge-automation-for-tms-release-notes-md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#add-j6-preview-supabase-auto-mirror-on-local-journal-save",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-17-ten-파일럿-이전-가이드-보강",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#admin-journal-read-only-safari-sidebar-fix",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-17-북마크-기본-origin-edu-team-tms-ten-확정",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#add-j5-supabase-journal-pull-with-conflict-confirm",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-15-새-vercel-blob-edu-team-tms-ten",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#fix-supabase-journal-stale-write-protection",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-10-구성원-조회용-json-가져오기",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-07-09",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-10-구성원-일지-a-b-c-탭-조회",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#add-j4-journal-supabase-freshness-ui-read-only",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12-kpi2-향상-과제-json-공유-ux-정리",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#add-pr-merge-automation-for-tms-release-notes-md",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12-kpi2-향상-과제-json-다운로드-가져오기-fallback",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-17",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12-kpi2-향상-과제-팀-공유-api-hotfix",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#ten-파일럿-이전-가이드-보강",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12-kpi2-향상-과제-운영-목록-팀-공유-1차",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#북마크-기본-origin-edu-team-tms-ten-확정",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-10-kpi2-운영-목록-구성원-일지-연결-1차",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-15",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12-공개-조회-랜딩-축소-역할-url-정리",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#새-vercel-blob-edu-team-tms-ten",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-11-blob-트래픽-절감-구성원-운영-배포-복구",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-10",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#구성원-조회용-json-가져오기",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#구성원-일지-a-b-c-탭-조회",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#kpi2-운영-목록-구성원-일지-연결-1차",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-12",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#kpi2-향상-과제-json-공유-ux-정리",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#kpi2-향상-과제-json-다운로드-가져오기-fallback",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#kpi2-향상-과제-팀-공유-api-hotfix",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#kpi2-향상-과제-운영-목록-팀-공유-1차",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#공개-조회-랜딩-축소-역할-url-정리",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-11",
       "type": "documents"
     },
     {
@@ -9242,22 +10009,32 @@
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-05-역량-메뉴-접속-url",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-05",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-02-오늘-뭐-먹지",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#역량-메뉴-접속-url",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-02-ppt-아카데미화-정의서-v5",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-02",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "docs/reference-source/TMS-릴리즈노트.md#2026-06-02-참고문서-ui",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#오늘-뭐-먹지",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#ppt-아카데미화-정의서-v5",
+      "type": "documents"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "docs/reference-source/TMS-릴리즈노트.md#참고문서-ui",
       "type": "documents"
     },
     {
@@ -9277,17 +10054,37 @@
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "url:./TMS-운영URL-이전-가이드.md",
+      "to": "docs/reference-source/TMS-운영URL-이전-가이드.md",
       "type": "links_to"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "url:./TMS-접속URL-북마크.md",
+      "to": "docs/reference-source/TMS-접속URL-북마크.md",
       "type": "links_to"
     },
     {
       "from": "docs/reference-source/TMS-릴리즈노트.md",
-      "to": "url:./TMS-Blob중단-장부일지-운영가이드.md",
+      "to": "docs/reference-source/TMS-Blob중단-장부일지-운영가이드.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "url:https://github.com/cxr542/edu-team-tms/pull/97",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "url:https://github.com/cxr542/edu-team-tms/pull/96",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "url:https://github.com/cxr542/edu-team-tms/pull/95",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/reference-source/TMS-릴리즈노트.md",
+      "to": "url:https://github.com/cxr542/edu-team-tms/pull/94",
       "type": "links_to"
     },
     {
@@ -9567,17 +10364,17 @@
     },
     {
       "from": "docs/reference-source/TMS-운영URL-이전-가이드.md",
-      "to": "url:./TMS-접속URL-북마크.md",
+      "to": "docs/reference-source/TMS-접속URL-북마크.md",
       "type": "links_to"
     },
     {
       "from": "docs/reference-source/TMS-운영URL-이전-가이드.md",
-      "to": "url:./KPI-일지-TMS-연계-가이드.md",
+      "to": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
       "type": "links_to"
     },
     {
       "from": "docs/reference-source/TMS-운영URL-이전-가이드.md",
-      "to": "url:./TMS-Blob중단-장부일지-운영가이드.md",
+      "to": "docs/reference-source/TMS-Blob중단-장부일지-운영가이드.md",
       "type": "links_to"
     },
     {
@@ -9737,17 +10534,17 @@
     },
     {
       "from": "docs/reference-source/TMS-접속URL-북마크.md",
-      "to": "url:./TMS-운영URL-이전-가이드.md",
+      "to": "docs/reference-source/TMS-운영URL-이전-가이드.md",
       "type": "links_to"
     },
     {
       "from": "docs/reference-source/TMS-접속URL-북마크.md",
-      "to": "url:./KPI-TMS-팀KPI메뉴.md",
+      "to": "docs/reference-source/KPI-TMS-팀KPI메뉴.md",
       "type": "links_to"
     },
     {
       "from": "docs/reference-source/TMS-접속URL-북마크.md",
-      "to": "url:./KPI-일지-TMS-연계-가이드.md",
+      "to": "docs/reference-source/KPI-일지-TMS-연계-가이드.md",
       "type": "links_to"
     },
     {
@@ -9867,7 +10664,7 @@
     },
     {
       "from": "docs/reference-source/TMS-접속URL-북마크.md",
-      "to": "url:https://edu-team-tms-ten.vercel.app/hwshin",
+      "to": "url:https://edu-team-tms-ten.vercel.app/hyshin",
       "type": "links_to"
     },
     {
@@ -9982,22 +10779,7 @@
     },
     {
       "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#지표-설명",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-산식",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
       "to": "docs/reference-source/교육팀_KPI_정의서.md#m-m-구성",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#결과-평가",
       "type": "documents"
     },
     {
@@ -10007,37 +10789,7 @@
     },
     {
       "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#지표-설명",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-산식",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#결과-평가",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
       "to": "docs/reference-source/교육팀_KPI_정의서.md#지표-2-교육팀-업무-리소스-생산성",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#지표-설명",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-산식",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#결과-평가",
       "type": "documents"
     },
     {
@@ -10047,47 +10799,12 @@
     },
     {
       "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#지표-설명",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-산식",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
       "to": "docs/reference-source/교육팀_KPI_정의서.md#분기별-목표",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#결과-평가",
       "type": "documents"
     },
     {
       "from": "docs/reference-source/교육팀_KPI_정의서.md",
       "to": "docs/reference-source/교육팀_KPI_정의서.md#지표-3-교육팀-핵심-역량-레벨",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#지표-설명",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-산식",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#분기별-목표",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#결과-평가",
       "type": "documents"
     },
     {
@@ -10098,11 +10815,6 @@
     {
       "from": "docs/reference-source/교육팀_KPI_정의서.md",
       "to": "docs/reference-source/교육팀_KPI_정의서.md#정의",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-산식",
       "type": "documents"
     },
     {
@@ -10127,22 +10839,7 @@
     },
     {
       "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#정의",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-산식",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
       "to": "docs/reference-source/교육팀_KPI_정의서.md#유효-응답-최소-n-기준",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#유효-응답만-평균",
       "type": "documents"
     },
     {
@@ -10167,32 +10864,7 @@
     },
     {
       "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#정의",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-산식",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-방법",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-주기-분기별",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
       "to": "docs/reference-source/교육팀_KPI_정의서.md#세부-지표-역량-실전-적용률-25",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#정의",
       "type": "documents"
     },
     {
@@ -10207,22 +10879,7 @@
     },
     {
       "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-산식",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-주기-분기별",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
       "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-요소-종합",
-      "type": "documents"
-    },
-    {
-      "from": "docs/reference-source/교육팀_KPI_정의서.md",
-      "to": "docs/reference-source/교육팀_KPI_정의서.md#측정-주기",
       "type": "documents"
     },
     {
@@ -10332,6 +10989,11 @@
     },
     {
       "from": "docs/sot-map.md",
+      "to": "docs/sot-map.md#obsidian-related",
+      "type": "documents"
+    },
+    {
+      "from": "docs/sot-map.md",
       "to": "docs/sot-map.md#non-sot-copies-and-build-outputs",
       "type": "documents"
     },
@@ -10359,6 +11021,51 @@
       "from": "docs/sot-map.md",
       "to": "docs/sot-map.md#next-cleanup-candidates",
       "type": "documents"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "docs/j8-journal-supabase-auto-upload-plan.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "docs/journal-supabase-sync-plan.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "docs/operations-backlog.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "docs/obsidian-graph-poc.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "AGENTS.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "DESIGN.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "docs/j7-journal-realtime-blob-plan.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "docs/ledger-live-sync.md",
+      "type": "links_to"
+    },
+    {
+      "from": "docs/sot-map.md",
+      "to": "docs/deployment-process.md",
+      "type": "links_to"
     },
     {
       "from": "docs/sot-map.md",
@@ -10477,22 +11184,22 @@
     },
     {
       "from": "docs/supabase-phase0-runbook.md",
-      "to": "url:./j7-journal-realtime-blob-plan.md",
+      "to": "url:../supabase/j7e-grant-service-role-sync-events.sql",
       "type": "links_to"
     },
     {
       "from": "docs/supabase-phase0-runbook.md",
-      "to": "url:./journal-supabase-sync-plan.md",
+      "to": "docs/journal-supabase-sync-plan.md",
       "type": "links_to"
     },
     {
       "from": "docs/supabase-phase0-runbook.md",
-      "to": "url:./supabase-schema-plan.md",
+      "to": "docs/supabase-schema-plan.md",
       "type": "links_to"
     },
     {
       "from": "docs/supabase-phase0-runbook.md",
-      "to": "url:./operations-backlog.md",
+      "to": "docs/operations-backlog.md",
       "type": "links_to"
     },
     {
@@ -10538,11 +11245,6 @@
     {
       "from": "docs/supabase-phase0-runbook.md",
       "to": "keyword:kpi",
-      "type": "mentions"
-    },
-    {
-      "from": "docs/supabase-phase0-runbook.md",
-      "to": "keyword:member",
       "type": "mentions"
     },
     {
@@ -10757,22 +11459,22 @@
     },
     {
       "from": "docs/vercel-new-account-setup.md",
-      "to": "url:./reference-source/TMS-접속URL-북마크.md",
+      "to": "docs/reference-source/TMS-접속URL-북마크.md",
       "type": "links_to"
     },
     {
       "from": "docs/vercel-new-account-setup.md",
-      "to": "url:./reference-source/TMS-Blob중단-장부일지-운영가이드.md",
+      "to": "docs/reference-source/TMS-Blob중단-장부일지-운영가이드.md",
       "type": "links_to"
     },
     {
       "from": "docs/vercel-new-account-setup.md",
-      "to": "url:./ledger-live-sync.md",
+      "to": "docs/ledger-live-sync.md",
       "type": "links_to"
     },
     {
       "from": "docs/vercel-new-account-setup.md",
-      "to": "url:./deployment-process.md",
+      "to": "docs/deployment-process.md",
       "type": "links_to"
     },
     {
@@ -10902,7 +11604,7 @@
     },
     {
       "from": "docs/workspace-guide.md",
-      "to": "url:deployment-process.md",
+      "to": "docs/deployment-process.md",
       "type": "links_to"
     },
     {
@@ -11007,27 +11709,27 @@
     },
     {
       "from": "README.md",
-      "to": "url:docs/workspace-guide.md",
+      "to": "docs/workspace-guide.md",
       "type": "links_to"
     },
     {
       "from": "README.md",
-      "to": "url:docs/sot-map.md",
+      "to": "docs/sot-map.md",
       "type": "links_to"
     },
     {
       "from": "README.md",
-      "to": "url:docs/deployment-process.md",
+      "to": "docs/deployment-process.md",
       "type": "links_to"
     },
     {
       "from": "README.md",
-      "to": "url:docs/ledger-live-sync.md",
+      "to": "docs/ledger-live-sync.md",
       "type": "links_to"
     },
     {
       "from": "README.md",
-      "to": "url:docs/mobile-home-screen.md",
+      "to": "docs/mobile-home-screen.md",
       "type": "links_to"
     },
     {
@@ -11112,8 +11814,8 @@
     }
   ],
   "summary": {
-    "documentCount": 34,
-    "nodeCount": 617,
-    "edgeCount": 859
+    "documentCount": 35,
+    "nodeCount": 637,
+    "edgeCount": 912
   }
 }

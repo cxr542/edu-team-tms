@@ -89,7 +89,7 @@ GitHub Actions (`edu-team-tms` repo):
 Source reference documents live under `docs/reference-source/*`. Published/static copies under `public/docs/*` are not the source of truth. Build output under `.vercel/output/static/*` is also not source documentation.
 
 ## Docs Graph PoC
-The docs graph PoC writes `docs/docs-graph.json` from Markdown sources. If only `generatedAt` changes after regeneration, do not treat it as a meaningful documentation change.
+The docs graph PoC writes `docs/docs-graph.json` from Markdown sources (`npm run docs:graph`). Open the repo root as an Obsidian vault to explore links visually — see `docs/obsidian-graph-poc.md`. If only `generatedAt` changes after regeneration, do not treat it as a meaningful documentation change.
 
 ## 버전
 

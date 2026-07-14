@@ -4,7 +4,9 @@
 > **범위:** 업무일지 팀 공유 SoT를 Blob → Supabase per-member로 이전하고, Realtime은 알림·감사만.  
 > **비범위:** Production `MANUAL_MIRROR=true`, localStorage 제거, 자동 pull/merge, 매직링크 필수화, improve-projects/ledger Blob.
 
-관련: [`operations-backlog.md`](./operations-backlog.md) §6·§9 · [`journal-supabase-sync-plan.md`](./journal-supabase-sync-plan.md) · [`journal-live-latest-concurrency-analysis.md`](./journal-live-latest-concurrency-analysis.md) · [`supabase-phase0-runbook.md`](./supabase-phase0-runbook.md)
+관련: [[operations-backlog]] · [[journal-supabase-sync-plan]] · [[journal-live-latest-concurrency-analysis]] · [[supabase-phase0-runbook]] · [[j8-journal-supabase-auto-upload-plan]] · [[obsidian-graph-poc]] · [[sot-map]]
+
+([operations-backlog.md](./operations-backlog.md) §6·§9 · [journal-supabase-sync-plan.md](./journal-supabase-sync-plan.md) · [journal-live-latest-concurrency-analysis.md](./journal-live-latest-concurrency-analysis.md) · [supabase-phase0-runbook.md](./supabase-phase0-runbook.md))
 
 ---
 

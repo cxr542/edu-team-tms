@@ -4,6 +4,7 @@ import path from 'node:path';
 const EXCLUDE_DIR_PATTERNS = [
   /(^|\/)node_modules(\/|$)/,
   /(^|\/)\.git(\/|$)/,
+  /(^|\/)\.obsidian(\/|$)/,
   /(^|\/)dist(\/|$)/,
   /(^|\/)build(\/|$)/,
   /(^|\/)outputs(\/|$)/,
@@ -134,6 +135,78 @@ function parseMarkdownLinks(text) {
   return links;
 }
 
+/**
+ * Obsidian-style [[wikilink]] or [[path|label]]. Returns target paths (no label).
+ * @param {string} text
+ * @returns {string[]}
+ */
+export function parseWikilinks(text) {
+  const links = [];
+  const seen = new Set();
+  const re = /\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]/g;
+  const source = String(text || '');
+  for (const match of source.matchAll(re)) {
+    const target = cleanText(match[1]).replace(/\\/g, '/');
+    if (!target || seen.has(target)) continue;
+    seen.add(target);
+    links.push(target);
+  }
+  return links;
+}
+
+/**
+ * Resolve a wikilink target to a markdown document path in the vault index.
+ * @param {string} target
+ * @param {Map<string, string>} byKey lowercase key → rel path
+ */
+export function resolveWikilinkTarget(target, byKey) {
+  const raw = cleanText(target).replace(/\\/g, '/').replace(/^\.\//, '');
+  if (!raw) return null;
+  const candidates = [
+    raw,
+    raw.endsWith('.md') ? raw : `${raw}.md`,
+    raw.startsWith('docs/') ? raw : `docs/${raw}`,
+    raw.startsWith('docs/') || raw.endsWith('.md') ? null : `docs/${raw}.md`,
+  ].filter(Boolean);
+
+  for (const c of candidates) {
+    const hit = byKey.get(c.toLowerCase());
+    if (hit) return hit;
+  }
+
+  const base = path.posix.basename(raw.replace(/\.md$/i, '')).toLowerCase();
+  const baseHit = byKey.get(`basename:${base}`);
+  return baseHit || null;
+}
+
+function buildPathIndex(markdownFiles) {
+  /** @type {Map<string, string>} */
+  const byKey = new Map();
+  /** @type {Map<string, string[]>} */
+  const byBasename = new Map();
+
+  for (const relPath of markdownFiles) {
+    const posix = toPosix(relPath);
+    byKey.set(posix.toLowerCase(), posix);
+    const noExt = posix.replace(/\.md$/i, '');
+    byKey.set(noExt.toLowerCase(), posix);
+    const base = path.posix.basename(noExt).toLowerCase();
+    if (!byBasename.has(base)) byBasename.set(base, []);
+    byBasename.get(base).push(posix);
+  }
+
+  for (const [base, paths] of byBasename) {
+    if (paths.length === 1) {
+      byKey.set(`basename:${base}`, paths[0]);
+    } else {
+      const docsPreferred = paths.find((p) => p.startsWith('docs/')) || paths[0];
+      byKey.set(`basename:${base}`, docsPreferred);
+    }
+  }
+
+  return byKey;
+}
+
 function extractKeywordHits(text) {
   const hits = [];
   const source = String(text || '');
@@ -153,12 +226,14 @@ function sourceKindFor(relPath) {
 
 export function buildDocsGraph(rootDir, { now = new Date() } = {}) {
   const markdownFiles = walkMarkdownFiles(rootDir).sort((a, b) => a.localeCompare(b));
+  const pathIndex = buildPathIndex(markdownFiles);
   const nodes = [];
   const edges = [];
   const documents = [];
   const nodeIds = new Set();
   const keywordIds = new Set();
   const urlIds = new Set();
+  const edgeKeys = new Set();
 
   const addNode = (node) => {
     if (nodeIds.has(node.id)) return;
@@ -167,6 +242,9 @@ export function buildDocsGraph(rootDir, { now = new Date() } = {}) {
   };
 
   const addEdge = (edge) => {
+    const key = `${edge.from}|${edge.to}|${edge.type}`;
+    if (edgeKeys.has(key)) return;
+    edgeKeys.add(key);
     edges.push(edge);
   };
 
@@ -176,6 +254,7 @@ export function buildDocsGraph(rootDir, { now = new Date() } = {}) {
     const title = parseFirstH1(text) || path.basename(relPath);
     const headings = parseHeadings(text);
     const links = parseMarkdownLinks(text);
+    const wikilinks = parseWikilinks(text);
     const keywords = extractKeywordHits(text);
     const sourceKind = sourceKindFor(relPath);
 
@@ -194,6 +273,7 @@ export function buildDocsGraph(rootDir, { now = new Date() } = {}) {
       sourceKind,
       headings,
       links,
+      wikilinks,
       keywords,
     });
 
@@ -214,18 +294,59 @@ export function buildDocsGraph(rootDir, { now = new Date() } = {}) {
     }
 
     for (const target of links) {
-      const urlId = `url:${target}`;
-      if (!urlIds.has(urlId)) {
-        urlIds.add(urlId);
-        addNode({
-          id: urlId,
-          type: 'url',
-          label: target,
+      if (/^https?:\/\//i.test(target)) {
+        const urlId = `url:${target}`;
+        if (!urlIds.has(urlId)) {
+          urlIds.add(urlId);
+          addNode({
+            id: urlId,
+            type: 'url',
+            label: target,
+          });
+        }
+        addEdge({
+          from: relPath,
+          to: urlId,
+          type: 'links_to',
+        });
+        continue;
+      }
+
+      // Relative markdown path → document edge when resolvable
+      const resolvedMd = resolveWikilinkTarget(
+        target.replace(/^\.\//, '').split('#')[0],
+        pathIndex
+      );
+      if (resolvedMd && resolvedMd !== relPath) {
+        addEdge({
+          from: relPath,
+          to: resolvedMd,
+          type: 'links_to',
+        });
+      } else {
+        const urlId = `url:${target}`;
+        if (!urlIds.has(urlId)) {
+          urlIds.add(urlId);
+          addNode({
+            id: urlId,
+            type: 'url',
+            label: target,
+          });
+        }
+        addEdge({
+          from: relPath,
+          to: urlId,
+          type: 'links_to',
         });
       }
+    }
+
+    for (const wiki of wikilinks) {
+      const resolved = resolveWikilinkTarget(wiki, pathIndex);
+      if (!resolved || resolved === relPath) continue;
       addEdge({
         from: relPath,
-        to: urlId,
+        to: resolved,
         type: 'links_to',
       });
     }

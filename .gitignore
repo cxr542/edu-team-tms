@@ -5,3 +5,4 @@ ledger-snapshot.json
 snapshots
 .env*
 .DS_Store
+.obsidian/
