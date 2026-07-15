@@ -285,6 +285,132 @@
   font-size: 0.78rem;
 }
 
+.announcement-engagement {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.announcement-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.announcement-reaction-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 1.85rem;
+  padding: 0.15rem 0.55rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 999px;
+  background: var(--bg-primary, #fff);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.announcement-reaction-btn:hover:not(:disabled) {
+  border-color: rgba(0, 109, 255, 0.35);
+}
+
+.announcement-reaction-btn.is-mine {
+  border-color: rgba(0, 109, 255, 0.45);
+  background: rgba(0, 109, 255, 0.08);
+}
+
+.announcement-reaction-btn:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
+.announcement-reaction-btn__count {
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+  font-weight: 600;
+}
+
+.announcement-comments__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, #475569);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.announcement-comments__chevron {
+  transition: transform 0.15s ease;
+}
+
+.announcement-comments__chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.announcement-comments__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-top: 0.45rem;
+}
+
+.announcement-comments__empty {
+  margin: 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.82rem;
+}
+
+.announcement-comments__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.announcement-comments__item {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 0.45rem;
+  background: rgba(248, 250, 252, 0.7);
+}
+
+.announcement-comments__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+  margin-bottom: 0.25rem;
+}
+
+.announcement-comments__body {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 0.88rem;
+  color: var(--text-secondary, #334155);
+  line-height: 1.5;
+}
+
+.announcement-comments__delete {
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+}
+
+.announcement-comments__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+
 .announcement-entry__editor {
   display: flex;
   flex-direction: column;

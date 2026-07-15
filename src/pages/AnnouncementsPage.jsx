@@ -13,6 +13,8 @@ import {
 import { isEditorMode } from '../utils/appMode.js';
 import {
   ANNOUNCEMENT_CATEGORY_LIST,
+  ANNOUNCEMENT_COMMENT_MAX_LENGTH,
+  ANNOUNCEMENT_REACTION_EMOJIS,
   DEFAULT_ANNOUNCEMENT_CATEGORY,
   formatAnnouncementCategoryLabel,
   formatAnnouncementPublishLabel,
@@ -22,6 +24,13 @@ import {
 import { buildDocsModuleUrl } from '../constants/referenceDocs.js';
 import { useAnnouncements } from '../hooks/useAnnouncements.js';
 import { resolveAnnouncementAuthorIdentity } from '../utils/announcementAuthorIdentity.js';
+import {
+  createAnnouncementComment,
+  deleteAnnouncementComment,
+  fetchAnnouncementComments,
+  fetchAnnouncementReactions,
+  toggleAnnouncementReaction,
+} from '../utils/announcementEngagementApi.js';
 import { markAnnouncementsSeen } from '../utils/announcementsUnreadBadge.js';
 import './AnnouncementsPage.css';
 
@@ -42,6 +51,118 @@ function AnnouncementBody({ body }) {
   return <div className="announcement-entry__body">{body || ''}</div>;
 }
 
+function AnnouncementEngagement({
+  announcementId,
+  reactions = {},
+  comments = [],
+  commentsOpen = false,
+  commentDraft = '',
+  canEngage = false,
+  isManager = false,
+  memberCode = '',
+  busy = false,
+  onToggleReaction,
+  onToggleComments,
+  onCommentDraftChange,
+  onSubmitComment,
+  onDeleteComment,
+}) {
+  return (
+    <div className="announcement-engagement">
+      <div className="announcement-reactions" role="group" aria-label="이모지 반응">
+        {ANNOUNCEMENT_REACTION_EMOJIS.map((emoji) => {
+          const stat = reactions[emoji] || { count: 0, mine: false };
+          return (
+            <button
+              key={emoji}
+              type="button"
+              className={`announcement-reaction-btn${stat.mine ? ' is-mine' : ''}`}
+              disabled={!canEngage || busy}
+              aria-pressed={stat.mine}
+              onClick={() => onToggleReaction?.(announcementId, emoji)}
+              title={canEngage ? `${emoji} 반응` : '조회 모드에서는 반응할 수 없습니다'}
+            >
+              <span aria-hidden>{emoji}</span>
+              {stat.count > 0 ? <span className="announcement-reaction-btn__count">{stat.count}</span> : null}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="announcement-comments">
+        <button
+          type="button"
+          className="announcement-comments__toggle"
+          aria-expanded={commentsOpen}
+          onClick={() => onToggleComments?.(announcementId)}
+        >
+          댓글 {comments.length}
+          <ChevronDown
+            size={14}
+            className={`announcement-comments__chevron${commentsOpen ? ' is-open' : ''}`}
+            aria-hidden
+          />
+        </button>
+        {commentsOpen && (
+          <div className="announcement-comments__panel">
+            {comments.length === 0 ? (
+              <p className="announcement-comments__empty">아직 댓글이 없습니다.</p>
+            ) : (
+              <ul className="announcement-comments__list">
+                {comments.map((comment) => {
+                  const canDelete =
+                    canEngage && (isManager || comment.memberCode === memberCode);
+                  return (
+                    <li key={comment.id} className="announcement-comments__item">
+                      <div className="announcement-comments__meta">
+                        <strong>{comment.author}</strong>
+                        <span>{formatDateTime(comment.createdAt)}</span>
+                      </div>
+                      <p className="announcement-comments__body">{comment.body}</p>
+                      {canDelete && (
+                        <button
+                          type="button"
+                          className="btn btn-ghost announcement-comments__delete"
+                          disabled={busy}
+                          onClick={() => onDeleteComment?.(announcementId, comment.id)}
+                        >
+                          삭제
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            {canEngage && (
+              <form
+                className="announcement-comments__form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  onSubmitComment?.(announcementId);
+                }}
+              >
+                <textarea
+                  className="form-input announcements-textarea"
+                  rows={2}
+                  maxLength={ANNOUNCEMENT_COMMENT_MAX_LENGTH}
+                  value={commentDraft}
+                  disabled={busy}
+                  placeholder="짧은 댓글을 남겨 주세요"
+                  onChange={(e) => onCommentDraftChange?.(announcementId, e.target.value)}
+                />
+                <button type="submit" className="btn btn-secondary btn-sm" disabled={busy || !commentDraft.trim()}>
+                  댓글 등록
+                </button>
+              </form>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function AnnouncementEntry({
   announcement,
   draft,
@@ -53,6 +174,7 @@ function AnnouncementEntry({
   onCancelEdit,
   onDraftChange,
   onSave,
+  engagement = null,
 }) {
   const managerEditable = isManager && canEdit && !saving;
 
@@ -196,6 +318,7 @@ function AnnouncementEntry({
               </button>
             </div>
           )}
+          {engagement}
         </>
       )}
     </article>
@@ -216,6 +339,7 @@ export default function AnnouncementsPage({
   const authorCode = authorIdentity.authorCode;
   const authorName = authorIdentity.authorName;
   const canEdit = isEditorMode() && !readOnly && isManager;
+  const canEngage = isEditorMode() && !readOnly && Boolean(authorCode);
   const releaseNotesUrl = buildDocsModuleUrl('tms-release');
 
   const {
@@ -238,6 +362,11 @@ export default function AnnouncementsPage({
   const [drafts, setDrafts] = useState({});
   const [composeOpen, setComposeOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [reactionsById, setReactionsById] = useState({});
+  const [commentsById, setCommentsById] = useState({});
+  const [commentsOpenById, setCommentsOpenById] = useState({});
+  const [commentDraftById, setCommentDraftById] = useState({});
+  const [engagementBusyId, setEngagementBusyId] = useState(null);
 
   useEffect(() => {
     setDrafts((prev) => {
@@ -260,11 +389,103 @@ export default function AnnouncementsPage({
     markAnnouncementsSeen();
   }, [loading, announcements]);
 
+  useEffect(() => {
+    if (loading) return;
+    const ids = announcements.map((item) => item.id).filter(Boolean);
+    if (ids.length === 0) {
+      setReactionsById({});
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const result = await fetchAnnouncementReactions(ids, authorCode);
+      if (cancelled || !result.ok) return;
+      setReactionsById(result.data || {});
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, announcements, authorCode]);
+
   const visibleAnnouncements = useMemo(() => sortAnnouncements(announcements), [announcements]);
   const feedGroups = useMemo(
     () => groupAnnouncementsByFeedDay(visibleAnnouncements),
     [visibleAnnouncements]
   );
+
+  const handleToggleReaction = async (announcementId, emoji) => {
+    if (!canEngage) return;
+    setEngagementBusyId(announcementId);
+    const result = await toggleAnnouncementReaction({
+      announcementId,
+      memberCode: authorCode,
+      emoji,
+    });
+    setEngagementBusyId(null);
+    if (!result.ok) {
+      setMessage(result.message || '반응을 저장하지 못했습니다.');
+      return;
+    }
+    setReactionsById((prev) => ({
+      ...prev,
+      [announcementId]: result.data || {},
+    }));
+  };
+
+  const handleToggleComments = async (announcementId) => {
+    const nextOpen = !commentsOpenById[announcementId];
+    setCommentsOpenById((prev) => ({ ...prev, [announcementId]: nextOpen }));
+    if (!nextOpen || commentsById[announcementId]) return;
+    setEngagementBusyId(announcementId);
+    const result = await fetchAnnouncementComments(announcementId);
+    setEngagementBusyId(null);
+    if (!result.ok) {
+      setMessage(result.message || '댓글을 불러오지 못했습니다.');
+      return;
+    }
+    setCommentsById((prev) => ({ ...prev, [announcementId]: result.data }));
+  };
+
+  const handleSubmitComment = async (announcementId) => {
+    if (!canEngage) return;
+    const text = String(commentDraftById[announcementId] || '').trim();
+    if (!text) return;
+    setEngagementBusyId(announcementId);
+    const result = await createAnnouncementComment({
+      announcementId,
+      memberCode: authorCode,
+      author: authorName,
+      body: text,
+    });
+    setEngagementBusyId(null);
+    if (!result.ok) {
+      setMessage(result.message || '댓글 등록에 실패했습니다.');
+      return;
+    }
+    setCommentDraftById((prev) => ({ ...prev, [announcementId]: '' }));
+    setCommentsById((prev) => ({
+      ...prev,
+      [announcementId]: [...(prev[announcementId] || []), result.data],
+    }));
+  };
+
+  const handleDeleteComment = async (announcementId, commentId) => {
+    if (!canEngage) return;
+    setEngagementBusyId(announcementId);
+    const result = await deleteAnnouncementComment({
+      commentId,
+      memberCode: authorCode,
+    });
+    setEngagementBusyId(null);
+    if (!result.ok) {
+      setMessage(result.message || '댓글 삭제에 실패했습니다.');
+      return;
+    }
+    setCommentsById((prev) => ({
+      ...prev,
+      [announcementId]: (prev[announcementId] || []).filter((item) => item.id !== commentId),
+    }));
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -505,6 +726,26 @@ export default function AnnouncementsPage({
                         }))
                       }
                       onSave={handleManagerSave}
+                      engagement={
+                        <AnnouncementEngagement
+                          announcementId={announcement.id}
+                          reactions={reactionsById[announcement.id] || {}}
+                          comments={commentsById[announcement.id] || []}
+                          commentsOpen={Boolean(commentsOpenById[announcement.id])}
+                          commentDraft={commentDraftById[announcement.id] || ''}
+                          canEngage={canEngage}
+                          isManager={isManager}
+                          memberCode={authorCode}
+                          busy={engagementBusyId === announcement.id}
+                          onToggleReaction={handleToggleReaction}
+                          onToggleComments={handleToggleComments}
+                          onCommentDraftChange={(id, value) =>
+                            setCommentDraftById((prev) => ({ ...prev, [id]: value }))
+                          }
+                          onSubmitComment={handleSubmitComment}
+                          onDeleteComment={handleDeleteComment}
+                        />
+                      }
                     />
                   );
                 })}

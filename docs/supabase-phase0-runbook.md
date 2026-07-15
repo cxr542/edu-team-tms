@@ -38,6 +38,7 @@ Supabase 매직링크는 일지·공지 필수 로그인이 **아님**.
 | 테이블 | Phase 0 정책 |
 |--------|----------------|
 | `announcements` | 공개 공지만 anon 조회, 초안 조회·등록·수정은 authenticated admin |
+| `announcement_reactions` / `announcement_comments` | anon **select만**; 쓰기는 `/api/announcement-reactions`·`/api/announcement-comments` + service_role ([`announcement-engagement.sql`](../supabase/announcement-engagement.sql)) |
 | `csr_requests`, KPI 승인 테이블 | **anon draft** (URL 게이트 앱과 호환) |
 | `journal_snapshots`, `kpi_operational_snapshots` | **authenticated + `tms_profiles`** |
 | `sync_events` | authenticated (admin 읽기, 팀원 insert) |
@@ -69,7 +70,12 @@ Supabase 매직링크는 일지·공지 필수 로그인이 **아님**.
 ## 3. Auth / 관리자 접근 (일지·공지)
 
 **운영 경로 (권장):** `/admin` 비밀번호 → `admin-session` 쿠키 → `/api/announcements`, `/api/journal-snapshots` (service role).
+공지 **반응·댓글**은 admin-session 없이 구성원 URL referer + `memberCode` 가드로 `/api/announcement-reactions`·`/api/announcement-comments`에 쓴다.
 브라우저 anon 키로 `journal_snapshots`에 직접 쓰지 않는다.
+
+### 공지 반응·댓글 DDL (추가 적용)
+
+이미 phase0 DDL을 적용한 프로젝트는 SQL Editor에서 [`supabase/announcement-engagement.sql`](../supabase/announcement-engagement.sql) 을 **Run** 한다.
 
 선택(레거시/실험): Supabase Authentication → URL Configuration에 Site URL·Redirect를 둘 수 있으나, 일지 미러·공지 쓰기에는 **필요하지 않다**. `tms_profiles` 매직링크 프로비저닝도 일지 admin API 경로에서는 필수가 아니다.
 

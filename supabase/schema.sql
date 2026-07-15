@@ -178,6 +178,45 @@ create index if not exists announcements_pinned_updated_at_idx
 create index if not exists announcements_published_updated_at_idx
   on public.announcements (is_published, updated_at desc);
 
+create table if not exists public.announcement_reactions (
+  id uuid primary key default gen_random_uuid(),
+  announcement_id uuid not null references public.announcements (id) on delete cascade,
+  member_code text not null,
+  emoji text not null,
+  created_at timestamptz not null default now(),
+
+  constraint announcement_reactions_member_code_check
+    check (member_code in ('A', 'B', 'C')),
+  constraint announcement_reactions_emoji_not_blank
+    check (length(trim(emoji)) > 0),
+  constraint announcement_reactions_unique_member_emoji
+    unique (announcement_id, member_code, emoji)
+);
+
+create index if not exists announcement_reactions_announcement_id_idx
+  on public.announcement_reactions (announcement_id);
+
+create table if not exists public.announcement_comments (
+  id uuid primary key default gen_random_uuid(),
+  announcement_id uuid not null references public.announcements (id) on delete cascade,
+  member_code text not null,
+  author text not null,
+  body text not null,
+  is_deleted boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+
+  constraint announcement_comments_member_code_check
+    check (member_code in ('A', 'B', 'C')),
+  constraint announcement_comments_author_not_blank
+    check (length(trim(author)) > 0),
+  constraint announcement_comments_body_not_blank
+    check (length(trim(body)) > 0 and length(trim(body)) <= 500)
+);
+
+create index if not exists announcement_comments_announcement_id_created_at_idx
+  on public.announcement_comments (announcement_id, created_at asc);
+
 create table if not exists public.csr_requests (
   id uuid primary key default gen_random_uuid(),
   title text not null,
@@ -220,6 +259,8 @@ alter table public.kpi_operational_snapshots enable row level security;
 alter table public.kpi_monthly_approvals enable row level security;
 alter table public.kpi2_row_approvals enable row level security;
 alter table public.announcements enable row level security;
+alter table public.announcement_reactions enable row level security;
+alter table public.announcement_comments enable row level security;
 alter table public.csr_requests enable row level security;
 alter table public.sync_events enable row level security;
 
@@ -273,11 +314,17 @@ revoke insert, update, delete on table public.announcements from anon;
 grant select on table public.announcements to anon;
 grant select, insert, update on table public.announcements to authenticated;
 grant select, insert, update on table public.csr_requests to anon;
+revoke all on table public.announcement_reactions from anon, authenticated;
+revoke all on table public.announcement_comments from anon, authenticated;
+grant select on table public.announcement_reactions to anon, authenticated;
+grant select on table public.announcement_comments to anon, authenticated;
 
 -- Admin API paths use SUPABASE_SERVICE_ROLE_KEY (bypasses RLS but still needs table grants)
 grant select, insert, update on table public.journal_snapshots to service_role;
 grant select, insert, update on table public.kpi_operational_snapshots to service_role;
 grant select, insert, update on table public.announcements to service_role;
+grant select, insert, update, delete on table public.announcement_reactions to service_role;
+grant select, insert, update, delete on table public.announcement_comments to service_role;
 grant insert on table public.sync_events to service_role;
 
 -- tms_profiles
@@ -384,6 +431,18 @@ create policy "announcements_update_admin"
   on public.announcements for update to authenticated
   using (public.is_tms_admin())
   with check (public.is_tms_admin());
+
+drop policy if exists "announcement_reactions_read_all" on public.announcement_reactions;
+create policy "announcement_reactions_read_all"
+  on public.announcement_reactions for select
+  to anon, authenticated
+  using (true);
+
+drop policy if exists "announcement_comments_read_active" on public.announcement_comments;
+create policy "announcement_comments_read_active"
+  on public.announcement_comments for select
+  to anon, authenticated
+  using (is_deleted = false);
 
 drop policy if exists "csr_requests_read_all_draft" on public.csr_requests;
 drop policy if exists "csr_requests_insert_all_draft" on public.csr_requests;

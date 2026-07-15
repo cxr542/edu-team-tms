@@ -5,6 +5,11 @@ export const ANNOUNCEMENT_CATEGORY_LABELS = {
   guide: '사용안내',
 };
 
+/** Fixed reaction set for announcement engagement (v1). */
+export const ANNOUNCEMENT_REACTION_EMOJIS = ['👍', '❤️', '🎉', '👀', '✅'];
+
+export const ANNOUNCEMENT_COMMENT_MAX_LENGTH = 500;
+
 /** New posts default to release-note style updates. */
 export const DEFAULT_ANNOUNCEMENT_CATEGORY = 'release';
 

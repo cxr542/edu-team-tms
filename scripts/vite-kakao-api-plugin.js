@@ -2,6 +2,8 @@ import { loadEnv } from 'vite';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import kakaoHandler from '../api/kakao-local.js';
+import announcementReactionsHandler from '../api/announcement-reactions.js';
+import announcementCommentsHandler from '../api/announcement-comments.js';
 
 const thisDir = path.dirname(fileURLToPath(import.meta.url));
 // scripts/ 아래이므로 부모 폴더가 TMS 앱 루트입니다.
@@ -133,3 +135,38 @@ export function kakaoApiDevPlugin() {
     },
   };
 }
+
+/** Vite dev: announcement reactions/comments APIs */
+export function announcementEngagementApiDevPlugin() {
+  return {
+    name: 'tms-announcement-engagement-api-dev',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        const path = (req.url || '').split('?')[0];
+        let handler = null;
+        if (path === '/api/announcement-reactions') handler = announcementReactionsHandler;
+        else if (path === '/api/announcement-comments') handler = announcementCommentsHandler;
+        else {
+          next();
+          return;
+        }
+
+        const env = loadEnv(server.config.mode, tmsAppRoot, '');
+        if (env.SUPABASE_URL) process.env.SUPABASE_URL = env.SUPABASE_URL;
+        if (env.VITE_SUPABASE_URL) process.env.VITE_SUPABASE_URL = env.VITE_SUPABASE_URL;
+        if (env.SUPABASE_SERVICE_ROLE_KEY) {
+          process.env.SUPABASE_SERVICE_ROLE_KEY = env.SUPABASE_SERVICE_ROLE_KEY;
+        }
+
+        try {
+          await handler(req, res);
+        } catch (err) {
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+    },
+  };
+}
+

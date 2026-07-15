@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { kakaoApiDevPlugin, prodSnapshotReadProxyPlugin } from './scripts/vite-kakao-api-plugin.js'
+import {
+  announcementEngagementApiDevPlugin,
+  kakaoApiDevPlugin,
+  prodSnapshotReadProxyPlugin,
+} from './scripts/vite-kakao-api-plugin.js'
 
 /** GitHub Pages: TMS_PAGES_BASE=/cxr542-ai/projects/edu-team-tms/ npm run build:team */
 const base = process.env.TMS_PAGES_BASE || '/'
@@ -9,7 +13,12 @@ const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 
 
 export default defineConfig({
   base,
-  plugins: [react(), prodSnapshotReadProxyPlugin(), kakaoApiDevPlugin()],
+  plugins: [
+    react(),
+    prodSnapshotReadProxyPlugin(),
+    kakaoApiDevPlugin(),
+    announcementEngagementApiDevPlugin(),
+  ],
   define: {
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(pkg.version),
     'import.meta.env.VITE_VERCEL_ENV': JSON.stringify(process.env.VERCEL_ENV || ''),
