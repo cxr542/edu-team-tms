@@ -7,6 +7,8 @@ import {
   memberCodeFromReferer,
 } from '../server/api-utils/requestScope.js';
 import { isMemberJournalEmpty } from '../src/utils/journalCloudSnapshot.js';
+import { mergeKpiApprovalSlices } from '../src/utils/journalKpiApprovalSlice.js';
+import { normalizeMemberJournalSlice } from '../src/utils/journalMemberStore.js';
 
 const JOURNAL_SNAPSHOTS_TABLE = 'journal_snapshots';
 const SYNC_EVENTS_TABLE = 'sync_events';
@@ -210,6 +212,27 @@ async function readSnapshotRow(client, memberCode) {
   return { row: normalizeSnapshotRow(data), error };
 }
 
+function mergeSnapshotPayloadForWrite(payload, currentPayload, memberCode) {
+  const incomingSlice = normalizeMemberJournalSlice(payload);
+  const currentSlice = normalizeMemberJournalSlice(currentPayload);
+  const mergedApproval = mergeKpiApprovalSlices(
+    currentSlice.kpiApproval,
+    incomingSlice.kpiApproval,
+    memberCode
+  );
+  const nextPayload = payload && typeof payload === 'object' && !Array.isArray(payload)
+    ? { ...payload }
+    : incomingSlice;
+
+  if (mergedApproval) {
+    nextPayload.kpiApproval = mergedApproval;
+  } else {
+    delete nextPayload.kpiApproval;
+  }
+
+  return nextPayload;
+}
+
 /**
  * Insert or update with optimistic locking on updated_at to close
  * check-then-write races between concurrent POSTs.
@@ -230,12 +253,14 @@ async function writeSnapshotAtomically(client, { memberCode, payload, clientUpda
     };
   }
 
+  const payloadForWrite = mergeSnapshotPayloadForWrite(payload, current?.payload, memberCode);
+
   if (!current) {
     const { data, error } = await client
       .from(JOURNAL_SNAPSHOTS_TABLE)
       .insert({
         member_code: memberCode,
-        payload,
+        payload: payloadForWrite,
         payload_version: PAYLOAD_VERSION,
         updated_at: updatedAt,
       })
@@ -268,7 +293,7 @@ async function writeSnapshotAtomically(client, { memberCode, payload, clientUpda
   let updateQuery = client
     .from(JOURNAL_SNAPSHOTS_TABLE)
     .update({
-      payload,
+      payload: payloadForWrite,
       payload_version: PAYLOAD_VERSION,
       updated_at: updatedAt,
     })

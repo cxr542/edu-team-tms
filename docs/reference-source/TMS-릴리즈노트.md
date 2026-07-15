@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-07-14
+
+### [수정] Fix Supabase journal approval downgrades
+
+- Supabase 업무일지 저장 시 기존 승인/반려 상태가 더 약한 로컬 상태로 덮이지 않도록 보강했습니다.
+- PR #103: https://github.com/cxr542/edu-team-tms/pull/103
+
 ## 2026-07-10
 
 ### Fix J7c storage-compare test expectations
