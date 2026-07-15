@@ -623,9 +623,26 @@ export default function AnnouncementsPage({
           </button>
           {composeOpen && (
             <form className="announcements-form" onSubmit={handleSubmit}>
-              <p className="announcements-note">
-                /admin 비밀번호 세션으로 저장됩니다. Supabase 로그인은 필요하지 않습니다.
-              </p>
+              <div className="announcements-form__toolbar">
+                <p className="announcements-note">
+                  /admin 비밀번호 세션으로 저장됩니다. Supabase 로그인은 필요하지 않습니다.
+                </p>
+                <div className="form-group announcements-form__category">
+                  <label htmlFor="announcement-category">카테고리</label>
+                  <select
+                    id="announcement-category"
+                    className="form-input"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                  >
+                    {ANNOUNCEMENT_CATEGORY_LIST.map((item) => (
+                      <option key={item.value} value={item.value}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
               <div className="form-group">
                 <label htmlFor="announcement-title">제목</label>
                 <input
@@ -638,21 +655,6 @@ export default function AnnouncementsPage({
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="announcement-category">카테고리</label>
-                <select
-                  id="announcement-category"
-                  className="form-input"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                >
-                  {ANNOUNCEMENT_CATEGORY_LIST.map((item) => (
-                    <option key={item.value} value={item.value}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group announcements-form__wide">
                 <label htmlFor="announcement-body">본문</label>
                 <textarea
                   id="announcement-body"
@@ -664,26 +666,28 @@ export default function AnnouncementsPage({
                   maxLength={4000}
                 />
               </div>
-              <label className="announcement-toggle announcements-form__toggle">
-                <input
-                  type="checkbox"
-                  checked={isPinned}
-                  onChange={(e) => setIsPinned(e.target.checked)}
-                />
-                <span>고정</span>
-              </label>
-              <label className="announcement-toggle announcements-form__toggle">
-                <input
-                  type="checkbox"
-                  checked={isPublished}
-                  onChange={(e) => setIsPublished(e.target.checked)}
-                />
-                <span>공개</span>
-              </label>
-              <button type="submit" className="btn btn-primary" disabled={savingId !== null}>
-                <Plus size={14} />
-                등록
-              </button>
+              <div className="announcements-form__actions">
+                <label className="announcement-toggle">
+                  <input
+                    type="checkbox"
+                    checked={isPinned}
+                    onChange={(e) => setIsPinned(e.target.checked)}
+                  />
+                  <span>고정</span>
+                </label>
+                <label className="announcement-toggle">
+                  <input
+                    type="checkbox"
+                    checked={isPublished}
+                    onChange={(e) => setIsPublished(e.target.checked)}
+                  />
+                  <span>공개</span>
+                </label>
+                <button type="submit" className="btn btn-primary" disabled={savingId !== null}>
+                  <Plus size={14} />
+                  등록
+                </button>
+              </div>
             </form>
           )}
         </section>
