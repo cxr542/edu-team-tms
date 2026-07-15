@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createAdminSessionCookie } from '../server/api-utils/adminSession.js';
 
 const fromMock = vi.fn();
 
@@ -32,6 +33,8 @@ describe('announcement-reactions API', () => {
     fromMock.mockReset();
     process.env.SUPABASE_URL = 'https://example.supabase.co';
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role-key';
+    process.env.TMS_ADMIN_GATE_PASSWORD = 'secret-gate';
+    process.env.TMS_ADMIN_SESSION_SECRET = 'session-secret';
   });
 
   it('rejects bad origin', async () => {
@@ -90,6 +93,80 @@ describe('announcement-reactions API', () => {
       res
     );
     expect(res.statusCode).toBe(403);
+  });
+
+  it('rejects forged admin referer before allowing unpublished announcement reaction', async () => {
+    const handler = await loadHandler();
+    const res = createRes();
+    await handler(
+      {
+        method: 'POST',
+        headers: { referer: 'https://edu-team-tms-ten.vercel.app/admin' },
+        body: {
+          announcementId: '11111111-1111-1111-1111-111111111111',
+          memberCode: 'A',
+          emoji: '👍',
+        },
+      },
+      res
+    );
+    expect(res.statusCode).toBe(403);
+    expect(JSON.parse(res.body).message).toMatch(/관리자 세션/);
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it('allows session-backed admin reaction on unpublished announcement', async () => {
+    const announcementId = '11111111-1111-1111-1111-111111111111';
+    const cookie = createAdminSessionCookie();
+    fromMock
+      .mockReturnValueOnce({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: async () => ({
+              data: { id: announcementId, is_published: false },
+              error: null,
+            }),
+          }),
+        }),
+      })
+      .mockReturnValueOnce({
+        select: () => ({
+          eq: () => ({
+            eq: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({ data: null, error: null }),
+              }),
+            }),
+          }),
+        }),
+      })
+      .mockReturnValueOnce({
+        insert: async () => ({ error: null }),
+      })
+      .mockReturnValueOnce({
+        select: () => ({
+          eq: async () => ({
+            data: [{ announcement_id: announcementId, member_code: 'A', emoji: '👍' }],
+            error: null,
+          }),
+        }),
+      });
+
+    const handler = await loadHandler();
+    const res = createRes();
+    await handler(
+      {
+        method: 'POST',
+        headers: {
+          referer: 'https://edu-team-tms-ten.vercel.app/admin',
+          cookie: cookie.split(';')[0],
+        },
+        body: { announcementId, memberCode: 'A', emoji: '👍' },
+      },
+      res
+    );
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body).data['👍'].count).toBe(1);
   });
 
   it('toggles reaction insert for member', async () => {
