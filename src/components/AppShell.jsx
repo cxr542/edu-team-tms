@@ -10,6 +10,7 @@ import {
   CheckCircle,
   Eye,
   FileSpreadsheet,
+  GraduationCap,
   Pencil,
   PieChart,
   Settings,
@@ -200,6 +201,7 @@ export default function AppShell({
     viewerMenuVisibility &&
     !viewerMenuVisibility.lunch &&
     !viewerMenuVisibility['idea-bank'] &&
+    !viewerMenuVisibility['lecture-journal'] &&
     !viewerMenuVisibility['kpi-report'] &&
     !viewerMenuVisibility['kpi-approve'] &&
     !viewerMenuVisibility.docs;
@@ -276,6 +278,7 @@ export default function AppShell({
                     {navBtn('ledger', FileSpreadsheet, { viewer: true })}
                     {navBtn('lunch', UtensilsCrossed, { viewer: true })}
                     {navBtn('idea-bank', Lightbulb, { viewer: true })}
+                    {navBtn('lecture-journal', GraduationCap, { viewer: true })}
                   </NavGroup>
                   <NavGroup title={NAV_GROUP_VIEWER_KPI} className="project-nav-group--leader">
                     {navBtn('kpi-report', PieChart, { viewer: true })}
@@ -295,6 +298,7 @@ export default function AppShell({
                       })}
                       {navBtn('academizer', Presentation)}
                       {navBtn('lunch', UtensilsCrossed)}
+                      {navBtn('lecture-journal', GraduationCap)}
                     </NavGroup>
                   )}
                   {showTeamCommonNav && (
@@ -305,6 +309,7 @@ export default function AppShell({
                       })}
                       {navBtn('lunch', UtensilsCrossed)}
                       {navBtn('idea-bank', Lightbulb)}
+                      {navBtn('lecture-journal', GraduationCap)}
                     </NavGroup>
                   )}
                   {showMemberWorkNav && (

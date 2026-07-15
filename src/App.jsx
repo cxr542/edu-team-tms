@@ -86,6 +86,7 @@ import CloudChatbotEmbedPage from './pages/CloudChatbotEmbedPage';
 import LunchPickPage from './pages/LunchPickPage';
 import IdeaBankPage from './pages/IdeaBankPage';
 import AnnouncementsPage from './pages/AnnouncementsPage';
+import LectureJournalPage from './pages/LectureJournalPage';
 import PublicViewerGuidePage from './pages/PublicViewerGuidePage';
 import { isProductionEnvironment } from './constants/appEnv';
 import { uiTooltip } from './utils/uiTooltip';
@@ -1103,6 +1104,8 @@ export default function App() {
         <CloudChatbotEmbedPage />
       ) : displayModule === 'lunch' ? (
         <LunchPickPage />
+      ) : displayModule === 'lecture-journal' ? (
+        <LectureJournalPage />
       ) : displayModule === 'idea-bank' ? (
         <IdeaBankPage
           readOnly={isViewer}

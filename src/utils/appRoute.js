@@ -29,6 +29,7 @@ const APP_MODULES = new Set([
   'announcements',
   'lunch',
   'idea-bank',
+  'lecture-journal',
   'journal',
   'competency',
   'kpi',

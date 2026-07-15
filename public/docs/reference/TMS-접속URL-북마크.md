@@ -49,6 +49,7 @@
 | KPI 승인 | https://edu-team-tms-ten.vercel.app/admin?module=kpi-approve |
 | KPI 리포트 | https://edu-team-tms-ten.vercel.app/?mode=edit&access=admin&module=kpi-report |
 | 점심 뭐 먹지 | https://edu-team-tms-ten.vercel.app/?mode=edit&access=admin&module=lunch |
+| 강의일지 | https://edu-team-tms-ten.vercel.app/admin?module=lecture-journal |
 | PPT Academizer | https://edu-team-tms-ten.vercel.app/?mode=edit&access=admin&module=academizer |
 | 클라우드 챗봇 (실험) | https://edu-team-tms-ten.vercel.app/?mode=edit&access=admin&module=cloud-chatbot |
 | 참고문서 | https://edu-team-tms-ten.vercel.app/?mode=edit&access=admin&module=docs |
@@ -72,6 +73,7 @@
 | 역량 평가 | https://edu-team-tms-ten.vercel.app/yhkim?module=competency |
 | 팀 빌딩비 장부 (조회) | https://edu-team-tms-ten.vercel.app/yhkim?mode=view&module=ledger&year=2026&month=6 |
 | 점심 뭐 먹지 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=A&module=lunch |
+| 강의일지 | https://edu-team-tms-ten.vercel.app/yhkim?module=lecture-journal |
 | 이것도? | https://edu-team-tms-ten.vercel.app/?mode=edit&member=A&module=idea-bank |
 | 참고문서 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=A&module=docs |
 
@@ -89,6 +91,7 @@ B/C와 **동일한 사용자 UI**입니다. KPI 승인 요청·향상 과제는 
 | 역량 평가 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=competency |
 | 팀 빌딩비 장부 (조회) | https://edu-team-tms-ten.vercel.app/?mode=view&member=B&module=ledger&year=2026&month=6 |
 | 점심 뭐 먹지 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=lunch |
+| 강의일지 | https://edu-team-tms-ten.vercel.app/wschoi?module=lecture-journal |
 | 이것도? | https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=idea-bank |
 | 참고문서 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=docs |
 
@@ -108,6 +111,7 @@ B/C와 **동일한 사용자 UI**입니다. KPI 승인 요청·향상 과제는 
 | 역량 평가 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=competency |
 | 팀 빌딩비 장부 (조회) | https://edu-team-tms-ten.vercel.app/?mode=view&member=C&module=ledger&year=2026&month=6 |
 | 점심 뭐 먹지 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=lunch |
+| 강의일지 | https://edu-team-tms-ten.vercel.app/hyshin?module=lecture-journal |
 | 이것도? | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=idea-bank |
 | 참고문서 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=docs |
 
@@ -121,7 +125,7 @@ B/C와 **동일한 사용자 UI**입니다. KPI 승인 요청·향상 과제는 
 | 그룹 | 관리자 | 사용자 (A/B/C) |
 |------|:------:|:--------------:|
 | 관리·공통 (장부 편집·Academizer·점심) | ✅ | — |
-| **팀 공통** (장부 조회·점심·이것도?) | — | ✅ |
+| **팀 공통** (장부 조회·점심·이것도?·강의일지) | — | ✅ |
 | **사용자 업무** (일지·역량) | ✅ (팀 전체) | ✅ (본인 작성 · 일지 A/B/C **조회**) |
 | **실험 버전** (클라우드 챗봇) | ✅ | ❌ |
 | **관리 업무** (KPI·승인·리포트) | ✅ | ❌ |

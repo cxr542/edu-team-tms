@@ -62,6 +62,12 @@ npx vercel blob put ledger/live-latest.json ./ledger-live.json --pathname ledger
 |------|------|------|
 | `BLOB_READ_WRITE_TOKEN` | ✅ (Blob 연결 시 자동) | 스냅샷 read/write |
 | `KAKAO_REST_API_KEY` | ✅ | 점심 메뉴 API |
+| `CONFLUENCE_EMAIL` | 강의일지 사용 시 | Atlassian 계정 이메일 (Basic auth) |
+| `CONFLUENCE_API_TOKEN` | 강의일지 사용 시 | Atlassian API token (서버 전용) |
+| `CONFLUENCE_LECTURE_FOLDER_ID` | 선택 | 기본 `1867843025` (`02. 강의일지 폴더`) |
+| `CONFLUENCE_LECTURE_PARENT_TYPE` | 선택 | 기본 `folder` |
+| `CONFLUENCE_BASE_URL` | 선택 | 기본 `https://okestro.atlassian.net` |
+| `CONFLUENCE_SPACE_KEY` | 선택 | 기본 `rDzwjbV6p8qL` |
 | `LEDGER_PUBLISH_SECRET` | 권장 | 장부 POST 추가 인증 |
 | `VITE_LEDGER_PUBLISH_KEY` | 위와 동일 값 | 클라이언트 키 (설정 시) |
 | `VITE_TMS_ORIGIN` | 권장 | `https://edu-team-tms-ten.vercel.app` |

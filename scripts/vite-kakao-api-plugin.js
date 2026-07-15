@@ -2,6 +2,7 @@ import { loadEnv } from 'vite';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import kakaoHandler from '../api/kakao-local.js';
+import confluenceLectureHandler from '../api/confluence-lecture.js';
 import announcementReactionsHandler from '../api/announcement-reactions.js';
 import announcementCommentsHandler from '../api/announcement-comments.js';
 
@@ -170,3 +171,38 @@ export function announcementEngagementApiDevPlugin() {
   };
 }
 
+/** Vite dev: /api/confluence-lecture → api/confluence-lecture.js */
+export function confluenceLectureApiDevPlugin() {
+  return {
+    name: 'tms-confluence-lecture-api-dev',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        if (!req.url?.startsWith('/api/confluence-lecture')) {
+          next();
+          return;
+        }
+
+        const env = loadEnv(server.config.mode, tmsAppRoot, '');
+        const merged = {
+          ...process.env,
+          CONFLUENCE_BASE_URL: env.CONFLUENCE_BASE_URL || process.env.CONFLUENCE_BASE_URL,
+          CONFLUENCE_EMAIL: env.CONFLUENCE_EMAIL || process.env.CONFLUENCE_EMAIL,
+          CONFLUENCE_API_TOKEN: env.CONFLUENCE_API_TOKEN || process.env.CONFLUENCE_API_TOKEN,
+          CONFLUENCE_LECTURE_FOLDER_ID:
+            env.CONFLUENCE_LECTURE_FOLDER_ID || process.env.CONFLUENCE_LECTURE_FOLDER_ID,
+          CONFLUENCE_LECTURE_PARENT_TYPE:
+            env.CONFLUENCE_LECTURE_PARENT_TYPE || process.env.CONFLUENCE_LECTURE_PARENT_TYPE,
+          CONFLUENCE_SPACE_KEY: env.CONFLUENCE_SPACE_KEY || process.env.CONFLUENCE_SPACE_KEY,
+        };
+
+        try {
+          await confluenceLectureHandler(req, res, { env: merged });
+        } catch (err) {
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+    },
+  };
+}

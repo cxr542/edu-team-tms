@@ -1057,7 +1057,8 @@ html.project-sidebar-collapsed-boot .project-sidebar-rail__icon {
 .project-content > .academizer-embed-main,
 .project-content > .cloud-chatbot-embed-main,
 .project-content > .lunch-pick-main,
-.project-content > .idea-bank-page {
+.project-content > .idea-bank-page,
+.project-content > .lecture-journal-page {
   flex: 0 1 auto;
   width: 100%;
   min-height: 0;

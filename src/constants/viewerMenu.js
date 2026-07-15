@@ -2,16 +2,25 @@
 
 export const VIEWER_MENU_STORAGE_KEY = 'tms-viewer-menu-v1';
 
-/** @typedef {'ledger' | 'lunch' | 'idea-bank' | 'kpi-report' | 'kpi-approve' | 'docs'} ViewerMenuModuleId */
+/** @typedef {'ledger' | 'lunch' | 'idea-bank' | 'lecture-journal' | 'kpi-report' | 'kpi-approve' | 'docs'} ViewerMenuModuleId */
 
 /** @type {ViewerMenuModuleId[]} */
-export const VIEWER_MENU_MODULE_IDS = ['ledger', 'lunch', 'idea-bank', 'kpi-report', 'kpi-approve', 'docs'];
+export const VIEWER_MENU_MODULE_IDS = [
+  'ledger',
+  'lunch',
+  'idea-bank',
+  'lecture-journal',
+  'kpi-report',
+  'kpi-approve',
+  'docs',
+];
 
 /** @type {Record<ViewerMenuModuleId, boolean>} */
 export const DEFAULT_VIEWER_MENU_VISIBILITY = {
   ledger: true,
   lunch: false,
   'idea-bank': false,
+  'lecture-journal': false,
   'kpi-report': false,
   'kpi-approve': false,
   docs: false,
@@ -33,6 +42,11 @@ export const VIEWER_MENU_OPTIONS = [
     id: 'idea-bank',
     required: false,
     description: '이것도 · 팀원 조회용',
+  },
+  {
+    id: 'lecture-journal',
+    required: false,
+    description: '강의일지 (Confluence) · 팀원 조회용',
   },
   {
     id: 'kpi-report',
