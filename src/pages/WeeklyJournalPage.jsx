@@ -104,6 +104,8 @@ import {
   resolveRemoteSnapshotUpdatedAt,
 } from '../utils/journalSupabaseFreshness';
 import { useJournalSupabaseFreshness } from '../hooks/useJournalSupabaseFreshness';
+import JournalTaskTitleCombobox from '../components/JournalTaskTitleCombobox';
+import { collectJournalTaskTitles } from '../utils/journalTaskTitleSuggestions';
 import './WeeklyJournalPage.css';
 
 const MEMBER_IMPROVE_PROJECT_CODES = new Set(['B', 'C']);
@@ -372,6 +374,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     SUPABASE_AUTO_MIRROR_STATUS_LABEL[journal.supabaseMirrorSaveStatus] || '';
 
   const memberDays = journal.getMemberDays(memberCode);
+  const knownTaskTitles = useMemo(
+    () => collectJournalTaskTitles(memberDays),
+    [memberDays]
+  );
 
   const patchDay = useCallback(
     (key, updater) => journal.updateDay(key, updater, memberCode),
@@ -2152,8 +2158,14 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 </div>
               </div>
               <div className="form-group">
-                <label>업무명</label>
-                <input className="form-input" value={editTask.title} onChange={(e) => setEditTask({ ...editTask, title: e.target.value })} readOnly={journalReadOnly} />
+                <label htmlFor="journal-edit-task-title">업무명</label>
+                <JournalTaskTitleCombobox
+                  id="journal-edit-task-title"
+                  value={editTask.title}
+                  titles={knownTaskTitles}
+                  readOnly={journalReadOnly}
+                  onChange={(title) => setEditTask({ ...editTask, title })}
+                />
               </div>
               <JournalEditKpiPreview task={editTask} dayKey={editTask.dayKey} improveProjects={journal.improveProjects} />
               <div className="form-group">
@@ -2298,8 +2310,14 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             </div>
           </div>
           <div className="form-group">
-            <label>업무명</label>
-            <input className="form-input" value={addDraft.title} onChange={(e) => setAddDraft({ ...addDraft, title: e.target.value })} />
+            <label htmlFor="journal-add-task-title">업무명</label>
+            <JournalTaskTitleCombobox
+              id="journal-add-task-title"
+              value={addDraft.title}
+              titles={knownTaskTitles}
+              placeholder="입력하거나 이전 업무명 선택"
+              onChange={(title) => setAddDraft({ ...addDraft, title })}
+            />
           </div>
           <div className="form-group">
             <label>계획 (h)</label>
