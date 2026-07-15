@@ -365,11 +365,10 @@ export function adminRoutePath() {
 }
 
 /**
- * Member-shell toolbar shortcut → /admin, preserving year/month when present.
+ * @param {string} pathname absolute app path e.g. /admin or /yhkim
  * @param {{ pathname?: string, search?: string, href?: string } | Location} [location]
- * @returns {string} path + query for <a href>
  */
-export function buildAdminShortcutHref(location) {
+function buildScopedShortcutHref(pathname, location) {
   const loc =
     location ||
     (typeof window !== 'undefined'
@@ -380,8 +379,8 @@ export function buildAdminShortcutHref(location) {
     `http://local${loc.pathname || '/'}${loc.search || ''}`;
   const from = new URL(href);
   const url = new URL(from.href);
-  url.pathname = withAppBase(`/${APP_ROUTE_ADMIN}`);
-  // Drop member-scoped noise; keep calendar context only.
+  const path = pathname.startsWith('/') ? pathname : `/${pathname}`;
+  url.pathname = withAppBase(path);
   for (const key of [...url.searchParams.keys()]) {
     if (key !== 'year' && key !== 'month') url.searchParams.delete(key);
   }
@@ -392,4 +391,21 @@ export function buildAdminShortcutHref(location) {
   if (month) url.searchParams.set('month', month);
   else url.searchParams.delete('month');
   return `${url.pathname}${url.search}`;
+}
+
+/**
+ * Member-shell toolbar shortcut → /admin, preserving year/month when present.
+ * @param {{ pathname?: string, search?: string, href?: string } | Location} [location]
+ * @returns {string} path + query for <a href>
+ */
+export function buildAdminShortcutHref(location) {
+  return buildScopedShortcutHref(`/${APP_ROUTE_ADMIN}`, location);
+}
+
+/**
+ * Admin-shell toolbar shortcut → leader member URL (/yhkim), year/month kept.
+ * @param {{ pathname?: string, search?: string, href?: string } | Location} [location]
+ */
+export function buildLeaderMemberShortcutHref(location) {
+  return buildScopedShortcutHref(`/${MEMBER_ROUTE_SLUG.A}`, location);
 }

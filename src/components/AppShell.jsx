@@ -21,6 +21,7 @@ import {
   Megaphone,
   Shield,
   Sparkles,
+  User,
 } from 'lucide-react';
 import LeaderKpiApprovalBell from './LeaderKpiApprovalBell';
 import { useLeaderKpiPendingBadge } from '../hooks/useLeaderKpiPendingBadge';
@@ -56,7 +57,11 @@ import MobileHomeGuideModal from './MobileHomeGuideModal';
 import AppModuleNavItem from './AppModuleNavItem';
 import { buildAppModuleUrl } from '../hooks/useAppModule';
 import { openAppModuleInNewTab } from '../utils/appModuleNavigation';
-import { buildAdminShortcutHref, withAppBase } from '../utils/appRoute';
+import {
+  buildAdminShortcutHref,
+  buildLeaderMemberShortcutHref,
+  withAppBase,
+} from '../utils/appRoute';
 import { checkSupabaseHealth, SUPABASE_HEALTH_STATUS } from '../utils/supabaseHealth';
 
 export default function AppShell({
@@ -545,23 +550,37 @@ export default function AppShell({
                 </span>
               )}
             </p>
-            {showLeaderApprovalBadge && (
-              <LeaderKpiApprovalBell
-                count={leaderPending.count}
-                summary={leaderPending.summary}
-                period={leaderPending.period}
-              />
-            )}
-            {isMemberShell && !isViewer && (
+            {(showLeaderApprovalBadge ||
+              (isAdminShell && !isViewer) ||
+              (isMemberShell && !isViewer)) && (
               <div className="project-toolbar__actions">
-                <a
-                  className="btn btn--hub project-toolbar__admin-link"
-                  href={buildAdminShortcutHref()}
-                  {...uiTooltip('관리자 화면으로 이동 (비밀번호 필요)', 'below')}
-                >
-                  <Shield size={14} aria-hidden />
-                  관리자
-                </a>
+                {showLeaderApprovalBadge && (
+                  <LeaderKpiApprovalBell
+                    count={leaderPending.count}
+                    summary={leaderPending.summary}
+                    period={leaderPending.period}
+                  />
+                )}
+                {isAdminShell && !isViewer && (
+                  <a
+                    className="btn btn--hub project-toolbar__scope-link"
+                    href={buildLeaderMemberShortcutHref()}
+                    {...uiTooltip('구성원 A(/yhkim) 일지·업무 화면으로 이동', 'below')}
+                  >
+                    <User size={14} aria-hidden />
+                    구성원 A
+                  </a>
+                )}
+                {isMemberShell && !isViewer && (
+                  <a
+                    className="btn btn--hub project-toolbar__scope-link"
+                    href={buildAdminShortcutHref()}
+                    {...uiTooltip('관리자 화면으로 이동 (비밀번호 필요)', 'below')}
+                  >
+                    <Shield size={14} aria-hidden />
+                    관리자
+                  </a>
+                )}
               </div>
             )}
           </div>

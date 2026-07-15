@@ -943,10 +943,14 @@ html.project-sidebar-collapsed-boot .project-sidebar-rail__icon {
   flex-shrink: 0;
 }
 
-.project-toolbar__admin-link {
+.project-toolbar__scope-link {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+}
+
+.project-toolbar__actions .leader-kpi-approval-bell {
+  margin-left: 0;
 }
 
 .leader-kpi-approval-bell {

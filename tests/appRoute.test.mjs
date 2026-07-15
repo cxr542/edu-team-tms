@@ -4,6 +4,7 @@ import {
   MEMBER_ROUTE_SLUG,
   adminRoutePath,
   buildAdminShortcutHref,
+  buildLeaderMemberShortcutHref,
   buildAppScopedUrl,
   getModuleFromLocation,
   memberRoutePath,
@@ -148,5 +149,15 @@ describe('appRoute path scopes', () => {
         href: 'https://example.test/wschoi',
       })
     ).toBe('/admin');
+  });
+
+  it('builds leader member shortcut href to /yhkim', () => {
+    expect(
+      buildLeaderMemberShortcutHref({
+        pathname: '/admin',
+        search: '?year=2026&month=7&module=ledger',
+        href: 'https://example.test/admin?year=2026&month=7&module=ledger',
+      })
+    ).toBe('/yhkim?year=2026&month=7');
   });
 });
