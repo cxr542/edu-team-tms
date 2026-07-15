@@ -363,3 +363,33 @@ export function memberRoutePath(memberCode) {
 export function adminRoutePath() {
   return withAppBase(`/${APP_ROUTE_ADMIN}`);
 }
+
+/**
+ * Member-shell toolbar shortcut → /admin, preserving year/month when present.
+ * @param {{ pathname?: string, search?: string, href?: string } | Location} [location]
+ * @returns {string} path + query for <a href>
+ */
+export function buildAdminShortcutHref(location) {
+  const loc =
+    location ||
+    (typeof window !== 'undefined'
+      ? window.location
+      : { pathname: '/', search: '', href: 'http://local/' });
+  const href =
+    loc.href ||
+    `http://local${loc.pathname || '/'}${loc.search || ''}`;
+  const from = new URL(href);
+  const url = new URL(from.href);
+  url.pathname = withAppBase(`/${APP_ROUTE_ADMIN}`);
+  // Drop member-scoped noise; keep calendar context only.
+  for (const key of [...url.searchParams.keys()]) {
+    if (key !== 'year' && key !== 'month') url.searchParams.delete(key);
+  }
+  const year = from.searchParams.get('year');
+  const month = from.searchParams.get('month');
+  if (year) url.searchParams.set('year', year);
+  else url.searchParams.delete('year');
+  if (month) url.searchParams.set('month', month);
+  else url.searchParams.delete('month');
+  return `${url.pathname}${url.search}`;
+}

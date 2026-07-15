@@ -19,6 +19,7 @@ import {
   UtensilsCrossed,
   MessageCircle,
   Megaphone,
+  Shield,
   Sparkles,
 } from 'lucide-react';
 import LeaderKpiApprovalBell from './LeaderKpiApprovalBell';
@@ -55,7 +56,7 @@ import MobileHomeGuideModal from './MobileHomeGuideModal';
 import AppModuleNavItem from './AppModuleNavItem';
 import { buildAppModuleUrl } from '../hooks/useAppModule';
 import { openAppModuleInNewTab } from '../utils/appModuleNavigation';
-import { withAppBase } from '../utils/appRoute';
+import { buildAdminShortcutHref, withAppBase } from '../utils/appRoute';
 import { checkSupabaseHealth, SUPABASE_HEALTH_STATUS } from '../utils/supabaseHealth';
 
 export default function AppShell({
@@ -550,6 +551,18 @@ export default function AppShell({
                 summary={leaderPending.summary}
                 period={leaderPending.period}
               />
+            )}
+            {isMemberShell && !isViewer && (
+              <div className="project-toolbar__actions">
+                <a
+                  className="btn btn--hub project-toolbar__admin-link"
+                  href={buildAdminShortcutHref()}
+                  {...uiTooltip('관리자 화면으로 이동 (비밀번호 필요)', 'below')}
+                >
+                  <Shield size={14} aria-hidden />
+                  관리자
+                </a>
+              </div>
             )}
           </div>
           <div className="content project-content">{children}</div>

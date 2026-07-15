@@ -935,6 +935,20 @@ html.project-sidebar-collapsed-boot .project-sidebar-rail__icon {
   color: var(--text-muted);
 }
 
+.project-toolbar__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.project-toolbar__admin-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 .leader-kpi-approval-bell {
   position: relative;
   display: inline-flex;

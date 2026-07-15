@@ -3,6 +3,7 @@ import {
   APP_ROUTE_ADMIN,
   MEMBER_ROUTE_SLUG,
   adminRoutePath,
+  buildAdminShortcutHref,
   buildAppScopedUrl,
   getModuleFromLocation,
   memberRoutePath,
@@ -130,5 +131,22 @@ describe('appRoute path scopes', () => {
 
     expect(migrateLegacyAppUrlIfNeeded()).toBe(true);
     expect(replaceState).toHaveBeenCalledWith({}, '', '/hyshin');
+  });
+
+  it('builds admin shortcut href with year/month only', () => {
+    expect(
+      buildAdminShortcutHref({
+        pathname: '/yhkim',
+        search: '?year=2026&month=7&module=journal',
+        href: 'https://example.test/yhkim?year=2026&month=7&module=journal',
+      })
+    ).toBe('/admin?year=2026&month=7');
+    expect(
+      buildAdminShortcutHref({
+        pathname: '/wschoi',
+        search: '',
+        href: 'https://example.test/wschoi',
+      })
+    ).toBe('/admin');
   });
 });
