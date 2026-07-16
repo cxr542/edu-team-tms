@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createAdminSessionCookie } from '../server/api-utils/adminSession.js';
 
 const fromMock = vi.fn();
 
@@ -32,6 +33,8 @@ describe('announcement-comments API', () => {
     fromMock.mockReset();
     process.env.SUPABASE_URL = 'https://example.supabase.co';
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role-key';
+    process.env.TMS_ADMIN_GATE_PASSWORD = 'secret-gate';
+    process.env.TMS_ADMIN_SESSION_SECRET = 'session-secret';
   });
 
   it('rejects empty body', async () => {
@@ -116,7 +119,24 @@ describe('announcement-comments API', () => {
     expect(JSON.parse(res.body).data.body).toBe('확인했습니다');
   });
 
-  it('allows admin to soft-delete another member comment', async () => {
+  it('rejects forged admin referer when deleting another member comment', async () => {
+    const handler = await loadHandler();
+    const res = createRes();
+    await handler(
+      {
+        method: 'POST',
+        headers: { referer: 'https://edu-team-tms-ten.vercel.app/admin' },
+        body: { action: 'delete', commentId: 'c1', memberCode: 'A' },
+      },
+      res
+    );
+    expect(res.statusCode).toBe(403);
+    expect(JSON.parse(res.body).message).toMatch(/관리자 세션/);
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it('allows session-backed admin to soft-delete another member comment', async () => {
+    const cookie = createAdminSessionCookie();
     fromMock
       .mockReturnValueOnce({
         select: () => ({
@@ -155,7 +175,10 @@ describe('announcement-comments API', () => {
     await handler(
       {
         method: 'POST',
-        headers: { referer: 'https://edu-team-tms-ten.vercel.app/admin' },
+        headers: {
+          referer: 'https://edu-team-tms-ten.vercel.app/admin',
+          cookie: cookie.split(';')[0],
+        },
         body: { action: 'delete', commentId: 'c1', memberCode: 'A' },
       },
       res

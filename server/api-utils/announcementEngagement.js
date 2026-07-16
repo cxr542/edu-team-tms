@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { hasValidAdminSession } from './adminSession.js';
 import { isAllowedPublishOrigin } from './publishOrigin.js';
 import {
   isAdminOrSameMemberRouteReferer,
@@ -30,7 +31,7 @@ export function canUseEngagementOrigin(req) {
 
 /**
  * Member code from body/query must match URL scope.
- * /admin may only act as A.
+ * /admin may only act as A after the password-backed session gate.
  * @returns {{ ok: true, memberCode: string, isAdmin: boolean } | { ok: false, status: number, message: string }}
  */
 export function resolveEngagementMember(req, claimedCode) {
@@ -43,6 +44,13 @@ export function resolveEngagementMember(req, claimedCode) {
   }
   const isAdmin = isAdminRouteReferer(req);
   if (isAdmin) {
+    if (!hasValidAdminSession(req)) {
+      return {
+        ok: false,
+        status: 403,
+        message: '관리자 세션이 필요합니다. /admin 에서 비밀번호를 다시 입력하세요.',
+      };
+    }
     if (memberCode !== 'A') {
       return { ok: false, status: 403, message: '관리자 화면에서는 구성원 A로만 반응·댓글할 수 있습니다.' };
     }

@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-07-16
+
+### [수정] Fix announcement engagement admin session checks
+
+- 공지 댓글 삭제 및 비공개 공지 반응의 관리자 권한 검증을 비밀번호 세션 기준으로 강화
+- PR #104: https://github.com/cxr542/edu-team-tms/pull/104
+
 ## 2026-07-14
 
 ### [수정] Fix Supabase journal approval downgrades
