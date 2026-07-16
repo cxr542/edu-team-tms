@@ -828,7 +828,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
 
   const openCopyModal = () => {
     if (!editTask || journalReadOnly) return;
-    setCopyTargetDayKey(editTask.dayKey);
+    setCopyTargetDayKey(getTodayParts().key);
     setCopyOpen(true);
   };
 
