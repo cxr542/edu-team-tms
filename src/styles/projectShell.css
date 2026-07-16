@@ -10,6 +10,8 @@
   --shell-sidebar-w: 13.75rem;
   --shell-sidebar-w-mini: 3.5rem;
   --shell-sidebar-current: var(--shell-sidebar-w);
+  /* Space between dark sidebar and light main content */
+  --shell-content-gutter: 1.75rem;
   --shell-banner-h: 2.25rem;
   --shell-drawer-bp: 1024px;
 }
@@ -342,11 +344,13 @@ html.project-sidebar-collapsed-boot .project-app.theme-tms {
 .project-shell {
   display: grid;
   grid-template-columns: var(--shell-sidebar-current) 1fr;
+  column-gap: var(--shell-content-gutter);
   align-items: start;
   flex: 1;
   position: relative;
   z-index: 1;
-  transition: grid-template-columns 0.22s ease;
+  background: var(--shell-bg);
+  transition: grid-template-columns 0.22s ease, column-gap 0.22s ease;
 }
 
 /* 사이드바 배경만 뷰포트 높이 — 본문 길이에 따라 문서가 늘어나지 않음 */
@@ -365,10 +369,12 @@ html.project-sidebar-collapsed-boot .project-app.theme-tms {
 
 .project-shell.is-sidebar-collapsed {
   --shell-sidebar-current: var(--shell-sidebar-w-mini);
+  --shell-content-gutter: 1.25rem;
 }
 
 html.project-sidebar-collapsed-boot .project-shell {
   --shell-sidebar-current: var(--shell-sidebar-w-mini);
+  --shell-content-gutter: 1.25rem;
 }
 
 .project-sidebar {
@@ -1217,6 +1223,8 @@ html.project-sidebar-collapsed-boot .project-logo h1 {
   .project-shell.is-sidebar-collapsed {
     grid-template-columns: 1fr;
     --shell-sidebar-current: 0px;
+    --shell-content-gutter: 0px;
+    column-gap: 0;
   }
 
   .project-sidebar-rail {
