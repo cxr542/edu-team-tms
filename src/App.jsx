@@ -1106,7 +1106,7 @@ export default function App() {
         <LunchPickPage />
       ) : displayModule === 'lecture-journal' ? (
         <LectureJournalPage />
-      ) : displayModule === 'idea-bank' ? (
+      ) : displayModule === 'csr' ? (
         <IdeaBankPage
           readOnly={isViewer}
           teamAccess={teamAccess}

@@ -9,7 +9,7 @@ export const NAV_LABEL_IDS = [
   'cloud-chatbot',
   'announcements',
   'lunch',
-  'idea-bank',
+  'csr',
   'lecture-journal',
   'docs',
 ];
@@ -25,7 +25,7 @@ export const DEFAULT_NAV_LABELS = {
   'cloud-chatbot': '클라우드 챗봇',
   announcements: '공지사항',
   lunch: '오늘 뭐 먹지',
-  'idea-bank': '이것도',
+  csr: '이것도',
   'lecture-journal': '강의일지',
   docs: '참고문서',
 };

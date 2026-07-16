@@ -9,7 +9,9 @@ import {
   getModuleFromLocation,
   memberRoutePath,
   migrateLegacyAppUrlIfNeeded,
+  migrateLegacyModuleQueryIfNeeded,
   parseAppRoute,
+  resolveAppModuleId,
   resolveScopedPathname,
 } from '../src/utils/appRoute.js';
 
@@ -64,6 +66,28 @@ describe('appRoute path scopes', () => {
     expect(getModuleFromLocation({ pathname: '/admin', search: '' })).toBe('ledger');
     expect(getModuleFromLocation({ pathname: '/yhkim', search: '' })).toBe('journal');
     expect(getModuleFromLocation({ pathname: '/admin', search: '?module=announcements' })).toBe('announcements');
+    expect(getModuleFromLocation({ pathname: '/admin', search: '?module=csr' })).toBe('csr');
+  });
+
+  it('resolves legacy idea-bank module to csr', () => {
+    expect(resolveAppModuleId('idea-bank')).toBe('csr');
+    expect(resolveAppModuleId('csr')).toBe('csr');
+    expect(getModuleFromLocation({ pathname: '/admin', search: '?module=idea-bank' })).toBe('csr');
+  });
+
+  it('rewrites module=idea-bank query to module=csr', () => {
+    const replaceState = vi.fn();
+    vi.stubGlobal('window', {
+      location: {
+        pathname: '/admin',
+        search: '?module=idea-bank',
+        href: 'https://example.test/admin?module=idea-bank',
+      },
+      history: { replaceState },
+    });
+
+    expect(migrateLegacyModuleQueryIfNeeded()).toBe(true);
+    expect(replaceState).toHaveBeenCalledWith({}, '', '/admin?module=csr');
   });
 
   it('migrates legacy admin query to /admin path shape', () => {

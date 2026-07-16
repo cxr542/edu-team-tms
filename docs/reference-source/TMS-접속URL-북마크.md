@@ -3,7 +3,7 @@
 > **운영 URL:** https://edu-team-tms-ten.vercel.app — 경로 URL(`/admin`, `/yhkim` …), 접속 안내 랜딩, 관리자 비밀번호 게이트, 팀 공유  
 > **Preview 일지 팀 공유 SoT:** Supabase (`MANUAL_MIRROR`) — journal Blob POST demote(J7d). Production은 기존 Blob 팀 공유 유지.  
 > 로그인 없음 — **아래 §2~§5 URL을 그대로 북마크**하세요.  
-> 마지막 갱신: 2026-07-10  
+> 마지막 갱신: 2026-07-16  
 > **옛 URL** (`okestro-edu-team-tms.vercel.app`, `edu-team-tms.vercel.app`) 은 **데이터 origin이 분리**됩니다. 일지 이전은 §9 참고.  
 > **예비 hostname** `okestro-edu-tms-v2.vercel.app` — Vercel 도메인 확보 전까지 **미사용**.
 
@@ -50,6 +50,7 @@
 | KPI 리포트 | https://edu-team-tms-ten.vercel.app/?mode=edit&access=admin&module=kpi-report |
 | 점심 뭐 먹지 | https://edu-team-tms-ten.vercel.app/?mode=edit&access=admin&module=lunch |
 | 강의일지 | https://edu-team-tms-ten.vercel.app/admin?module=lecture-journal |
+| 이것도 (CSR) | https://edu-team-tms-ten.vercel.app/admin?module=csr |
 | PPT Academizer | https://edu-team-tms-ten.vercel.app/?mode=edit&access=admin&module=academizer |
 | 클라우드 챗봇 (실험) | https://edu-team-tms-ten.vercel.app/?mode=edit&access=admin&module=cloud-chatbot |
 | 참고문서 | https://edu-team-tms-ten.vercel.app/?mode=edit&access=admin&module=docs |
@@ -74,7 +75,7 @@
 | 팀 빌딩비 장부 (조회) | https://edu-team-tms-ten.vercel.app/yhkim?mode=view&module=ledger&year=2026&month=6 |
 | 점심 뭐 먹지 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=A&module=lunch |
 | 강의일지 | https://edu-team-tms-ten.vercel.app/yhkim?module=lecture-journal |
-| 이것도? | https://edu-team-tms-ten.vercel.app/?mode=edit&member=A&module=idea-bank |
+| 이것도 (CSR) | https://edu-team-tms-ten.vercel.app/yhkim?module=csr |
 | 참고문서 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=A&module=docs |
 
 B/C와 **동일한 사용자 UI**입니다. KPI 승인 요청·향상 과제는 일지 상단 버튼을 사용합니다.
@@ -92,7 +93,7 @@ B/C와 **동일한 사용자 UI**입니다. KPI 승인 요청·향상 과제는 
 | 팀 빌딩비 장부 (조회) | https://edu-team-tms-ten.vercel.app/?mode=view&member=B&module=ledger&year=2026&month=6 |
 | 점심 뭐 먹지 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=lunch |
 | 강의일지 | https://edu-team-tms-ten.vercel.app/wschoi?module=lecture-journal |
-| 이것도? | https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=idea-bank |
+| 이것도 (CSR) | https://edu-team-tms-ten.vercel.app/wschoi?module=csr |
 | 참고문서 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=docs |
 
 `module` 없이 `?mode=edit&member=B` 만 열면 **일지**로 들어갑니다.
@@ -112,7 +113,7 @@ B/C와 **동일한 사용자 UI**입니다. KPI 승인 요청·향상 과제는 
 | 팀 빌딩비 장부 (조회) | https://edu-team-tms-ten.vercel.app/?mode=view&member=C&module=ledger&year=2026&month=6 |
 | 점심 뭐 먹지 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=lunch |
 | 강의일지 | https://edu-team-tms-ten.vercel.app/hyshin?module=lecture-journal |
-| 이것도? | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=idea-bank |
+| 이것도 (CSR) | https://edu-team-tms-ten.vercel.app/hyshin?module=csr |
 | 참고문서 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=docs |
 
 **일지:** B와 동일 — **A/B/C 탭 조회**, **C 탭만** 편집. 작성 후 **「팀 공유 저장」**, 타인 조회는 **「팀 공유본 가져오기」**.  

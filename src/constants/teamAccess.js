@@ -18,7 +18,7 @@ export const TEAM_COMMON_MODULES = new Set([
   'ledger',
   'announcements',
   'lunch',
-  'idea-bank',
+  'csr',
   'lecture-journal',
   'docs',
 ]);

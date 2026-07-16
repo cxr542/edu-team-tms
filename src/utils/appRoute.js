@@ -28,7 +28,7 @@ const APP_MODULES = new Set([
   'cloud-chatbot',
   'announcements',
   'lunch',
-  'idea-bank',
+  'csr',
   'lecture-journal',
   'journal',
   'competency',
@@ -36,6 +36,18 @@ const APP_MODULES = new Set([
   'kpi-approve',
   'kpi-report',
 ]);
+
+/** 옛 module 쿼리 → 현재 모듈 id (북마크 호환) */
+export const LEGACY_MODULE_ALIASES = {
+  'idea-bank': 'csr',
+};
+
+export function resolveAppModuleId(raw) {
+  if (!raw) return null;
+  if (LEGACY_MODULE_ALIASES[raw]) return LEGACY_MODULE_ALIASES[raw];
+  if (APP_MODULES.has(raw)) return raw;
+  return null;
+}
 
 function appBasePrefix() {
   const base = import.meta.env.BASE_URL || '/';
@@ -145,6 +157,19 @@ export function isAdminScopedRoute(location) {
 export function isScopedWorkRoute(location) {
   const scope = parseAppRoute(location).scope;
   return scope === 'admin' || scope === 'user';
+}
+
+/** legacy module=idea-bank → module=csr 등 */
+export function migrateLegacyModuleQueryIfNeeded(location = window.location) {
+  if (typeof window === 'undefined') return false;
+  const url = new URL(location.href);
+  const raw = url.searchParams.get('module');
+  const resolved = raw ? LEGACY_MODULE_ALIASES[raw] : null;
+  if (!resolved) return false;
+  url.searchParams.set('module', resolved);
+  pruneDefaultScopedQuery(url, resolved);
+  window.history.replaceState({}, '', `${url.pathname}${url.search}`);
+  return true;
 }
 
 /** legacy ?access= / ?member= 를 /admin · /yhkim 등으로 치환 */
@@ -345,8 +370,8 @@ export function buildAppScopedUrl(
 
 export function getModuleFromLocation(location = window.location) {
   const params = parseAppRoute(location).searchParams;
-  const m = params.get('module');
-  if (m && APP_MODULES.has(m)) return m;
+  const resolved = resolveAppModuleId(params.get('module'));
+  if (resolved) return resolved;
   const route = parseAppRoute(location);
   if (route.scope === 'user') return 'journal';
   if (route.scope === 'admin') return 'ledger';

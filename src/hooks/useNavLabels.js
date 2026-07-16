@@ -8,10 +8,15 @@ function loadNavLabels() {
     const raw = localStorage.getItem(NAV_LABELS_STORAGE_KEY);
     if (!raw) return { ...DEFAULT_NAV_LABELS };
     const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && parsed['idea-bank'] && !parsed.csr) {
+      parsed.csr = parsed['idea-bank'];
+      delete parsed['idea-bank'];
+    }
     const merged = { ...DEFAULT_NAV_LABELS, ...parsed };
     if (merged.ledger === LEGACY_LEDGER_LABEL) {
       merged.ledger = DEFAULT_NAV_LABELS.ledger;
     }
+    delete merged['idea-bank'];
     return merged;
   } catch {
     return { ...DEFAULT_NAV_LABELS };

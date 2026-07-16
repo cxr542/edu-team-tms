@@ -81,42 +81,46 @@ export default function CsrRequestCard({
       </div>
 
       <div className="csr-board-item__side">
-        <small>상태</small>
-        <strong className={`csr-board-status csr-board-status--compact ${statusClassName(request.status)}`}>
-          {formatCsrRequestStatusLabel(request.status)}
-        </strong>
+        <div className="csr-board-side__status-row">
+          <small>상태</small>
+          <strong className={`csr-board-status csr-board-status--compact ${statusClassName(request.status)}`}>
+            {formatCsrRequestStatusLabel(request.status)}
+          </strong>
+        </div>
         {isManager && (
-          <>
+          <div className="csr-board-side__controls">
             <label htmlFor={`csr-status-${request.id}`} className="csr-board-side__label">
               상태 변경
             </label>
-            <select
-              id={`csr-status-${request.id}`}
-              className="form-input csr-board-side__select"
-              value={draft.status}
-              onChange={(e) =>
-                onDraftChange(request.id, {
-                  ...draft,
-                  status: e.target.value,
-                })
-              }
-              disabled={!managerStatusEditable || !canEdit}
-            >
-              <option value="received">접수</option>
-              <option value="inProgress">진행 중</option>
-              <option value="done">완료</option>
-              <option value="hold">보류</option>
-              <option value="rejected">불가</option>
-            </select>
-            <button
-              type="button"
-              className="btn btn-primary csr-board-side__save"
-              onClick={() => onSave(request.id)}
-              disabled={!managerStatusEditable || !canEdit}
-            >
-              저장
-            </button>
-          </>
+            <div className="csr-board-side__actions">
+              <select
+                id={`csr-status-${request.id}`}
+                className="form-input csr-board-side__select"
+                value={draft.status}
+                onChange={(e) =>
+                  onDraftChange(request.id, {
+                    ...draft,
+                    status: e.target.value,
+                  })
+                }
+                disabled={!managerStatusEditable || !canEdit}
+              >
+                <option value="received">접수</option>
+                <option value="inProgress">진행 중</option>
+                <option value="done">완료</option>
+                <option value="hold">보류</option>
+                <option value="rejected">불가</option>
+              </select>
+              <button
+                type="button"
+                className="btn btn-primary csr-board-side__save"
+                onClick={() => onSave(request.id)}
+                disabled={!managerStatusEditable || !canEdit}
+              >
+                저장
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </article>

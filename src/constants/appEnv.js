@@ -44,7 +44,7 @@ export function formatAppVersion(version = APP_VERSION) {
 }
 
 /**
- * idea-bank와 같이 origin 기준 운영/개발 구분.
+ * CSR(이것도) 등과 같이 origin 기준 운영/개발 구분.
  * - 운영: Vercel 프로덕션 alias, GitHub Pages edu-team-tms
  * - 개발: localhost, Vercel 프리뷰 URL 등
  */

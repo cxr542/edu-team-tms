@@ -200,7 +200,7 @@ export default function AppShell({
     !isPublicViewerScope &&
     viewerMenuVisibility &&
     !viewerMenuVisibility.lunch &&
-    !viewerMenuVisibility['idea-bank'] &&
+    !viewerMenuVisibility.csr &&
     !viewerMenuVisibility['lecture-journal'] &&
     !viewerMenuVisibility['kpi-report'] &&
     !viewerMenuVisibility['kpi-approve'] &&
@@ -277,7 +277,7 @@ export default function AppShell({
                   <NavGroup title={NAV_GROUP_VIEWER}>
                     {navBtn('ledger', FileSpreadsheet, { viewer: true })}
                     {navBtn('lunch', UtensilsCrossed, { viewer: true })}
-                    {navBtn('idea-bank', Lightbulb, { viewer: true })}
+                    {navBtn('csr', Lightbulb, { viewer: true })}
                     {navBtn('lecture-journal', GraduationCap, { viewer: true })}
                   </NavGroup>
                   <NavGroup title={NAV_GROUP_VIEWER_KPI} className="project-nav-group--leader">
@@ -293,7 +293,7 @@ export default function AppShell({
                       {navBtn('announcements', Megaphone, {
                         badgeCount: announcementsUnread.count,
                       })}
-                      {navBtn('idea-bank', Lightbulb, {
+                      {navBtn('csr', Lightbulb, {
                         badgeCount: csrRequestsUnread.count,
                       })}
                       {navBtn('academizer', Presentation)}
@@ -308,7 +308,7 @@ export default function AppShell({
                         badgeCount: announcementsUnread.count,
                       })}
                       {navBtn('lunch', UtensilsCrossed)}
-                      {navBtn('idea-bank', Lightbulb)}
+                      {navBtn('csr', Lightbulb)}
                       {navBtn('lecture-journal', GraduationCap)}
                     </NavGroup>
                   )}

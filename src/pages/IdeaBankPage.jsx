@@ -149,6 +149,12 @@ export default function IdeaBankPage({
             {error}
           </p>
         )}
+        {sourceStatus === 'disabled' && import.meta.env.DEV && requests.length > 0 && (
+          <p className="idea-bank-message csr-board-message">
+            <CheckCircle2 size={14} aria-hidden />
+            로컬 UI 미리보기 — 저장·등록은 Supabase `.env` 설정 후 동작합니다.
+          </p>
+        )}
         {message && (
           <p className="idea-bank-message csr-board-message">
             <CheckCircle2 size={14} aria-hidden />

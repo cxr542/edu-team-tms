@@ -2,13 +2,13 @@
 
 export const VIEWER_MENU_STORAGE_KEY = 'tms-viewer-menu-v1';
 
-/** @typedef {'ledger' | 'lunch' | 'idea-bank' | 'lecture-journal' | 'kpi-report' | 'kpi-approve' | 'docs'} ViewerMenuModuleId */
+/** @typedef {'ledger' | 'lunch' | 'csr' | 'lecture-journal' | 'kpi-report' | 'kpi-approve' | 'docs'} ViewerMenuModuleId */
 
 /** @type {ViewerMenuModuleId[]} */
 export const VIEWER_MENU_MODULE_IDS = [
   'ledger',
   'lunch',
-  'idea-bank',
+  'csr',
   'lecture-journal',
   'kpi-report',
   'kpi-approve',
@@ -19,7 +19,7 @@ export const VIEWER_MENU_MODULE_IDS = [
 export const DEFAULT_VIEWER_MENU_VISIBILITY = {
   ledger: true,
   lunch: false,
-  'idea-bank': false,
+  csr: false,
   'lecture-journal': false,
   'kpi-report': false,
   'kpi-approve': false,
@@ -39,9 +39,9 @@ export const VIEWER_MENU_OPTIONS = [
     description: '오늘 뭐 먹지 · 팀원 조회용',
   },
   {
-    id: 'idea-bank',
+    id: 'csr',
     required: false,
-    description: '이것도 · 팀원 조회용',
+    description: '이것도(CSR) · 팀원 조회용',
   },
   {
     id: 'lecture-journal',
@@ -69,6 +69,10 @@ export const VIEWER_MENU_OPTIONS = [
 export function normalizeViewerMenuVisibility(raw) {
   const next = { ...DEFAULT_VIEWER_MENU_VISIBILITY };
   if (!raw || typeof raw !== 'object') return next;
+  // legacy key from module=idea-bank era
+  if (typeof raw['idea-bank'] === 'boolean' && typeof raw.csr !== 'boolean') {
+    next.csr = raw['idea-bank'];
+  }
   for (const id of VIEWER_MENU_MODULE_IDS) {
     if (typeof raw[id] === 'boolean') next[id] = raw[id];
   }
