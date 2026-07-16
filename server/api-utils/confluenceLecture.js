@@ -145,3 +145,61 @@ export async function fetchDirectChildren({
     items: results.map((row) => normalizeChildItem(row, ctx)),
   };
 }
+
+/**
+ * Validate that a requested parent lives under the configured lecture root before
+ * using the server token to list its children.
+ *
+ * @param {{
+ *   config: ReturnType<typeof resolveConfluenceConfig>,
+ *   parentId: string,
+ *   parentType: 'folder' | 'page',
+ *   fetchImpl?: typeof fetch,
+ *   maxDepth?: number,
+ * }} opts
+ */
+export async function isLectureParentAllowed({
+  config,
+  parentId,
+  parentType,
+  fetchImpl = fetch,
+  maxDepth = 5,
+}) {
+  const id = sanitizeContentId(parentId);
+  if (!id) return false;
+
+  const kind = parentType === 'page' ? 'page' : 'folder';
+  const rootType = config.parentType === 'page' ? 'page' : 'folder';
+  if (id === config.folderId && kind === rootType) return true;
+
+  const queue = [{ id: config.folderId, type: rootType, depth: 0 }];
+  const seen = new Set([`${rootType}:${config.folderId}`]);
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current || current.depth >= maxDepth) continue;
+
+    const listed = await fetchDirectChildren({
+      config,
+      parentId: current.id,
+      parentType: current.type,
+      limit: 250,
+      fetchImpl,
+    });
+
+    for (const item of listed.items) {
+      const childId = sanitizeContentId(item.id);
+      if (!childId) continue;
+      const childType = item.type === 'page' ? 'page' : 'folder';
+      if (childId === id && childType === kind) return true;
+
+      const key = `${childType}:${childId}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        queue.push({ id: childId, type: childType, depth: current.depth + 1 });
+      }
+    }
+  }
+
+  return false;
+}

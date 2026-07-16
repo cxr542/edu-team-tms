@@ -54,6 +54,12 @@ function randomId() {
 
 export function normalizeCsrRequest(row) {
   if (!row || typeof row !== 'object') return null;
+  const adminComment =
+    typeof row.admin_comment === 'string'
+      ? row.admin_comment
+      : typeof row.adminComment === 'string'
+        ? row.adminComment
+        : '';
   return {
     id: String(row.id || '').trim(),
     title: String(row.title || '').trim(),
@@ -62,7 +68,7 @@ export function normalizeCsrRequest(row) {
     status: normalizeCsrRequestStatus(row.status),
     requester: String(row.requester || '').trim(),
     requesterCode: readRequesterCode(row),
-    adminComment: typeof row.admin_comment === 'string' ? row.admin_comment.trim() : '',
+    adminComment: adminComment.trim(),
     createdAt: row.created_at || row.createdAt || null,
     updatedAt: row.updated_at || row.updatedAt || null,
     completedAt: row.completed_at || row.completedAt || null,

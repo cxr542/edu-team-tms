@@ -73,6 +73,23 @@ describe('csrRequestsSupabase', () => {
       completedAt: null,
       categoryLabel: '문의',
     });
+
+    expect(
+      normalizeCsrRequest({
+        id: '2',
+        title: '개선',
+        description: '',
+        category: 'improvement',
+        status: 'received',
+        requester: '최우성',
+        requesterCode: 'B',
+        adminComment: '  반영 예정  ',
+      })
+    ).toMatchObject({
+      id: '2',
+      requesterCode: 'B',
+      adminComment: '반영 예정',
+    });
   });
 
   it('upserts CSR requests to Supabase', async () => {
@@ -88,7 +105,7 @@ describe('csrRequestsSupabase', () => {
             status: 'received',
             requester: '김윤형',
             requester_code: 'A',
-            admin_comment: '',
+            admin_comment: '관리자 답변',
             created_at: '2026-07-03T00:00:00.000Z',
             updated_at: '2026-07-03T00:00:00.000Z',
             completed_at: null,
@@ -108,7 +125,7 @@ describe('csrRequestsSupabase', () => {
       status: 'received',
       requester: '김윤형',
       requesterCode: 'A',
-      adminComment: '',
+      adminComment: '관리자 답변',
       createdAt: '2026-07-03T00:00:00.000Z',
       updatedAt: '2026-07-03T00:00:00.000Z',
       completedAt: null,
@@ -119,6 +136,7 @@ describe('csrRequestsSupabase', () => {
       expect.objectContaining({
         requester: '김윤형',
         requester_code: 'A',
+        admin_comment: '관리자 답변',
       }),
       { onConflict: 'id' }
     );

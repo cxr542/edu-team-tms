@@ -4,6 +4,7 @@
  */
 import {
   fetchDirectChildren,
+  isLectureParentAllowed,
   resolveConfluenceConfig,
   sanitizeContentId,
 } from '../server/api-utils/confluenceLecture.js';
@@ -67,13 +68,30 @@ export default async function handler(req, res, options = {}) {
       : requestedId
         ? 'folder'
         : config.parentType;
+  const fetchImpl = options.fetchImpl || fetch;
 
   try {
+    if (requestedId) {
+      const allowed = await isLectureParentAllowed({
+        config,
+        parentId,
+        parentType,
+        fetchImpl,
+      });
+      if (!allowed) {
+        return json(res, 403, {
+          error: 'Forbidden parentId',
+          available: false,
+          items: [],
+        });
+      }
+    }
+
     const listed = await fetchDirectChildren({
       config,
       parentId,
       parentType,
-      fetchImpl: options.fetchImpl || fetch,
+      fetchImpl,
     });
     return json(res, 200, {
       available: true,

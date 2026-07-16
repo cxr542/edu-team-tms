@@ -144,6 +144,105 @@ describe('api/confluence-lecture handler', () => {
     expect(calledUrl).toContain('/wiki/api/v2/folders/1867843025/direct-children');
   });
 
+  it('lists requested children only after resolving the parent under the root folder', async () => {
+    const fetchImpl = vi.fn(async (url) => {
+      const href = String(url);
+      if (href.includes('/wiki/api/v2/folders/1867843025/direct-children')) {
+        return {
+          ok: true,
+          status: 200,
+          text: async () =>
+            JSON.stringify({
+              results: [
+                { id: '2748514320', type: 'folder', title: '26년 강의일지', status: 'current' },
+              ],
+            }),
+        };
+      }
+      if (href.includes('/wiki/api/v2/folders/2748514320/direct-children')) {
+        return {
+          ok: true,
+          status: 200,
+          text: async () =>
+            JSON.stringify({
+              results: [
+                { id: '2748514333', type: 'page', title: '7월 강의일지', status: 'current' },
+              ],
+            }),
+        };
+      }
+      return {
+        ok: false,
+        status: 404,
+        text: async () => JSON.stringify({ message: 'not found' }),
+      };
+    });
+    const res = mockRes();
+    await handler(
+      {
+        method: 'GET',
+        headers: { referer: 'https://edu-team-tms-ten.vercel.app/yhkim' },
+        url: '/api/confluence-lecture?action=list&parentId=2748514320&parentType=folder',
+      },
+      res,
+      {
+        env: {
+          CONFLUENCE_EMAIL: 'a@x.com',
+          CONFLUENCE_API_TOKEN: 't',
+          CONFLUENCE_LECTURE_FOLDER_ID: '1867843025',
+        },
+        fetchImpl,
+      }
+    );
+
+    expect(res.statusCode).toBe(200);
+    const body = parseBody(res);
+    expect(body.parentId).toBe('2748514320');
+    expect(body.items).toHaveLength(1);
+    expect(String(fetchImpl.mock.calls[0][0])).toContain(
+      '/wiki/api/v2/folders/1867843025/direct-children'
+    );
+    expect(String(fetchImpl.mock.calls[1][0])).toContain(
+      '/wiki/api/v2/folders/2748514320/direct-children'
+    );
+  });
+
+  it('rejects requested parent ids outside the lecture root', async () => {
+    const fetchImpl = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      text: async () =>
+        JSON.stringify({
+          results: [
+            { id: '2748514320', type: 'folder', title: '26년 강의일지', status: 'current' },
+          ],
+        }),
+    }));
+    const res = mockRes();
+    await handler(
+      {
+        method: 'GET',
+        headers: { referer: 'https://edu-team-tms-ten.vercel.app/yhkim' },
+        url: '/api/confluence-lecture?action=list&parentId=999999999&parentType=folder',
+      },
+      res,
+      {
+        env: {
+          CONFLUENCE_EMAIL: 'a@x.com',
+          CONFLUENCE_API_TOKEN: 't',
+          CONFLUENCE_LECTURE_FOLDER_ID: '1867843025',
+        },
+        fetchImpl,
+      }
+    );
+
+    expect(res.statusCode).toBe(403);
+    expect(parseBody(res)).toMatchObject({ available: false, items: [] });
+    const calledUrls = fetchImpl.mock.calls.map(([url]) => String(url));
+    expect(calledUrls).toHaveLength(2);
+    expect(calledUrls.some((url) => url.includes('/wiki/api/v2/folders/999999999/'))).toBe(false);
+  });
+
   it('rejects invalid parentId', async () => {
     const res = mockRes();
     await handler(
