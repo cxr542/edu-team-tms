@@ -95,6 +95,34 @@ describe('announcement-reactions API', () => {
     expect(res.statusCode).toBe(403);
   });
 
+  it('rejects member reaction reads on unpublished announcements', async () => {
+    const announcementId = '11111111-1111-1111-1111-111111111111';
+    fromMock.mockReturnValueOnce({
+      select: () => ({
+        in: async () => ({
+          data: [{ id: announcementId, is_published: false }],
+          error: null,
+        }),
+      }),
+    });
+
+    const handler = await loadHandler();
+    const res = createRes();
+    await handler(
+      {
+        method: 'GET',
+        headers: { referer: 'https://edu-team-tms-ten.vercel.app/yhkim' },
+        url: `/api/announcement-reactions?announcementIds=${announcementId}&memberCode=A`,
+        query: { announcementIds: announcementId, memberCode: 'A' },
+      },
+      res
+    );
+
+    expect(res.statusCode).toBe(403);
+    expect(JSON.parse(res.body).message).toMatch(/비공개 공지/);
+    expect(fromMock).toHaveBeenCalledTimes(1);
+  });
+
   it('rejects forged admin referer before allowing unpublished announcement reaction', async () => {
     const handler = await loadHandler();
     const res = createRes();
@@ -223,17 +251,26 @@ describe('announcement-reactions API', () => {
   });
 
   it('lists aggregated reactions', async () => {
-    fromMock.mockReturnValueOnce({
-      select: () => ({
-        in: async () => ({
-          data: [
-            { announcement_id: 'a1', member_code: 'A', emoji: '👍' },
-            { announcement_id: 'a1', member_code: 'B', emoji: '👍' },
-          ],
-          error: null,
+    fromMock
+      .mockReturnValueOnce({
+        select: () => ({
+          in: async () => ({
+            data: [{ id: 'a1', is_published: true }],
+            error: null,
+          }),
         }),
-      }),
-    });
+      })
+      .mockReturnValueOnce({
+        select: () => ({
+          in: async () => ({
+            data: [
+              { announcement_id: 'a1', member_code: 'A', emoji: '👍' },
+              { announcement_id: 'a1', member_code: 'B', emoji: '👍' },
+            ],
+            error: null,
+          }),
+        }),
+      });
 
     const handler = await loadHandler();
     const res = createRes();

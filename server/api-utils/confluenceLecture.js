@@ -64,6 +64,72 @@ export function sanitizeContentId(raw) {
 }
 
 /**
+ * Ensure ad-hoc parentId requests stay inside the configured lecture root.
+ * @param {{
+ *   config: ReturnType<typeof resolveConfluenceConfig>,
+ *   parentId: string,
+ *   parentType: 'folder' | 'page',
+ *   fetchImpl?: typeof fetch,
+ * }} opts
+ */
+export async function assertContentInLectureScope({
+  config,
+  parentId,
+  parentType,
+  fetchImpl = fetch,
+}) {
+  const id = sanitizeContentId(parentId);
+  const rootId = sanitizeContentId(config.folderId);
+  if (!id || !rootId) {
+    const err = new Error('Invalid parentId');
+    err.status = 400;
+    throw err;
+  }
+  if (id === rootId) return;
+
+  const kind = parentType === 'page' ? 'page' : 'folder';
+  const path =
+    kind === 'page'
+      ? `/wiki/api/v2/pages/${id}/ancestors`
+      : `/wiki/api/v2/folders/${id}/ancestors`;
+  const url = new URL(path, `${config.baseUrl}/`);
+  url.searchParams.set('limit', '250');
+
+  const upstream = await fetchImpl(url.toString(), {
+    headers: {
+      Authorization: buildBasicAuthHeader(config.email, config.apiToken),
+      Accept: 'application/json',
+    },
+  });
+
+  const text = await upstream.text();
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = null;
+  }
+
+  if (!upstream.ok) {
+    const message =
+      (data && (data.message || data.errorMessage || data.error)) ||
+      `Confluence API error (${upstream.status})`;
+    const err = new Error(String(message));
+    err.status = upstream.status;
+    err.upstream = data;
+    throw err;
+  }
+
+  const ancestors = Array.isArray(data?.results) ? data.results : [];
+  const isInScope = ancestors.some((row) => String(row?.id ?? '').trim() === rootId);
+  if (!isInScope) {
+    const err = new Error('Requested Confluence parent is outside the lecture journal root.');
+    err.status = 403;
+    throw err;
+  }
+}
+
+/**
  * @param {Record<string, unknown>} item
  * @param {{ baseUrl: string, spaceKey: string }} ctx
  */

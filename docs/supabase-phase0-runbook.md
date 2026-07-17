@@ -38,7 +38,7 @@ Supabase 매직링크는 일지·공지 필수 로그인이 **아님**.
 | 테이블 | Phase 0 정책 |
 |--------|----------------|
 | `announcements` | 공개 공지만 anon 조회, 초안 조회·등록·수정은 authenticated admin |
-| `announcement_reactions` / `announcement_comments` | anon **select만**; 쓰기는 `/api/announcement-reactions`·`/api/announcement-comments` + service_role ([`announcement-engagement.sql`](../supabase/announcement-engagement.sql)) |
+| `announcement_reactions` / `announcement_comments` | 공개 공지 부모 row만 anon **select**; 쓰기는 `/api/announcement-reactions`·`/api/announcement-comments` + service_role ([`announcement-engagement.sql`](../supabase/announcement-engagement.sql)) |
 | `csr_requests`, KPI 승인 테이블 | **anon draft** (URL 게이트 앱과 호환) |
 | `journal_snapshots`, `kpi_operational_snapshots` | **authenticated + `tms_profiles`** |
 | `sync_events` | authenticated (admin 읽기, 팀원 insert) |

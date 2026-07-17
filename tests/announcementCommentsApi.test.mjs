@@ -119,6 +119,85 @@ describe('announcement-comments API', () => {
     expect(JSON.parse(res.body).data.body).toBe('확인했습니다');
   });
 
+  it('rejects member comment reads on unpublished announcements', async () => {
+    const announcementId = '11111111-1111-1111-1111-111111111111';
+    fromMock.mockReturnValueOnce({
+      select: () => ({
+        in: async () => ({
+          data: [{ id: announcementId, is_published: false }],
+          error: null,
+        }),
+      }),
+    });
+
+    const handler = await loadHandler();
+    const res = createRes();
+    await handler(
+      {
+        method: 'GET',
+        headers: { referer: 'https://edu-team-tms-ten.vercel.app/wschoi' },
+        url: `/api/announcement-comments?announcementId=${announcementId}`,
+        query: { announcementId },
+      },
+      res
+    );
+
+    expect(res.statusCode).toBe(403);
+    expect(JSON.parse(res.body).message).toMatch(/비공개 공지/);
+    expect(fromMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('lists comments for published announcements', async () => {
+    const announcementId = '11111111-1111-1111-1111-111111111111';
+    fromMock
+      .mockReturnValueOnce({
+        select: () => ({
+          in: async () => ({
+            data: [{ id: announcementId, is_published: true }],
+            error: null,
+          }),
+        }),
+      })
+      .mockReturnValueOnce({
+        select: () => ({
+          eq: () => ({
+            eq: () => ({
+              order: async () => ({
+                data: [
+                  {
+                    id: 'c1',
+                    announcement_id: announcementId,
+                    member_code: 'B',
+                    author: '최우성',
+                    body: '확인했습니다',
+                    is_deleted: false,
+                    created_at: '2026-07-15T00:00:00.000Z',
+                    updated_at: '2026-07-15T00:00:00.000Z',
+                  },
+                ],
+                error: null,
+              }),
+            }),
+          }),
+        }),
+      });
+
+    const handler = await loadHandler();
+    const res = createRes();
+    await handler(
+      {
+        method: 'GET',
+        headers: { referer: 'https://edu-team-tms-ten.vercel.app/wschoi' },
+        url: `/api/announcement-comments?announcementId=${announcementId}`,
+        query: { announcementId },
+      },
+      res
+    );
+
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body).data[0].body).toBe('확인했습니다');
+  });
+
   it('rejects forged admin referer when deleting another member comment', async () => {
     const handler = await loadHandler();
     const res = createRes();
