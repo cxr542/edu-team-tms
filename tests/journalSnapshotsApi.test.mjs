@@ -327,6 +327,93 @@ describe('journal-snapshots API admin session', () => {
     expect(insertMock).not.toHaveBeenCalled();
   });
 
+  it('allows later KPI approval resubmissions to replace a remote rejection', async () => {
+    const current = {
+      member_code: 'B',
+      payload: {
+        days: { '2026-07-09': { tasks: [{ id: 'effect-1', title: 'old task' }] } },
+        kpiApproval: {
+          months: {
+            '2026-07': {
+              monthly01: {
+                status: KPI_STATUS.REJECTED,
+                submittedAt: '2026-07-09T01:00:00.000Z',
+                approvedAt: '2026-07-09T02:00:00.000Z',
+                rejectReason: '보완 필요',
+              },
+            },
+          },
+          kpi2RowStatus: {
+            'B|2026-07-09|effect-1': {
+              status: KPI_STATUS.REJECTED,
+              submittedAt: '2026-07-09T01:00:00.000Z',
+              approvedAt: '2026-07-09T02:00:00.000Z',
+              rejectReason: '보완 필요',
+            },
+          },
+        },
+      },
+      payload_version: 1,
+      updated_at: '2026-07-09T02:00:00.000Z',
+    };
+    const incomingPayload = {
+      days: { '2026-07-09': { tasks: [{ id: 'effect-1', title: 'updated task' }] } },
+      kpiApproval: {
+        months: {
+          '2026-07': {
+            monthly01: {
+              status: KPI_STATUS.SUBMITTED,
+              submittedAt: '2026-07-09T03:00:00.000Z',
+            },
+          },
+        },
+        kpi2RowStatus: {
+          'B|2026-07-09|effect-1': {
+            status: KPI_STATUS.SUBMITTED,
+            submittedAt: '2026-07-09T03:00:00.000Z',
+          },
+        },
+      },
+    };
+    const saved = {
+      ...current,
+      payload: incomingPayload,
+      updated_at: '2026-07-09T03:00:00.000Z',
+    };
+    mockCurrentReadThenUpdate(current, saved);
+
+    const cookie = createAdminSessionCookie();
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: {
+        referer: 'https://edu-team-tms-ten.vercel.app/admin?module=journal',
+        cookie,
+      },
+      body: {
+        memberCode: 'B',
+        payload: incomingPayload,
+        updatedAt: saved.updated_at,
+      },
+    };
+    const res = createRes();
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(updateMock).toHaveBeenCalledWith({
+      payload: incomingPayload,
+      payload_version: 1,
+      updated_at: saved.updated_at,
+    });
+    expect(JSON.parse(res.body).data.payload.kpiApproval.months['2026-07'].monthly01.status).toBe(
+      KPI_STATUS.SUBMITTED
+    );
+    expect(JSON.parse(res.body).data.payload.kpiApproval.kpi2RowStatus['B|2026-07-09|effect-1'].status).toBe(
+      KPI_STATUS.SUBMITTED
+    );
+    expect(insertMock).not.toHaveBeenCalled();
+  });
+
   it('rejects a stale snapshot write when Supabase has a newer row', async () => {
     const current = {
       member_code: 'B',

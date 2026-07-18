@@ -222,7 +222,7 @@ describe('journalKpiApprovalSlice', () => {
     expect(merged.kpi2RowStatus[rowId].approver).toBe('팀장');
   });
 
-  it('mergeMemberKpiApprovalIntoStore — keeps terminal decisions over later submitted backups', () => {
+  it('mergeMemberKpiApprovalIntoStore — accepts later resubmission after rejection', () => {
     const store = createEmptyKpiOperationalStore();
     store.months['2026-06'] = {
       B: {
@@ -247,7 +247,34 @@ describe('journalKpiApprovalSlice', () => {
 
     const merged = mergeMemberKpiApprovalIntoStore(store, 'B', incoming);
 
-    expect(merged.months['2026-06'].B.monthly01.status).toBe(KPI_STATUS.REJECTED);
+    expect(merged.months['2026-06'].B.monthly01.status).toBe(KPI_STATUS.SUBMITTED);
+    expect(merged.months['2026-06'].B.monthly01.submittedAt).toBe('2026-06-21T12:00:00.000Z');
+  });
+
+  it('mergeMemberKpiApprovalIntoStore — accepts later KPI2 row resubmission after rejection', () => {
+    const store = createEmptyKpiOperationalStore();
+    const rowId = kpi2RowId('B', '2026-06-16', 't1');
+    store.kpi2RowStatus[rowId] = {
+      status: KPI_STATUS.REJECTED,
+      submittedAt: '2026-06-21T10:00:00.000Z',
+      approvedAt: '2026-06-21T11:00:00.000Z',
+      rejectReason: '수정 필요',
+    };
+    const incoming = {
+      months: {},
+      kpi2RowStatus: {
+        '2026-06-16|t1': {
+          status: KPI_STATUS.SUBMITTED,
+          submittedAt: '2026-06-21T12:00:00.000Z',
+        },
+      },
+    };
+
+    const merged = mergeMemberKpiApprovalIntoStore(store, 'B', incoming);
+
+    expect(merged.kpi2RowStatus[rowId].status).toBe(KPI_STATUS.SUBMITTED);
+    expect(merged.kpi2RowStatus[rowId].submittedAt).toBe('2026-06-21T12:00:00.000Z');
+    expect(merged.kpi2RowStatus[rowId].rejectReason).toBeUndefined();
   });
 
   it('mergeMemberKpiApprovalIntoStore — uses the newer timestamp when ranks match', () => {
