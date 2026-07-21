@@ -68,8 +68,7 @@ npx vercel blob put ledger/live-latest.json ./ledger-live.json --pathname ledger
 | `CONFLUENCE_LECTURE_PARENT_TYPE` | 선택 | 기본 `folder` |
 | `CONFLUENCE_BASE_URL` | 선택 | 기본 `https://okestro.atlassian.net` |
 | `CONFLUENCE_SPACE_KEY` | 선택 | 기본 `rDzwjbV6p8qL` |
-| `LEDGER_PUBLISH_SECRET` | 권장 | 장부 POST 추가 인증 |
-| `VITE_LEDGER_PUBLISH_KEY` | 위와 동일 값 | 클라이언트 키 (설정 시) |
+| `LEDGER_PUBLISH_SECRET` | 선택 | 서버 자동화용 장부 POST 추가 인증 (`VITE_*` 클라이언트 변수로 노출하지 않음) |
 | `VITE_TMS_ORIGIN` | 권장 | `https://edu-team-tms-ten.vercel.app` |
 | `TMS_PUBLISH_ALLOWED_ORIGINS` | 조건부 | 새 운영·프리뷰·커스텀 origin 추가 시 (쉼표 구분) |
 

@@ -4,6 +4,7 @@
  */
 import { readFile } from 'fs/promises';
 import path from 'path';
+import { hasValidAdminSession } from '../server/api-utils/adminSession.js';
 import { isAllowedPublishOrigin } from '../server/api-utils/publishOrigin.js';
 import { isAdminRouteReferer } from '../server/api-utils/requestScope.js';
 import {
@@ -19,7 +20,7 @@ function canPublish(req) {
   if (secret && key && key === secret) return true;
 
   const referer = req.headers.referer || req.headers.origin || '';
-  return isAllowedPublishOrigin(referer) && isAdminRouteReferer(req);
+  return isAllowedPublishOrigin(referer) && isAdminRouteReferer(req) && hasValidAdminSession(req);
 }
 
 async function readStaticFromDisk() {
