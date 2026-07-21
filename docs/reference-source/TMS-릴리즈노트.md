@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-07-22
+
+### [수정] Require admin session for ledger snapshot publish
+
+- 장부 조회 반영 API가 관리자 세션 없이 위조된 관리자 Referer만으로 갱신되지 않도록 차단합니다.
+- PR #108: https://github.com/cxr542/edu-team-tms/pull/108
+
 ## 2026-07-21
 
 ### [수정] Fix engagement and Confluence read scope leaks
