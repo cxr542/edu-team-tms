@@ -140,13 +140,9 @@ export async function publishSnapshotToServer(payload) {
     };
   }
 
-  const headers = { 'Content-Type': 'application/json' };
-  const publishKey = import.meta.env.VITE_LEDGER_PUBLISH_KEY;
-  if (publishKey) headers['x-ledger-publish-key'] = publishKey;
-
   const res = await fetch('/api/ledger-snapshot', {
     method: 'POST',
-    headers,
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
   const body = await res.json().catch(() => ({}));

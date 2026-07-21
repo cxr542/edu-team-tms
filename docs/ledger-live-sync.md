@@ -15,7 +15,8 @@
 2. **Storage** → **Create Database** → **Blob** → Connect to project
 3. **Redeploy** (환경 변수 `BLOB_READ_WRITE_TOKEN` 자동 주입)
 
-선택: `LEDGER_PUBLISH_SECRET` + 동일 값을 `VITE_LEDGER_PUBLISH_KEY`에 넣으면 URL 검사 외 키 인증도 가능합니다. (미설정 시 `?mode=edit` Referer만으로 게시 허용)
+게시 API는 허용된 origin의 관리자 URL에서 발급된 서버 관리자 세션 쿠키가 있어야 동작합니다.
+선택: 서버 자동화가 브라우저 세션 없이 게시해야 하는 경우에만 `LEDGER_PUBLISH_SECRET`를 설정하고 `x-ledger-publish-key` 헤더로 전달합니다. 브라우저용 `VITE_*` 환경 변수에는 게시 키를 넣지 않습니다.
 
 ## 수동 배포 (Blob 미사용 시)
 

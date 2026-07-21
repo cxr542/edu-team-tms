@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createAdminSessionCookie } from '../server/api-utils/adminSession.js';
 
 const putMock = vi.fn();
 
@@ -34,6 +35,8 @@ describe('ledger-snapshot API write scope', () => {
     vi.resetModules();
     putMock.mockReset();
     process.env.BLOB_READ_WRITE_TOKEN = 'test-token';
+    process.env.TMS_ADMIN_GATE_PASSWORD = 'secret-gate';
+    process.env.TMS_ADMIN_SESSION_SECRET = 'session-secret';
     delete process.env.BLOB_STORE_ID;
     delete process.env.LEDGER_PUBLISH_SECRET;
   });
@@ -54,12 +57,32 @@ describe('ledger-snapshot API write scope', () => {
     expect(putMock).not.toHaveBeenCalled();
   });
 
-  it('allows admin-scoped POSTs', async () => {
-    putMock.mockResolvedValue({ url: 'https://blob.example/ledger/live-latest.json' });
+  it('rejects forged admin-scoped POSTs without a session before writing Blob', async () => {
     const handler = await loadHandler();
     const req = {
       method: 'POST',
       headers: { referer: 'https://edu-team-tms-ten.vercel.app/admin' },
+      body: { transactions: [{ id: 'forged-admin-save' }] },
+    };
+    const res = createRes();
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(403);
+    expect(JSON.parse(res.body).error).toBe('forbidden');
+    expect(putMock).not.toHaveBeenCalled();
+  });
+
+  it('allows session-backed admin-scoped POSTs', async () => {
+    putMock.mockResolvedValue({ url: 'https://blob.example/ledger/live-latest.json' });
+    const cookie = createAdminSessionCookie();
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: {
+        referer: 'https://edu-team-tms-ten.vercel.app/admin',
+        cookie: cookie.split(';')[0],
+      },
       body: { transactions: [{ id: 'admin-save' }], publishedAt: '2026-06-29T00:00:00.000Z' },
     };
     const res = createRes();
