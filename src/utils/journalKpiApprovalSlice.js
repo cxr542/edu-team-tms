@@ -22,9 +22,21 @@ function shouldUseIncomingApproval(existing, incoming) {
   if (!existing) return true;
   const incomingRank = approvalStatusRank(incoming?.status);
   const existingRank = approvalStatusRank(existing?.status);
-  if (incomingRank !== existingRank) return incomingRank > existingRank;
   const incomingTime = timeValue(approvalEventAt(incoming));
   const existingTime = timeValue(approvalEventAt(existing));
+  const rejectedSubmittedConflict =
+    (existing?.status === KPI_STATUS.REJECTED && incoming?.status === KPI_STATUS.SUBMITTED) ||
+    (existing?.status === KPI_STATUS.SUBMITTED && incoming?.status === KPI_STATUS.REJECTED);
+
+  if (
+    rejectedSubmittedConflict &&
+    incomingTime !== null &&
+    existingTime !== null &&
+    incomingTime !== existingTime
+  ) {
+    return incomingTime > existingTime;
+  }
+  if (incomingRank !== existingRank) return incomingRank > existingRank;
   if (incomingTime !== null && existingTime !== null && incomingTime !== existingTime) {
     return incomingTime > existingTime;
   }
