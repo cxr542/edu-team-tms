@@ -7,6 +7,11 @@
 
 ## 2026-07-21
 
+### [수정] Fix engagement and Confluence read scope leaks
+
+- 공지 반응·댓글과 강의일지 Confluence 조회 범위가 의도한 공개/루트 경계 밖으로 새지 않도록 보강
+- PR #106: https://github.com/cxr542/edu-team-tms/pull/106
+
 ### [수정] Fix KPI approval resubmission merge
 
 - 반려된 KPI1/KPI2 승인 요청을 수정 후 재제출하면 업무일지 스냅샷에도 다시 제출 상태가 유지됩니다.
