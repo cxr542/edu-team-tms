@@ -53,13 +53,30 @@ grant select, insert, update, delete on table public.announcement_reactions to s
 grant select, insert, update, delete on table public.announcement_comments to service_role;
 
 drop policy if exists "announcement_reactions_read_all" on public.announcement_reactions;
-create policy "announcement_reactions_read_all"
+drop policy if exists "announcement_reactions_read_published" on public.announcement_reactions;
+create policy "announcement_reactions_read_published"
   on public.announcement_reactions for select
   to anon, authenticated
-  using (true);
+  using (
+    exists (
+      select 1
+      from public.announcements a
+      where a.id = announcement_reactions.announcement_id
+        and a.is_published = true
+    )
+  );
 
 drop policy if exists "announcement_comments_read_active" on public.announcement_comments;
-create policy "announcement_comments_read_active"
+drop policy if exists "announcement_comments_read_published_active" on public.announcement_comments;
+create policy "announcement_comments_read_published_active"
   on public.announcement_comments for select
   to anon, authenticated
-  using (is_deleted = false);
+  using (
+    is_deleted = false
+    and exists (
+      select 1
+      from public.announcements a
+      where a.id = announcement_comments.announcement_id
+        and a.is_published = true
+    )
+  );

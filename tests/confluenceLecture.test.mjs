@@ -144,6 +144,81 @@ describe('api/confluence-lecture handler', () => {
     expect(calledUrl).toContain('/wiki/api/v2/folders/1867843025/direct-children');
   });
 
+  it('allows listing a nested folder when the lecture root is an ancestor', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: async () =>
+          JSON.stringify({
+            results: [{ id: '1867843025', type: 'folder', title: '02. 강의일지 폴더' }],
+          }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: async () =>
+          JSON.stringify({
+            results: [{ id: '300', type: 'page', title: '7월 강의일지', status: 'current' }],
+          }),
+      });
+    const res = mockRes();
+    await handler(
+      {
+        method: 'GET',
+        headers: { referer: 'https://edu-team-tms-ten.vercel.app/yhkim' },
+        url: '/api/confluence-lecture?action=list&parentId=2748514320&parentType=folder',
+      },
+      res,
+      {
+        env: {
+          CONFLUENCE_EMAIL: 'a@x.com',
+          CONFLUENCE_API_TOKEN: 't',
+          CONFLUENCE_LECTURE_FOLDER_ID: '1867843025',
+        },
+        fetchImpl,
+      }
+    );
+
+    expect(res.statusCode).toBe(200);
+    expect(parseBody(res).items[0].title).toBe('7월 강의일지');
+    expect(String(fetchImpl.mock.calls[0][0])).toContain('/wiki/api/v2/folders/2748514320/ancestors');
+    expect(String(fetchImpl.mock.calls[1][0])).toContain('/wiki/api/v2/folders/2748514320/direct-children');
+  });
+
+  it('rejects parentId outside the configured lecture root', async () => {
+    const fetchImpl = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      text: async () =>
+        JSON.stringify({
+          results: [{ id: '999', type: 'folder', title: '다른 폴더' }],
+        }),
+    }));
+    const res = mockRes();
+    await handler(
+      {
+        method: 'GET',
+        headers: { referer: 'https://edu-team-tms-ten.vercel.app/yhkim' },
+        url: '/api/confluence-lecture?action=list&parentId=2748514320&parentType=folder',
+      },
+      res,
+      {
+        env: {
+          CONFLUENCE_EMAIL: 'a@x.com',
+          CONFLUENCE_API_TOKEN: 't',
+          CONFLUENCE_LECTURE_FOLDER_ID: '1867843025',
+        },
+        fetchImpl,
+      }
+    );
+
+    expect(res.statusCode).toBe(403);
+    expect(parseBody(res).available).toBe(false);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
   it('rejects invalid parentId', async () => {
     const res = mockRes();
     await handler(

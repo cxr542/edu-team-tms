@@ -8,6 +8,7 @@ import {
   getServiceClient,
   json,
   loadAnnouncementAccess,
+  loadAnnouncementReadAccess,
   parseQuery,
   readJsonBody,
   resolveEngagementMember,
@@ -58,10 +59,22 @@ export default async function handler(req, res) {
     }
 
     try {
+      const access = await loadAnnouncementReadAccess(client, req, ids);
+      if (!access.ok) {
+        return json(res, access.status, {
+          ok: false,
+          status: access.status === 404 ? 'not_found' : 'forbidden',
+          message: access.message,
+        });
+      }
+      if (access.ids.length === 0) {
+        return json(res, 200, { ok: true, status: 'ok', data: {} });
+      }
+
       const { data, error } = await client
         .from(TABLE)
         .select('announcement_id, member_code, emoji')
-        .in('announcement_id', ids);
+        .in('announcement_id', access.ids);
       if (error) throw new Error(error.message);
       return json(res, 200, {
         ok: true,

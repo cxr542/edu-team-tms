@@ -3,6 +3,7 @@
  * GET /api/confluence-lecture?action=list&parentId=&parentType=folder|page
  */
 import {
+  assertContentInLectureScope,
   fetchDirectChildren,
   resolveConfluenceConfig,
   sanitizeContentId,
@@ -67,13 +68,22 @@ export default async function handler(req, res, options = {}) {
       : requestedId
         ? 'folder'
         : config.parentType;
+  const fetchImpl = options.fetchImpl || fetch;
 
   try {
+    if (requestedId) {
+      await assertContentInLectureScope({
+        config,
+        parentId,
+        parentType,
+        fetchImpl,
+      });
+    }
     const listed = await fetchDirectChildren({
       config,
       parentId,
       parentType,
-      fetchImpl: options.fetchImpl || fetch,
+      fetchImpl,
     });
     return json(res, 200, {
       available: true,

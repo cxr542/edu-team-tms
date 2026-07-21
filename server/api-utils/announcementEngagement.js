@@ -84,6 +84,44 @@ export async function loadAnnouncementAccess(client, announcementId, { isAdmin }
   return { ok: true, announcement: data };
 }
 
+export async function loadAnnouncementReadAccess(client, req, announcementIds) {
+  const ids = Array.from(
+    new Set((announcementIds || []).map((id) => String(id || '').trim()).filter(Boolean))
+  );
+  if (ids.length === 0) {
+    return { ok: true, ids: [] };
+  }
+  if (!canUseEngagementOrigin(req)) {
+    return { ok: false, status: 403, message: 'Forbidden origin.' };
+  }
+
+  const { data, error } = await client
+    .from('announcements')
+    .select('id, is_published')
+    .in('id', ids);
+  if (error) {
+    return { ok: false, status: 500, message: error.message };
+  }
+
+  const announcements = Array.isArray(data) ? data : [];
+  const hasUnpublished = announcements.some((row) => !row.is_published);
+  if (hasUnpublished) {
+    const isSessionBackedAdmin = isAdminRouteReferer(req) && hasValidAdminSession(req);
+    if (!isSessionBackedAdmin) {
+      return {
+        ok: false,
+        status: 403,
+        message: '비공개 공지의 반응·댓글은 관리자 세션에서만 조회할 수 있습니다.',
+      };
+    }
+  }
+
+  return {
+    ok: true,
+    ids: announcements.map((row) => String(row.id)).filter(Boolean),
+  };
+}
+
 /** Parse JSON body for Node/Vite handlers that may not pre-parse. */
 export async function readJsonBody(req) {
   if (req.body && typeof req.body === 'object') return req.body;
