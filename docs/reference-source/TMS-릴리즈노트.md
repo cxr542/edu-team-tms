@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-07-21
+
+### [수정] Fix KPI approval resubmission merge
+
+- 반려된 KPI1/KPI2 승인 요청을 수정 후 재제출하면 업무일지 스냅샷에도 다시 제출 상태가 유지됩니다.
+- PR #107: https://github.com/cxr542/edu-team-tms/pull/107
+
 ## 2026-07-16
 
 ### [수정] Fix announcement engagement admin session checks
