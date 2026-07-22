@@ -3,7 +3,7 @@ import {
   normalizeKpiOperationalStore,
 } from '../constants/kpiOperationalStore.js';
 import { JOURNAL_STORAGE_KEY } from './journalSnapshot.js';
-import { isKpi2EffectTask } from './computeTeamKpi.js';
+import { hasKpi2EffectEnabled } from './computeTeamKpi.js';
 
 /** localStorage 저널에서 memberJournals 로드 (badge·마이그레이션용) */
 export function loadMemberJournalsFromStorage() {
@@ -31,7 +31,7 @@ export function resolveLegacyKpi2Member(memberJournals, dayKey, taskId) {
     const day = slice?.days?.[dayKey];
     if (!day) return;
     const found = (day.tasks || []).some(
-      (task) => task?.id === taskId && isKpi2EffectTask(task)
+      (task) => task?.id === taskId && hasKpi2EffectEnabled(task)
     );
     if (found) matched.push(memberCode);
   });
