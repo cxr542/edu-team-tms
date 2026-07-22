@@ -21,7 +21,7 @@ function averagePositive(nums) {
 /**
  * KPI 정의서 기준 팀 통합 지표
  * - KPI1: (팀 총 업무+생산향상+휴일 M/M ÷ 팀 총 가용 M/M)×100
- * - KPI2: (팀 계획시간 합 ÷ 팀 실작업 합)×100 (승인 효과 건)
+ * - KPI2: (팀 계획시간 합 ÷ 팀 실작업 합)×100 (공식=승인 · 표시는 일지 효과 미리보기 포함)
  * - KPI3: 4요소 구성원 평균 후 가중 합산 (레벨 축 = 개인 레벨 산술평균)
  *
  * @param {ReturnType<import('./kpiReportData').buildTeamMonthlyReport>} monthly
@@ -92,7 +92,7 @@ export function buildTeamIntegratedSummary(monthly, quarterly) {
       displayPct: kpi2Display.displayPct,
       usesPreview: kpi2Display.usesPreview,
       formula: kpi2Display.usesPreview
-        ? '(팀 계획/실적 합산 · 승인 전 효과 건 포함 — 구성원 카드와 동일)'
+        ? '(팀 계획/실적 합산 · 일지 효과 건 기준 · 승인 전)'
         : '(팀 계획시간 합 ÷ 팀 실작업시간 합)×100 · 승인 효과 건만',
     },
     kpi3: {

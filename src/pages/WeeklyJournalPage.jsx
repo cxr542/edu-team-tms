@@ -42,7 +42,11 @@ import {
 } from '../utils/journalHoliday2026';
 import { applyLeavePresetToDay, LEAVE_MEMO_TASK_RE, LEAVE_PRESET_BUTTONS } from '../utils/journalLeavePresets';
 import { findWeekKeyForDayKey, resolveJournalScrollDayKey, scheduleScrollJournalDay } from '../utils/journalScroll';
-import { mergeTaskFromEdit, taskFieldsFromEdit } from '../utils/journalTaskFields';
+import {
+  mergeTaskFromEdit,
+  taskFieldsFromEdit,
+  validateKpi2EffectEdit,
+} from '../utils/journalTaskFields';
 import { loadCollapsedWeekKeys, saveCollapsedWeekKeys } from '../utils/journalWeekVisibility';
 import { KPI1_NAME, KPI2_NAME } from '../constants/kpiDisplayNames';
 import {
@@ -147,14 +151,17 @@ function journalPullToastMessage(result) {
     return '팀 공유본을 가져오지 못했습니다';
   }
   const when = formatPublishedAt(result.publishedAt);
+  if (result.source === 'static') {
+    return when
+      ? `로컬 구버전 파일(public, ${when})을 가져왔습니다. 운영 7월 일지가 아닙니다. 로컬은 VITE_PROD_SNAPSHOT_PROXY=true 후 재시작하거나, 운영 URL에서 가져오세요.`
+      : '로컬 구버전 파일(public)을 가져왔습니다. 운영 일지가 아닙니다.';
+  }
   const sourceLabel =
     result.source === 'supabase'
       ? 'Supabase'
       : result.source === 'blob'
         ? '클라우드'
-        : result.source === 'static'
-          ? '백업 파일'
-          : '공유 저장소';
+        : '공유 저장소';
   if (!result.changed) {
     return when
       ? `가져온 공유본(${sourceLabel}, ${when})과 이 브라우저 내용이 같습니다`
@@ -301,6 +308,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       ? { ownMemberCode: teamAccess.scopedMember }
       : { ownMemberCode: memberCode };
   const showJournalLeaderToolbar = teamAccess.isLeader && !teamAccess.isMemberScope;
+  // /admin 일지는 조회 전용(journalReadOnly)이라 기존 조건에선 가져오기 버튼이 숨겨짐 → 팀 KPI 집계용으로 리더에게 노출
+  const showLeaderTeamSharePull = showJournalLeaderToolbar && SHOW_BC_JOURNAL_TEAM_SHARE_UI;
   // Leader /admin: backup + Supabase mirror stay available even when journal body is read-only.
   const showJournalBackupToolbar = showJournalLeaderToolbar;
   const showSupabaseMirrorTools = showJournalLeaderToolbar && SUPABASE_MANUAL_MIRROR_ENABLED;
@@ -803,6 +812,11 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const saveEdit = (e) => {
     e.preventDefault();
     if (!editTask || journalReadOnly) return;
+    const kpi2Check = validateKpi2EffectEdit(editTask);
+    if (!kpi2Check.ok) {
+      showToast(kpi2Check.message);
+      return;
+    }
     patchDay(editTask.dayKey, (day) => {
       const tasks = day.tasks.map((t) =>
         t.id === editTask.id ? mergeTaskFromEdit(t, editTask) : t
@@ -840,6 +854,11 @@ export default function WeeklyJournalPage({ readOnly = false }) {
 
   const confirmCopy = () => {
     if (!editTask || journalReadOnly || !copyTargetDayKey) return;
+    const kpi2Check = validateKpi2EffectEdit(editTask);
+    if (!kpi2Check.ok) {
+      showToast(kpi2Check.message);
+      return;
+    }
     const sourceDayKey = editTask.dayKey;
     const sourceId = editTask.id;
     const copy = {
@@ -885,6 +904,11 @@ export default function WeeklyJournalPage({ readOnly = false }) {
 
   const confirmMove = () => {
     if (!editTask || journalReadOnly || !moveTargetDayKey) return;
+    const kpi2Check = validateKpi2EffectEdit(editTask);
+    if (!kpi2Check.ok) {
+      showToast(kpi2Check.message);
+      return;
+    }
     const sourceDayKey = editTask.dayKey;
     if (moveTargetDayKey === sourceDayKey) {
       showToast('이동할 날짜가 현재와 같습니다');
@@ -1311,7 +1335,9 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   )}
                 </button>
               )}
-              {(showMemberTeamSharePull || (!journalReadOnly && showJournalTeamShareControls)) && (
+              {(showMemberTeamSharePull ||
+                showLeaderTeamSharePull ||
+                (!journalReadOnly && showJournalTeamShareControls)) && (
                 <button
                   type="button"
                   className="btn btn-import-shared"
@@ -1319,7 +1345,9 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   {...uiTooltip(
                     showMemberTeamSharePull
                       ? '팀 공유 일지를 수동으로 가져옵니다. 기본은 본인 일지 유지이며, 확인 시 본인 일지도 포함해 병합할 수 있습니다.'
-                      : '팀 공유 일지를 수동으로 가져옵니다. 자동 동기화는 사용하지 않습니다.',
+                      : showLeaderTeamSharePull
+                        ? '팀 공유 일지(A/B/C)를 이 관리자 브라우저로 가져옵니다. 팀 KPI·효과 건 집계에 필요합니다. 자동 동기화는 사용하지 않습니다.'
+                        : '팀 공유 일지를 수동으로 가져옵니다. 자동 동기화는 사용하지 않습니다.',
                     undefined,
                     { wrap: true }
                   )}
@@ -1791,6 +1819,13 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               )}
             </p>
           )}
+          {journalReadOnly && showLeaderTeamSharePull && (
+            <p className="journal-sync-hint">
+              관리자 일지는 <strong>조회 전용</strong>입니다. 작성·수정은 구성원 URL에서 하세요. 팀 KPI에
+              효과 건·일지 M/M를 반영하려면 상단 <strong>「팀 공유본 가져오기」</strong>로 공유 저장소를
+              이 브라우저에 불러오세요.
+            </p>
+          )}
         </div>
 
         <div className="journal-summary-blocks">
@@ -2194,10 +2229,13 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               {editTask.kpi2Effect?.enabled && (
                 <>
                   <div className="form-group">
-                    <label>향상 과제</label>
+                    <label htmlFor="journal-edit-kpi2-project">향상 과제 (필수)</label>
                     <select
+                      id="journal-edit-kpi2-project"
                       className="form-input"
                       value={editTask.kpi2Effect.projectId || ''}
+                      required
+                      aria-required="true"
                       onChange={(e) =>
                         setEditTask({
                           ...editTask,
@@ -2213,6 +2251,11 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                         </option>
                       ))}
                     </select>
+                    {!editTask.kpi2Effect.projectId && (
+                      <p className="journal-field-help journal-field-help--warn">
+                        향상 과제를 선택해야 저장·KPI2 집계에 포함됩니다.
+                      </p>
+                    )}
                   </div>
                   <div className="form-group">
                     <label>기준시간 (h, 도구 없을 때)</label>

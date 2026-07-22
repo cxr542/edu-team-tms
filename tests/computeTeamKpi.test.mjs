@@ -72,6 +72,28 @@ describe('computeTeamKpi june', () => {
     expect(rows[0]['생산성%']).toBeGreaterThan(150);
   });
 
+  it('buildKpi02EffectRows — 향상 과제 미선택은 집계 제외', () => {
+    const days = {
+      '2026-06-01': {
+        holiday: false,
+        mm: { work: 0.5, improve: 0, leave: 0 },
+        tasks: [
+          {
+            id: 'no-proj',
+            cat: 'prep',
+            title: '과제 미선택 효과',
+            plan: 10,
+            actual: 4,
+            done: true,
+            kpi2Effect: { enabled: true, projectId: '', baselineHours: 10 },
+          },
+        ],
+      },
+    };
+    expect(isKpi2EffectTask(days['2026-06-01'].tasks[0])).toBe(false);
+    expect(buildKpi02EffectRows(2026, 5, days, IMPROVE_PROJECTS)).toHaveLength(0);
+  });
+
   it('buildKpi02EffectRows — 행정·KPI 개발 제외', () => {
     const rows = buildKpi02EffectRows(2026, 5, juneDays, IMPROVE_PROJECTS);
     expect(rows.some((r) => r.업무명.includes('법인카드'))).toBe(false);
@@ -208,6 +230,21 @@ describe('computeTeamKpi june', () => {
     expect(m.kpi2.effectCount).toBe(1);
     expect(m.kpi2.submittedCount).toBe(1);
     expect(m.kpi2.productivityPct).toBeGreaterThan(100);
+  });
+
+  it('computeTeamKpi — KPI2 미리보기는 작성중(일지) 효과 건도 집계', () => {
+    const m = computeTeamKpi({
+      year: 2026,
+      monthIndex: 5,
+      days: juneDays,
+      kpiWeekMemos: {},
+      improveProjects: IMPROVE_PROJECTS,
+      memberCode: 'A',
+      kpi2RowStatus: {},
+    });
+    expect(m.kpi2.productivityPct).toBeNull();
+    expect(m.kpi2Preview.submittedCount).toBe(1);
+    expect(m.kpi2Preview.productivityPct).toBeCloseTo(160, 0);
   });
 
   it('computeTeamKpi — member 스코프 키가 겹침 없이 분리된다', () => {
