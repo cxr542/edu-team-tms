@@ -49,7 +49,7 @@ export default function TeamKpiSummarySection({
       <p className="team-kpi-hint team-kpi-summary-hint">아래 표에서 구성원을 선택하면 상세가 열립니다.</p>
       <div className="team-kpi-summary-tables">
         <p className="team-kpi-hint team-kpi-summary-hint" style={{ marginTop: 0 }}>
-          KPI2 * = 승인 전 효과 건 포함(구성원 카드와 동일). 공식 집계는 승인 건만.
+          KPI2 * = 일지 효과 건 기준(승인 전). 공식 집계는 승인 건만.
         </p>
         <div className="team-kpi-summary-block">
           <h3>월간 KPI (구성원별)</h3>

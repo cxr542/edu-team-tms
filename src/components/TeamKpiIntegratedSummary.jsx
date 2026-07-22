@@ -74,13 +74,13 @@ export default function TeamKpiIntegratedSummary({
           <p className="team-kpi-integrated-grade">
             팀 등급 <span className={`kpi-grade kpi-grade--${team.grade2}`}>{team.grade2}</span>
             {team.kpi2.usesPreview && (
-              <span className="team-kpi-hint-inline"> (승인 전 · 효과 건 기준)</span>
+              <span className="team-kpi-hint-inline"> (일지 기준 · 승인 전)</span>
             )}
           </p>
           <p className="team-kpi-integrated-meta">
             {team.kpi2.usesPreview ? (
               <>
-                미승인 포함 {team.kpi2.preview?.submittedCount ?? 0}건 · 승인{' '}
+                일지 효과 {team.kpi2.preview?.submittedCount ?? 0}건 · 승인{' '}
                 {team.kpi2.submittedCount ?? 0}건
               </>
             ) : (

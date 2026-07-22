@@ -404,18 +404,18 @@ export default function TeamKpiPage() {
               <p className="team-kpi-grade">
                 등급 {gradeKpi2(kpi2DisplayPct)}
                 {kpi2ShowsPreview && (
-                  <span className="team-kpi-hint-inline"> (승인 전 · 일지 제출 기준)</span>
+                  <span className="team-kpi-hint-inline"> (일지 기준 · 승인 전)</span>
                 )}
               </p>
               <ul>
                 <li>효과 {metrics.kpi2.effectCount}건 · 승인 {kpi2ApprovedCount}건</li>
                 {kpi2ShowsPreview && metrics.kpi2.effectCount > 0 && (
-                  <li>팀장 승인 후 공식 집계에 반영됩니다</li>
+                  <li>승인 전 미리보기 · 팀장 승인 후 공식 집계</li>
                 )}
                 {metrics.kpi2.productivityPct != null &&
                   metrics.kpi2Preview?.productivityPct != null &&
                   Math.abs(metrics.kpi2.productivityPct - metrics.kpi2Preview.productivityPct) > 0.05 && (
-                    <li>미승인 포함 {formatPct(metrics.kpi2Preview.productivityPct)}</li>
+                    <li>일지 기준 {formatPct(metrics.kpi2Preview.productivityPct)}</li>
                   )}
               </ul>
               <span className="team-kpi-card-detail">KPI2 상세보기 →</span>

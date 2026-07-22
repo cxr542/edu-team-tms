@@ -30,8 +30,18 @@ function round4(n) {
   return Math.round(n * 10000) / 10000;
 }
 
-export function isKpi2EffectTask(task) {
+/** 효과 토글만 켜진 상태 (향상 과제 미선택 포함) */
+export function hasKpi2EffectEnabled(task) {
   return Boolean(task?.kpi2Effect?.enabled);
+}
+
+export function getKpi2EffectProjectId(task) {
+  return String(task?.kpi2Effect?.projectId || '').trim();
+}
+
+/** KPI2 집계 대상: 효과 토글 + 향상 과제 선택 */
+export function isKpi2EffectTask(task) {
+  return hasKpi2EffectEnabled(task) && Boolean(getKpi2EffectProjectId(task));
 }
 
 export function getKpi2BaselineHours(task) {
@@ -197,17 +207,26 @@ export function computeMonthKpi1Totals(year, monthIndex, days) {
   return { work, improve, leave, available, total, utilization };
 }
 
+/**
+ * KPI2 월 요약.
+ * - approvedOnly=true: 공식 — 승인 건만
+ * - approvedOnly=false: 미리보기 — 일지 효과 건(작성중·제출·승인). 반려만 제외
+ *   (승인 워크플로 전에도 지표가 보이도록)
+ */
 export function computeMonthKpi2Summary(effectRows, approvedOnly = true) {
-  const submitted = effectRows.filter((r) => {
-    const okStatus = approvedOnly ? r.상태 === KPI_STATUS.APPROVED : r.상태 === KPI_STATUS.SUBMITTED || r.상태 === KPI_STATUS.APPROVED;
+  const counted = effectRows.filter((r) => {
+    const status = r.상태;
+    const okStatus = approvedOnly
+      ? status === KPI_STATUS.APPROVED
+      : status !== KPI_STATUS.REJECTED;
     return okStatus && Number(r.실작업시간) > 0;
   });
-  const planSum = submitted.reduce((s, r) => s + Number(r.계획시간), 0);
-  const actualSum = submitted.reduce((s, r) => s + Number(r.실작업시간), 0);
+  const planSum = counted.reduce((s, r) => s + Number(r.계획시간), 0);
+  const actualSum = counted.reduce((s, r) => s + Number(r.실작업시간), 0);
   const productivity = actualSum > 0 ? round4((planSum / actualSum) * 100) : null;
   return {
     effectCount: effectRows.length,
-    submittedCount: submitted.length,
+    submittedCount: counted.length,
     planSum: round4(planSum),
     actualSum: round4(actualSum),
     productivityPct: productivity,

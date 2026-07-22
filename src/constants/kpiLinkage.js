@@ -4,7 +4,13 @@ import { getTaskLoggedHours, getTaskMmAxis, hoursToMm } from '../utils/journalMm
 import { LEAVE_MEMO_TASK_RE } from '../utils/journalLeavePresets';
 import { getTaskSlotLabel } from './journalTaskSlot';
 import { findImproveProject } from './improveProjects';
-import { buildKpi01cRows, buildKpi02EffectRows, getKpi2BaselineHours, isKpi2EffectTask } from '../utils/computeTeamKpi';
+import {
+  buildKpi01cRows,
+  buildKpi02EffectRows,
+  getKpi2BaselineHours,
+  hasKpi2EffectEnabled,
+  isKpi2EffectTask,
+} from '../utils/computeTeamKpi';
 import { KPI1_NAME, KPI2_NAME } from './kpiDisplayNames';
 
 export const KPI_SYSTEM_LABEL = '교육팀 KPI 운영';
@@ -29,7 +35,7 @@ export const KPI_LINKAGE_ROWS = [
     journal: `${KPI2_NAME} 효과 건 (기준h·실작업·향상과제)`,
     kpi: `${KPI2_NAME} — 도구 활용 단축 효과`,
     sheet: KPI_SHEET_02,
-    note: 'kpi2Effect.enabled · 완료 건 · 생산성=기준÷실작업',
+    note: 'kpi2Effect.enabled · 향상 과제 선택 · 완료 건 · 생산성=기준÷실작업',
   },
   {
     journal: '휴일 M/D · 휴일 메모',
@@ -81,6 +87,8 @@ export function describeTaskKpiLinkage(task, dayKey, improveProjects = []) {
           ? `${enteredActual}h(미완료)`
           : '0h';
     kpi2 = `효과건 · 기준${baseline}h→${effectActual}${project ? ` · ${project.name}` : ''}`;
+  } else if (hasKpi2EffectEnabled(task)) {
+    kpi2 = '효과 건 체크됨 — 향상 과제 선택 필요 (저장·집계 제외)';
   } else if (axis === 'improve') {
     kpi2 = `향상 투자 — ${KPI2_NAME} 효과 건 아님 (과제 개발·개선)`;
   }

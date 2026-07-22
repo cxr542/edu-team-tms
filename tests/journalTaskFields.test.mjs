@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { buildKpi02EffectRows } from '../src/utils/computeTeamKpi.js';
-import { mergeTaskFromEdit, taskFieldsFromEdit } from '../src/utils/journalTaskFields.js';
+import {
+  mergeTaskFromEdit,
+  taskFieldsFromEdit,
+  validateKpi2EffectEdit,
+} from '../src/utils/journalTaskFields.js';
 
 const IMPROVE_PROJECTS = [{ id: 'ppt-academizer', name: 'PPT-Academizer', code: 'ppt-acad' }];
 
@@ -60,6 +64,22 @@ describe('journalTaskFields — KPI2 effect persist', () => {
     expect(rows[0].업무명).toBe('강의자료 자동화');
     expect(rows[0].계획시간).toBe(8);
     expect(rows[0].실작업시간).toBe(5);
+  });
+
+  it('validateKpi2EffectEdit blocks save without projectId', () => {
+    const ok = validateKpi2EffectEdit(
+      editFromTask(baseTask(), {
+        kpi2Effect: { enabled: true, projectId: 'ppt-academizer', baselineHours: 8 },
+      })
+    );
+    expect(ok.ok).toBe(true);
+    const blocked = validateKpi2EffectEdit(
+      editFromTask(baseTask(), {
+        kpi2Effect: { enabled: true, projectId: '', baselineHours: 10 },
+      })
+    );
+    expect(blocked.ok).toBe(false);
+    expect(blocked.message).toMatch(/향상 과제/);
   });
 
   it('disabling KPI2 effect removes kpi2Effect from stored task', () => {

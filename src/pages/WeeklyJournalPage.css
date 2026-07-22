@@ -145,6 +145,10 @@
   line-height: 1.45;
 }
 
+.journal-field-help--warn {
+  color: var(--danger, #b42318);
+}
+
 .journal-sticky-top {
   position: sticky;
   top: 0;

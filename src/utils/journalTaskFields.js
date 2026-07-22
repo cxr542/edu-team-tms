@@ -1,5 +1,18 @@
 import { getTaskMmAxis } from './journalMm';
 import { resolveTaskSlotField } from '../constants/journalTaskSlot';
+import { getKpi2EffectProjectId, hasKpi2EffectEnabled } from './computeTeamKpi';
+
+/** KPI2 효과 건 저장 전 검증 — 향상 과제 필수 */
+export function validateKpi2EffectEdit(editTask) {
+  if (!hasKpi2EffectEnabled(editTask)) return { ok: true };
+  if (!getKpi2EffectProjectId(editTask)) {
+    return {
+      ok: false,
+      message: 'KPI2 효과 건은 향상 과제를 선택해야 저장할 수 있습니다.',
+    };
+  }
+  return { ok: true };
+}
 
 /** 업무 편집 폼 → 저장 필드 (KPI2 effect 포함) */
 export function taskFieldsFromEdit(editTask) {

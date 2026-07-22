@@ -52,4 +52,23 @@ describe('buildTeamIntegratedSummary', () => {
     expect(t.kpi2.usesPreview).toBe(true);
     expect(t.grade2).not.toBe('—');
   });
+
+  it('KPI2 preview includes draft journal effect rows (승인 전에도 지표 표시)', () => {
+    const monthly = [
+      {
+        kpi1: { work: 0, improve: 0, leave: 0, available: 1 },
+        kpi2: { productivityPct: null },
+        status: KPI_STATUS.DRAFT,
+        rows02: [
+          { 상태: KPI_STATUS.DRAFT, 계획시간: 8, 실작업시간: 5 },
+          { 상태: KPI_STATUS.REJECTED, 계획시간: 10, 실작업시간: 10 },
+        ],
+      },
+    ];
+    const t = buildTeamIntegratedSummary(monthly, [{ quarter: { composite: 0 } }]);
+    expect(t.kpi2.productivityPct).toBeNull();
+    expect(t.kpi2.displayPct).toBeCloseTo(160, 0);
+    expect(t.kpi2.usesPreview).toBe(true);
+    expect(t.kpi2.preview.submittedCount).toBe(1);
+  });
 });
