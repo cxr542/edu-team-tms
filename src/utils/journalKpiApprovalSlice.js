@@ -1,6 +1,6 @@
 import { kpi2LegacyRowId, kpi2RowId } from '../constants/kpiOperationalStore.js';
 import { KPI_STATUS } from '../constants/kpiStatuses.js';
-import { isKpi2EffectTask } from './computeTeamKpi.js';
+import { hasKpi2EffectEnabled } from './computeTeamKpi.js';
 
 function approvalStatusRank(status) {
   if (status === KPI_STATUS.APPROVED || status === KPI_STATUS.REJECTED) return 2;
@@ -113,7 +113,8 @@ export function extractMemberKpiApprovalSlice(kpiOperational, memberCode, days =
   const memberRowIds = new Set();
   Object.entries(days || {}).forEach(([dayKey, day]) => {
     (day.tasks || []).forEach((task) => {
-      if (!task?.id || !isKpi2EffectTask(task)) return;
+      // 승인 상태 백업: 효과 토글만으로도 포함 (과제 미선택 legacy 포함). 집계는 isKpi2EffectTask.
+      if (!task?.id || !hasKpi2EffectEnabled(task)) return;
       memberRowIds.add(kpi2RowId(memberCode, dayKey, task.id));
       memberRowIds.add(kpi2LegacyRowId(dayKey, task.id));
     });
