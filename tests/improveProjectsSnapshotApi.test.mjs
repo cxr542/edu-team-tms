@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createAdminSessionCookie } from '../server/api-utils/adminSession.js';
 import {
   IMPROVE_PROJECTS_BLOB_KEY,
   normalizeImproveProjectsSnapshot,
@@ -48,6 +49,8 @@ describe('improve-projects-snapshot API', () => {
     headMock.mockReset();
     putMock.mockReset();
     process.env.BLOB_READ_WRITE_TOKEN = 'test-token';
+    process.env.TMS_ADMIN_GATE_PASSWORD = 'secret-gate';
+    process.env.TMS_ADMIN_SESSION_SECRET = 'session-secret';
     delete process.env.BLOB_STORE_ID;
     global.fetch = vi.fn(async () => ({
       ok: true,
@@ -114,10 +117,14 @@ describe('improve-projects-snapshot API', () => {
 
   it('POST validates projects and writes live-latest only', async () => {
     putMock.mockResolvedValue({ url: 'https://blob.example/live.json' });
+    const cookie = createAdminSessionCookie();
     const handler = await loadHandler();
     const req = {
       method: 'POST',
-      headers: { referer: 'https://okestro-edu-team-tms.vercel.app/admin?module=kpi' },
+      headers: {
+        referer: 'https://okestro-edu-team-tms.vercel.app/admin?module=kpi',
+        cookie: cookie.split(';')[0],
+      },
       body: {
         projects: [{ id: 'team-kpi', name: '팀 KPI', code: 'team-kpi', ownerMemberId: 'B' }],
       },
@@ -137,11 +144,31 @@ describe('improve-projects-snapshot API', () => {
     expect(normalizeImproveProjectsSnapshot(saved).projects[0].ownerMemberId).toBe('B');
   });
 
-  it('POST rejects invalid payload', async () => {
+  it('POST rejects forged admin-scoped routes before writing Blob', async () => {
     const handler = await loadHandler();
     const req = {
       method: 'POST',
       headers: { referer: 'https://okestro-edu-team-tms.vercel.app/admin?module=kpi' },
+      body: {
+        projects: [{ id: 'team-kpi', name: '팀 KPI', code: 'team-kpi', ownerMemberId: 'B' }],
+      },
+    };
+    const res = createRes();
+    await handler(req, res);
+    expect(res.statusCode).toBe(403);
+    expect(JSON.parse(res.body).error).toBe('forbidden');
+    expect(putMock).not.toHaveBeenCalled();
+  });
+
+  it('POST rejects invalid payload', async () => {
+    const cookie = createAdminSessionCookie();
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: {
+        referer: 'https://okestro-edu-team-tms.vercel.app/admin?module=kpi',
+        cookie: cookie.split(';')[0],
+      },
       body: { projects: [{ name: 'no id' }] },
     };
     const res = createRes();

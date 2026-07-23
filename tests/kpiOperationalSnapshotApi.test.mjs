@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createAdminSessionCookie } from '../server/api-utils/adminSession.js';
 
 const headMock = vi.fn();
 const putMock = vi.fn();
@@ -40,6 +41,8 @@ describe('kpi-operational-snapshot API write scope', () => {
     headMock.mockReset();
     putMock.mockReset();
     process.env.BLOB_READ_WRITE_TOKEN = 'test-token';
+    process.env.TMS_ADMIN_GATE_PASSWORD = 'secret-gate';
+    process.env.TMS_ADMIN_SESSION_SECRET = 'session-secret';
     delete process.env.BLOB_STORE_ID;
   });
 
@@ -91,6 +94,31 @@ describe('kpi-operational-snapshot API write scope', () => {
   it('allows admin routes to save any member', async () => {
     headMock.mockRejectedValue(new Error('not found'));
     putMock.mockResolvedValue({ url: 'https://blob.example/kpi-operational/live-latest.json' });
+    const cookie = createAdminSessionCookie();
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: {
+        referer: 'https://edu-team-tms-ten.vercel.app/admin?module=competency',
+        cookie: cookie.split(';')[0],
+      },
+      body: {
+        memberCode: 'C',
+        yearMonth: '2026-06',
+        competencyMonth: saveableCompetencyMonth(),
+        updatedAt: '2026-06-29T00:00:00.000Z',
+      },
+    };
+    const res = createRes();
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body).ok).toBe(true);
+    expect(putMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects forged admin-scoped POSTs before Blob access', async () => {
     const handler = await loadHandler();
     const req = {
       method: 'POST',
@@ -106,9 +134,10 @@ describe('kpi-operational-snapshot API write scope', () => {
 
     await handler(req, res);
 
-    expect(res.statusCode).toBe(200);
-    expect(JSON.parse(res.body).ok).toBe(true);
-    expect(putMock).toHaveBeenCalledTimes(1);
+    expect(res.statusCode).toBe(403);
+    expect(JSON.parse(res.body).error).toBe('kpi-operational-member-forbidden');
+    expect(headMock).not.toHaveBeenCalled();
+    expect(putMock).not.toHaveBeenCalled();
   });
 
   it('does not overwrite the live snapshot when Blob head is temporarily unavailable', async () => {
@@ -137,6 +166,7 @@ describe('kpi-operational-snapshot API write scope', () => {
   it('does not overwrite the live snapshot when Blob JSON fetch fails', async () => {
     headMock.mockResolvedValue({ downloadUrl: 'https://blob.example/kpi-operational/live-latest.json' });
     putMock.mockResolvedValue({ url: 'https://blob.example/kpi-operational/live-latest.json' });
+    const cookie = createAdminSessionCookie();
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
@@ -147,7 +177,10 @@ describe('kpi-operational-snapshot API write scope', () => {
     const handler = await loadHandler();
     const req = {
       method: 'POST',
-      headers: { referer: 'https://edu-team-tms-ten.vercel.app/admin?module=competency' },
+      headers: {
+        referer: 'https://edu-team-tms-ten.vercel.app/admin?module=competency',
+        cookie: cookie.split(';')[0],
+      },
       body: {
         memberCode: 'C',
         yearMonth: '2026-06',

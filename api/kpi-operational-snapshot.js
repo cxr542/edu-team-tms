@@ -7,8 +7,12 @@ import {
   mergeMemberIntoCompetencyCloudSnapshot,
   normalizeCompetencyCloudSnapshot,
 } from '../src/utils/kpiOperationalCloudSnapshot.js';
+import { hasValidAdminSession } from '../server/api-utils/adminSession.js';
 import { isAllowedPublishOrigin } from '../server/api-utils/publishOrigin.js';
-import { isAdminOrSameMemberRouteReferer } from '../server/api-utils/requestScope.js';
+import {
+  isAdminRouteReferer,
+  isSameMemberRouteReferer,
+} from '../server/api-utils/requestScope.js';
 import {
   assertBlobConfigured,
   getBlobSdkOptions,
@@ -19,6 +23,12 @@ const LIVE_LATEST_PATH = 'kpi-operational/live-latest.json';
 function canUse(req) {
   const referer = req.headers.referer || req.headers.origin || '';
   return isAllowedPublishOrigin(referer);
+}
+
+function canWriteMember(req, memberCode) {
+  if (!canUse(req)) return false;
+  if (isAdminRouteReferer(req)) return hasValidAdminSession(req);
+  return isSameMemberRouteReferer(req, memberCode);
 }
 
 function json(res, status, body) {
@@ -130,10 +140,10 @@ export default async function handler(req, res) {
       if (!isValidCompetencyMemberCode(memberCode)) {
         return json(res, 400, { error: 'memberCode는 A/B/C 중 하나여야 합니다.' });
       }
-      if (!isAdminOrSameMemberRouteReferer(req, memberCode)) {
+      if (!canWriteMember(req, memberCode)) {
         return json(res, 403, {
           error: 'kpi-operational-member-forbidden',
-          message: '현재 구성원 URL과 다른 역량 평가는 공유 저장할 수 없습니다.',
+          message: '현재 구성원 URL 또는 관리자 세션이 필요합니다.',
         });
       }
       if (!isValidCompetencyYearMonth(yearMonth)) {

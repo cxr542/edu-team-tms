@@ -5,6 +5,7 @@ import {
   normalizeImproveProjectsSnapshot,
   validateImproveProjectsPayload,
 } from '../server/api-utils/improveProjectsSnapshotCore.js';
+import { hasValidAdminSession } from '../server/api-utils/adminSession.js';
 import { isAllowedPublishOrigin } from '../server/api-utils/publishOrigin.js';
 import { isAdminRouteReferer } from '../server/api-utils/requestScope.js';
 import {
@@ -16,6 +17,10 @@ import {
 function canUse(req) {
   const referer = req.headers.referer || req.headers.origin || '';
   return isAllowedPublishOrigin(referer);
+}
+
+function canPublish(req) {
+  return canUse(req) && isAdminRouteReferer(req) && hasValidAdminSession(req);
 }
 
 function json(res, status, body, headers = {}) {
@@ -137,10 +142,10 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    if (!isAdminRouteReferer(req)) {
+    if (!canPublish(req)) {
       return json(res, 403, {
         error: 'forbidden',
-        message: '관리자 URL에서만 향상 과제 팀 공유본을 저장할 수 있습니다.',
+        message: '관리자 세션이 있는 /admin URL에서만 향상 과제 팀 공유본을 저장할 수 있습니다.',
       });
     }
 
