@@ -177,6 +177,24 @@ describe('improve-projects-snapshot API', () => {
     expect(putMock).not.toHaveBeenCalled();
   });
 
+  it('POST rejects empty project lists before overwriting the shared snapshot', async () => {
+    const cookie = createAdminSessionCookie();
+    const handler = await loadHandler();
+    const req = {
+      method: 'POST',
+      headers: {
+        referer: 'https://okestro-edu-team-tms.vercel.app/admin?module=kpi',
+        cookie: cookie.split(';')[0],
+      },
+      body: { projects: [] },
+    };
+    const res = createRes();
+    await handler(req, res);
+    expect(res.statusCode).toBe(400);
+    expect(JSON.parse(res.body).error).toMatch(/비어/);
+    expect(putMock).not.toHaveBeenCalled();
+  });
+
   it('POST rejects member-scoped routes before writing Blob', async () => {
     const handler = await loadHandler();
     const req = {
