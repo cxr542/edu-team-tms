@@ -1,0 +1,71 @@
+# One-shot ops: point TMS at Render ppt-academizer API.
+# Sets PPT_ACADEMIZER_API_URL for Production (+ Preview/Development).
+name: Set Academizer API URL
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: ppt-academizer FastAPI base URL (no trailing slash)
+        required: true
+        default: https://ppt-academizer-api.onrender.com
+permissions:
+  contents: read
+
+jobs:
+  set_academizer_env:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Link Vercel project
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Set PPT_ACADEMIZER_API_URL
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          API_URL: ${{ inputs.api_url }}
+        run: |
+          set -euo pipefail
+          API_URL="${API_URL%/}"
+          echo "Target URL: $API_URL"
+          echo "## Before" >> "$GITHUB_STEP_SUMMARY"
+          npx vercel env ls --token="$VERCEL_TOKEN" | tee /tmp/vercel-env-before.txt
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/vercel-env-before.txt >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+          for env_name in production preview development; do
+            npx vercel env add PPT_ACADEMIZER_API_URL "$env_name" \
+              --value "$API_URL" \
+              --yes \
+              --force \
+              --non-interactive \
+              --token="$VERCEL_TOKEN"
+          done
+
+          echo "## After" >> "$GITHUB_STEP_SUMMARY"
+          npx vercel env ls --token="$VERCEL_TOKEN" | tee /tmp/vercel-env-after.txt
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/vercel-env-after.txt >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+          if ! grep -E 'PPT_ACADEMIZER_API_URL' /tmp/vercel-env-after.txt | grep -iq 'Production'; then
+            echo "ERROR: PPT_ACADEMIZER_API_URL missing from Production" >&2
+            exit 1
+          fi
+          echo "PPT_ACADEMIZER_API_URL set for production/preview/development."
+          echo "Next: run Deploy Production (or push main) so serverless picks up the env."
