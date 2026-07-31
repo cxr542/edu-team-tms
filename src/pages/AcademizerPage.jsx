@@ -5,6 +5,12 @@ import {
   postAcademize,
   postWizardPreview,
 } from '../utils/academizerApi.js';
+import {
+  readSavedSaveMode,
+  savePptxBlob,
+  supportsSaveFilePicker,
+  writeSavedSaveMode,
+} from '../utils/academizerSave.js';
 import './AcademizerPage.css';
 
 const PREVIEW_PHASES = [
@@ -34,23 +40,18 @@ function formatElapsed(sec) {
   return m > 0 ? `${m}분 ${String(s).padStart(2, '0')}초` : `${s}초`;
 }
 
-function downloadBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename || 'academy-deck.pptx';
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function BusyProgress({ kind, elapsedSec }) {
+function BusyProgress({ kind, elapsedSec, saveMode }) {
   const phases = kind === 'preview' ? PREVIEW_PHASES : ACADEMIZE_PHASES;
   const label = phaseLabel(phases, elapsedSec);
   const title = kind === 'preview' ? '분석·미리보기 진행 중' : '아카데미화 실행 중';
+  const doneHint =
+    kind === 'academize' && saveMode === 'pick'
+      ? '완료되면 저장할 폴더·파일명을 고르는 창이 뜹니다.'
+      : '완료되면 파일이 다운로드됩니다.';
   const hint =
     elapsedSec >= 20
       ? 'API가 잠들어 있으면 첫 요청에 30~60초 걸릴 수 있습니다. 창을 닫지 마세요.'
-      : '완료되면 파일이 자동으로 다운로드됩니다.';
+      : doneHint;
 
   return (
     <div className="academizer-busy" role="status" aria-live="polite" aria-busy="true">
@@ -87,6 +88,32 @@ export default function AcademizerPage() {
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
   const [warnings, setWarnings] = useState(/** @type {object[]} */ ([]));
+  const [saveMode, setSaveMode] = useState(/** @type {'pick'|'download'} */ (() => readSavedSaveMode()));
+  const [lastResult, setLastResult] = useState(
+    /** @type {{ blob: Blob, filename: string, slideCount?: string }|null} */ (null)
+  );
+  const canPickPath = supportsSaveFilePicker();
+
+  const onSaveModeChange = (mode) => {
+    setSaveMode(mode);
+    writeSavedSaveMode(mode);
+  };
+
+  const persistResult = async (blob, filename, slideCount) => {
+    setLastResult({ blob, filename, slideCount });
+    const saved = await savePptxBlob(blob, filename, { mode: saveMode });
+    if (saved.method === 'cancelled') {
+      setStatus(
+        `변환 완료${slideCount ? ` · 출력 ${slideCount}장` : ''} · 저장이 취소되었습니다. 아래에서 다시 저장할 수 있습니다.`
+      );
+      return;
+    }
+    const where =
+      saved.method === 'picker'
+        ? `선택한 위치에 저장됨 (${saved.name || filename})`
+        : `다운로드 시작 (${saved.name || filename})`;
+    setStatus(`완료${slideCount ? ` · 출력 ${slideCount}장` : ''} · ${where}`);
+  };
 
   useEffect(() => {
     if (!busy) {
@@ -144,6 +171,7 @@ export default function AcademizerPage() {
     setSelectedProfile('');
     setSelectedQuality('standard');
     setStatus('');
+    setLastResult(null);
     if (!next) {
       setFile(null);
       return;
@@ -200,6 +228,7 @@ export default function AcademizerPage() {
     setError('');
     setWarnings([]);
     setStatus('');
+    setLastResult(null);
     try {
       const fd = new FormData();
       fd.append('file', file, file.name);
@@ -210,10 +239,7 @@ export default function AcademizerPage() {
       if (est != null) fd.append('estimated_output_slides', String(est));
       const result = await postAcademize(apiBase, fd);
       if (Array.isArray(result.meta?.warnings)) setWarnings(result.meta.warnings);
-      downloadBlob(result.blob, result.filename);
-      setStatus(
-        `완료${result.slideCount ? ` · 출력 ${result.slideCount}장` : ''} · ${result.filename}`
-      );
+      await persistResult(result.blob, result.filename, result.slideCount);
     } catch (e) {
       setError(e?.message || String(e));
       setStatus('');
@@ -398,7 +424,7 @@ export default function AcademizerPage() {
                       <button
                         key={mode.id}
                         type="button"
-                        disabled={!mode.available}
+                        disabled={!mode.available || busy}
                         className={`academizer-card${selectedQuality === mode.id ? ' is-selected' : ''}${
                           !mode.available ? ' is-disabled' : ''
                         }`}
@@ -412,6 +438,45 @@ export default function AcademizerPage() {
                   </div>
                 </>
               ) : null}
+
+              <h2>결과 저장</h2>
+              <div className="academizer-save" role="radiogroup" aria-label="결과 저장 방식">
+                <label className={`academizer-save__option${saveMode === 'pick' ? ' is-selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="academizer-save-mode"
+                    value="pick"
+                    checked={saveMode === 'pick'}
+                    disabled={busy || !canPickPath}
+                    onChange={() => onSaveModeChange('pick')}
+                  />
+                  <span>
+                    <strong>저장 위치 선택</strong>
+                    <span className="academizer-save__desc">
+                      {canPickPath
+                        ? '완료 후 폴더·파일명을 직접 지정합니다 (Chrome / Edge).'
+                        : '이 브라우저에서는 지원하지 않습니다. Chrome 또는 Edge를 사용하세요.'}
+                    </span>
+                  </span>
+                </label>
+                <label className={`academizer-save__option${saveMode === 'download' ? ' is-selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="academizer-save-mode"
+                    value="download"
+                    checked={saveMode === 'download'}
+                    disabled={busy}
+                    onChange={() => onSaveModeChange('download')}
+                  />
+                  <span>
+                    <strong>브라우저 다운로드</strong>
+                    <span className="academizer-save__desc">
+                      기본 다운로드 폴더로 바로 받습니다.
+                    </span>
+                  </span>
+                </label>
+              </div>
+
               <div className="academizer-actions">
                 <button type="button" className="academizer-secondary" disabled={busy} onClick={() => setStep(1)}>
                   이전
@@ -433,9 +498,46 @@ export default function AcademizerPage() {
                 </button>
               </div>
               {busy && busyKind === 'academize' ? (
-                <BusyProgress kind="academize" elapsedSec={elapsedSec} />
+                <BusyProgress kind="academize" elapsedSec={elapsedSec} saveMode={saveMode} />
               ) : null}
               {!busy && status ? <p className="academizer-status">{status}</p> : null}
+              {!busy && lastResult ? (
+                <div className="academizer-actions academizer-actions--result">
+                  {canPickPath ? (
+                    <button
+                      type="button"
+                      className="academizer-secondary"
+                      onClick={async () => {
+                        const saved = await savePptxBlob(lastResult.blob, lastResult.filename, {
+                          mode: 'pick',
+                        });
+                        if (saved.method === 'cancelled') return;
+                        setStatus(
+                          `다시 저장함 · ${saved.name || lastResult.filename}${
+                            lastResult.slideCount ? ` · ${lastResult.slideCount}장` : ''
+                          }`
+                        );
+                      }}
+                    >
+                      다른 위치에 저장
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="academizer-secondary"
+                    onClick={async () => {
+                      await savePptxBlob(lastResult.blob, lastResult.filename, { mode: 'download' });
+                      setStatus(
+                        `다운로드 시작 · ${lastResult.filename}${
+                          lastResult.slideCount ? ` · ${lastResult.slideCount}장` : ''
+                        }`
+                      );
+                    }}
+                  >
+                    다시 다운로드
+                  </button>
+                </div>
+              ) : null}
               {warnings.length > 0 ? (
                 <div className="academizer-warnings">
                   <strong>참고</strong>
