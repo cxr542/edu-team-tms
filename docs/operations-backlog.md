@@ -61,9 +61,10 @@ KPI1 계산 기준은 안정화 메모를 남기고, 주차 완료 M/M 정렬 �
 - **문서:** [`ppt-academizer-tms.md`](./ppt-academizer-tms.md) · API 배포: sibling `ppt-academizer/docs/DEPLOY-TMS-RENDER.md`
 - **엔진 repo:** [`cxr542/ppt-academizer`](https://github.com/cxr542/ppt-academizer) — [PR #2](https://github.com/cxr542/ppt-academizer/pull/2) 머지 (TMS CORS·Render 문서)
 - **로컬 스모크 (✅ 2026-07-23):** fixture #1 `01_k8s_dashboard_lab_lecture` · API `127.0.0.1:8766` · preview/academize 13장
+- **진행 (2026-07-31):** Render API live (`ppt-academizer-api.onrender.com`, template ok) · TMS UI [PR #114](https://github.com/cxr542/edu-team-tms/pull/114) 머지
 - **다음에 할 일 (운영 게이트):**
-  1. Render Docker + `TEMPLATE_PPTX` → `/health` ok
-  2. Vercel `PPT_ACADEMIZER_API_URL` → `/admin?module=academizer` E2E
+  1. Vercel `PPT_ACADEMIZER_API_URL` (Actions: Set Academizer API URL) → prod redeploy
+  2. `/admin?module=academizer` E2E (fixture #1)
   3. (이후) real_world fixture 2~5
 - **Netlify** UI/프록시는 TMS 경로에서 **deprecated**
 
