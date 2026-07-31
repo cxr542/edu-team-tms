@@ -21,8 +21,9 @@ npm install && npm run dev
 ```
 
 - KPI 참고문서: `docs/reference-source/` 수정 → `npm run sync:docs`
-- PPT 아카데미화 UI: `public/tools/ppt-academizer/` (vendored)
-- 환경 변수: `.env.local` (Kakao 등)
+- PPT 아카데미화 UI: `src/pages/AcademizerPage.jsx` (`module=academizer`)
+- PPT 변환 API: sibling `ppt-academizer` (Render/local FastAPI, `PPT_ACADEMIZER_API_URL`)
+- 환경 변수: `.env.local` (Kakao · Confluence · Academizer API 등)
 
 ### cxr542-portal (별도 repo)
 
@@ -61,7 +62,7 @@ monorepo에 예전 실험 폴더가 많습니다. **삭제 여부** 기준:
 | 폴더 | 역할 | TMS/portal과 관계 |
 |------|------|-------------------|
 | `kpi-app-new/` | KPI 시뮬레이터(Python)·엑셀 스크립트·정의서 원본 | TMS는 `docs/reference-source/`로 **자체 보유**. 시뮬레이터 쓸 때만 필요 |
-| `ppt-academizer/` | PPT 변환 **엔진** (Python, Netlify 배포) | TMS는 embed UI + Netlify API. **엔진 수정 시** 필요 |
+| `ppt-academizer/` | PPT 변환 **엔진** (Python FastAPI, Render 예정) | TMS는 React UI + `PPT_ACADEMIZER_API_URL`. SoT: `docs/ppt-academizer-tms.md` |
 | `cxr542/` | GitHub Pages (`cxr542.github.io`) | 허브·today-shoes Pages. portal 외부 링크 |
 | `cloud-chatbot/` | Render 배포 중인 챗봇 | `github.com/cxr542/cloud-chatbot` — **별도 서비스** |
 | `cxr542-portal/` | 개인 포털 정본 | monorepo 사본. **작업은 GitHub repo clone 권장** |

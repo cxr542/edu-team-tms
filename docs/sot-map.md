@@ -30,6 +30,7 @@
 | Journal J8 Supabase auto-upload | `docs/j8-journal-supabase-auto-upload-plan.md` ([[j8-journal-supabase-auto-upload-plan]]) | Blob 수동 유지 · Supabase debounce 자동 업로드 (자동 pull 비범위) |
 | Journal Supabase sync | `docs/journal-supabase-sync-plan.md` ([[journal-supabase-sync-plan]]) | 일지 Supabase 전환 원칙·단계 |
 | Operations backlog | `docs/operations-backlog.md` ([[operations-backlog]]) | 운영 후속 작업·일지 J-track 진행률 |
+| PPT Academizer | `docs/ppt-academizer-tms.md` ([[ppt-academizer-tms]]) | `module=academizer` · React UI + Render/local FastAPI (`PPT_ACADEMIZER_API_URL`) · Netlify deprecated · 로컬 fixture#1 스모크 완료 · Render/Vercel prod 게이트는 backlog 4c |
 | Obsidian / docs graph | `docs/obsidian-graph-poc.md` ([[obsidian-graph-poc]]) | Vault 열기 · `npm run docs:graph` |
 
 ## Obsidian Related

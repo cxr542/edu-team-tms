@@ -55,6 +55,18 @@ KPI1 계산 기준은 안정화 메모를 남기고, 주차 완료 M/M 정렬 �
 - 전체 이력 문서는 공지 헤더의 「참고문서 릴리즈 노트」 링크 (`?module=docs&doc=tms-release`) — 같은 날짜 PR은 하나의 날짜 H2 아래 `###`로 묶여 표시
 - **반응·댓글 (2026-07):** A/B/C·`/admin`(A) 모두 참여. DDL: [`supabase/announcement-engagement.sql`](../supabase/announcement-engagement.sql). API: `/api/announcement-reactions`, `/api/announcement-comments`
 
+## 4c. PPT Academizer (TMS 네이티브 · 2026-07)
+
+- **메뉴:** `module=academizer` (관리·공통, admin)
+- **문서:** [`ppt-academizer-tms.md`](./ppt-academizer-tms.md) · API 배포: sibling `ppt-academizer/docs/DEPLOY-TMS-RENDER.md`
+- **엔진 repo:** [`cxr542/ppt-academizer`](https://github.com/cxr542/ppt-academizer) — [PR #2](https://github.com/cxr542/ppt-academizer/pull/2) 머지 (TMS CORS·Render 문서)
+- **로컬 스모크 (✅ 2026-07-23):** fixture #1 `01_k8s_dashboard_lab_lecture` · API `127.0.0.1:8766` · preview/academize 13장
+- **다음에 할 일 (운영 게이트):**
+  1. Render Docker + `TEMPLATE_PPTX` → `/health` ok
+  2. Vercel `PPT_ACADEMIZER_API_URL` → `/admin?module=academizer` E2E
+  3. (이후) real_world fixture 2~5
+- **Netlify** UI/프록시는 TMS 경로에서 **deprecated**
+
 ## 5. 운영 QA 체크리스트
 
 공지사항/릴리즈노트 배포 후 아래를 확인한다.
