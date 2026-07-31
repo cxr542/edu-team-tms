@@ -4,9 +4,14 @@
 
 export const ACADEMIZER_SAVE_MODE_KEY = 'tms.academizer.saveMode';
 
+function getShowSaveFilePicker() {
+  const g = typeof globalThis !== 'undefined' ? globalThis : null;
+  return typeof g?.showSaveFilePicker === 'function' ? g.showSaveFilePicker.bind(g) : null;
+}
+
 /** @returns {boolean} */
 export function supportsSaveFilePicker() {
-  return typeof window !== 'undefined' && typeof window.showSaveFilePicker === 'function';
+  return getShowSaveFilePicker() != null;
 }
 
 /**
@@ -14,7 +19,7 @@ export function supportsSaveFilePicker() {
  */
 export function readSavedSaveMode() {
   try {
-    const raw = localStorage.getItem(ACADEMIZER_SAVE_MODE_KEY);
+    const raw = globalThis.localStorage?.getItem?.(ACADEMIZER_SAVE_MODE_KEY);
     if (raw === 'pick' || raw === 'download') return raw;
   } catch {
     /* ignore */
@@ -27,7 +32,7 @@ export function readSavedSaveMode() {
  */
 export function writeSavedSaveMode(mode) {
   try {
-    localStorage.setItem(ACADEMIZER_SAVE_MODE_KEY, mode);
+    globalThis.localStorage?.setItem?.(ACADEMIZER_SAVE_MODE_KEY, mode);
   } catch {
     /* ignore */
   }
@@ -38,8 +43,12 @@ export function writeSavedSaveMode(mode) {
  * @param {string} [filename]
  */
 export function downloadBlobViaAnchor(blob, filename) {
+  const doc = globalThis.document;
+  if (!doc?.createElement) {
+    throw new Error('document is not available for download');
+  }
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = doc.createElement('a');
   a.href = url;
   a.download = filename || 'academy-deck.pptx';
   a.click();
@@ -55,10 +64,11 @@ export function downloadBlobViaAnchor(blob, filename) {
 export async function savePptxBlob(blob, filename, options = {}) {
   const name = filename || 'academy-deck.pptx';
   const mode = options.mode || 'download';
+  const showSaveFilePicker = getShowSaveFilePicker();
 
-  if (mode === 'pick' && supportsSaveFilePicker()) {
+  if (mode === 'pick' && showSaveFilePicker) {
     try {
-      const handle = await window.showSaveFilePicker({
+      const handle = await showSaveFilePicker({
         suggestedName: name,
         types: [
           {

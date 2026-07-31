@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ACADEMIZER_SAVE_MODE_KEY,
   readSavedSaveMode,
@@ -7,13 +7,27 @@ import {
   writeSavedSaveMode,
 } from '../src/utils/academizerSave.js';
 
+function installMemoryLocalStorage() {
+  /** @type {Map<string, string>} */
+  const store = new Map();
+  vi.stubGlobal('localStorage', {
+    getItem: (k) => (store.has(k) ? store.get(k) : null),
+    setItem: (k, v) => {
+      store.set(String(k), String(v));
+    },
+    removeItem: (k) => {
+      store.delete(k);
+    },
+  });
+  return store;
+}
+
+beforeEach(() => {
+  installMemoryLocalStorage();
+});
+
 afterEach(() => {
   vi.unstubAllGlobals();
-  try {
-    localStorage.removeItem(ACADEMIZER_SAVE_MODE_KEY);
-  } catch {
-    /* ignore */
-  }
 });
 
 describe('academizerSave', () => {
@@ -31,6 +45,7 @@ describe('academizerSave', () => {
 
   it('persists save mode', () => {
     writeSavedSaveMode('download');
+    expect(localStorage.getItem(ACADEMIZER_SAVE_MODE_KEY)).toBe('download');
     expect(readSavedSaveMode()).toBe('download');
   });
 
@@ -68,7 +83,9 @@ describe('academizerSave', () => {
     vi.stubGlobal('showSaveFilePicker', undefined);
     const click = vi.fn();
     const anchor = { click, href: '', download: '' };
-    vi.spyOn(document, 'createElement').mockReturnValue(anchor);
+    vi.stubGlobal('document', {
+      createElement: vi.fn(() => anchor),
+    });
     vi.stubGlobal('URL', {
       createObjectURL: () => 'blob:mock',
       revokeObjectURL: vi.fn(),
