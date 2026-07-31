@@ -81,7 +81,7 @@ import KpiApprovePage from './pages/KpiApprovePage';
 import KpiReportPage from './pages/KpiReportPage';
 import { useTeamAccess } from './hooks/useTeamAccess';
 import ReferenceDocsPage from './pages/ReferenceDocsPage';
-import AcademizerEmbedPage from './pages/AcademizerEmbedPage';
+import AcademizerPage from './pages/AcademizerPage';
 import CloudChatbotEmbedPage from './pages/CloudChatbotEmbedPage';
 import LunchPickPage from './pages/LunchPickPage';
 import IdeaBankPage from './pages/IdeaBankPage';
@@ -1099,7 +1099,7 @@ export default function App() {
       ) : displayModule === 'docs' ? (
         <ReferenceDocsPage />
       ) : displayModule === 'academizer' && !isViewer ? (
-        <AcademizerEmbedPage />
+        <AcademizerPage />
       ) : displayModule === 'cloud-chatbot' && !isViewer ? (
         <CloudChatbotEmbedPage />
       ) : displayModule === 'lunch' ? (

@@ -3,6 +3,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import {
   announcementEngagementApiDevPlugin,
+  academizerApiDevPlugin,
   confluenceLectureApiDevPlugin,
   kakaoApiDevPlugin,
   prodSnapshotReadProxyPlugin,
@@ -19,6 +20,7 @@ export default defineConfig({
     prodSnapshotReadProxyPlugin(),
     kakaoApiDevPlugin(),
     confluenceLectureApiDevPlugin(),
+    academizerApiDevPlugin(),
     announcementEngagementApiDevPlugin(),
   ],
   define: {

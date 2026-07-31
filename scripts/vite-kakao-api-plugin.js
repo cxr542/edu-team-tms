@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import kakaoHandler from '../api/kakao-local.js';
 import confluenceLectureHandler from '../api/confluence-lecture.js';
+import academizerHandler from '../api/academizer.js';
 import announcementReactionsHandler from '../api/announcement-reactions.js';
 import announcementCommentsHandler from '../api/announcement-comments.js';
 
@@ -201,6 +202,39 @@ export function confluenceLectureApiDevPlugin() {
           res.statusCode = 500;
           res.setHeader('Content-Type', 'application/json; charset=utf-8');
           res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+    },
+  };
+}
+
+/** Vite dev: /api/academizer → api/academizer.js (health proxy only) */
+export function academizerApiDevPlugin() {
+  return {
+    name: 'tms-academizer-api-dev',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        if (!req.url?.startsWith('/api/academizer')) {
+          next();
+          return;
+        }
+
+        const env = loadEnv(server.config.mode, tmsAppRoot, '');
+        const merged = {
+          ...process.env,
+          PPT_ACADEMIZER_API_URL:
+            env.PPT_ACADEMIZER_API_URL || process.env.PPT_ACADEMIZER_API_URL,
+          VITE_PPT_ACADEMIZER_API_URL:
+            env.VITE_PPT_ACADEMIZER_API_URL || process.env.VITE_PPT_ACADEMIZER_API_URL,
+          NODE_ENV: process.env.NODE_ENV || 'development',
+        };
+
+        try {
+          await academizerHandler(req, res, { env: merged });
+        } catch (err) {
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          res.end(JSON.stringify({ error: err.message, available: false }));
         }
       });
     },
