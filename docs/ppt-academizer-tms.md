@@ -14,13 +14,13 @@
 | `ppt-academizer` main | ✅ Render template fetch [PR #4](https://github.com/cxr542/ppt-academizer/pull/4) |
 | TMS React 네이티브 UI | ✅ [PR #114](https://github.com/cxr542/edu-team-tms/pull/114) 머지 |
 | Render 운영 API | ✅ `https://ppt-academizer-api.onrender.com` · `/health` `template_configured: true` |
-| Vercel `PPT_ACADEMIZER_API_URL` | ⏳ Actions `Set Academizer API URL` → 그다음 Prod E2E |
+| Vercel `PPT_ACADEMIZER_API_URL` | ✅ `https://ppt-academizer-api.onrender.com` |
+| Prod E2E (fixture #1) | ✅ health proxy + preview/academize 13장 (2026-07-31) |
 
 ## Next
 
-1. Vercel env `PPT_ACADEMIZER_API_URL=https://ppt-academizer-api.onrender.com` (workflow_dispatch)
-2. Prod 스모크: `/admin?module=academizer` + fixture #1
-3. (이후) real_world fixture 2~5 — [`ppt-academizer/docs/evaluation/real_world_fixture_evaluation.md`](../../ppt-academizer/docs/evaluation/real_world_fixture_evaluation.md)
+1. (선택) real_world fixture 2~5 — [`ppt-academizer/docs/evaluation/real_world_fixture_evaluation.md`](../../ppt-academizer/docs/evaluation/real_world_fixture_evaluation.md)
+2. Free Render cold-start 안내 UX (선택)
 
 상세 절차: sibling [`DEPLOY-TMS-RENDER.md`](../../ppt-academizer/docs/DEPLOY-TMS-RENDER.md)
 
