@@ -1,11 +1,38 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Presentation, RefreshCcw, Upload } from 'lucide-react';
+import { Loader2, Presentation, RefreshCcw, Upload } from 'lucide-react';
 import {
   fetchAcademizerHealth,
   postAcademize,
   postWizardPreview,
 } from '../utils/academizerApi.js';
 import './AcademizerPage.css';
+
+const PREVIEW_PHASES = [
+  { at: 0, label: '파일 업로드 중…' },
+  { at: 3, label: '덱 구조 분석 중…' },
+  { at: 8, label: '변환 방식 추천 준비 중…' },
+];
+
+const ACADEMIZE_PHASES = [
+  { at: 0, label: '파일 업로드 중…' },
+  { at: 4, label: '아카데미 템플릿에 맞추는 중…' },
+  { at: 12, label: '슬라이드 배치·스타일 적용 중…' },
+  { at: 22, label: '결과 파일 준비 중…' },
+];
+
+function phaseLabel(phases, elapsedSec) {
+  let label = phases[0]?.label || '처리 중…';
+  for (const phase of phases) {
+    if (elapsedSec >= phase.at) label = phase.label;
+  }
+  return label;
+}
+
+function formatElapsed(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return m > 0 ? `${m}분 ${String(s).padStart(2, '0')}초` : `${s}초`;
+}
 
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
@@ -14,6 +41,33 @@ function downloadBlob(blob, filename) {
   a.download = filename || 'academy-deck.pptx';
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function BusyProgress({ kind, elapsedSec }) {
+  const phases = kind === 'preview' ? PREVIEW_PHASES : ACADEMIZE_PHASES;
+  const label = phaseLabel(phases, elapsedSec);
+  const title = kind === 'preview' ? '분석·미리보기 진행 중' : '아카데미화 실행 중';
+  const hint =
+    elapsedSec >= 20
+      ? 'API가 잠들어 있으면 첫 요청에 30~60초 걸릴 수 있습니다. 창을 닫지 마세요.'
+      : '완료되면 파일이 자동으로 다운로드됩니다.';
+
+  return (
+    <div className="academizer-busy" role="status" aria-live="polite" aria-busy="true">
+      <div className="academizer-busy__row">
+        <Loader2 className="academizer-busy__spinner" size={20} aria-hidden />
+        <div className="academizer-busy__copy">
+          <strong>{title}</strong>
+          <span>{label}</span>
+        </div>
+        <span className="academizer-busy__elapsed">{formatElapsed(elapsedSec)}</span>
+      </div>
+      <div className="academizer-busy__track" aria-hidden>
+        <div className="academizer-busy__bar" />
+      </div>
+      <p className="academizer-busy__hint">{hint}</p>
+    </div>
+  );
 }
 
 export default function AcademizerPage() {
@@ -28,9 +82,23 @@ export default function AcademizerPage() {
   const [selectedProfile, setSelectedProfile] = useState('');
   const [selectedQuality, setSelectedQuality] = useState('standard');
   const [busy, setBusy] = useState(false);
+  const [busyKind, setBusyKind] = useState(/** @type {''|'preview'|'academize'} */ (''));
+  const [elapsedSec, setElapsedSec] = useState(0);
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
   const [warnings, setWarnings] = useState(/** @type {object[]} */ ([]));
+
+  useEffect(() => {
+    if (!busy) {
+      setElapsedSec(0);
+      return undefined;
+    }
+    setElapsedSec(0);
+    const id = window.setInterval(() => {
+      setElapsedSec((n) => n + 1);
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [busy]);
 
   const loadHealth = useCallback(async () => {
     setHealthLoading(true);
@@ -97,8 +165,9 @@ export default function AcademizerPage() {
   const runPreview = async () => {
     if (!file || !apiBase) return;
     setBusy(true);
+    setBusyKind('preview');
     setError('');
-    setStatus('덱 분석 중…');
+    setStatus('');
     try {
       const fd = new FormData();
       fd.append('file', file, file.name);
@@ -120,15 +189,17 @@ export default function AcademizerPage() {
       setStatus('');
     } finally {
       setBusy(false);
+      setBusyKind('');
     }
   };
 
   const runAcademize = async () => {
     if (!file || !apiBase || !selectedProfile) return;
     setBusy(true);
+    setBusyKind('academize');
     setError('');
     setWarnings([]);
-    setStatus('아카데미화 실행 중…');
+    setStatus('');
     try {
       const fd = new FormData();
       fd.append('file', file, file.name);
@@ -148,6 +219,7 @@ export default function AcademizerPage() {
       setStatus('');
     } finally {
       setBusy(false);
+      setBusyKind('');
     }
   };
 
@@ -235,9 +307,20 @@ export default function AcademizerPage() {
                   disabled={!file || busy || !apiBase}
                   onClick={runPreview}
                 >
-                  분석·미리보기
+                  {busy && busyKind === 'preview' ? (
+                    <>
+                      <Loader2 className="academizer-busy__spinner" size={16} aria-hidden />
+                      분석 중…
+                    </>
+                  ) : (
+                    '분석·미리보기'
+                  )}
                 </button>
               </div>
+
+              {busy && busyKind === 'preview' ? (
+                <BusyProgress kind="preview" elapsedSec={elapsedSec} />
+              ) : null}
 
               {wizardData ? (
                 <div className="academizer-wizard">
@@ -339,10 +422,20 @@ export default function AcademizerPage() {
                   disabled={busy || !apiBase}
                   onClick={runAcademize}
                 >
-                  아카데미화 실행
+                  {busy && busyKind === 'academize' ? (
+                    <>
+                      <Loader2 className="academizer-busy__spinner" size={16} aria-hidden />
+                      실행 중…
+                    </>
+                  ) : (
+                    '아카데미화 실행'
+                  )}
                 </button>
               </div>
-              {status ? <p className="academizer-status">{status}</p> : null}
+              {busy && busyKind === 'academize' ? (
+                <BusyProgress kind="academize" elapsedSec={elapsedSec} />
+              ) : null}
+              {!busy && status ? <p className="academizer-status">{status}</p> : null}
               {warnings.length > 0 ? (
                 <div className="academizer-warnings">
                   <strong>참고</strong>
