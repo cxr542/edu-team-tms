@@ -39,9 +39,19 @@ export function getKpi2EffectProjectId(task) {
   return String(task?.kpi2Effect?.projectId || '').trim();
 }
 
-/** KPI2 집계 대상: 효과 토글 + 향상 과제 선택 */
+/** non-AI만 향상 과제 필수. AI는 효과 건 ON이면 projectId 생략 가능. */
+export function kpi2EffectRequiresProject(task) {
+  return String(task?.cat || '') !== 'ai';
+}
+
+/**
+ * KPI2 집계 대상: 효과 토글 필수.
+ * 향상 과제는 AI 카테고리만 선택 사항 (카테고리만으로 자동 포함하지 않음).
+ */
 export function isKpi2EffectTask(task) {
-  return hasKpi2EffectEnabled(task) && Boolean(getKpi2EffectProjectId(task));
+  if (!hasKpi2EffectEnabled(task)) return false;
+  if (!kpi2EffectRequiresProject(task)) return true;
+  return Boolean(getKpi2EffectProjectId(task));
 }
 
 export function getKpi2BaselineHours(task) {

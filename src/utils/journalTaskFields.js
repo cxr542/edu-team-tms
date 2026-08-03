@@ -1,11 +1,15 @@
 import { getTaskMmAxis } from './journalMm';
 import { resolveTaskSlotField } from '../constants/journalTaskSlot';
-import { getKpi2EffectProjectId, hasKpi2EffectEnabled } from './computeTeamKpi';
+import {
+  getKpi2EffectProjectId,
+  hasKpi2EffectEnabled,
+  kpi2EffectRequiresProject,
+} from './computeTeamKpi';
 
-/** KPI2 효과 건 저장 전 검증 — 향상 과제 필수 */
+/** KPI2 효과 건 저장 전 검증 — non-AI는 향상 과제 필수, AI는 효과 건만으로 허용 */
 export function validateKpi2EffectEdit(editTask) {
   if (!hasKpi2EffectEnabled(editTask)) return { ok: true };
-  if (!getKpi2EffectProjectId(editTask)) {
+  if (kpi2EffectRequiresProject(editTask) && !getKpi2EffectProjectId(editTask)) {
     return {
       ok: false,
       message: 'KPI2 효과 건은 향상 과제를 선택해야 저장할 수 있습니다.',

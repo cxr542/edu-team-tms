@@ -32,7 +32,7 @@ import {
   getMmAxisSelectValue,
   recalcDayMmFromHours,
 } from '../utils/journalMm';
-import { countKpi2EffectTasks } from '../utils/computeTeamKpi';
+import { countKpi2EffectTasks, kpi2EffectRequiresProject } from '../utils/computeTeamKpi';
 import { formatPublishedAt } from '../utils/appMode';
 import { getCloudHealthUserMessage } from '../utils/cloudHealth';
 import {
@@ -2229,13 +2229,15 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               {editTask.kpi2Effect?.enabled && (
                 <>
                   <div className="form-group">
-                    <label htmlFor="journal-edit-kpi2-project">향상 과제 (필수)</label>
+                    <label htmlFor="journal-edit-kpi2-project">
+                      {kpi2EffectRequiresProject(editTask) ? '향상 과제 (필수)' : '향상 과제 (선택)'}
+                    </label>
                     <select
                       id="journal-edit-kpi2-project"
                       className="form-input"
                       value={editTask.kpi2Effect.projectId || ''}
-                      required
-                      aria-required="true"
+                      required={kpi2EffectRequiresProject(editTask)}
+                      aria-required={kpi2EffectRequiresProject(editTask) ? 'true' : undefined}
                       onChange={(e) =>
                         setEditTask({
                           ...editTask,
@@ -2251,9 +2253,14 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                         </option>
                       ))}
                     </select>
-                    {!editTask.kpi2Effect.projectId && (
+                    {!editTask.kpi2Effect.projectId && kpi2EffectRequiresProject(editTask) && (
                       <p className="journal-field-help journal-field-help--warn">
                         향상 과제를 선택해야 저장·KPI2 집계에 포함됩니다.
+                      </p>
+                    )}
+                    {!editTask.kpi2Effect.projectId && !kpi2EffectRequiresProject(editTask) && (
+                      <p className="journal-field-help">
+                        AI 카테고리는 향상 과제를 선택하지 않아도 KPI2 집계에 포함됩니다.
                       </p>
                     )}
                   </div>

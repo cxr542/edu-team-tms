@@ -94,6 +94,53 @@ describe('computeTeamKpi june', () => {
     expect(buildKpi02EffectRows(2026, 5, days, IMPROVE_PROJECTS)).toHaveLength(0);
   });
 
+  it('buildKpi02EffectRows — AI는 효과 건 ON이면 향상 과제 없이도 집계', () => {
+    const task = {
+      id: 'ai-effect',
+      cat: 'ai',
+      title: 'AI 도구 활용',
+      plan: 8,
+      actual: 4,
+      done: true,
+      mmAxis: 'improve',
+      kpi2Effect: { enabled: true, projectId: '', baselineHours: 8 },
+    };
+    const days = {
+      '2026-06-01': {
+        holiday: false,
+        mm: { work: 0, improve: 0.5, leave: 0 },
+        tasks: [task],
+      },
+    };
+    expect(isKpi2EffectTask(task)).toBe(true);
+    const rows = buildKpi02EffectRows(2026, 5, days, IMPROVE_PROJECTS);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].업무명).toBe('AI 도구 활용');
+    expect(rows[0].계획시간).toBe(8);
+    expect(rows[0].실작업시간).toBe(4);
+  });
+
+  it('isKpi2EffectTask — AI 카테고리·완료만으로는 KPI2 미포함', () => {
+    const task = {
+      id: 'ai-invest',
+      cat: 'ai',
+      title: 'AI 카테고리 투자만',
+      plan: 4,
+      actual: 4,
+      done: true,
+      mmAxis: 'improve',
+    };
+    expect(isKpi2EffectTask(task)).toBe(false);
+    const days = {
+      '2026-06-01': {
+        holiday: false,
+        mm: { work: 0, improve: 0.5, leave: 0 },
+        tasks: [task],
+      },
+    };
+    expect(buildKpi02EffectRows(2026, 5, days, IMPROVE_PROJECTS)).toHaveLength(0);
+  });
+
   it('buildKpi02EffectRows — 행정·KPI 개발 제외', () => {
     const rows = buildKpi02EffectRows(2026, 5, juneDays, IMPROVE_PROJECTS);
     expect(rows.some((r) => r.업무명.includes('법인카드'))).toBe(false);

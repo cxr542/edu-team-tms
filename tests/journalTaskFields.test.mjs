@@ -82,6 +82,38 @@ describe('journalTaskFields — KPI2 effect persist', () => {
     expect(blocked.message).toMatch(/향상 과제/);
   });
 
+  it('validateKpi2EffectEdit allows AI effect without projectId', () => {
+    const allowed = validateKpi2EffectEdit(
+      editFromTask(baseTask({ cat: 'ai' }), {
+        kpi2Effect: { enabled: true, projectId: '', baselineHours: 8 },
+      })
+    );
+    expect(allowed.ok).toBe(true);
+    const saved = mergeTaskFromEdit(
+      baseTask({ cat: 'ai' }),
+      editFromTask(baseTask({ cat: 'ai' }), {
+        kpi2Effect: { enabled: true, projectId: '', baselineHours: 8 },
+      })
+    );
+    expect(saved.kpi2Effect).toEqual({
+      enabled: true,
+      projectId: '',
+      baselineHours: 8,
+    });
+    const days = { '2026-06-10': { tasks: [saved] } };
+    expect(buildKpi02EffectRows(2026, 5, days, IMPROVE_PROJECTS)).toHaveLength(1);
+  });
+
+  it('AI without effect toggle is not a KPI2 row', () => {
+    const saved = mergeTaskFromEdit(
+      baseTask({ cat: 'ai' }),
+      editFromTask(baseTask({ cat: 'ai' }), { kpi2Effect: { enabled: false } })
+    );
+    expect(saved.kpi2Effect).toBeUndefined();
+    const days = { '2026-06-10': { tasks: [saved] } };
+    expect(buildKpi02EffectRows(2026, 5, days, IMPROVE_PROJECTS)).toHaveLength(0);
+  });
+
   it('disabling KPI2 effect removes kpi2Effect from stored task', () => {
     const existing = baseTask({
       kpi2Effect: { enabled: true, projectId: 'ppt-academizer', baselineHours: 8 },
