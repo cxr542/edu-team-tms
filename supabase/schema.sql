@@ -250,6 +250,37 @@ create index if not exists csr_requests_requester_code_updated_at_idx
   on public.csr_requests (requester_code, updated_at desc);
 
 -- ---------------------------------------------------------------------------
+-- Kanban Tasks (production app on main)
+-- ---------------------------------------------------------------------------
+
+create table if not exists public.kanban_tasks (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  status text not null default 'todo',
+  assignee text not null default 'unassigned',
+  category text not null default 'other',
+  plan_hours integer not null default 0,
+  notes text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+
+  constraint kanban_tasks_title_not_blank
+    check (length(trim(title)) > 0),
+  constraint kanban_tasks_status_valid
+    check (status in ('todo', 'in_progress', 'done')),
+  constraint kanban_tasks_assignee_valid
+    check (assignee in ('A', 'B', 'C', 'unassigned')),
+  constraint kanban_tasks_category_valid
+    check (category in ('edu', 'prep', 'ai', 'other'))
+);
+
+create index if not exists kanban_tasks_status_idx
+  on public.kanban_tasks (status);
+
+create index if not exists kanban_tasks_assignee_idx
+  on public.kanban_tasks (assignee);
+
+-- ---------------------------------------------------------------------------
 -- RLS
 -- ---------------------------------------------------------------------------
 
@@ -262,6 +293,7 @@ alter table public.announcements enable row level security;
 alter table public.announcement_reactions enable row level security;
 alter table public.announcement_comments enable row level security;
 alter table public.csr_requests enable row level security;
+alter table public.kanban_tasks enable row level security;
 alter table public.sync_events enable row level security;
 
 create or replace function public.is_tms_user()
@@ -314,6 +346,7 @@ revoke insert, update, delete on table public.announcements from anon;
 grant select on table public.announcements to anon;
 grant select, insert, update on table public.announcements to authenticated;
 grant select, insert, update on table public.csr_requests to anon;
+grant select, insert, update, delete on table public.kanban_tasks to anon;
 revoke all on table public.announcement_reactions from anon, authenticated;
 revoke all on table public.announcement_comments from anon, authenticated;
 grant select on table public.announcement_reactions to anon, authenticated;
@@ -326,6 +359,7 @@ grant select, insert, update on table public.announcements to service_role;
 grant select, insert, update, delete on table public.announcement_reactions to service_role;
 grant select, insert, update, delete on table public.announcement_comments to service_role;
 grant insert on table public.sync_events to service_role;
+grant select, insert, update, delete on table public.kanban_tasks to service_role;
 
 -- tms_profiles
 drop policy if exists "tms_profiles_read_self" on public.tms_profiles;
@@ -455,6 +489,12 @@ create policy "csr_requests_insert_all_draft"
 create policy "csr_requests_update_all_draft"
   on public.csr_requests for update using (true) with check (true);
 
+drop policy if exists "kanban_tasks_all_policy" on public.kanban_tasks;
+create policy "kanban_tasks_all_policy"
+  on public.kanban_tasks for all to anon, authenticated, service_role
+  using (true)
+  with check (true);
+
 -- Post-run sanity (should return one row per table)
 select tablename
 from pg_tables
@@ -467,6 +507,7 @@ where schemaname = 'public'
     'kpi2_row_approvals',
     'announcements',
     'csr_requests',
-    'sync_events'
+    'sync_events',
+    'kanban_tasks'
   )
 order by tablename;

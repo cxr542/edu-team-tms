@@ -47,10 +47,35 @@ function loadKanbanTasks() {
 
 export function useKanbanTasks() {
   const [tasks, setTasks] = useState(loadKanbanTasks);
+  const [loading, setLoading] = useState(false);
 
+  // Fetch tasks from Supabase API on mount
   useEffect(() => {
-    localStorage.setItem(KANBAN_STORAGE_KEY, JSON.stringify(tasks));
-  }, [tasks]);
+    let active = true;
+    const fetchTasks = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch('/api/kanban-tasks');
+        if (!res.ok) throw new Error('Failed to fetch tasks from server');
+        const payload = await res.json();
+        if (payload.ok && Array.isArray(payload.data)) {
+          if (active) {
+            setTasks(payload.data);
+            localStorage.setItem(KANBAN_STORAGE_KEY, JSON.stringify(payload.data));
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load kanban tasks from API, using localStorage cache:', err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    void fetchTasks();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Synchronize state across multiple browser tabs in real-time
   useEffect(() => {
@@ -70,9 +95,10 @@ export function useKanbanTasks() {
     };
   }, []);
 
-  const addTask = useCallback((taskData) => {
-    const newTask = {
-      id: `k-${Date.now()}`,
+  const addTask = useCallback(async (taskData) => {
+    const tempId = `temp-${Date.now()}`;
+    const tempTask = {
+      id: tempId,
       title: taskData.title?.trim() || '새 업무 카드',
       status: taskData.status || 'todo',
       assignee: taskData.assignee || 'unassigned',
@@ -81,36 +107,139 @@ export function useKanbanTasks() {
       notes: taskData.notes || '',
       createdAt: new Date().toISOString(),
     };
-    setTasks((prev) => [newTask, ...prev]);
-    return newTask;
+
+    // Optimistic update
+    setTasks((prev) => [tempTask, ...prev]);
+
+    try {
+      const res = await fetch('/api/kanban-tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(taskData),
+      });
+      if (!res.ok) throw new Error('API error creating task');
+      const payload = await res.json();
+      if (payload.ok && payload.data) {
+        setTasks((prev) => {
+          const next = prev.map((t) => (t.id === tempId ? payload.data : t));
+          localStorage.setItem(KANBAN_STORAGE_KEY, JSON.stringify(next));
+          return next;
+        });
+        return payload.data;
+      }
+    } catch (err) {
+      console.error('Failed to create task on server:', err);
+      // Revert optimistic update
+      setTasks((prev) => {
+        const next = prev.filter((t) => t.id !== tempId);
+        localStorage.setItem(KANBAN_STORAGE_KEY, JSON.stringify(next));
+        return next;
+      });
+    }
   }, []);
 
-  const updateTask = useCallback((id, patch) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, ...patch, id: t.id } : t))
-    );
+  const updateTask = useCallback(async (id, patch) => {
+    let originalTasks = [];
+    setTasks((prev) => {
+      originalTasks = prev;
+      const next = prev.map((t) => (t.id === id ? { ...t, ...patch } : t));
+      localStorage.setItem(KANBAN_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+
+    try {
+      const res = await fetch('/api/kanban-tasks', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...patch }),
+      });
+      if (!res.ok) throw new Error('API error updating task');
+      const payload = await res.json();
+      if (payload.ok && payload.data) {
+        setTasks((prev) => {
+          const next = prev.map((t) => (t.id === id ? payload.data : t));
+          localStorage.setItem(KANBAN_STORAGE_KEY, JSON.stringify(next));
+          return next;
+        });
+      }
+    } catch (err) {
+      console.error('Failed to update task on server:', err);
+      // Revert optimistic update
+      setTasks(() => {
+        localStorage.setItem(KANBAN_STORAGE_KEY, JSON.stringify(originalTasks));
+        return originalTasks;
+      });
+    }
   }, []);
 
-  const deleteTask = useCallback((id) => {
-    setTasks((prev) => prev.filter((t) => t.id !== id));
+  const deleteTask = useCallback(async (id) => {
+    let originalTasks = [];
+    setTasks((prev) => {
+      originalTasks = prev;
+      const next = prev.filter((t) => t.id !== id);
+      localStorage.setItem(KANBAN_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+
+    try {
+      const res = await fetch(`/api/kanban-tasks?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error('API error deleting task');
+    } catch (err) {
+      console.error('Failed to delete task on server:', err);
+      // Revert optimistic update
+      setTasks(() => {
+        localStorage.setItem(KANBAN_STORAGE_KEY, JSON.stringify(originalTasks));
+        return originalTasks;
+      });
+    }
   }, []);
 
-  const moveTask = useCallback((id, newStatus) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, status: newStatus } : t))
-    );
+  const moveTask = useCallback(async (id, newStatus) => {
+    await updateTask(id, { status: newStatus });
+  }, [updateTask]);
+
+  const resetTasks = useCallback(async () => {
+    try {
+      const res = await fetch('/api/kanban-tasks?reset=true', {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error('API error resetting tasks');
+      const payload = await res.json();
+      if (payload.ok) {
+        // Fetch fresh seeded tasks with database IDs
+        const fresh = await fetch('/api/kanban-tasks');
+        const freshPayload = await fresh.json();
+        if (freshPayload.ok && Array.isArray(freshPayload.data)) {
+          setTasks(freshPayload.data);
+          localStorage.setItem(KANBAN_STORAGE_KEY, JSON.stringify(freshPayload.data));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to reset tasks on server:', err);
+    }
   }, []);
 
-  const resetTasks = useCallback(() => {
-    setTasks(DEFAULT_KANBAN_TASKS);
-  }, []);
-
-  const clearTasks = useCallback(() => {
-    setTasks([]);
+  const clearTasks = useCallback(async () => {
+    try {
+      const res = await fetch('/api/kanban-tasks?clear=true', {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error('API error clearing tasks');
+      const payload = await res.json();
+      if (payload.ok) {
+        setTasks([]);
+        localStorage.setItem(KANBAN_STORAGE_KEY, '[]');
+      }
+    } catch (err) {
+      console.error('Failed to clear tasks on server:', err);
+    }
   }, []);
 
   return {
     tasks,
+    loading,
     addTask,
     updateTask,
     deleteTask,
