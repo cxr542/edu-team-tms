@@ -5,6 +5,7 @@ import {
   normalizeMemberJournalSlice,
 } from './journalMemberStore.js';
 import { mergeKpiApprovalSlices } from './journalKpiApprovalSlice.js';
+import { getTaskLoggedHours } from './journalMm.js';
 
 export const JOURNAL_CLOUD_SNAPSHOT_VERSION = 1;
 export const JOURNAL_MEMBER_CODES = TEAM_KPI_MEMBERS.map((m) => m.code);
@@ -164,6 +165,34 @@ function maxIso(left, right) {
   return isNewer(left, right) ? left : right;
 }
 
+/** 완료 체크된 실작업(h) 합 — 가져오기 시 빈약한(0h) 로컬 날짜가 원격 완료본을 막지 않게 한다. */
+export function dayLoggedHours(day) {
+  return (day?.tasks || []).reduce((sum, task) => sum + getTaskLoggedHours(task), 0);
+}
+
+/**
+ * 일자 맵 병합.
+ * - preferLocalOverlaps=false: 원격 일자로 덮어씀 (로컬 전용 일자는 유지)
+ * - preferLocalOverlaps=true: 기본적으로 로컬 일자 유지하되, 원격 일자의 실작업이 더 크면 원격 채택
+ */
+export function mergeDayMapsForImport(localDays, remoteDays, preferLocalOverlaps = false) {
+  const localMap = localDays && typeof localDays === 'object' ? localDays : {};
+  const remoteMap = remoteDays && typeof remoteDays === 'object' ? remoteDays : {};
+  if (!preferLocalOverlaps) {
+    return { ...localMap, ...remoteMap };
+  }
+  const merged = { ...remoteMap, ...localMap };
+  Object.keys(remoteMap).forEach((key) => {
+    const localDay = localMap[key];
+    const remoteDay = remoteMap[key];
+    if (!localDay || !remoteDay) return;
+    if (dayLoggedHours(remoteDay) > dayLoggedHours(localDay)) {
+      merged[key] = clone(remoteDay);
+    }
+  });
+  return merged;
+}
+
 /** 공유 일지 가져오기 — day/week 필드를 병합하고, 최신 로컬 slice는 겹치는 키를 보호한다. */
 export function mergeMemberJournalSlicesImport(localSlice, remoteSlice, { preferLocalOverlaps = false } = {}) {
   const local = normalizeMemberJournalSlice(localSlice);
@@ -174,7 +203,7 @@ export function mergeMemberJournalSlicesImport(localSlice, remoteSlice, { prefer
   const mergeMap = (localMap, remoteMap) =>
     preferLocalOverlaps ? { ...remoteMap, ...localMap } : { ...localMap, ...remoteMap };
   const merged = {
-    days: mergeMap(local.days, remote.days),
+    days: mergeDayMapsForImport(local.days, remote.days, preferLocalOverlaps),
     weekSummaries: mergeMap(local.weekSummaries, remote.weekSummaries),
     nextWeekPlans: mergeMap(local.nextWeekPlans, remote.nextWeekPlans),
     kpiWeekMemos: mergeMap(local.kpiWeekMemos, remote.kpiWeekMemos),

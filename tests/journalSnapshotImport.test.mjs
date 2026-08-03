@@ -182,6 +182,109 @@ describe('journal snapshot import', () => {
     expect(imported.meta.memberUpdatedAt.B).toBe('2026-06-11T12:00:00.000Z');
   });
 
+  it('replaces local plan-only days with remote completed hours even when local meta is newer', () => {
+    const local = {
+      memberJournals: {
+        A: {
+          days: {
+            '2026-07-14': {
+              holiday: false,
+              mm: { work: 0, improve: 0, leave: 0 },
+              tasks: [
+                {
+                  id: 'a-stub',
+                  cat: 'edu',
+                  title: 'CONTRABASS 소개 및 기능 교육',
+                  plan: 8,
+                  actual: 0,
+                  done: false,
+                },
+              ],
+            },
+            '2026-07-15': {
+              holiday: false,
+              mm: { work: 0, improve: 0, leave: 0 },
+              tasks: [
+                {
+                  id: 'a-stub-2',
+                  cat: 'edu',
+                  title: 'VIOLA 소개 및 기능 교육',
+                  plan: 8,
+                  actual: 0,
+                  done: false,
+                },
+              ],
+            },
+          },
+        },
+        B: { days: {} },
+        C: { days: {} },
+      },
+      meta: {
+        updatedAt: '2026-08-03T12:00:00.000Z',
+        memberUpdatedAt: { A: '2026-08-03T12:00:00.000Z' },
+      },
+    };
+
+    const remoteWithCompletedDays = {
+      version: 1,
+      publishedAt: '2026-08-03T00:19:53.834Z',
+      meta: {
+        updatedAt: '2026-08-03T00:19:53.834Z',
+        memberUpdatedAt: { A: '2026-08-03T00:19:53.834Z' },
+      },
+      memberJournals: {
+        A: {
+          days: {
+            '2026-07-14': {
+              holiday: false,
+              mm: { work: 1, improve: 0, leave: 0 },
+              tasks: [
+                {
+                  id: 'a-done',
+                  cat: 'edu',
+                  title: 'CONTRABASS 소개 및 기능 교육',
+                  plan: 8,
+                  actual: 8,
+                  done: true,
+                },
+              ],
+            },
+            '2026-07-15': {
+              holiday: false,
+              mm: { work: 1, improve: 0, leave: 0 },
+              tasks: [
+                {
+                  id: 'a-done-2',
+                  cat: 'edu',
+                  title: 'VIOLA 소개 및 기능 교육',
+                  plan: 8,
+                  actual: 6,
+                  done: true,
+                },
+                {
+                  id: 'a-done-3',
+                  cat: 'prep',
+                  title: '강의 모듈 업데이트',
+                  plan: 2,
+                  actual: 2,
+                  done: true,
+                },
+              ],
+            },
+          },
+        },
+      },
+    };
+
+    const imported = applyJournalSnapshotImport(local, remoteWithCompletedDays);
+
+    expect(imported.memberJournals.A.days['2026-07-14'].tasks[0].actual).toBe(8);
+    expect(imported.memberJournals.A.days['2026-07-14'].tasks[0].done).toBe(true);
+    expect(imported.memberJournals.A.days['2026-07-15'].tasks).toHaveLength(2);
+    expect(imported.memberJournals.A.days['2026-07-15'].tasks[0].actual).toBe(6);
+  });
+
   it('rejects malformed snapshots safely', () => {
     expect(isJournalSnapshotImportable(null)).toBe(false);
     expect(isJournalSnapshotImportable({ version: 1 })).toBe(false);

@@ -1119,7 +1119,17 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               className={`journal-task-item${editTask?.id === t.id ? ' selected' : ''}${hoursLine && !(Number(t.actual) > 0) ? ' is-planned' : ''}${slotLabel ? ` slot-${normalizeTaskSlot(t.slot)}` : ''}`}
               onClick={(e) => {
                 e.stopPropagation();
-                if (!journalReadOnly) openEdit(t.id, key);
+                openEdit(t.id, key);
+              }}
+              title={journalReadOnly ? '클릭하여 세부 내용 조회' : undefined}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  openEdit(t.id, key);
+                }
               }}
             >
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: memberCategoryView.cats[t.cat]?.color, flexShrink: 0, marginTop: 5 }} />
@@ -1521,7 +1531,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               <h2 className="journal-status-panel__title">{formatJournalDayHeading(focusDayKey)}</h2>
               <p className="journal-status-panel__meta">
                 {journalReadOnly ? (
-                  <span>관리자 조회 · 일지 본문 수정은 구성원 URL에서만 가능합니다</span>
+                  <span>
+                    관리자 조회 · 항목을 클릭하면 세부 내용을 볼 수 있습니다. 수정은 구성원 URL에서만
+                    가능합니다
+                  </span>
                 ) : focusIsToday ? (
                   <span className="journal-status-panel__today">오늘 작성 중</span>
                 ) : (
@@ -2113,7 +2126,9 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           </div>
           <div className="form-group">
             <p className="journal-field-help">
-              「{memoTask.title}」 업무 처리 중 참고할 내용, 협의 사항, 이슈, 후속 조치 등을 기록하세요.
+              {journalReadOnly
+                ? `「${memoTask.title}」 업무 메모 (조회 전용)`
+                : `「${memoTask.title}」 업무 처리 중 참고할 내용, 협의 사항, 이슈, 후속 조치 등을 기록하세요.`}
             </p>
             <textarea
               className="form-input"
@@ -2125,19 +2140,21 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               autoFocus
             />
           </div>
-          {!journalReadOnly && (
-            <div className="modal-actions">
+          <div className="modal-actions">
+            {!journalReadOnly && (
               <button type="button" className="btn btn-secondary" onClick={() => setMemoText('')}>
                 메모 삭제
               </button>
-              <button type="button" className="btn btn-secondary" onClick={closeTaskMemo}>
-                닫기
-              </button>
+            )}
+            <button type="button" className="btn btn-secondary" onClick={closeTaskMemo}>
+              닫기
+            </button>
+            {!journalReadOnly && (
               <button type="button" className="btn btn-primary" onClick={saveTaskMemo}>
                 저장
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 
@@ -2145,7 +2162,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         {editTask && (
           <form onSubmit={saveEdit} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>
-              <h3>업무 항목 편집</h3>
+              <h3>{journalReadOnly ? '업무 항목 조회' : '업무 항목 편집'}</h3>
             </div>
             <div style={{ padding: '1rem', flex: 1, overflowY: 'auto' }}>
               <div className="form-group">
@@ -2295,7 +2312,15 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               </label>
               <p className="journal-field-help">완료 체크한 업무의 실작업(h)만 M/D·가동률에 반영됩니다.</p>
             </div>
-            {!journalReadOnly && (
+            {journalReadOnly ? (
+              <div className="modal-actions journal-edit-actions">
+                <div className="journal-edit-actions-primary">
+                  <button type="button" className="btn btn-primary" onClick={closeAll}>
+                    닫기
+                  </button>
+                </div>
+              </div>
+            ) : (
               <div className="modal-actions journal-edit-actions">
                 <div className="journal-edit-actions-danger">
                   <button type="button" className="btn btn-secondary" onClick={deleteTask}>
