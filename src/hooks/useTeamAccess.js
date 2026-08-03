@@ -92,8 +92,13 @@ export function canUseCompetencyPilot(access) {
   return Boolean(access?.isAdmin || !access?.isMemberScope || access?.scopedMember === 'A');
 }
 
+export function canUseKanbanPilot(access) {
+  return Boolean(access?.isAdmin || !access?.isMemberScope || access?.scopedMember);
+}
+
 export function canAccessTeamModule(access, module) {
   if (!module) return true;
+  if (module === 'kanban' && !canUseKanbanPilot(access)) return false;
   if (isLeaderOnlyModule(module)) return Boolean(access?.isAdmin);
   if (isExperimentalModule(module)) return Boolean(access?.isAdmin);
   if (access?.isMemberScope) {

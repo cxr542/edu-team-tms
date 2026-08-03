@@ -67,7 +67,7 @@ import {
 import AppModuleLink from '../components/AppModuleLink';
 import JournalWeekColumnTextarea from '../components/JournalWeekColumnTextarea';
 import { uiTooltip } from '../utils/uiTooltip';
-import { applyLeaderJournalMemberToUrl, canEditMemberJournal, useTeamAccess } from '../hooks/useTeamAccess';
+import { applyLeaderJournalMemberToUrl, canEditMemberJournal, useTeamAccess, canUseKanbanPilot } from '../hooks/useTeamAccess';
 import { URL_ACCESS_ADMIN } from '../constants/teamAccess';
 import { JournalEditKpiPreview, TaskKpiBadge } from '../components/JournalKpiLinkagePanel';
 import JournalCategoryLegend from '../components/JournalCategoryLegend';
@@ -282,6 +282,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const [supabaseJournalSaveStatus, setSupabaseJournalSaveStatus] = useState('idle');
   const [supabaseJournalPullStatus, setSupabaseJournalPullStatus] = useState('idle');
   const [storageComparisonStatus, setStorageComparisonStatus] = useState('idle');
+  const [activeKanbanTasks, setActiveKanbanTasks] = useState([]);
   const [storageComparison, setStorageComparison] = useState(null);
 
   const memberCategoryView = useMemo(
@@ -946,7 +947,26 @@ export default function WeeklyJournalPage({ readOnly = false }) {
 
   const openAdd = (dayKey) => {
     setAddDayKey(dayKey);
-    setAddDraft(DEFAULT_ADD_DRAFT);
+    setAddDraft({ ...DEFAULT_ADD_DRAFT, kanbanTaskId: '' });
+
+    if (canUseKanbanPilot(teamAccess)) {
+      try {
+        const raw = localStorage.getItem('tms-kanban-tasks-v1');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const active = parsed.filter((t) => t.status === 'todo' || t.status === 'in_progress');
+          setActiveKanbanTasks(active);
+        } else {
+          setActiveKanbanTasks([]);
+        }
+      } catch (e) {
+        console.error('Failed to load kanban tasks for journal linkage:', e);
+        setActiveKanbanTasks([]);
+      }
+    } else {
+      setActiveKanbanTasks([]);
+    }
+
     setAddOpen(true);
   };
 
@@ -968,6 +988,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       note: '',
       mmAxis: addDraft.cat === 'ai' ? 'improve' : 'work',
       slot: resolveTaskSlotField(addDraft.slot),
+      kanbanTaskId: addDraft.kanbanTaskId || '',
     };
     const dayKey = addDayKey;
     patchDay(dayKey, (day) => {
@@ -2219,6 +2240,53 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   onChange={(title) => setEditTask({ ...editTask, title })}
                 />
               </div>
+              {canUseKanbanPilot(teamAccess) && (
+                <div className="form-group">
+                  <label>칸반 보드 업무 연동</label>
+                  <select
+                    className="form-input"
+                    value={editTask.kanbanTaskId || ''}
+                    onChange={(e) => {
+                      const taskId = e.target.value;
+                      let updatedTitle = editTask.title;
+                      try {
+                        const raw = localStorage.getItem('tms-kanban-tasks-v1');
+                        if (raw) {
+                          const selectedTask = JSON.parse(raw).find((t) => t.id === taskId);
+                          if (selectedTask) {
+                            updatedTitle = selectedTask.title;
+                          }
+                        }
+                      } catch (err) {
+                        console.error(err);
+                      }
+                      setEditTask({
+                        ...editTask,
+                        kanbanTaskId: taskId,
+                        title: updatedTitle,
+                      });
+                    }}
+                    disabled={journalReadOnly}
+                  >
+                    <option value="">-- 연동 없음 --</option>
+                    {(() => {
+                      try {
+                        const raw = localStorage.getItem('tms-kanban-tasks-v1');
+                        if (!raw) return [];
+                        return JSON.parse(raw)
+                          .filter((t) => t.status === 'todo' || t.status === 'in_progress' || t.id === editTask.kanbanTaskId)
+                          .map((t) => (
+                            <option key={t.id} value={t.id}>
+                              [{t.assignee === 'unassigned' ? '미지정' : t.assignee}] {t.title}
+                            </option>
+                          ));
+                      } catch {
+                        return [];
+                      }
+                    })()}
+                  </select>
+                </div>
+              )}
               <JournalEditKpiPreview task={editTask} dayKey={editTask.dayKey} improveProjects={journal.improveProjects} />
               <div className="form-group">
                 <label>
@@ -2367,6 +2435,37 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               ))}
             </select>
           </div>
+          {canUseKanbanPilot(teamAccess) && activeKanbanTasks.length > 0 && (
+            <div className="form-group">
+              <label>칸반 보드 업무 연동 (선택)</label>
+              <select
+                className="form-input"
+                value={addDraft.kanbanTaskId || ''}
+                onChange={(e) => {
+                  const taskId = e.target.value;
+                  const selectedTask = activeKanbanTasks.find((t) => t.id === taskId);
+                  if (selectedTask) {
+                    setAddDraft({
+                      ...addDraft,
+                      kanbanTaskId: taskId,
+                      title: selectedTask.title,
+                      cat: selectedTask.category || addDraft.cat,
+                      plan: selectedTask.planHours || addDraft.plan,
+                    });
+                  } else {
+                    setAddDraft({ ...addDraft, kanbanTaskId: '' });
+                  }
+                }}
+              >
+                <option value="">-- 연동할 칸반 카드 선택 --</option>
+                {activeKanbanTasks.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    [{t.assignee === 'unassigned' ? '미지정' : t.assignee}] {t.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="form-group">
             <label>시간대</label>
             <div className="journal-slot-options" role="group" aria-label="시간대">

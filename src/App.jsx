@@ -79,6 +79,7 @@ import TeamKpiPage from './pages/TeamKpiPage';
 import CompetencyPage from './pages/CompetencyPage';
 import KpiApprovePage from './pages/KpiApprovePage';
 import KpiReportPage from './pages/KpiReportPage';
+import KanbanPage from './pages/KanbanPage';
 import { useTeamAccess } from './hooks/useTeamAccess';
 import ReferenceDocsPage from './pages/ReferenceDocsPage';
 import AcademizerPage from './pages/AcademizerPage';
@@ -1121,7 +1122,7 @@ export default function App() {
           authorName={announcementAuthor.authorName}
         />
       ) : isKpiRelatedModule(displayModule) &&
-        (!isViewer || displayModule === 'kpi-approve' || displayModule === 'kpi-report') ? (
+        (!isViewer || displayModule === 'kpi-approve' || displayModule === 'kpi-report' || displayModule === 'kanban') ? (
         <JournalProvider
           readOnly={isViewer && displayModule !== 'kpi-approve'}
           autoSyncCloud={false}
@@ -1129,6 +1130,7 @@ export default function App() {
         >
           {displayModule === 'journal' && <WeeklyJournalPage readOnly={false} />}
           {displayModule === 'competency' && <CompetencyPage />}
+          {displayModule === 'kanban' && <KanbanPage />}
           {displayModule === 'kpi' && <TeamKpiPage />}
           {displayModule === 'kpi-approve' && (
             <KpiApprovePage readOnly={isViewer && displayModule !== 'kpi-approve'} />

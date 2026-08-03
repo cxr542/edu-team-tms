@@ -20,6 +20,7 @@ export const TEAM_COMMON_MODULES = new Set([
   'lunch',
   'csr',
   'lecture-journal',
+  'kanban',
   'docs',
 ]);
 

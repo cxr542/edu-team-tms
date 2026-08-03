@@ -42,6 +42,9 @@ export function taskFieldsFromEdit(editTask) {
     fields.improveProjectId = editTask.improveProjectId;
     fields.improveProjectTitle = String(editTask.improveProjectTitle || '').trim();
   }
+  if (editTask.kanbanTaskId) {
+    fields.kanbanTaskId = editTask.kanbanTaskId;
+  }
   return fields;
 }
 
@@ -54,6 +57,9 @@ export function mergeTaskFromEdit(existingTask, editTask) {
   if (!editTask.improveProjectId) {
     delete next.improveProjectId;
     delete next.improveProjectTitle;
+  }
+  if (!editTask.kanbanTaskId) {
+    delete next.kanbanTaskId;
   }
   return next;
 }
