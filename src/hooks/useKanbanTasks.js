@@ -52,6 +52,24 @@ export function useKanbanTasks() {
     localStorage.setItem(KANBAN_STORAGE_KEY, JSON.stringify(tasks));
   }, [tasks]);
 
+  // Synchronize state across multiple browser tabs in real-time
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === KANBAN_STORAGE_KEY) {
+        try {
+          const nextTasks = e.newValue ? JSON.parse(e.newValue) : [];
+          setTasks(nextTasks);
+        } catch {
+          // ignore parsing errors
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
   const addTask = useCallback((taskData) => {
     const newTask = {
       id: `k-${Date.now()}`,
