@@ -579,7 +579,7 @@ export default function AppShell({
                     구성원 A
                   </a>
                 )}
-                {isMemberShell && !isViewer && (
+                {isMemberShell && !isViewer && teamAccess?.scopedMember === 'A' && (
                   <a
                     className="btn btn--hub project-toolbar__scope-link"
                     href={buildAdminShortcutHref()}
