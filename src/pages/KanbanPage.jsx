@@ -169,7 +169,7 @@ export default function KanbanPage() {
     if (!canCreateTask) return;
     setActiveTask(null);
     setModalTitle('');
-    setModalAssignee(isPilotUser ? 'A' : 'unassigned');
+    setModalAssignee(isPilotUser ? scopedMember : 'unassigned');
     setModalCategory('other');
     setModalPlanHours('0');
     setModalNotes('');
@@ -312,7 +312,7 @@ export default function KanbanPage() {
             </div>
           )}
           <span className="kanban-badge-role">
-            {hasFullControl ? '관리자 모드' : isPilotUser ? '구성원 A 모드 (본인 카드 이동/편집 가능)' : '조회 모드'}
+            {hasFullControl ? '관리자 모드' : isPilotUser ? `구성원 ${scopedMember} 모드 (본인 카드 이동/편집 가능)` : '조회 모드'}
           </span>
         </div>
       </header>
