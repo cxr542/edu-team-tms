@@ -209,14 +209,18 @@ export async function upsertAnnouncementToSupabase(announcement) {
 }
 
 export async function listAnnouncementsFromSupabase({ includeUnpublished = false } = {}) {
-  if (!isConfigured()) return supabaseDisabledResult();
-
   if (includeUnpublished) {
     return callAnnouncementsApi('/api/announcements?includeUnpublished=true');
   }
 
+  if (!isConfigured()) {
+    return callAnnouncementsApi('/api/announcements');
+  }
+
   const client = getSupabaseClient();
-  if (!client) return supabaseDisabledResult();
+  if (!client) {
+    return callAnnouncementsApi('/api/announcements');
+  }
 
   try {
     let query = client
