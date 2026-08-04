@@ -7,6 +7,7 @@ import { useKanbanTasks } from '../hooks/useKanbanTasks';
 import { useJournal } from '../context/JournalProvider';
 import { useTeamAccess } from '../hooks/useTeamAccess';
 import { navigateAppModule } from '../hooks/useAppModule';
+import { resolveMemberCategories } from '../utils/journalMemberPrefs';
 import './KanbanPage.css';
 
 const CATEGORIES = {
@@ -45,6 +46,13 @@ export default function KanbanPage() {
     }
     return false;
   };
+
+  const getMemberCategoryLabel = useCallback((categoryKey, memberCode) => {
+    const targetCode = memberCode && memberCode !== 'unassigned' ? memberCode : (scopedMember || 'A');
+    const prefs = memberJournals?.[targetCode]?.prefs;
+    const catView = resolveMemberCategories(prefs);
+    return catView.cats[categoryKey]?.label || CATEGORIES[categoryKey]?.label || categoryKey;
+  }, [memberJournals, scopedMember]);
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -394,7 +402,7 @@ export default function KanbanPage() {
                             className="kanban-card__tag" 
                             style={{ color: catInfo.color, backgroundColor: catInfo.bg }}
                           >
-                            {catInfo.label}
+                            {getMemberCategoryLabel(task.category, task.assignee)}
                           </span>
                           <span className="kanban-card__assignee">
                             <User size={12} /> {MEMBERS[task.assignee] ? task.assignee : '미지정'}
@@ -519,10 +527,10 @@ export default function KanbanPage() {
                   disabled={!isModalEditable}
                   onChange={(e) => setModalCategory(e.target.value)}
                 >
-                  <option value="edu">교육</option>
-                  <option value="prep">교육 준비</option>
-                  <option value="ai">AI</option>
-                  <option value="other">기타</option>
+                  <option value="edu">{getMemberCategoryLabel('edu', modalAssignee)}</option>
+                  <option value="prep">{getMemberCategoryLabel('prep', modalAssignee)}</option>
+                  <option value="ai">{getMemberCategoryLabel('ai', modalAssignee)}</option>
+                  <option value="other">{getMemberCategoryLabel('other', modalAssignee)}</option>
                 </select>
               </div>
             </div>
