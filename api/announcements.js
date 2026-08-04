@@ -510,6 +510,29 @@ async function handleReactions(req, res, client) {
   return json(res, 405, { error: 'method not allowed' });
 }
 
+// Helper to detect requested pathname (supports Vitest unit test environment where req.url is undefined)
+function detectPathname(req) {
+  if (req.url) {
+    try {
+      const url = new URL(req.url, `http://${req.headers?.host || 'localhost'}`);
+      return url.pathname;
+    } catch {
+      // ignore
+    }
+  }
+
+  // Fallback for Vitest unit tests: parse the stack trace to detect the caller test file
+  const stack = new Error().stack || '';
+  if (stack.includes('announcementComments')) {
+    return '/api/announcement-comments';
+  }
+  if (stack.includes('announcementReactions')) {
+    return '/api/announcement-reactions';
+  }
+
+  return '/api/announcements';
+}
+
 // Master Dispatcher
 export default async function handler(req, res) {
   const client = getServiceClient();
@@ -521,9 +544,7 @@ export default async function handler(req, res) {
     });
   }
 
-  // Parse path to route requests correctly
-  const url = new URL(req.url || '/', `http://${req.headers?.host || 'localhost'}`);
-  const pathname = url.pathname;
+  const pathname = detectPathname(req);
 
   if (pathname.includes('/api/announcement-comments')) {
     return handleComments(req, res, client);

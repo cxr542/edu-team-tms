@@ -23,7 +23,7 @@ function createRes() {
 }
 
 async function loadHandler() {
-  const mod = await import('../api/announcement-reactions.js');
+  const mod = await import('../api/announcements.js');
   return mod.default;
 }
 
