@@ -838,9 +838,39 @@ export default function TeamKpiPage() {
                       {p.sourceLabel && p.source !== 'manual' ? ` · ${p.sourceLabel}` : ''}
                     </span>
                   </div>
-                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => improveProjectsApi.removeProject(p.id)}>
-                    삭제
-                  </button>
+                  <div className="team-kpi-project-row__actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <select
+                      className="form-input"
+                      style={{ width: '120px', padding: '0.25rem 0.5rem', height: 'auto', fontSize: '0.82rem' }}
+                      value={p.ownerMemberId || ''}
+                      aria-label={`${p.name} 담당자 변경`}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '') {
+                          improveProjectsApi.updateProject(p.id, {
+                            ownerMemberId: undefined,
+                            ownerName: undefined,
+                          });
+                          showToast('공통 과제로 변경했습니다');
+                        } else {
+                          const m = findKpiMember(val);
+                          improveProjectsApi.updateProject(p.id, {
+                            ownerMemberId: val,
+                            ownerName: m ? m.displayName : val,
+                          });
+                          showToast(`${val} 담당 과제로 변경했습니다`);
+                        }
+                      }}
+                    >
+                      <option value="">팀 공통</option>
+                      <option value="A">김윤형 (A)</option>
+                      <option value="B">최우성 (B)</option>
+                      <option value="C">신혜윤 (C)</option>
+                    </select>
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => improveProjectsApi.removeProject(p.id)}>
+                      삭제
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>

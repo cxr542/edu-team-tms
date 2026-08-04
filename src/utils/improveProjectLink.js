@@ -85,21 +85,23 @@ export function isMemberJournalImproveProject(project, memberCode) {
   );
 }
 
-/** 구성원 일지 패널 · 팀 공유 가져오기 — 위 조건과 동일 */
+/** 구성원 일지 패널 · 팀 공유 가져오기 — 본인 담당 과제 및 팀 공통 과제 포함 */
 export function filterImproveProjectsOwnedByMember(projects = [], memberCode) {
   if (!memberCode) return [];
-  return projects.filter((p) => isMemberJournalImproveProject(p, memberCode));
+  return projects.filter(
+    (p) => isMemberJournalImproveProject(p, memberCode) || isSharedImproveProject(p)
+  );
 }
 
 export function formatImproveProjectOwnerLine(project, formatMemberCode = (code) => code) {
   if (!project) return '';
   if (isSharedImproveProject(project)) {
-    return project.sourceLabel || '공통/수동 등록';
+    return '팀 공통';
   }
   const code = project.ownerMemberId;
   const name = project.ownerName;
   const label = formatMemberCode(code);
-  return name ? `담당/출처: ${label}(${name})` : `담당/출처: ${label}`;
+  return name ? `담당: ${label}(${name})` : `담당: ${label}`;
 }
 
 export function formatCandidateMemberSummary(sources = [], formatMemberCode = (code) => code) {
@@ -127,9 +129,9 @@ export function describeImproveProjectsShareImport(
   if (total === 0) return '팀 공유본이 비어 있습니다';
   if (ownedOnly) {
     if (visible.length === 0) {
-      return `팀 공유 ${total}건 병합 · 본인 담당 과제 없음`;
+      return `팀 공유 ${total}건 병합 · 본인 및 공통 과제 없음`;
     }
-    return `팀 공유 ${total}건 병합 · 본인 담당 ${visible.length}건`;
+    return `팀 공유 ${total}건 병합 · 본인 및 공통 ${visible.length}건`;
   }
   if (visible.length >= total) {
     return `팀 공유 향상 과제 ${total}건을 반영했습니다`;

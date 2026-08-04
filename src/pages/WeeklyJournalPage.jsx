@@ -2730,10 +2730,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               memberCode: pullCode,
             });
             if (r.ok) {
-              showToast(`본인 향상 과제 ${r.importedCount}건을 반영했습니다`);
+              showToast(`향상 과제(본인 및 공통) ${r.importedCount}건을 반영했습니다`);
             } else if (r.reason === 'no-member-projects') {
               showToast(
-                '팀 공유본에 본인 담당 과제가 없습니다. 팀장 운영 목록 등록·공유 저장을 확인하세요.'
+                '팀 공유본에 가져올 과제(본인 담당 또는 팀 공통)가 없습니다. 팀장 운영 목록 등록·공유 저장을 확인하세요.'
               );
             } else if (r.reason === 'no-remote') showToast('팀 공유본이 아직 없습니다');
             else showToast(r.message || '팀 공유본을 가져오지 못했습니다');

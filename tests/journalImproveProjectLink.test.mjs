@@ -61,9 +61,13 @@ describe('improve project link utilities', () => {
 
   it('filters owned journal-candidate projects for member panel and share pull', () => {
     expect(filterImproveProjectsOwnedByMember(IMPROVE_PROJECTS, 'B').map((p) => p.id)).toEqual([
+      'ppt-academizer',
       'team-kpi',
     ]);
-    expect(filterImproveProjectsOwnedByMember(IMPROVE_PROJECTS, 'C').map((p) => p.id)).toEqual(['tune']);
+    expect(filterImproveProjectsOwnedByMember(IMPROVE_PROJECTS, 'C').map((p) => p.id)).toEqual([
+      'ppt-academizer',
+      'tune',
+    ]);
     const manualOwned = [
       {
         id: 'x',
@@ -72,17 +76,17 @@ describe('improve project link utilities', () => {
         source: IMPROVE_PROJECT_SOURCE.MANUAL,
       },
     ];
-    expect(filterImproveProjectsOwnedByMember(manualOwned, 'B')).toHaveLength(0);
+    expect(filterImproveProjectsOwnedByMember(manualOwned, 'B')).toHaveLength(1);
   });
 
   it('describes share import toast with member filter', () => {
     expect(describeImproveProjectsShareImport(IMPROVE_PROJECTS, 'B')).toMatch(/연결 가능 2건/);
     expect(describeImproveProjectsShareImport(IMPROVE_PROJECTS, 'B')).toMatch(/담당 타인 전용 1건/);
     expect(describeImproveProjectsShareImport(IMPROVE_PROJECTS, 'B', { ownedOnly: true })).toBe(
-      '팀 공유 3건 병합 · 본인 담당 1건'
+      '팀 공유 3건 병합 · 본인 및 공통 2건'
     );
     expect(describeImproveProjectsShareImport(IMPROVE_PROJECTS, 'A', { ownedOnly: true })).toBe(
-      '팀 공유 3건 병합 · 본인 담당 과제 없음'
+      '팀 공유 3건 병합 · 본인 및 공통 1건'
     );
   });
 
@@ -104,11 +108,11 @@ describe('improve project link utilities', () => {
 
   it('formats owner line for dedicated and shared projects', () => {
     expect(formatImproveProjectOwnerLine(IMPROVE_PROJECTS[1], (c) => c)).toBe(
-      '담당/출처: B(최우성)'
+      '담당: B(최우성)'
     );
-    expect(formatImproveProjectOwnerLine(IMPROVE_PROJECTS[0])).toBe('공통/수동 등록');
+    expect(formatImproveProjectOwnerLine(IMPROVE_PROJECTS[0])).toBe('팀 공통');
     expect(formatImproveProjectOwnerLine(buildManualImproveProjectRegistration('x'))).toBe(
-      '공통/수동 등록'
+      '팀 공통'
     );
   });
 
