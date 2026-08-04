@@ -96,6 +96,9 @@ export function validateImproveProjectsPayload(projects) {
   if (!Array.isArray(projects)) {
     return { ok: false, error: 'projects 배열이 필요합니다.' };
   }
+  if (projects.length === 0) {
+    return { ok: false, error: '향상 과제 운영 목록이 비어 있습니다.' };
+  }
   const normalized = projects.map(normalizeImproveProjectEntry).filter(Boolean);
   if (projects.length > 0 && normalized.length === 0) {
     return { ok: false, error: '유효한 향상 과제 항목이 없습니다.' };
