@@ -4,8 +4,7 @@ import path from 'node:path';
 import kakaoHandler from '../api/kakao-local.js';
 import confluenceLectureHandler from '../api/confluence-lecture.js';
 import academizerHandler from '../api/academizer.js';
-import announcementReactionsHandler from '../api/announcement-reactions.js';
-import announcementCommentsHandler from '../api/announcement-comments.js';
+import announcementsHandler from '../api/announcements.js';
 
 const thisDir = path.dirname(fileURLToPath(import.meta.url));
 // scripts/ 아래이므로 부모 폴더가 TMS 앱 루트입니다.
@@ -146,8 +145,8 @@ export function announcementEngagementApiDevPlugin() {
       server.middlewares.use(async (req, res, next) => {
         const path = (req.url || '').split('?')[0];
         let handler = null;
-        if (path === '/api/announcement-reactions') handler = announcementReactionsHandler;
-        else if (path === '/api/announcement-comments') handler = announcementCommentsHandler;
+        if (path === '/api/announcement-reactions') handler = announcementsHandler;
+        else if (path === '/api/announcement-comments') handler = announcementsHandler;
         else {
           next();
           return;

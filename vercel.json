@@ -18,6 +18,14 @@
   ],
   "rewrites": [
     {
+      "source": "/api/announcement-comments",
+      "destination": "/api/announcements"
+    },
+    {
+      "source": "/api/announcement-reactions",
+      "destination": "/api/announcements"
+    },
+    {
       "source": "/((?!api/|assets/|ledger-snapshot\\.json|journal-snapshot\\.json|favicon\\.svg|manifest\\.webmanifest|apple-touch-icon\\.svg|icon-512\\.svg|okestro-logo-white\\.png).*)",
       "destination": "/index.html"
     }
