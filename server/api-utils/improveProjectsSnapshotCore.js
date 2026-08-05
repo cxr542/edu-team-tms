@@ -127,12 +127,18 @@ export function mergeImproveProjects(localProjects = [], remoteProjects = []) {
     const key = improveProjectStableKey(remote);
     const existing = map.get(key);
     if (existing) {
-      map.set(key, {
+      const merged = {
         ...existing,
         ...remote,
         id: existing.id || remote.id,
         code: remote.code || existing.code,
+      };
+      OPTIONAL_PROJECT_FIELDS.forEach((field) => {
+        if (remote[field] === undefined) {
+          delete merged[field];
+        }
       });
+      map.set(key, merged);
     } else {
       map.set(key, remote);
     }

@@ -66,6 +66,19 @@ describe('improveProjectsCloudSnapshot utilities', () => {
     expect(merged).toHaveLength(3);
   });
 
+  it('clears local optional fields if they are absent in the remote update', () => {
+    const local = [
+      { id: 'shared', name: '공통전환', code: 'shared', ownerMemberId: 'B', ownerName: '최우성' },
+    ];
+    const remote = [
+      { id: 'shared', name: '공통전환', code: 'shared' },
+    ];
+    const merged = mergeImproveProjects(local, remote);
+    const item = merged.find((p) => p.id === 'shared');
+    expect(item.ownerMemberId).toBeUndefined();
+    expect(item.ownerName).toBeUndefined();
+  });
+
   it('uses live-latest path constant only', () => {
     expect(IMPROVE_PROJECTS_LIVE_PATH).toBe('improve-projects/live-latest.json');
     expect(IMPROVE_PROJECTS_LIVE_PATH).not.toMatch(/live-\d/);
