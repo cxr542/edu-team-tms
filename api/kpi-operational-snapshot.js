@@ -132,6 +132,11 @@ export default async function handler(req, res) {
         return json(res, 503, {
           error: 'blob-read-unavailable',
           message: e.message,
+          cause: e.cause ? {
+            message: e.cause.message,
+            code: e.cause.code,
+            status: e.cause.status || e.cause.statusCode,
+          } : null,
         });
       }
       return json(res, 500, { error: e.message || String(e) });
@@ -201,6 +206,11 @@ export default async function handler(req, res) {
         return json(res, 503, {
           error: 'blob-read-unavailable',
           message: e.message,
+          cause: e.cause ? {
+            message: e.cause.message,
+            code: e.cause.code,
+            status: e.cause.status || e.cause.statusCode,
+          } : null,
         });
       }
       return json(res, 500, { error: msg });
