@@ -43,6 +43,7 @@ import {
   isCompetencyMonthRecordSaveable,
   isValidCompetencyMemberCode,
   mergeApprovedCompetencyMonthsIntoKpiStore,
+  mergeCompetencyMonthsIntoKpiStore,
 } from '../utils/kpiOperationalCloudSnapshot';
 import {
   mirrorKpi2RowApprovalToSupabase,
@@ -662,10 +663,12 @@ export function useKpiOperational({ readOnly = false } = {}) {
     (year, monthIndex, memberCode) => {
       if (readOnly) return;
       const ym = monthKey(year, monthIndex);
+      console.log(`[TMS Debug] pullCompetencyManagerFromSelf start for ${ym} ${memberCode}`);
       setStore((prev) => {
         let next = ensureCompetencyMonthMember(prev, ym, memberCode);
         const rec = next.competencyMonths[ym][memberCode];
         const roleId = rec.roleId;
+        console.log(`[TMS Debug] Current local rec:`, JSON.stringify(rec, null, 2));
         const manager = {
           intLevel: rec.self.intLevel,
           dims: { ...rec.self.dims },
@@ -678,6 +681,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
           manager: normalizeCompetencyEvalSide(manager, roleId),
           updatedAt: new Date().toISOString(),
         };
+        console.log(`[TMS Debug] Updated rec with manager:`, JSON.stringify(updated, null, 2));
         next = {
           ...next,
           competencyMonths: {
@@ -946,13 +950,15 @@ export function useKpiOperational({ readOnly = false } = {}) {
     if (readOnly) return { ok: false, reason: 'read-only' };
     try {
       const remote = await fetchCompetencyCloudSnapshot();
+      console.log(`[TMS Debug] pullCompetencyCloudSnapshot remote:`, JSON.stringify(remote, null, 2));
       let mergedStore = null;
       setStore((prev) => {
-        mergedStore = mergeApprovedCompetencyMonthsIntoKpiStore(prev, remote);
+        mergedStore = mergeCompetencyMonthsIntoKpiStore(prev, remote);
         return persist(mergedStore);
       });
       return { ok: true, remote, store: mergedStore };
     } catch (e) {
+      console.error(`[TMS Debug] pullCompetencyCloudSnapshot error:`, e);
       return { ok: false, reason: 'error', error: e };
     }
   }, [readOnly, persist]);
@@ -989,7 +995,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
         }
         let mergedStore = null;
         setStore((prev) => {
-          mergedStore = mergeApprovedCompetencyMonthsIntoKpiStore(prev, body.snapshot || body);
+          mergedStore = mergeCompetencyMonthsIntoKpiStore(prev, body.snapshot || body);
           return persist(mergedStore);
         });
         return { ok: true, remote: body.snapshot, store: mergedStore };
