@@ -61,7 +61,7 @@ function isNotFoundError(e) {
     code === 'blob_not_found' ||
     code === 'not_found' ||
     code === 'notfound' ||
-    /not[ _]?found|404/i.test(msg)
+    /not[ _]?found|does not exist|404/i.test(msg)
   );
 }
 
