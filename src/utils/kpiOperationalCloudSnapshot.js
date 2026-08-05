@@ -154,7 +154,11 @@ function pickSide({
     };
   }
 
-  if (localRec[lockKey]) {
+  const localLocked = Boolean(localRec[lockKey]);
+  const remoteLocked = Boolean(remoteRec[lockKey]);
+
+  // Rule 1: Local is locked, remote is not -> Local wins
+  if (localLocked && !remoteLocked) {
     return {
       side: localRec[sideKey],
       locked: true,
@@ -162,20 +166,30 @@ function pickSide({
     };
   }
 
+  // Rule 2: Remote is locked, local is not -> Remote wins
+  if (remoteLocked && !localLocked) {
+    return {
+      side: remoteRec[sideKey],
+      locked: true,
+      updatedAt: remoteRec[timestampKey] ?? remoteRec.updatedAt ?? null,
+    };
+  }
+
+  // Rule 3: Both have the same lock state -> newer timestamp wins
   const localAt = localRec[timestampKey] ?? localRec.updatedAt ?? null;
   const remoteAt = remoteRec[timestampKey] ?? remoteRec.updatedAt ?? null;
 
   if (isNewer(remoteAt, localAt)) {
     return {
       side: remoteRec[sideKey],
-      locked: Boolean(remoteRec[lockKey]),
+      locked: remoteLocked,
       updatedAt: remoteAt,
     };
   }
 
   return {
     side: localRec[sideKey],
-    locked: Boolean(localRec[lockKey]),
+    locked: localLocked,
     updatedAt: localAt,
   };
 }
