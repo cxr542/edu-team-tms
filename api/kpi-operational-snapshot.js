@@ -56,13 +56,18 @@ function isNotFoundError(e) {
   const status = Number(e?.status || e?.statusCode);
   const code = String(e?.code || '').toLowerCase();
   const msg = String(e?.message || e || '').toLowerCase();
-  return (
+  const matched = (
     status === 404 ||
     code === 'blob_not_found' ||
     code === 'not_found' ||
     code === 'notfound' ||
     /not[ _]?found|does not exist|404/i.test(msg)
   );
+  if (e && typeof e === 'object') {
+    e._debugMatched = matched;
+    e._debugDetails = { status, code, msg, regexTest: /not[ _]?found|does not exist|404/i.test(msg) };
+  }
+  return matched;
 }
 
 async function readLiveLatestBlob() {
@@ -136,6 +141,8 @@ export default async function handler(req, res) {
             message: e.cause.message,
             code: e.cause.code,
             status: e.cause.status || e.cause.statusCode,
+            _debugMatched: e.cause._debugMatched,
+            _debugDetails: e.cause._debugDetails,
           } : null,
         });
       }
@@ -210,6 +217,8 @@ export default async function handler(req, res) {
             message: e.cause.message,
             code: e.cause.code,
             status: e.cause.status || e.cause.statusCode,
+            _debugMatched: e.cause._debugMatched,
+            _debugDetails: e.cause._debugDetails,
           } : null,
         });
       }
