@@ -32,8 +32,6 @@ export default function Kpi3LeaderWorkPanel({
   const readOnly = journal.kpiOperationalReadOnly;
   const memberRole = findKpiMember(memberCode)?.role;
 
-  console.log('[TMS Debug] Kpi3LeaderWorkPanel render record:', JSON.stringify(competencyRec, null, 2));
-
   return (
     <div className="kpi3-leader-work">
       <p className="team-kpi-hint" style={{ marginTop: 0 }}>
