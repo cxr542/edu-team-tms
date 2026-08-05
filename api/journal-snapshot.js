@@ -61,7 +61,15 @@ async function fetchBlobJson(url) {
 
 function isNotFoundError(e) {
   const status = Number(e?.status || e?.statusCode);
-  return status === 404 || e?.code === 'BLOB_NOT_FOUND' || /not found|404/i.test(String(e?.message || e));
+  const code = String(e?.code || '').toLowerCase();
+  const msg = String(e?.message || e || '').toLowerCase();
+  return (
+    status === 404 ||
+    code === 'blob_not_found' ||
+    code === 'not_found' ||
+    code === 'notfound' ||
+    /not[ _]?found|404/i.test(msg)
+  );
 }
 
 async function readLiveLatestBlob() {
