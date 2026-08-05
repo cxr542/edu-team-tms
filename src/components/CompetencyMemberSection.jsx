@@ -215,18 +215,40 @@ export default function CompetencyMemberSection({
               readOnly={readOnly}
               memberView
               onUpdate={(patch) => journal.updateCompetencySelf(year, selectedMonthIndex, memberCode, patch)}
-              onLock={() => {
+              onLock={async () => {
                 const r = journal.lockCompetencyMonth(year, selectedMonthIndex, memberCode, { side: 'self' });
                 if (r.ok) {
                   onToast?.(`${member.displayName} · ${year}-${String(selectedMonthIndex + 1).padStart(2, '0')} 레벨 자체평가 제출`);
+                  const ymStr = `${year}-${String(selectedMonthIndex + 1).padStart(2, '0')}`;
+                  const uploadResult = await journal.saveCompetencyMemberCloudSnapshot?.(memberCode, ymStr);
+                  if (uploadResult && !uploadResult.ok) {
+                    if (uploadResult.reason === 'dev-blocked') {
+                      onToast?.('제출 완료 (개발 환경으로 클라우드 저장은 생략되었습니다)');
+                    } else {
+                      onToast?.(`클라우드 저장 실패: ${uploadResult.error?.message || uploadResult.reason}`);
+                    }
+                  } else if (uploadResult?.ok) {
+                    onToast?.('제출 및 클라우드 동기화 완료');
+                  }
                 } else if (r.reason === 'invalid-int-level') {
                   onToast?.('정수 레벨을 1~5 중에서 선택해 주세요');
                 }
               }}
-              onUnlockSelf={() => {
+              onUnlockSelf={async () => {
                 const r = journal.unlockCompetencyMonthSelf?.(year, selectedMonthIndex, memberCode);
                 if (r?.ok) {
                   onToast?.(`${member.displayName} · ${year}-${String(selectedMonthIndex + 1).padStart(2, '0')} 제출 취소`);
+                  const ymStr = `${year}-${String(selectedMonthIndex + 1).padStart(2, '0')}`;
+                  const uploadResult = await journal.saveCompetencyMemberCloudSnapshot?.(memberCode, ymStr);
+                  if (uploadResult && !uploadResult.ok) {
+                    if (uploadResult.reason === 'dev-blocked') {
+                      onToast?.('제출 취소 완료 (개발 환경으로 클라우드 저장은 생략되었습니다)');
+                    } else {
+                      onToast?.(`클라우드 저장 실패: ${uploadResult.error?.message || uploadResult.reason}`);
+                    }
+                  } else if (uploadResult?.ok) {
+                    onToast?.('제출 취소 및 클라우드 동기화 완료');
+                  }
                 } else if (r?.reason === 'manager-locked') {
                   onToast?.('팀장 검토가 완료되어 수정할 수 없습니다');
                 } else if (r?.reason === 'read-only') {

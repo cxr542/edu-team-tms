@@ -61,13 +61,37 @@ export default function Kpi3LeaderWorkPanel({
             readOnly={readOnly || !canEdit}
             showPullButton
             onUpdate={(patch) => journal.updateCompetencyManager(year, month, memberCode, patch)}
-            onPullFromSelf={() => {
-              journal.pullCompetencyManagerFromSelf(year, month, memberCode);
-              onToast?.('자체평가에서 가져옴');
+            onPullFromSelf={async () => {
+              onToast?.('최신 클라우드 자체평가 조회 중…');
+              const pullResult = await journal.pullCompetencyCloudSnapshot?.();
+              if (pullResult && pullResult.ok) {
+                journal.pullCompetencyManagerFromSelf(year, month, memberCode);
+                onToast?.('최신 자체평가를 가져와 반영했습니다');
+              } else {
+                journal.pullCompetencyManagerFromSelf(year, month, memberCode);
+                onToast?.('로컬 기준 자체평가에서 가져왔습니다');
+              }
             }}
-            onLock={() => {
-              journal.lockCompetencyMonth(year, month, memberCode, { side: 'manager' });
-              onToast?.('팀장 평가 확정');
+            onLock={async () => {
+              const r = journal.lockCompetencyMonth(year, month, memberCode, { side: 'manager' });
+              if (r.ok) {
+                onToast?.('팀장 평가 확정 처리 중…');
+                const ymStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+                const uploadResult = await journal.saveCompetencyMemberCloudSnapshot?.(memberCode, ymStr);
+                if (uploadResult && !uploadResult.ok) {
+                  if (uploadResult.reason === 'dev-blocked') {
+                    onToast?.('팀장 평가 확정 완료 (개발 환경으로 클라우드 저장은 생략되었습니다)');
+                  } else {
+                    onToast?.(`클라우드 저장 실패: ${uploadResult.error?.message || uploadResult.reason}`);
+                  }
+                } else if (uploadResult?.ok) {
+                  onToast?.('팀장 평가 확정 및 클라우드 동기화 완료');
+                } else {
+                  onToast?.('팀장 평가 확정 완료');
+                }
+              } else {
+                onToast?.('확정 실패: 자체평가가 아직 제출되지 않았거나 오류가 발생했습니다.');
+              }
             }}
           />
         </>
