@@ -13,6 +13,7 @@ import {
   normalizeCompetencyIntLevel,
   proposedComposite,
   quarterAverageLevel,
+  mergeCompetencyEvalSidePatch,
 } from '../src/utils/competencyScore.js';
 import {
   ACCUMULATION_ORDER_BY_ROLE,
@@ -358,5 +359,37 @@ describe('competencyScore', () => {
     const mgrSide = normalizeCompetencyEvalSide({ intLevel: 2, dims: d }, 'default');
     expect(selfSide.computed).toEqual(mgrSide.computed);
     expect(selfSide.computed.fractional).toBe(0.6);
+  });
+
+  it('mergeCompetencyEvalSidePatch — merges evidence, dimEvidences and dimLinks', () => {
+    const existing = {
+      intLevel: 2,
+      dims: { autonomy: 'met', scope: 'unmet' },
+      evidence: '기존 전체 근거',
+      dimEvidences: { autonomy: '자율성 근거' },
+      dimLinks: { autonomy: 'https://example.com/autonomy' },
+    };
+
+    const patch = {
+      evidence: '수정된 전체 근거',
+      dimEvidences: { scope: '범위 근거' },
+      dimLinks: { scope: 'https://example.com/scope' },
+    };
+
+    const merged = mergeCompetencyEvalSidePatch(existing, patch, 'default');
+    expect(merged.evidence).toBe('수정된 전체 근거');
+    expect(merged.dimEvidences).toEqual({
+      autonomy: '자율성 근거',
+      scope: '범위 근거',
+    });
+    expect(merged.dimLinks).toEqual({
+      autonomy: 'https://example.com/autonomy',
+      scope: 'https://example.com/scope',
+    });
+
+    const normalized = normalizeCompetencyEvalSide(merged, 'default');
+    expect(normalized.evidence).toBe('수정된 전체 근거');
+    expect(normalized.dimEvidences.autonomy).toBe('자율성 근거');
+    expect(normalized.dimLinks.scope).toBe('https://example.com/scope');
   });
 });

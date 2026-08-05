@@ -427,4 +427,33 @@ describe('kpiOperationalCloudSnapshot', () => {
     expect(merged.kpiWeekMemos['2026-W24']).toBe('memo');
     expect(merged.kpi2RowStatus['2026-06-01|t1']).toBe('approved');
   });
+
+  it('normalizeCompetencyMonthRecord — preserves evidence, dimEvidences, and dimLinks in self/manager', () => {
+    const raw = {
+      roleId: 'default',
+      self: {
+        intLevel: 3,
+        dims: { autonomy: 'met' },
+        evidence: '스냅샷 자체 근거',
+        dimEvidences: { autonomy: '자율성 상세 근거' },
+        dimLinks: { autonomy: 'https://example.com/snapshot-autonomy' },
+      },
+      manager: {
+        intLevel: 3,
+        dims: { autonomy: 'met' },
+        evidence: '스냅샷 평가자 근거',
+        dimEvidences: { autonomy: '자율성 매니저 근거' },
+        dimLinks: { autonomy: 'https://example.com/snapshot-mgr-autonomy' },
+      },
+    };
+
+    const record = normalizeCompetencyMonthRecord(raw, 'B');
+    expect(record.self.evidence).toBe('스냅샷 자체 근거');
+    expect(record.self.dimEvidences.autonomy).toBe('자율성 상세 근거');
+    expect(record.self.dimLinks.autonomy).toBe('https://example.com/snapshot-autonomy');
+
+    expect(record.manager.evidence).toBe('스냅샷 평가자 근거');
+    expect(record.manager.dimEvidences.autonomy).toBe('자율성 매니저 근거');
+    expect(record.manager.dimLinks.autonomy).toBe('https://example.com/snapshot-mgr-autonomy');
+  });
 });

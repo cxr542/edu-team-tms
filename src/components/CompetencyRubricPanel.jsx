@@ -214,29 +214,85 @@ export default function CompetencyRubricPanel({
               <th>정수레벨 {liveEvalSide.intLevel} 관찰 문구</th>
             ) : null}
             <th>충족 여부</th>
+            <th>차원별 근거</th>
+            <th>첨부 링크</th>
           </tr>
         </thead>
         <tbody>
-          {displayDims.map((dim) => (
-            <tr key={dim.id}>
-              <td>
-                {dim.label}
-                <span className="visually-hidden"> ({dim.id})</span>
-              </td>
-              {hasValidIntLevel ? (
-                <td className="competency-dim-observe">
-                  {rubricObserveText(roleId, dim.id, liveEvalSide.intLevel)}
+          {displayDims.map((dim) => {
+            const linkUrl = (liveEvalSide?.dimLinks?.[dim.id] || '').trim();
+            const hrefUrl = linkUrl && !/^https?:\/\//i.test(linkUrl) ? `https://${linkUrl}` : linkUrl;
+
+            return (
+              <tr key={dim.id}>
+                <td>
+                  {dim.label}
+                  <span className="visually-hidden"> ({dim.id})</span>
                 </td>
-              ) : null}
-              <td>
-                <DimSelect
-                  value={liveEvalSide?.dims?.[dim.id]}
-                  disabled={readOnly || locked}
-                  onChange={(v) => handleDim(dim.id, v)}
-                />
-              </td>
-            </tr>
-          ))}
+                {hasValidIntLevel ? (
+                  <td className="competency-dim-observe">
+                    {rubricObserveText(roleId, dim.id, liveEvalSide.intLevel)}
+                  </td>
+                ) : null}
+                <td>
+                  <DimSelect
+                    value={liveEvalSide?.dims?.[dim.id]}
+                    disabled={readOnly || locked}
+                    onChange={(v) => handleDim(dim.id, v)}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    className="form-input competency-dim-evidence-input"
+                    value={liveEvalSide?.dimEvidences?.[dim.id] || ''}
+                    disabled={readOnly || locked}
+                    placeholder={readOnly || locked ? '' : '달성 근거 입력'}
+                    onChange={(e) => {
+                      const currentEvidences = liveEvalSide?.dimEvidences || {};
+                      onUpdate({
+                        dimEvidences: {
+                          ...currentEvidences,
+                          [dim.id]: e.target.value,
+                        },
+                      });
+                    }}
+                  />
+                </td>
+                <td>
+                  <div className="competency-dim-link-wrapper">
+                    <input
+                      type="text"
+                      className="form-input competency-dim-link-input"
+                      value={liveEvalSide?.dimLinks?.[dim.id] || ''}
+                      disabled={readOnly || locked}
+                      placeholder={readOnly || locked ? '' : 'https://...'}
+                      onChange={(e) => {
+                        const currentLinks = liveEvalSide?.dimLinks || {};
+                        onUpdate({
+                          dimLinks: {
+                            ...currentLinks,
+                            [dim.id]: e.target.value,
+                          },
+                        });
+                      }}
+                    />
+                    {linkUrl ? (
+                      <a
+                        href={hrefUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="competency-dim-link-anchor"
+                        title="링크 열기"
+                      >
+                        🔗
+                      </a>
+                    ) : null}
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 

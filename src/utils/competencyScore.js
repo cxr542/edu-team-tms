@@ -171,6 +171,14 @@ export function mergeCompetencyEvalSidePatch(existingSide, patch = {}, roleId = 
     intLevel: normalizeCompetencyIntLevel(rawIntLevel),
     dims: normalizeDimsChain(mergedDims, roleId),
     evidence: patch.evidence ?? existingSide?.evidence ?? '',
+    dimEvidences: {
+      ...(existingSide?.dimEvidences || {}),
+      ...(patch.dimEvidences || {}),
+    },
+    dimLinks: {
+      ...(existingSide?.dimLinks || {}),
+      ...(patch.dimLinks || {}),
+    },
   };
 }
 

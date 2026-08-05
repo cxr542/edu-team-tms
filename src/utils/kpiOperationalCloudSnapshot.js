@@ -38,6 +38,9 @@ function normalizeEvalSide(side, roleId) {
   return {
     intLevel,
     dims,
+    evidence: side?.evidence ?? '',
+    dimEvidences: side?.dimEvidences ?? {},
+    dimLinks: side?.dimLinks ?? {},
     computed: computeCompetencyEval(evalInput),
   };
 }
