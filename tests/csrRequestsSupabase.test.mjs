@@ -73,6 +73,33 @@ describe('csrRequestsSupabase', () => {
       completedAt: null,
       categoryLabel: '문의',
     });
+
+    // Test legacy empty requester_code resolution from displayName
+    expect(
+      normalizeCsrRequest({
+        id: 'legacy-1',
+        title: '신혜윤 개선',
+        requester: '신혜윤',
+        requester_code: '',
+      })
+    ).toMatchObject({
+      id: 'legacy-1',
+      requesterCode: 'C',
+    });
+
+    // Test adminComment camelCase fallback
+    expect(
+      normalizeCsrRequest({
+        id: 'comment-1',
+        title: '답변 테스트',
+        requester: '김윤형',
+        requester_code: 'A',
+        adminComment: '카멜케이스 답변',
+      })
+    ).toMatchObject({
+      id: 'comment-1',
+      adminComment: '카멜케이스 답변',
+    });
   });
 
   it('upserts CSR requests to Supabase', async () => {

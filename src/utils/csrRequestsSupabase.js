@@ -4,6 +4,7 @@ import {
   normalizeCsrRequestCategory,
   normalizeCsrRequestStatus,
 } from '../constants/csrRequests.js';
+import { TEAM_KPI_MEMBERS } from '../constants/kpiMembers.js';
 
 const CSR_REQUESTS_TABLE = 'csr_requests';
 const PAYLOAD_VERSION = 1;
@@ -54,15 +55,32 @@ function randomId() {
 
 export function normalizeCsrRequest(row) {
   if (!row || typeof row !== 'object') return null;
+
+  let requesterCode = readRequesterCode(row);
+  const requesterName = String(row.requester || '').trim();
+  if (!requesterCode && requesterName) {
+    const member = TEAM_KPI_MEMBERS.find((m) => m.displayName === requesterName);
+    if (member) {
+      requesterCode = member.code;
+    }
+  }
+
+  const adminComment =
+    typeof row.admin_comment === 'string'
+      ? row.admin_comment.trim()
+      : typeof row.adminComment === 'string'
+      ? row.adminComment.trim()
+      : '';
+
   return {
     id: String(row.id || '').trim(),
     title: String(row.title || '').trim(),
     description: typeof row.description === 'string' ? row.description.trim() : '',
     category: normalizeCsrRequestCategory(row.category),
     status: normalizeCsrRequestStatus(row.status),
-    requester: String(row.requester || '').trim(),
-    requesterCode: readRequesterCode(row),
-    adminComment: typeof row.admin_comment === 'string' ? row.admin_comment.trim() : '',
+    requester: requesterName,
+    requesterCode,
+    adminComment,
     createdAt: row.created_at || row.createdAt || null,
     updatedAt: row.updated_at || row.updatedAt || null,
     completedAt: row.completed_at || row.completedAt || null,
