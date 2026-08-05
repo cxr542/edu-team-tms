@@ -746,38 +746,35 @@ export function useKpiOperational({ readOnly = false } = {}) {
     (year, monthIndex, memberCode, { side = 'manager' } = {}) => {
       if (readOnly) return { ok: false, reason: 'read-only' };
       const ym = monthKey(year, monthIndex);
-      let blockReason = null;
-      let updatedRecord = null;
+      const roleId = mapMemberRoleToCompetency(findKpiMember(memberCode)?.role);
+      const rec = store.competencyMonths?.[ym]?.[memberCode] || defaultCompetencyMonthRecord(memberCode);
+      const selfSide = normalizeCompetencyEvalSide(rec.self, roleId);
+      if (side === 'self' && !isValidCompetencyIntLevel(selfSide.intLevel)) {
+        return { ok: false, reason: 'invalid-int-level' };
+      }
+
+      const updatedAt = new Date().toISOString();
+      const updated =
+        side === 'self'
+          ? {
+              ...rec,
+              roleId,
+              self: selfSide,
+              selfLocked: true,
+              selfUpdatedAt: rec.selfUpdatedAt || rec.updatedAt || updatedAt,
+              updatedAt,
+            }
+          : {
+              ...rec,
+              roleId,
+              manager: normalizeCompetencyEvalSide(rec.manager, roleId),
+              managerLocked: true,
+              managerUpdatedAt: rec.managerUpdatedAt || rec.updatedAt || updatedAt,
+              updatedAt,
+            };
+
       setStore((prev) => {
         let next = ensureCompetencyMonthMember(prev, ym, memberCode);
-        const rec = next.competencyMonths[ym][memberCode];
-        const roleId =
-          rec.roleId ?? mapMemberRoleToCompetency(findKpiMember(memberCode)?.role);
-        const selfSide = normalizeCompetencyEvalSide(rec.self, roleId);
-        if (side === 'self' && !isValidCompetencyIntLevel(selfSide.intLevel)) {
-          blockReason = 'invalid-int-level';
-          return prev;
-        }
-        const updatedAt = new Date().toISOString();
-        const updated =
-          side === 'self'
-            ? {
-                ...rec,
-                roleId,
-                self: selfSide,
-                selfLocked: true,
-                selfUpdatedAt: rec.selfUpdatedAt || rec.updatedAt || updatedAt,
-                updatedAt,
-              }
-            : {
-                ...rec,
-                roleId,
-                manager: normalizeCompetencyEvalSide(rec.manager, roleId),
-                managerLocked: true,
-                managerUpdatedAt: rec.managerUpdatedAt || rec.updatedAt || updatedAt,
-                updatedAt,
-              };
-        updatedRecord = updated;
         next = {
           ...next,
           competencyMonths: {
@@ -787,35 +784,32 @@ export function useKpiOperational({ readOnly = false } = {}) {
         };
         return persist(next);
       });
-      if (blockReason) return { ok: false, reason: blockReason };
-      return { ok: true, record: updatedRecord };
+
+      return { ok: true, record: updated };
     },
-    [readOnly, persist]
+    [readOnly, persist, store]
   );
 
   const unlockCompetencyMonthSelf = useCallback(
     (year, monthIndex, memberCode) => {
       if (readOnly) return { ok: false, reason: 'read-only' };
       const ym = monthKey(year, monthIndex);
-      let result = { ok: true };
+      const rec = store.competencyMonths?.[ym]?.[memberCode] || defaultCompetencyMonthRecord(memberCode);
+      if (rec.managerLocked) {
+        return { ok: false, reason: 'manager-locked' };
+      }
+      const roleId = rec.roleId ?? mapMemberRoleToCompetency(findKpiMember(memberCode)?.role);
+      const updatedAt = new Date().toISOString();
+      const updated = {
+        ...rec,
+        roleId,
+        self: normalizeCompetencyEvalSide(rec.self, roleId),
+        selfLocked: false,
+        updatedAt,
+      };
+
       setStore((prev) => {
         let next = ensureCompetencyMonthMember(prev, ym, memberCode);
-        const rec = next.competencyMonths[ym][memberCode];
-        if (rec.managerLocked) {
-          result = { ok: false, reason: 'manager-locked' };
-          return prev;
-        }
-        const roleId =
-          rec.roleId ?? mapMemberRoleToCompetency(findKpiMember(memberCode)?.role);
-        const updatedAt = new Date().toISOString();
-        const updated = {
-          ...rec,
-          roleId,
-          self: normalizeCompetencyEvalSide(rec.self, roleId),
-          selfLocked: false,
-          updatedAt,
-        };
-        result = { ok: true, record: updated };
         next = {
           ...next,
           competencyMonths: {
@@ -825,9 +819,10 @@ export function useKpiOperational({ readOnly = false } = {}) {
         };
         return persist(next);
       });
-      return result;
+
+      return { ok: true, record: updated };
     },
-    [readOnly, persist]
+    [readOnly, persist, store]
   );
 
   const unlockCompetencyMonthManager = useCallback(
