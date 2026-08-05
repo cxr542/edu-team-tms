@@ -32,6 +32,18 @@ function parseAmount(v) {
 }
 
 function excelDateToIso(v) {
+  if (v instanceof Date) {
+    const y = v.getFullYear();
+    const m = String(v.getMonth() + 1).padStart(2, '0');
+    const d = String(v.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  if (typeof v === 'string') {
+    const s = v.trim();
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+    if (/^\d{4}\.\d{2}\.\d{2}/.test(s)) return s.replace(/\./g, '-').slice(0, 10);
+    if (/^\d{4}\/\d{2}\/\d{2}/.test(s)) return s.replace(/\//g, '-').slice(0, 10);
+  }
   if (typeof v === 'number' && v > 30000) {
     const d = XLSX.SSF.parse_date_code(v);
     const m = String(d.m).padStart(2, '0');
@@ -46,7 +58,7 @@ if (!fs.existsSync(excelPath)) {
   process.exit(1);
 }
 
-const wb = XLSX.readFile(excelPath);
+const wb = XLSX.readFile(excelPath, { cellDates: true });
 const txs = [];
 let id = 0;
 

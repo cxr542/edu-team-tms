@@ -33,3 +33,37 @@ export function assertBlobConfigured() {
     throw err;
   }
 }
+
+export async function withRetry(fn, maxAttempts = 3, delayMs = 300) {
+  const isTest = typeof process !== 'undefined' && (process.env.NODE_ENV === 'test' || process.env.VITEST);
+  const actualMaxAttempts = isTest ? 1 : maxAttempts;
+  const actualDelayMs = isTest ? 0 : delayMs;
+
+  let lastError;
+  let currentDelay = actualDelayMs;
+  for (let attempt = 1; attempt <= actualMaxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (!isTest) {
+        console.warn(`⚠️ Vercel Blob API attempt ${attempt} failed: ${err.message || err}. Retrying in ${currentDelay}ms...`);
+      }
+      if (attempt < actualMaxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, currentDelay));
+        currentDelay *= 2;
+      }
+    }
+  }
+  throw lastError;
+}
+
+export async function putWithRetry(path, data, options) {
+  const { put } = await import('@vercel/blob');
+  return withRetry(() => put(path, data, options));
+}
+
+export async function headWithRetry(path, options) {
+  const { head } = await import('@vercel/blob');
+  return withRetry(() => head(path, options));
+}

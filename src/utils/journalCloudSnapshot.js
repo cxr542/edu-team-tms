@@ -97,6 +97,61 @@ export function applyRemoteMemberJournalSave(localStore, remoteSnapshot, memberC
   };
 }
 
+export function isDayEmpty(day) {
+  if (!day) return true;
+  if (Array.isArray(day.tasks) && day.tasks.length > 0) return false;
+  if (day.publicHolidayOverride) return false;
+  if (day.holiday) return false;
+  if (day.mm) {
+    const work = Number(day.mm.work) || 0;
+    const improve = Number(day.mm.improve) || 0;
+    const leave = Number(day.mm.leave) || 0;
+    if (work !== 0 || improve !== 0 || leave !== 0) return false;
+  }
+  return true;
+}
+
+export function pruneMemberJournalSlice(slice) {
+  const pruned = { ...slice };
+  if (pruned.days) {
+    const days = {};
+    Object.entries(pruned.days).forEach(([key, day]) => {
+      if (!isDayEmpty(day)) {
+        days[key] = day;
+      }
+    });
+    pruned.days = days;
+  }
+  if (pruned.weekSummaries) {
+    const summaries = {};
+    Object.entries(pruned.weekSummaries).forEach(([key, val]) => {
+      if (val && typeof val === 'string' && val.trim()) {
+        summaries[key] = val;
+      }
+    });
+    pruned.weekSummaries = summaries;
+  }
+  if (pruned.nextWeekPlans) {
+    const plans = {};
+    Object.entries(pruned.nextWeekPlans).forEach(([key, val]) => {
+      if (val && typeof val === 'string' && val.trim()) {
+        plans[key] = val;
+      }
+    });
+    pruned.nextWeekPlans = plans;
+  }
+  if (pruned.kpiWeekMemos) {
+    const memos = {};
+    Object.entries(pruned.kpiWeekMemos).forEach(([key, val]) => {
+      if (val && typeof val === 'string' && val.trim()) {
+        memos[key] = val;
+      }
+    });
+    pruned.kpiWeekMemos = memos;
+  }
+  return pruned;
+}
+
 export function normalizeJournalCloudSnapshot(raw, { publishedAt = nowIso() } = {}) {
   const source = raw && typeof raw === 'object' ? raw : {};
   const snapshotAt = typeof source.publishedAt === 'string' ? source.publishedAt : publishedAt;
@@ -104,17 +159,17 @@ export function normalizeJournalCloudSnapshot(raw, { publishedAt = nowIso() } = 
 
   if (source.memberJournals && typeof source.memberJournals === 'object') {
     JOURNAL_MEMBER_CODES.forEach((code) => {
-      memberJournals[code] = normalizeMemberJournalSlice(source.memberJournals[code]);
+      memberJournals[code] = pruneMemberJournalSlice(normalizeMemberJournalSlice(source.memberJournals[code]));
     });
   } else if (source.days && typeof source.days === 'object') {
     const legacyMember = isValidMemberCode(source.member) ? source.member : 'A';
-    memberJournals[legacyMember] = normalizeMemberJournalSlice({
+    memberJournals[legacyMember] = pruneMemberJournalSlice(normalizeMemberJournalSlice({
       days: source.days,
       weekSummaries: source.weekSummaries,
       nextWeekPlans: source.nextWeekPlans,
       kpiWeekMemos: source.kpiWeekMemos,
       prefs: source.prefs,
-    });
+    }));
   }
 
   const sourceMeta = source.meta && typeof source.meta === 'object' ? source.meta : {};

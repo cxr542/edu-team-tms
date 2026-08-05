@@ -10,6 +10,8 @@ import { isAdminRouteReferer } from '../server/api-utils/requestScope.js';
 import {
   assertBlobConfigured,
   getBlobSdkOptions,
+  putWithRetry,
+  headWithRetry,
 } from '../server/api-utils/blobClient.js';
 
 const LIVE_LATEST_PATH = 'ledger/live-latest.json';
@@ -52,8 +54,7 @@ async function readLiveLatestBlob() {
   if (!blobOpts) return null;
 
   try {
-    const { head } = await import('@vercel/blob');
-    const meta = await head(LIVE_LATEST_PATH, blobOpts);
+    const meta = await headWithRetry(LIVE_LATEST_PATH, blobOpts);
     return fetchBlobJson(meta.downloadUrl || meta.url);
   } catch {
     return null;
@@ -64,8 +65,7 @@ async function writeLiveBlob(payload) {
   assertBlobConfigured();
   const blobOpts = getBlobSdkOptions();
 
-  const { put } = await import('@vercel/blob');
-  await put(LIVE_LATEST_PATH, JSON.stringify(payload), {
+  await putWithRetry(LIVE_LATEST_PATH, JSON.stringify(payload), {
     access: 'public',
     ...blobOpts,
     addRandomSuffix: false,
@@ -74,6 +74,17 @@ async function writeLiveBlob(payload) {
     cacheControlMaxAge: 60,
   });
   return LIVE_LATEST_PATH;
+}
+
+function pruneTransactions(transactions = []) {
+  if (!Array.isArray(transactions)) return [];
+  return transactions.map((tx) => {
+    const next = { ...tx };
+    if (next.extraData && typeof next.extraData === 'object' && Object.keys(next.extraData).length === 0) {
+      delete next.extraData;
+    }
+    return next;
+  });
 }
 
 export default async function handler(req, res) {
@@ -113,7 +124,7 @@ export default async function handler(req, res) {
     const payload = {
       publishedAt: body.publishedAt || new Date().toISOString(),
       categories: body.categories ?? null,
-      transactions: body.transactions,
+      transactions: pruneTransactions(body.transactions),
       viewerMenuVisibility:
         body.viewerMenuVisibility && typeof body.viewerMenuVisibility === 'object'
           ? body.viewerMenuVisibility

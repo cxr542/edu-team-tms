@@ -12,6 +12,8 @@ import {
   assertBlobConfigured,
   getBlobSdkOptions,
   isBlobConfigured,
+  putWithRetry,
+  headWithRetry,
 } from '../server/api-utils/blobClient.js';
 
 function canUse(req) {
@@ -48,8 +50,7 @@ async function readLiveLatestBlob() {
   if (!blobOpts) return null;
 
   try {
-    const { head } = await import('@vercel/blob');
-    const meta = await head(IMPROVE_PROJECTS_BLOB_KEY, blobOpts);
+    const meta = await headWithRetry(IMPROVE_PROJECTS_BLOB_KEY, blobOpts);
     const raw = await fetchBlobJson(meta.downloadUrl || meta.url);
     if (!raw) return null;
     return normalizeImproveProjectsSnapshot(raw);
@@ -62,8 +63,7 @@ async function writeLiveBlob(payload) {
   assertBlobConfigured();
   const blobOpts = getBlobSdkOptions();
 
-  const { put } = await import('@vercel/blob');
-  await put(IMPROVE_PROJECTS_BLOB_KEY, JSON.stringify(payload), {
+  await putWithRetry(IMPROVE_PROJECTS_BLOB_KEY, JSON.stringify(payload), {
     access: 'public',
     ...blobOpts,
     addRandomSuffix: false,

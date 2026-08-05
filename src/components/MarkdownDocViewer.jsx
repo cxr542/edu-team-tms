@@ -3,7 +3,16 @@ import { marked } from 'marked';
 import { resolveReferenceDocIdFromHref } from '../constants/referenceDocs';
 import { enrichArticleHeadings } from '../utils/markdownDoc';
 
-marked.setOptions({ gfm: true, breaks: false });
+const renderer = new marked.Renderer();
+renderer.html = (html) => {
+  return html
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+marked.setOptions({ gfm: true, breaks: false, renderer });
 
 function rewriteInternalDocLinks(html) {
   const template = document.createElement('template');
@@ -45,10 +54,12 @@ export default function MarkdownDocViewer({ src, className = '', onHeadingsChang
     fetch(src)
       .then((res) => {
         if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-        return res.text();
+        return res.arrayBuffer();
       })
-      .then((md) => {
+      .then((buffer) => {
         if (cancelled) return;
+        const decoder = new TextDecoder('utf-8');
+        const md = decoder.decode(buffer);
         setHtml(rewriteInternalDocLinks(marked.parse(md)));
         setLoading(false);
       })

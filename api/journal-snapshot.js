@@ -11,6 +11,8 @@ import { memberCodeFromReferer as memberCodeFromRequest } from '../server/api-ut
 import {
   assertBlobConfigured,
   getBlobSdkOptions,
+  putWithRetry,
+  headWithRetry,
 } from '../server/api-utils/blobClient.js';
 import { isJournalBlobPostEnabled } from '../server/api-utils/journalBlobPost.js';
 import { JOURNAL_BLOB_POST_DISABLED_MESSAGE } from '../src/constants/journalBlobShare.js';
@@ -67,8 +69,7 @@ async function readLiveLatestBlob() {
   if (!blobOpts) return { configured: false, snapshot: null, unavailable: false };
 
   try {
-    const { head } = await import('@vercel/blob');
-    const meta = await head(LIVE_LATEST_PATH, blobOpts);
+    const meta = await headWithRetry(LIVE_LATEST_PATH, blobOpts);
     return {
       configured: true,
       snapshot: await fetchBlobJson(meta.downloadUrl || meta.url),
@@ -105,8 +106,7 @@ async function writeLiveBlob(payload) {
   assertBlobConfigured();
   const blobOpts = getBlobSdkOptions();
 
-  const { put } = await import('@vercel/blob');
-  await put(LIVE_LATEST_PATH, JSON.stringify(payload), {
+  await putWithRetry(LIVE_LATEST_PATH, JSON.stringify(payload), {
     access: 'public',
     ...blobOpts,
     addRandomSuffix: false,

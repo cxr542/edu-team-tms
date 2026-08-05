@@ -16,6 +16,8 @@ import {
 import {
   assertBlobConfigured,
   getBlobSdkOptions,
+  putWithRetry,
+  headWithRetry,
 } from '../server/api-utils/blobClient.js';
 
 const LIVE_LATEST_PATH = 'kpi-operational/live-latest.json';
@@ -60,8 +62,7 @@ async function readLiveLatestBlob() {
   if (!blobOpts) return { configured: false, snapshot: null, unavailable: false };
 
   try {
-    const { head } = await import('@vercel/blob');
-    const meta = await head(LIVE_LATEST_PATH, blobOpts);
+    const meta = await headWithRetry(LIVE_LATEST_PATH, blobOpts);
     return {
       configured: true,
       snapshot: await fetchBlobJson(meta.downloadUrl || meta.url),
@@ -93,8 +94,7 @@ async function writeLiveBlob(payload) {
   assertBlobConfigured();
   const blobOpts = getBlobSdkOptions();
 
-  const { put } = await import('@vercel/blob');
-  await put(LIVE_LATEST_PATH, JSON.stringify(formatCompetencyCloudApiPayload(payload)), {
+  await putWithRetry(LIVE_LATEST_PATH, JSON.stringify(formatCompetencyCloudApiPayload(payload)), {
     access: 'public',
     ...blobOpts,
     addRandomSuffix: false,
