@@ -89,7 +89,7 @@ export function isMemberJournalImproveProject(project, memberCode) {
 export function filterImproveProjectsOwnedByMember(projects = [], memberCode) {
   if (!memberCode) return [];
   return projects.filter(
-    (p) => isMemberJournalImproveProject(p, memberCode) || isSharedImproveProject(p)
+    (p) => p.ownerMemberId === memberCode || isSharedImproveProject(p)
   );
 }
 
