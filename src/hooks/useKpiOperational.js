@@ -669,6 +669,9 @@ export function useKpiOperational({ readOnly = false } = {}) {
         const manager = {
           intLevel: rec.self.intLevel,
           dims: { ...rec.self.dims },
+          evidence: rec.self.evidence || '',
+          dimEvidences: { ...(rec.self.dimEvidences || {}) },
+          dimLinks: { ...(rec.self.dimLinks || {}) },
         };
         const updated = {
           ...rec,
@@ -744,6 +747,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
       if (readOnly) return { ok: false, reason: 'read-only' };
       const ym = monthKey(year, monthIndex);
       let blockReason = null;
+      let updatedRecord = null;
       setStore((prev) => {
         let next = ensureCompetencyMonthMember(prev, ym, memberCode);
         const rec = next.competencyMonths[ym][memberCode];
@@ -773,6 +777,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
                 managerUpdatedAt: rec.managerUpdatedAt || rec.updatedAt || updatedAt,
                 updatedAt,
               };
+        updatedRecord = updated;
         next = {
           ...next,
           competencyMonths: {
@@ -783,7 +788,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
         return persist(next);
       });
       if (blockReason) return { ok: false, reason: blockReason };
-      return { ok: true };
+      return { ok: true, record: updatedRecord };
     },
     [readOnly, persist]
   );
@@ -810,6 +815,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
           selfLocked: false,
           updatedAt,
         };
+        result = { ok: true, record: updated };
         next = {
           ...next,
           competencyMonths: {
@@ -957,7 +963,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
   }, [readOnly, persist]);
 
   const saveCompetencyMemberCloudSnapshot = useCallback(
-    async (memberCode, yearMonth) => {
+    async (memberCode, yearMonth, recordOverride = null) => {
       if (readOnly) return { ok: false, reason: 'read-only' };
       if (!isProductionEnvironment()) {
         return { ok: false, reason: 'dev-blocked', error: new Error('개발 환경에서는 공유 저장이 차단됩니다.') };
@@ -969,7 +975,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
       const [yearStr, monthStr] = String(yearMonth).split('-');
       const year = Number(yearStr);
       const monthIndex = Number(monthStr) - 1;
-      const competencyMonth = getCompetencyMonth(year, monthIndex, memberCode);
+      const competencyMonth = recordOverride || getCompetencyMonth(year, monthIndex, memberCode);
 
       if (!isCompetencyMonthRecordSaveable(competencyMonth, memberCode)) {
         return { ok: false, reason: 'empty' };
