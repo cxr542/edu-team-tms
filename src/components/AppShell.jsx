@@ -297,7 +297,6 @@ export default function AppShell({
                       {navBtn('csr', Lightbulb, {
                         badgeCount: csrRequestsUnread.count,
                       })}
-                      {navBtn('academizer', Presentation)}
                       {navBtn('lunch', UtensilsCrossed)}
                       {navBtn('lecture-journal', GraduationCap)}
                       {navBtn('kanban', Trello)}
@@ -339,6 +338,7 @@ export default function AppShell({
                   )}
                   {showExperimentalNav && (
                     <NavGroup title={NAV_GROUP_EXPERIMENTAL} className="project-nav-group--experimental">
+                      {navBtn('academizer', Presentation)}
                       {navBtn('cloud-chatbot', MessageCircle)}
                     </NavGroup>
                   )}
