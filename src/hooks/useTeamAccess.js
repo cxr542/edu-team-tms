@@ -89,7 +89,7 @@ export function canEditMemberJournal(access, memberCode) {
 }
 
 export function canUseCompetencyPilot(access) {
-  return Boolean(access?.isAdmin || !access?.isMemberScope || access?.scopedMember === 'A');
+  return Boolean(access?.isAdmin || !access?.isMemberScope || access?.scopedMember);
 }
 
 export function canUseKanbanPilot(access) {
