@@ -51,6 +51,7 @@ export default function CompetencyRubricPanel({
   onPullFromSelf,
   onLock,
   onUnlockSelf,
+  onUnlockManager,
   showPullButton = false,
   /** 구성원 자체평가 — 직군 고정·산식 숨김 */
   memberView = false,
@@ -494,7 +495,22 @@ export default function CompetencyRubricPanel({
         )
       )}
       {locked && side === 'manager' && (
-        <p className="team-kpi-hint">팀장 평가 확정됨</p>
+        <div className="competency-self-actions">
+          <p className="team-kpi-hint competency-self-actions__hint">팀장 평가 확정됨</p>
+          {!readOnly && typeof onUnlockManager === 'function' && (
+            <button
+              type="button"
+              className="btn btn-sm competency-self-unlock-btn competency-manager-unlock-btn"
+              onClick={() => {
+                if (window.confirm('팀장 평가 확정을 취소하시겠습니까?')) {
+                  onUnlockManager();
+                }
+              }}
+            >
+              확정 취소
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
