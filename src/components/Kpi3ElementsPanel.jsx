@@ -845,11 +845,13 @@ export default function Kpi3ElementsPanel({
         </p>
         {!readOnly && !locked && !practiceSubmittedForReview && (
           <div className="kpi3-elements-practice-add">
-            <input
-              className="form-input"
+            <textarea
+              className="form-input kpi3-practice-textarea"
               placeholder="실전 적용 사례 (증빙 요약)"
               value={practiceText}
               onChange={(e) => setPracticeText(e.target.value)}
+              rows={3}
+              style={{ resize: 'vertical' }}
             />
             <button
               type="button"
