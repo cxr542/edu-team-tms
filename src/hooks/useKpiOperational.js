@@ -765,7 +765,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
               roleId,
               self: selfSide,
               selfLocked: true,
-              selfUpdatedAt: rec.selfUpdatedAt || rec.updatedAt || updatedAt,
+              selfUpdatedAt: updatedAt,
               updatedAt,
             }
           : {
@@ -773,7 +773,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
               roleId,
               manager: normalizeCompetencyEvalSide(rec.manager, roleId),
               managerLocked: true,
-              managerUpdatedAt: rec.managerUpdatedAt || rec.updatedAt || updatedAt,
+              managerUpdatedAt: updatedAt,
               updatedAt,
             };
 
@@ -809,6 +809,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
         roleId,
         self: normalizeCompetencyEvalSide(rec.self, roleId),
         selfLocked: false,
+        selfUpdatedAt: updatedAt,
         updatedAt,
       };
 
@@ -844,6 +845,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
           roleId,
           manager: normalizeCompetencyEvalSide(rec.manager, roleId),
           managerLocked: false,
+          managerUpdatedAt: updatedAt,
           updatedAt,
         };
         next = {
