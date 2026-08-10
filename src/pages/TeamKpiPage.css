@@ -749,9 +749,9 @@
 
 .team-kpi-doc-fab {
   position: fixed;
-  right: 1.25rem;
-  bottom: 1.25rem;
-  z-index: 40;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 1000;
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
