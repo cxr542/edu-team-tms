@@ -843,43 +843,43 @@ export default function Kpi3ElementsPanel({
         <p className="team-kpi-hint">
           분기 실전 사례 증빙 제출 → 팀장 인정 건수: 3건↑=5점, 2건=4점, 1건=3점, 제출만=2점.
         </p>
-        {!readOnly && !locked && !practiceSubmittedForReview && (
-          <div className="kpi3-elements-practice-add">
-            <textarea
-              className="form-input kpi3-practice-textarea"
-              placeholder="실전 적용 사례 (증빙 요약)"
-              value={practiceText}
-              onChange={(e) => setPracticeText(e.target.value)}
-              rows={3}
-              style={{ resize: 'vertical' }}
-            />
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={() => {
-                const text = practiceText.trim();
-                if (!text) return;
-                const cases = [
-                  ...(practiceDetail.cases || []),
-                  { id: `p-${Date.now()}`, text, approved: false, at: new Date().toISOString() },
-                ];
-                journal.updateKpi3QuarterExtras(year, month, memberCode, { practiceDetail: { cases } });
-                setPracticeText('');
-                onToast?.('실전 사례 제출');
-              }}
-            >
-              사례 제출
-            </button>
-          </div>
-        )}
-        <ul className="team-kpi-memo-list kpi3-practice-cases">
-          {(practiceDetail.cases || []).map((c) => (
-            <li key={c.id}>
-              {c.text}
+        <div className="kpi3-practice-cases-container">
+          {(practiceDetail.cases || []).map((c, idx) => (
+            <div key={c.id} className="kpi3-practice-case-row" style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'flex-start' }}>
+              {!readOnly && !locked && !practiceSubmittedForReview ? (
+                <>
+                  <textarea
+                    className="form-input"
+                    value={c.text}
+                    onChange={(e) => {
+                      const cases = [...practiceDetail.cases];
+                      cases[idx] = { ...cases[idx], text: e.target.value };
+                      journal.updateKpi3QuarterExtras(year, month, memberCode, { practiceDetail: { cases } });
+                    }}
+                    rows={2}
+                    style={{ flex: 1, resize: 'vertical' }}
+                    placeholder={`실전 적용 사례 ${idx + 1} (증빙 요약)`}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-danger btn-sm"
+                    onClick={() => {
+                      const cases = practiceDetail.cases.filter((_, i) => i !== idx);
+                      journal.updateKpi3QuarterExtras(year, month, memberCode, { practiceDetail: { cases } });
+                    }}
+                  >
+                    삭제
+                  </button>
+                </>
+              ) : (
+                <div style={{ flex: 1, whiteSpace: 'pre-wrap', fontSize: '0.9rem', padding: '0.5rem', backgroundColor: 'var(--bg-card)', borderRadius: '4px', border: '1px solid var(--border-color)' }}>{c.text}</div>
+              )}
+
               {showManagerTabs && !readOnly && !locked ? (
                 <button
                   type="button"
                   className={`btn btn-sm ${c.approved ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ whiteSpace: 'nowrap' }}
                   onClick={() => {
                     const cases = (practiceDetail.cases || []).map((x) =>
                       x.id === c.id ? { ...x, approved: !x.approved } : x
@@ -890,11 +890,28 @@ export default function Kpi3ElementsPanel({
                   {c.approved ? '인정 취소' : '팀장 인정'}
                 </button>
               ) : (
-                <span className="kpi3-practice-status">{c.approved ? '인정' : '검토중'}</span>
+                <span className="kpi3-practice-status" style={{ whiteSpace: 'nowrap', paddingTop: '0.5rem' }}>{c.approved ? '인정' : '검토중'}</span>
               )}
-            </li>
+            </div>
           ))}
-        </ul>
+
+          {!readOnly && !locked && !practiceSubmittedForReview && (
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              style={{ marginTop: '0.5rem', marginBottom: '1rem' }}
+              onClick={() => {
+                const cases = [
+                  ...(practiceDetail.cases || []),
+                  { id: `p-${Date.now()}`, text: '', approved: false, at: new Date().toISOString() },
+                ];
+                journal.updateKpi3QuarterExtras(year, month, memberCode, { practiceDetail: { cases } });
+              }}
+            >
+              + 사례 행 추가
+            </button>
+          )}
+        </div>
         {showManagerTabs && (
           <Kpi3PreviewRow
             action={renderManagerReviewActions('practice', practiceDetail, computePracticeScore(practiceDetail))}
