@@ -355,16 +355,25 @@ export function isCompetencyMonthRecordSaveable(raw, memberCode) {
 export function mergeCompetencySelfPush(existingRaw, incomingRaw, memberCode) {
   const existing = existingRaw ? normalizeCompetencyMonthRecord(existingRaw, memberCode) : null;
   const incoming = normalizeCompetencyMonthRecord(incomingRaw, memberCode);
+
+  const existingSelfAt = existing?.selfUpdatedAt ?? existing?.updatedAt ?? null;
+  const incomingSelfAt = incoming.selfUpdatedAt ?? incoming.updatedAt ?? null;
+  const selfWins = !existing || isNewer(incomingSelfAt, existingSelfAt) ? incoming : existing;
+
+  const existingManagerAt = existing?.managerUpdatedAt ?? existing?.updatedAt ?? null;
+  const incomingManagerAt = incoming.managerUpdatedAt ?? incoming.updatedAt ?? null;
+  const managerWins = !existing || isNewer(incomingManagerAt, existingManagerAt) ? incoming : existing;
+
   const combined = {
     roleId: incoming.roleId ?? existing?.roleId,
-    self: incoming.self,
-    selfLocked: incoming.selfLocked,
-    selfUpdatedAt: incoming.selfUpdatedAt ?? incoming.updatedAt,
-    manager: existing?.manager ?? incoming.manager,
-    managerLocked: existing?.managerLocked ?? incoming.managerLocked,
-    managerUpdatedAt: existing?.managerUpdatedAt ?? incoming.managerUpdatedAt,
+    self: selfWins.self,
+    selfLocked: selfWins.selfLocked,
+    selfUpdatedAt: selfWins.selfUpdatedAt ?? selfWins.updatedAt,
+    manager: managerWins.manager,
+    managerLocked: managerWins.managerLocked,
+    managerUpdatedAt: managerWins.managerUpdatedAt ?? managerWins.updatedAt,
   };
-  return mergeCompetencyMonthRecord(existing, combined, memberCode);
+  return normalizeCompetencyMonthRecord(combined, memberCode);
 }
 
 /** cloud snapshot에 단일 member·month competency upsert */
