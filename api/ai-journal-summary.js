@@ -78,12 +78,12 @@ ${journalText}
       });
     };
 
-    let response = await fetchGemini('gemini-1.5-flash-latest');
+    let response = await fetchGemini('gemini-flash-latest');
     
-    // Fallback if 1.5 flash is not found/supported for this API key
+    // Fallback if flash-latest is not found/supported for this API key
     if (response.status === 404) {
-      console.log('gemini-1.5-flash-latest not found, falling back to gemini-pro...');
-      response = await fetchGemini('gemini-pro');
+      console.log('gemini-flash-latest not found, falling back to gemini-pro-latest...');
+      response = await fetchGemini('gemini-pro-latest');
     }
 
     if (!response.ok) {
