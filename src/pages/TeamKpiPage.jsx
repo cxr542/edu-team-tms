@@ -955,7 +955,7 @@ export default function TeamKpiPage() {
                 {(() => {
                   const totalPlan = metrics.rows02Effect.reduce((sum, row) => sum + (Number(row.계획시간) || 0), 0);
                   const totalActual = metrics.rows02Effect.reduce((sum, row) => sum + (Number(row.실작업시간) || 0), 0);
-                  const reductionPct = totalPlan > 0 ? (((totalPlan - totalActual) / totalPlan) * 100).toFixed(1) : '0.0';
+                  const productivityPct = totalActual > 0 ? ((totalPlan / totalActual) * 100).toFixed(1) : '0.0';
                   
                   return (
                     <tr style={{ backgroundColor: 'var(--color-bg-subtle)' }}>
@@ -963,7 +963,7 @@ export default function TeamKpiPage() {
                       <td style={{ fontWeight: 'bold' }}>{totalPlan}</td>
                       <td style={{ fontWeight: 'bold' }}>{totalActual}</td>
                       <td colSpan={2} style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>
-                        단축 비율: {reductionPct}%
+                        생산성: {productivityPct}%
                       </td>
                     </tr>
                   );
