@@ -85,7 +85,7 @@ ${journalText}
       console.error('Gemini API Error:', errorText);
       res.statusCode = 502;
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
-      res.end(JSON.stringify({ ok: false, error: 'AI 서버 호출 중 오류가 발생했습니다.' }));
+      res.end(JSON.stringify({ ok: false, error: `AI 서버 호출 중 오류가 발생했습니다: ${errorText}` }));
       return;
     }
 
