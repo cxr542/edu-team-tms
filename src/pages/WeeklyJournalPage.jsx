@@ -297,7 +297,9 @@ export default function WeeklyJournalPage({ readOnly = false }) {
 
       const daysMap = journal.getMemberDays(memberCode) || {};
       const targetPrefix = `${year}-${String(month + 1).padStart(2, '0')}-`;
-      const monthDays = Object.values(daysMap).filter(d => d.dayKey && d.dayKey.startsWith(targetPrefix));
+      const monthDays = Object.entries(daysMap)
+        .filter(([key, day]) => key.startsWith(targetPrefix))
+        .map(([key, day]) => ({ dayKey: key, ...day }));
       
       let journalText = '';
       monthDays.forEach(day => {
