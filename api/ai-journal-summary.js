@@ -44,7 +44,7 @@ export default async function handler(req, res, options = {}) {
       return;
     }
 
-    const apiKey = env.GEMINI_API_KEY;
+    const apiKey = (env.GEMINI_API_KEY || '').trim();
     if (!apiKey) {
       res.statusCode = 500;
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -66,7 +66,7 @@ ${journalText}
 4. 전문적이고 간결한 비즈니스 보고서 톤으로 작성해 주세요.
 `;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
