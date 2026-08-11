@@ -295,9 +295,9 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       setAiSummaryModalOpen(true);
       setAiSummaryText('AI 요약을 생성하는 중입니다. (약 5~10초 소요)...');
 
-      const days = journal.getMemberDays(memberCode) || [];
+      const daysMap = journal.getMemberDays(memberCode) || {};
       const targetPrefix = `${year}-${String(month + 1).padStart(2, '0')}-`;
-      const monthDays = days.filter(d => d.dayKey.startsWith(targetPrefix));
+      const monthDays = Object.values(daysMap).filter(d => d.dayKey && d.dayKey.startsWith(targetPrefix));
       
       let journalText = '';
       monthDays.forEach(day => {
