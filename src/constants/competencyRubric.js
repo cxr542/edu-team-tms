@@ -50,7 +50,7 @@ export const ACCUMULATION_ORDER_BY_ROLE = {
   default: ['autonomy', 'scope', 'collaboration', 'quality', 'expertise'],
   instructor: ['expertise', 'quality', 'collaboration', 'scope', 'autonomy'],
   concurrent: ['collaboration', 'scope', 'quality', 'expertise', 'autonomy'],
-  planner: ['collaboration', 'autonomy', 'scope', 'quality', 'expertise'],
+  planner: ['autonomy', 'scope', 'collaboration', 'quality', 'expertise'],
 };
 
 export function accumulationOrderForRole(roleId) {

@@ -259,7 +259,7 @@ export const ROLE_RUBRIC_HINTS = {
 export const ROLE_ACCUMULATION_HINTS = {
   default: '자율성 → 범위·난이도 → 협업·영향 → 품질·완결성 → 전문성·표준화',
   instructor: '전문성·표준화 → 품질·완결성 → 협업·영향 → 범위·난이도 → 자율성',
-  planner: '협업·영향 → 자율성 → 범위·난이도 → 품질·완결성 → 전문성·표준화',
+  planner: '자율성 → 범위·난이도 → 협업·영향 → 품질·완결성 → 전문성·표준화',
   concurrent: '협업·영향 → 범위·난이도 → 품질·완결성 → 전문성·표준화 → 자율성',
 };
 
