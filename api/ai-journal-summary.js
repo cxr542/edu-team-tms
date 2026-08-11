@@ -88,10 +88,21 @@ ${journalText}
 
     if (!response.ok) {
       const errorText = await response.text();
+      let extraInfo = '';
+      if (response.status === 404) {
+        try {
+          const modelsRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+          const modelsText = await modelsRes.text();
+          extraInfo = `\n\n[Available Models for this Key]:\n${modelsText}`;
+        } catch (e) {
+          extraInfo = `\n\n[Failed to fetch available models]`;
+        }
+      }
+      
       console.error('Gemini API Error:', errorText);
       res.statusCode = 502;
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
-      res.end(JSON.stringify({ ok: false, error: `AI 서버 호출 중 오류가 발생했습니다 (HTTP ${response.status}): ${errorText}` }));
+      res.end(JSON.stringify({ ok: false, error: `AI 서버 호출 중 오류가 발생했습니다 (HTTP ${response.status}): ${errorText}${extraInfo}` }));
       return;
     }
 
