@@ -312,7 +312,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         journalText += `[${day.dayKey}]\n`;
         day.tasks.forEach(task => {
           if (task.title) {
-            const categoryLabel = memberCategoryView.cats[task.categoryId]?.label || '기타';
+            const categoryLabel = memberCategoryView.cats[task.cat]?.label || '기타';
             journalText += `- 카테고리: ${categoryLabel}, 제목: ${task.title}`;
             if (task.note) {
               journalText += ` (메모: ${task.note})`;
