@@ -99,7 +99,6 @@ import {
   JOURNAL_BLOB_POST_DISABLED_MESSAGE,
   JOURNAL_BLOB_POST_ENABLED,
 } from '../constants/journalBlobShare';
-import { JOURNAL_CATS } from '../constants/journalCategories';
 import { compareJournalSnapshots } from '../utils/journalStorageComparison';
 import {
   JOURNAL_FRESHNESS_STATUS,
@@ -290,6 +289,11 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [aiSummaryText, setAiSummaryText] = useState('');
 
+  const memberCategoryView = useMemo(
+    () => resolveMemberCategories(journal.memberJournals?.[memberCode]?.prefs),
+    [journal.memberJournals, memberCode]
+  );
+
   const handleGenerateAiSummary = async () => {
     try {
       setIsGeneratingAi(true);
@@ -308,7 +312,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         journalText += `[${day.dayKey}]\n`;
         day.tasks.forEach(task => {
           if (task.title) {
-            const categoryLabel = JOURNAL_CATS[task.categoryId]?.label || '기타';
+            const categoryLabel = memberCategoryView.cats[task.categoryId]?.label || '기타';
             journalText += `- 카테고리: ${categoryLabel}, 제목: ${task.title}`;
             if (task.note) {
               journalText += ` (메모: ${task.note})`;
@@ -353,10 +357,6 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     }
   };
 
-  const memberCategoryView = useMemo(
-    () => resolveMemberCategories(journal.memberJournals?.[memberCode]?.prefs),
-    [journal.memberJournals, memberCode]
-  );
   const isImproveProjectMember = MEMBER_IMPROVE_PROJECT_CODES.has(memberCode);
   const showImproveProjectPanel = !journalReadOnly && (teamAccess.isMemberScope || isImproveProjectMember);
   const isMemberJournalScope = teamAccess.isMemberScope;
