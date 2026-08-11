@@ -323,7 +323,15 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         body: JSON.stringify({ journalText }),
       });
 
-      const data = await res.json();
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (parseErr) {
+        setAiSummaryText(`서버 응답 오류 (HTML 반환 의심): ${text.substring(0, 200)}`);
+        return;
+      }
+
       if (data.ok) {
         setAiSummaryText(data.summary);
       } else {
@@ -331,7 +339,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       }
     } catch (err) {
       console.error(err);
-      setAiSummaryText('요약 중 오류가 발생했습니다.');
+      setAiSummaryText(`요약 중 오류가 발생했습니다: ${err.message}`);
     } finally {
       setIsGeneratingAi(false);
     }
