@@ -163,6 +163,7 @@ export function buildKpi02EffectRows(
         dayKey: key,
         taskId: task.id,
         projectId: task.kpi2Effect?.projectId || '',
+        projectName: project?.name || '',
         완료일: date,
         연도: y,
         월: m,

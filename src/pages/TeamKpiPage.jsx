@@ -915,6 +915,7 @@ export default function TeamKpiPage() {
                 <tr>
                   <th>완료일</th>
                   <th>업무명</th>
+                  <th>향상 도구</th>
                   <th>기준h</th>
                   <th>실작업h</th>
                   <th>상태</th>
@@ -928,6 +929,7 @@ export default function TeamKpiPage() {
                     <tr key={`${row.dayKey}-${i}`}>
                       <td>{formatDate(row.완료일)}</td>
                       <td>{row.업무명}</td>
+                      <td>{row.projectName || '-'}</td>
                       <td>{row.계획시간}</td>
                       <td>{row.실작업시간}</td>
                       <td>{row.상태}</td>
@@ -957,7 +959,7 @@ export default function TeamKpiPage() {
                   
                   return (
                     <tr style={{ backgroundColor: 'var(--color-bg-subtle)' }}>
-                      <td colSpan={2} style={{ textAlign: 'center', fontWeight: 'bold' }}>합계</td>
+                      <td colSpan={3} style={{ textAlign: 'center', fontWeight: 'bold' }}>합계</td>
                       <td style={{ fontWeight: 'bold' }}>{totalPlan}</td>
                       <td style={{ fontWeight: 'bold' }}>{totalActual}</td>
                       <td colSpan={2} style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>
