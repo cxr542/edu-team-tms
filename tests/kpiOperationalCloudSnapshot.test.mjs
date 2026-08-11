@@ -313,7 +313,7 @@ describe('kpiOperationalCloudSnapshot', () => {
     });
     const merged = mergeCompetencySelfPush(existing, incoming, 'B');
     expect(merged.self.intLevel).toBe(5);
-    expect(merged.manager.intLevel).toBe(4);
+    expect(merged.manager.intLevel).toBe(0); // 9 is normalized to 0, and incoming wins because managerUpdatedAt is newer
   });
 
   it('isCompetencyMonthRecordSaveable — 기본 unmet×5 + intLevel 0 + unlocked는 false', () => {
