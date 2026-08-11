@@ -66,26 +66,30 @@ ${journalText}
 4. 전문적이고 간결한 비즈니스 보고서 톤으로 작성해 주세요.
 `;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: prompt }]
-          }
-        ]
-      })
-    });
+    const fetchGemini = async (modelName) => {
+      return fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      });
+    };
+
+    let response = await fetchGemini('gemini-1.5-flash-latest');
+    
+    // Fallback if 1.5 flash is not found/supported for this API key
+    if (response.status === 404) {
+      console.log('gemini-1.5-flash-latest not found, falling back to gemini-pro...');
+      response = await fetchGemini('gemini-pro');
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Gemini API Error:', errorText);
       res.statusCode = 502;
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
-      res.end(JSON.stringify({ ok: false, error: `AI 서버 호출 중 오류가 발생했습니다: ${errorText}` }));
+      res.end(JSON.stringify({ ok: false, error: `AI 서버 호출 중 오류가 발생했습니다 (HTTP ${response.status}): ${errorText}` }));
       return;
     }
 
