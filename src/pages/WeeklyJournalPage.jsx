@@ -284,6 +284,58 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const [storageComparisonStatus, setStorageComparisonStatus] = useState('idle');
   const [activeKanbanTasks, setActiveKanbanTasks] = useState([]);
   const [storageComparison, setStorageComparison] = useState(null);
+  
+  const [aiSummaryModalOpen, setAiSummaryModalOpen] = useState(false);
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [aiSummaryText, setAiSummaryText] = useState('');
+
+  const handleGenerateAiSummary = async () => {
+    try {
+      setIsGeneratingAi(true);
+      setAiSummaryModalOpen(true);
+      setAiSummaryText('AI 요약을 생성하는 중입니다. (약 5~10초 소요)...');
+
+      const days = journal.getMemberDays(memberCode) || [];
+      const targetPrefix = `${year}-${String(month + 1).padStart(2, '0')}-`;
+      const monthDays = days.filter(d => d.dayKey.startsWith(targetPrefix));
+      
+      let journalText = '';
+      monthDays.forEach(day => {
+        if (!day.tasks || day.tasks.length === 0) return;
+        journalText += `[${day.dayKey}]\n`;
+        day.tasks.forEach(task => {
+          if (task.content) {
+            journalText += `- 카테고리: ${task.categoryId || '기타'}, 내용: ${task.content}\n`;
+          }
+        });
+        journalText += '\n';
+      });
+
+      if (!journalText.trim()) {
+        setAiSummaryText('이번 달 요약할 업무일지 내용이 없습니다.');
+        setIsGeneratingAi(false);
+        return;
+      }
+      
+      const res = await fetch('/api/ai-journal-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ journalText }),
+      });
+
+      const data = await res.json();
+      if (data.ok) {
+        setAiSummaryText(data.summary);
+      } else {
+        setAiSummaryText(`요약 실패: ${data.error}`);
+      }
+    } catch (err) {
+      console.error(err);
+      setAiSummaryText('요약 중 오류가 발생했습니다.');
+    } finally {
+      setIsGeneratingAi(false);
+    }
+  };
 
   const memberCategoryView = useMemo(
     () => resolveMemberCategories(journal.memberJournals?.[memberCode]?.prefs),
@@ -1262,6 +1314,17 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               )}
             </div>
             <div className="journal-actions">
+              {!journalReadOnly && (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleGenerateAiSummary}
+                  disabled={isGeneratingAi}
+                  {...uiTooltip('이 달의 모든 일일 업무일지를 AI로 요약합니다.')}
+                >
+                  {isGeneratingAi ? '🤖 요약 중...' : '🤖 월간 AI 요약'}
+                </button>
+              )}
               {showJournalLeaderToolbar && (
                 <AppModuleLink
                   className="btn btn-secondary"
@@ -2706,6 +2769,44 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           </div>
         </div>
       )}
+
+      <div className={`journal-modal${aiSummaryModalOpen ? ' open' : ''}`}>
+        <h3 style={{ padding: '1rem' }}>🤖 월간 일지 AI 요약</h3>
+        <div style={{ padding: '0 1rem 1rem' }}>
+          <p className="journal-add-hint">
+            이 달의 모든 일일 업무일지를 바탕으로 AI가 자동 작성한 요약본입니다. 복사하여 필요한 곳에 활용하세요.
+          </p>
+          <div className="form-group" style={{ marginTop: '0.5rem' }}>
+            <textarea
+              className="form-input"
+              rows={15}
+              readOnly
+              value={aiSummaryText}
+              style={{ width: '100%', resize: 'vertical' }}
+            />
+          </div>
+        </div>
+        <div className="modal-actions">
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => setAiSummaryModalOpen(false)}
+          >
+            닫기
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={isGeneratingAi || !aiSummaryText || aiSummaryText.includes('요약 중 오류') || aiSummaryText.includes('요약할 업무일지')}
+            onClick={() => {
+              navigator.clipboard.writeText(aiSummaryText);
+              showToast('요약 내용이 클립보드에 복사되었습니다.');
+            }}
+          >
+            복사하기
+          </button>
+        </div>
+      </div>
 
       <JournalMemberPrefsModal
         open={memberPrefsOpen}
