@@ -99,6 +99,7 @@ import {
   JOURNAL_BLOB_POST_DISABLED_MESSAGE,
   JOURNAL_BLOB_POST_ENABLED,
 } from '../constants/journalBlobShare';
+import { JOURNAL_CATS } from '../constants/journalCategories';
 import { compareJournalSnapshots } from '../utils/journalStorageComparison';
 import {
   JOURNAL_FRESHNESS_STATUS,
@@ -307,7 +308,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         journalText += `[${day.dayKey}]\n`;
         day.tasks.forEach(task => {
           if (task.title) {
-            journalText += `- 카테고리: ${task.categoryId || '기타'}, 제목: ${task.title}`;
+            const categoryLabel = JOURNAL_CATS[task.categoryId]?.label || '기타';
+            journalText += `- 카테고리: ${categoryLabel}, 제목: ${task.title}`;
             if (task.note) {
               journalText += ` (메모: ${task.note})`;
             }
