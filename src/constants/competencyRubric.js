@@ -48,8 +48,8 @@ export function orderedDimsForDisplay(roleId) {
 /** 직군별 소수 누적 우선순위 (설계노트 §5) */
 export const ACCUMULATION_ORDER_BY_ROLE = {
   default: ['autonomy', 'scope', 'collaboration', 'quality', 'expertise'],
-  instructor: ['expertise', 'quality', 'collaboration', 'scope', 'autonomy'],
-  concurrent: ['collaboration', 'scope', 'quality', 'expertise', 'autonomy'],
+  instructor: ['autonomy', 'scope', 'collaboration', 'quality', 'expertise'],
+  concurrent: ['autonomy', 'scope', 'collaboration', 'quality', 'expertise'],
   planner: ['autonomy', 'scope', 'collaboration', 'quality', 'expertise'],
 };
 
