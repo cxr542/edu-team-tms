@@ -7,6 +7,7 @@ import {
   confluenceLectureApiDevPlugin,
   kakaoApiDevPlugin,
   prodSnapshotReadProxyPlugin,
+  aiJournalSummaryDevPlugin,
 } from './scripts/vite-kakao-api-plugin.js'
 
 /** GitHub Pages: TMS_PAGES_BASE=/cxr542-ai/projects/edu-team-tms/ npm run build:team */
@@ -22,6 +23,7 @@ export default defineConfig({
     confluenceLectureApiDevPlugin(),
     academizerApiDevPlugin(),
     announcementEngagementApiDevPlugin(),
+    aiJournalSummaryDevPlugin(),
   ],
   define: {
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(pkg.version),

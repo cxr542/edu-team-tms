@@ -57,6 +57,8 @@ export default function CompetencyRubricPanel({
   memberView = false,
   /** kpiMembers.role — 직군별 루브릭·누적 순서 표시 */
   memberRole = null,
+  isGeneratingAi = false,
+  onGenerateAiSummary = null,
 }) {
   const [showIntLevelRef, setShowIntLevelRef] = useState(false);
   const [showDimRef, setShowDimRef] = useState(false);
@@ -299,7 +301,20 @@ export default function CompetencyRubricPanel({
 
       {side === 'self' && (
         <label className="competency-evidence-field">
-          자체평가 근거
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '0.25rem' }}>
+            <span>자체평가 근거</span>
+            {!readOnly && !locked && (
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }}
+                onClick={onGenerateAiSummary}
+                disabled={isGeneratingAi}
+              >
+                {isGeneratingAi ? '요약 생성 중...' : '🤖 월간 일지 AI 요약'}
+              </button>
+            )}
+          </div>
           <textarea
             className="form-input"
             rows={4}

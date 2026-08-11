@@ -239,3 +239,33 @@ export function academizerApiDevPlugin() {
     },
   };
 }
+
+export function aiJournalSummaryDevPlugin() {
+  return {
+    name: 'tms-ai-journal-summary-dev',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        if (!req.url?.startsWith('/api/ai-journal-summary')) {
+          next();
+          return;
+        }
+
+        const env = loadEnv(server.config.mode, tmsAppRoot, '');
+        const merged = {
+          ...process.env,
+          GEMINI_API_KEY: env.GEMINI_API_KEY || process.env.GEMINI_API_KEY,
+          NODE_ENV: process.env.NODE_ENV || 'development',
+        };
+
+        try {
+          const handler = (await import('../api/ai-journal-summary.js')).default;
+          await handler(req, res, { env: merged });
+        } catch (err) {
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+    },
+  };
+}

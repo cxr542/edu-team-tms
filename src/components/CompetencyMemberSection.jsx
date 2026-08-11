@@ -29,6 +29,7 @@ export default function CompetencyMemberSection({
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(monthIndex);
   const [cloudBusy, setCloudBusy] = useState(false);
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const memberCode = member.code;
   const competencyMonthRec = journal.getCompetencyMonth(year, selectedMonthIndex, memberCode);
   const quarterRec = journal.getQuarterRecord(year, monthIndex, memberCode);
@@ -46,6 +47,56 @@ export default function CompetencyMemberSection({
 
   const kpi3Section = activeTab === 'dm' || activeTab === 'leader' || activeTab === 'practice' ? activeTab : null;
   const kpi3El = kpi3Section ? KPI3_BY_KEY[kpi3Section] : null;
+
+  const handleGenerateAiSummary = async () => {
+    try {
+      setIsGeneratingAi(true);
+      const days = journal.getMemberDays(memberCode) || [];
+      const targetPrefix = `${year}-${String(selectedMonthIndex + 1).padStart(2, '0')}-`;
+      const monthDays = days.filter(d => d.dayKey.startsWith(targetPrefix));
+      
+      let journalText = '';
+      monthDays.forEach(day => {
+        if (!day.tasks || day.tasks.length === 0) return;
+        journalText += `[${day.dayKey}]\n`;
+        day.tasks.forEach(task => {
+          if (task.content) {
+            journalText += `- 카테고리: ${task.categoryId || '기타'}, 내용: ${task.content}\n`;
+          }
+        });
+        journalText += '\n';
+      });
+
+      if (!journalText.trim()) {
+        onToast?.('요약할 업무일지 내용이 없습니다.');
+        return;
+      }
+
+      onToast?.('AI 요약을 생성하는 중입니다. (약 5~10초 소요)');
+      const res = await fetch('/api/ai-journal-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ journalText }),
+      });
+
+      const data = await res.json();
+      if (data.ok) {
+        const currentEvidence = competencyMonthRec?.self?.evidence || '';
+        const newEvidence = currentEvidence 
+          ? `${currentEvidence}\n\n[AI 월간 요약]\n${data.summary}` 
+          : `[AI 월간 요약]\n${data.summary}`;
+        journal.updateCompetencySelf(year, selectedMonthIndex, memberCode, { evidence: newEvidence });
+        onToast?.('AI 요약이 증빙 메모에 추가되었습니다!');
+      } else {
+        onToast?.(`요약 실패: ${data.error}`);
+      }
+    } catch (err) {
+      console.error(err);
+      onToast?.('요약 중 오류가 발생했습니다.');
+    } finally {
+      setIsGeneratingAi(false);
+    }
+  };
 
   return (
     <article
@@ -187,6 +238,7 @@ export default function CompetencyMemberSection({
             </nav>
           )}
 
+        <div className="competency-member-tab-panels">
         {activeTab === 'level' && (
           <div className="competency-member-tab-panel" role="tabpanel">
             {!showManagerTabs && (
@@ -214,6 +266,8 @@ export default function CompetencyMemberSection({
               memberRole={member.role}
               readOnly={readOnly}
               memberView
+              isGeneratingAi={isGeneratingAi}
+              onGenerateAiSummary={handleGenerateAiSummary}
               onUpdate={(patch) => journal.updateCompetencySelf(year, selectedMonthIndex, memberCode, patch)}
               onLock={async () => {
                 const r = journal.lockCompetencyMonth(year, selectedMonthIndex, memberCode, { side: 'self' });
@@ -282,6 +336,7 @@ export default function CompetencyMemberSection({
             />
           </div>
         )}
+        </div>
         </div>
       </div>
     </article>
