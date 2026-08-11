@@ -27,11 +27,11 @@ describe('competency rubric by role', () => {
     ).toBe('instructor');
   });
 
-  it('instructor rubric rows follow accumulation order (전문성 first)', () => {
+  it('instructor rubric rows follow unified accumulation order (자율성 first)', () => {
     const ordered = rubricRowsOrderedForRole('instructor');
-    expect(ordered[0].id).toBe('expertise');
-    expect(ordered[0].label).toBe('전문성·표준화');
-    expect(orderedDimsForDisplay('instructor')[0].id).toBe('expertise');
+    expect(ordered[0].id).toBe('autonomy');
+    expect(ordered[0].label).toBe('자율성');
+    expect(orderedDimsForDisplay('instructor')[0].id).toBe('autonomy');
   });
 
   it('rubricObserveText returns KPI doc phrase for instructor L3', () => {

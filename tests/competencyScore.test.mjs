@@ -341,11 +341,11 @@ describe('competencyScore', () => {
     const d = dims(DIM_MET, DIM_MET, DIM_MET, DIM_UNMET, DIM_UNMET);
     const instructor = computeCompetencyEval({
       intLevel: 2,
-      dims: dims(DIM_UNMET, DIM_UNMET, DIM_MET, DIM_MET, DIM_MET),
+      dims: dims(DIM_MET, DIM_MET, DIM_MET, DIM_UNMET, DIM_UNMET),
       roleId: 'instructor',
     });
     expect(instructor.accumulated).toBe(0.6);
-    expect(instructor.fractional).toBe(0.6);
+    expect(instructor.fractional).toBe(0.4);
 
     const planner = computeCompetencyEval({
       intLevel: 2,
