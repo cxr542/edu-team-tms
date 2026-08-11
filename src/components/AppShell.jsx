@@ -567,6 +567,7 @@ export default function AppShell({
                     count={leaderPending.count}
                     summary={leaderPending.summary}
                     period={leaderPending.period}
+                    items={leaderPending.items}
                   />
                 )}
                 {isAdminShell && !isViewer && (
