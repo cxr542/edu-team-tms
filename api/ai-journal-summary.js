@@ -1,5 +1,7 @@
 import { memberCodeFromReferer, isAdminRouteReferer } from '../server/api-utils/requestScope.js';
 
+export const maxDuration = 60; // Allow up to 60 seconds for Gemini API to respond
+
 export default async function handler(req, res, options = {}) {
   const env = options.env || process.env;
 
