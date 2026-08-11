@@ -306,8 +306,12 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         if (!day.tasks || day.tasks.length === 0) return;
         journalText += `[${day.dayKey}]\n`;
         day.tasks.forEach(task => {
-          if (task.content) {
-            journalText += `- 카테고리: ${task.categoryId || '기타'}, 내용: ${task.content}\n`;
+          if (task.title) {
+            journalText += `- 카테고리: ${task.categoryId || '기타'}, 제목: ${task.title}`;
+            if (task.note) {
+              journalText += ` (메모: ${task.note})`;
+            }
+            journalText += '\n';
           }
         });
         journalText += '\n';
