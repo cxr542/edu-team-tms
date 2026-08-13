@@ -136,17 +136,7 @@ describe('competencyScore', () => {
     expect(quarterAverageLevel([2.4, 2.6, 3.0])).toBe(2.67);
   });
 
-  it('instructor cap — 품질·전문성 둘 다 충족 시 캡 해제', () => {
-    const d = dims(DIM_MET, DIM_MET, DIM_MET, DIM_MET, DIM_MET);
-    expect(applyCap(1.0, d, 'instructor')).toBe(1.0);
-    const d2 = dims(DIM_MET, DIM_MET, DIM_MET, DIM_MET, DIM_UNMET);
-    expect(applyCap(1.0, d2, 'instructor')).toBe(0.4);
-  });
 
-  it('planner cap — 협업 미충족', () => {
-    const d = dims(DIM_MET, DIM_MET, DIM_UNMET, DIM_MET, DIM_MET);
-    expect(applyCap(0.6, d, 'planner')).toBe(0.4);
-  });
 
   it('instructor accumulation order — 전문성 우선', () => {
     const d = dims(DIM_UNMET, DIM_UNMET, DIM_UNMET, DIM_MET, DIM_MET);
@@ -345,7 +335,7 @@ describe('competencyScore', () => {
       roleId: 'instructor',
     });
     expect(instructor.accumulated).toBe(0.6);
-    expect(instructor.fractional).toBe(0.4);
+    expect(instructor.fractional).toBe(0.6);
 
     const planner = computeCompetencyEval({
       intLevel: 2,

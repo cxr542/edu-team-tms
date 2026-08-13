@@ -134,16 +134,8 @@ export function accumulateFractional(dims, order = ACCUMULATION_ORDER_BY_ROLE.de
  */
 export function applyCap(accumulated, dims, roleId = 'default') {
   if (accumulated == null) return null;
-  let cap = COMPETENCY_CAP_RELEASE;
-  if (roleId === 'instructor') {
-    cap =
-      dims.quality === DIM_MET && dims.expertise === DIM_MET
-        ? COMPETENCY_CAP_RELEASE
-        : COMPETENCY_CAP_DEFAULT;
-  } else if (roleId === 'planner') {
-    cap = dims.collaboration === DIM_MET ? COMPETENCY_CAP_RELEASE : COMPETENCY_CAP_DEFAULT;
-  }
-  return Math.min(accumulated, cap);
+  // 직군 공통: 캡(상한) 없이 충족한 개수만큼 0.2씩 온전히 반영
+  return accumulated;
 }
 
 /** Excel MROUND(value, 0.2) — 0.2 단위, 부동소수 오차 보정 */
