@@ -131,6 +131,8 @@ export function listPendingApprovals({
     if (m01?.status === KPI_STATUS.SUBMITTED) {
       items.push({
         type: 'KPI1',
+        year,
+        monthIndex,
         member,
         label: `${member.displayName} · ${monthIndex + 1}월 ${KPI1_NAME} · 승인 요청`,
         submittedAt: m01.submittedAt,
@@ -151,6 +153,8 @@ export function listPendingApprovals({
         const rowMeta = readKpi2RowStatus(kpi2RowStatus, member.code, row.dayKey, row.taskId).value;
         items.push({
           type: 'KPI2',
+          year,
+          monthIndex,
           member,
           dayKey: row.dayKey,
           taskId: row.taskId,
@@ -198,13 +202,27 @@ export function listPendingApprovalsFromBrowser(period = readJournalPeriodFromUr
   const kpiOperational = loadKpiOperationalFromStorage();
   const improveProjects = loadImproveProjects();
   const getMemberDays = (code) => memberJournals?.[code]?.days || {};
-  return listPendingApprovals({
-    year: period.year,
-    monthIndex: period.monthIndex,
-    getMemberDays,
-    kpiOperational,
-    improveProjects,
+  
+  const allItems = [];
+  for (let m = 0; m < 12; m++) {
+    const items = listPendingApprovals({
+      year: period.year,
+      monthIndex: m,
+      getMemberDays,
+      kpiOperational,
+      improveProjects,
+    });
+    allItems.push(...items);
+  }
+  
+  // 제출일시 기준 최신순 정렬
+  allItems.sort((a, b) => {
+    const timeA = a.submittedAt ? new Date(a.submittedAt).getTime() : 0;
+    const timeB = b.submittedAt ? new Date(b.submittedAt).getTime() : 0;
+    return timeB - timeA;
   });
+  
+  return allItems;
 }
 
 export function summarizePendingApprovals(items = []) {

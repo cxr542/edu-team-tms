@@ -60,9 +60,15 @@ export default function LeaderKpiApprovalBell({ count = 0, summary, period, item
           <div className="leader-kpi-approval-popover__body">
             {items.length > 0 ? (
               <ul className="leader-kpi-approval-popover__list">
-                {items.map((item, idx) => (
+                {items.map((item, idx) => {
+                  const itemHref = buildAppModuleUrl('kpi-approve', {
+                    access: URL_ACCESS_ADMIN,
+                    year: item.year ?? period?.year,
+                    month: (item.monthIndex ?? period?.monthIndex ?? 0) + 1,
+                  });
+                  return (
                   <li key={`${item.type}-${item.member.code}-${item.dayKey || idx}`}>
-                    <a href={href} className="leader-kpi-approval-popover__item">
+                    <a href={itemHref} className="leader-kpi-approval-popover__item">
                       <div className="leader-kpi-approval-popover__item-title">
                         <span className="leader-kpi-approval-popover__item-badge">{item.type}</span>
                         {item.label}
@@ -74,7 +80,8 @@ export default function LeaderKpiApprovalBell({ count = 0, summary, period, item
                       )}
                     </a>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             ) : (
               <div className="leader-kpi-approval-popover__empty">새로운 승인 요청이 없습니다.</div>
