@@ -21,7 +21,7 @@ describe('leader KPI pending badge data', () => {
       { type: 'KPI2' },
       { type: 'KPI2' },
     ]);
-    expect(summary).toEqual({ total: 3, kpi1: 1, kpi2: 2 });
+    expect(summary).toEqual({ total: 3, kpi1: 1, kpi2: 2, kpi3: 0 });
   });
 
   it('listPendingApprovalsFromBrowser returns array', () => {

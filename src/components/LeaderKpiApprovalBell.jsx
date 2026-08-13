@@ -16,7 +16,7 @@ export default function LeaderKpiApprovalBell({ count = 0, summary, period, item
 
   const label =
     count > 0
-      ? `KPI 승인 대기 ${count}건 (KPI1 ${summary?.kpi1 ?? 0} · KPI2 ${summary?.kpi2 ?? 0})`
+      ? `KPI 승인 대기 ${count}건 (KPI1 ${summary?.kpi1 ?? 0} · KPI2 ${summary?.kpi2 ?? 0} · KPI3 ${summary?.kpi3 ?? 0})`
       : 'KPI 승인 대기 없음';
 
   useEffect(() => {

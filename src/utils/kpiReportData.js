@@ -13,7 +13,7 @@ import { monthlyFinalScore } from './competencyScore';
 import { buildKpi02EffectRows, computeTeamKpi } from './computeTeamKpi';
 import { resolveKpi2Display } from './kpi2Display';
 import { gradeKpi1, gradeKpi2, gradeKpi3 } from './kpiGrades';
-import { KPI1_NAME, KPI2_NAME } from '../constants/kpiDisplayNames';
+import { KPI1_NAME, KPI2_NAME, KPI3_NAME } from '../constants/kpiDisplayNames';
 import {
   loadMemberJournalsFromStorage,
   migrateKpiOperationalStoreReadonly,
@@ -164,6 +164,18 @@ export function listPendingApprovals({
         });
       }
     });
+
+    const kpi3Rec = migratedOperational.competencyMonths?.[ym]?.[member.code];
+    if (kpi3Rec?.selfLocked && !kpi3Rec?.managerLocked) {
+      items.push({
+        type: 'KPI3',
+        year,
+        monthIndex,
+        member,
+        label: `${member.displayName} · ${monthIndex + 1}월 ${KPI3_NAME} · 승인 요청`,
+        submittedAt: kpi3Rec.selfUpdatedAt,
+      });
+    }
   });
 
   return items;
@@ -228,5 +240,6 @@ export function listPendingApprovalsFromBrowser(period = readJournalPeriodFromUr
 export function summarizePendingApprovals(items = []) {
   const kpi1 = items.filter((item) => item.type === 'KPI1').length;
   const kpi2 = items.filter((item) => item.type === 'KPI2').length;
-  return { total: items.length, kpi1, kpi2 };
+  const kpi3 = items.filter((item) => item.type === 'KPI3').length;
+  return { total: items.length, kpi1, kpi2, kpi3 };
 }

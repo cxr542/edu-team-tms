@@ -34,7 +34,7 @@ export function useLeaderKpiPendingBadge(enabled) {
 
   return useMemo(() => {
     if (!enabled) {
-      return { count: 0, summary: { total: 0, kpi1: 0, kpi2: 0 }, items: [], period: readJournalPeriodFromUrl() };
+      return { count: 0, summary: { total: 0, kpi1: 0, kpi2: 0, kpi3: 0 }, items: [], period: readJournalPeriodFromUrl() };
     }
     const period = readJournalPeriodFromUrl();
     const items = listPendingApprovalsFromBrowser(period);
