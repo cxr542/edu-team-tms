@@ -38,6 +38,7 @@ import {
   NAV_GROUP_TEAM_COMMON,
   NAV_GROUP_VIEWER,
   NAV_GROUP_VIEWER_KPI,
+  URL_ACCESS_ADMIN,
 } from '../constants/teamAccess';
 import { isModuleVisibleInViewer } from '../constants/viewerMenu';
 import {
@@ -564,10 +565,24 @@ export default function AppShell({
               <div className="project-toolbar__actions">
                 {showLeaderApprovalBadge && (
                   <LeaderKpiApprovalBell
-                    count={leaderPending.count}
-                    summary={leaderPending.summary}
-                    period={leaderPending.period}
-                    items={leaderPending.items}
+                    count={(leaderPending?.count || 0) + (csrRequestsUnread?.count || 0)}
+                    summary={{ ...(leaderPending?.summary || {}), csr: csrRequestsUnread?.count || 0 }}
+                    period={leaderPending?.period}
+                    items={[
+                      ...(leaderPending?.items || []),
+                      ...(csrRequestsUnread?.items?.map(req => ({
+                        type: 'CSR',
+                        label: `새로운 이것도(CSR) 제안: ${req.title}`,
+                        submittedAt: req.createdAt,
+                        member: { code: 'N/A', displayName: req.requester || '알 수 없음' },
+                        href: buildAppModuleUrl('csr', { access: URL_ACCESS_ADMIN }),
+                        id: req.id,
+                      })) || []),
+                    ].sort((a, b) => {
+                      const timeA = a.submittedAt ? new Date(a.submittedAt).getTime() : 0;
+                      const timeB = b.submittedAt ? new Date(b.submittedAt).getTime() : 0;
+                      return timeB - timeA;
+                    })}
                   />
                 )}
                 {isAdminShell && !isViewer && (
