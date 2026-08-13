@@ -73,8 +73,8 @@ html.project-sidebar-collapsed-boot .project-app.theme-tms {
   font-variant-numeric: tabular-nums;
   padding: 0.12rem 0.45rem;
   border-radius: 999px;
-  color: var(--text-muted);
-  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-primary);
+  background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   letter-spacing: 0;
 }
@@ -1397,7 +1397,7 @@ html.project-sidebar-collapsed-boot .project-supabase-auth {
   display: inline-flex;
   align-items: center;
   position: relative;
-  color: var(--color-text);
+  color: var(--text-primary);
   border-radius: 50%;
   width: 32px;
   height: 32px;
@@ -1406,18 +1406,18 @@ html.project-sidebar-collapsed-boot .project-supabase-auth {
 }
 
 .leader-kpi-approval-bell:hover {
-  background-color: var(--color-bg-subtle);
+  background-color: var(--bg-secondary);
 }
 
 .leader-kpi-approval-bell.has-pending {
-  color: var(--color-primary);
+  color: var(--primary);
 }
 
 .leader-kpi-approval-bell__badge {
   position: absolute;
   top: 0;
   right: 0;
-  background-color: var(--color-danger);
+  background-color: var(--danger-color);
   color: white;
   font-size: 0.65rem;
   font-weight: bold;
@@ -1433,8 +1433,8 @@ html.project-sidebar-collapsed-boot .project-supabase-auth {
   right: 0;
   margin-top: 8px;
   width: 320px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   z-index: 50;
@@ -1445,24 +1445,24 @@ html.project-sidebar-collapsed-boot .project-supabase-auth {
 
 .leader-kpi-approval-popover__header {
   padding: 12px 16px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--color-bg-subtle);
+  background: var(--bg-secondary);
 }
 
 .leader-kpi-approval-popover__header h4 {
   margin: 0;
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 .leader-kpi-approval-popover__count {
   font-size: 0.75rem;
   font-weight: bold;
-  background: var(--color-primary);
+  background: var(--primary);
   color: white;
   padding: 2px 6px;
   border-radius: 12px;
@@ -1476,7 +1476,7 @@ html.project-sidebar-collapsed-boot .project-supabase-auth {
 .leader-kpi-approval-popover__empty {
   padding: 24px 16px;
   text-align: center;
-  color: var(--color-text-light);
+  color: var(--text-muted);
   font-size: 0.85rem;
 }
 
@@ -1487,7 +1487,7 @@ html.project-sidebar-collapsed-boot .project-supabase-auth {
 }
 
 .leader-kpi-approval-popover__list li {
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--border-soft);
 }
 
 .leader-kpi-approval-popover__list li:last-child {
@@ -1499,13 +1499,13 @@ html.project-sidebar-collapsed-boot .project-supabase-auth {
   flex-direction: column;
   padding: 12px 16px;
   text-decoration: none;
-  color: var(--color-text);
+  color: var(--text-primary);
   gap: 4px;
   transition: background-color 0.2s;
 }
 
 .leader-kpi-approval-popover__item:hover {
-  background: var(--color-bg-subtle);
+  background: var(--bg-secondary);
 }
 
 .leader-kpi-approval-popover__item-title {
@@ -1520,8 +1520,8 @@ html.project-sidebar-collapsed-boot .project-supabase-auth {
   font-size: 0.65rem;
   font-weight: bold;
   padding: 2px 4px;
-  background: var(--color-border);
-  color: var(--color-text);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
   border-radius: 4px;
   flex-shrink: 0;
   margin-top: 2px;
@@ -1529,14 +1529,14 @@ html.project-sidebar-collapsed-boot .project-supabase-auth {
 
 .leader-kpi-approval-popover__item-time {
   font-size: 0.75rem;
-  color: var(--color-text-light);
+  color: var(--text-muted);
   margin-left: 32px;
 }
 
 .leader-kpi-approval-popover__footer {
   padding: 8px;
-  border-top: 1px solid var(--color-border);
-  background: var(--color-bg-subtle);
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-secondary);
 }
 
 .leader-kpi-approval-popover__view-all {
@@ -1547,7 +1547,7 @@ html.project-sidebar-collapsed-boot .project-supabase-auth {
   width: 100%;
   padding: 8px;
   text-decoration: none;
-  color: var(--color-primary);
+  color: var(--primary);
   font-size: 0.85rem;
   font-weight: 500;
   border-radius: 4px;
@@ -1555,5 +1555,5 @@ html.project-sidebar-collapsed-boot .project-supabase-auth {
 }
 
 .leader-kpi-approval-popover__view-all:hover {
-  background: rgba(var(--color-primary-rgb), 0.1);
+  background: var(--primary-glow);
 }
