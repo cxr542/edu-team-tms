@@ -5,7 +5,7 @@ import { useJournal } from '../context/JournalProvider';
 import { useJournalPeriod } from '../hooks/useJournalPeriod';
 import { listPendingApprovals, summarizePendingApprovals } from '../utils/kpiReportData';
 import { loadAdminKpiPendingApprovals } from '../utils/kpiApprovePendingApprovals';
-import { KPI1_NAME, KPI2_NAME, kpiTypeLabel } from '../constants/kpiDisplayNames';
+import { KPI1_NAME, KPI2_NAME, KPI3_NAME, kpiTypeLabel } from '../constants/kpiDisplayNames';
 import { URL_ACCESS_ADMIN } from '../constants/teamAccess';
 import { uiTooltip } from '../utils/uiTooltip';
 import './TeamKpiPage.css';
@@ -81,6 +81,9 @@ export default function KpiApprovePage({ readOnly = false }) {
     if (rejecting.type === 'KPI1') {
       rejectKpi1(year, month, rejecting.member.code, reason);
       showToast(`${rejecting.member.displayName} ${KPI1_NAME} 반려`);
+    } else if (rejecting.type === 'KPI3') {
+      kpiOperational.unlockCompetencyMonthSelf(year, month, rejecting.member.code);
+      showToast(`${rejecting.member.displayName} ${KPI3_NAME} 반려`);
     } else {
       rejectKpi2Row(rejecting.member.code, rejecting.dayKey, rejecting.taskId, reason);
       showToast(`${KPI2_NAME} 효과 건 반려`);
@@ -157,14 +160,14 @@ export default function KpiApprovePage({ readOnly = false }) {
                 {!readOnly && (
                   <div className="team-kpi-approve-actions">
                     <AppModuleLink
-                      module="journal"
+                      module={item.type === 'KPI3' ? 'competency' : 'journal'}
                       access={URL_ACCESS_ADMIN}
                       member={item.member.code}
                       year={year}
                       month={month + 1}
                       className="btn btn-secondary btn-sm"
                     >
-                      업무일지 보기
+                      {item.type === 'KPI3' ? '역량 평가 보기' : '업무일지 보기'}
                     </AppModuleLink>
                     <button
                       type="button"
@@ -173,6 +176,9 @@ export default function KpiApprovePage({ readOnly = false }) {
                         if (item.type === 'KPI1') {
                           approveKpi1(year, month, item.member.code);
                           showToast(`${item.member.displayName} ${KPI1_NAME} 승인`);
+                        } else if (item.type === 'KPI3') {
+                          kpiOperational.lockCompetencyMonth(year, month, item.member.code, { side: 'manager' });
+                          showToast(`${item.member.displayName} ${KPI3_NAME} 승인`);
                         } else {
                           approveKpi2Row(item.member.code, item.dayKey, item.taskId);
                           showToast(`${KPI2_NAME} 승인`);

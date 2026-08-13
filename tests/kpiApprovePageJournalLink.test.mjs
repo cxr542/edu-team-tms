@@ -8,7 +8,7 @@ describe('KpiApprovePage journal link', () => {
   it('renders 업무일지 보기 link on each pending approval card', () => {
     expect(source).toContain('업무일지 보기');
     expect(source).toContain('AppModuleLink');
-    expect(source).toContain('module="journal"');
+    expect(source).toContain("module={item.type === 'KPI3' ? 'competency' : 'journal'}");
     expect(source).toContain('access={URL_ACCESS_ADMIN}');
     expect(source).toContain('member={item.member.code}');
     expect(source).toContain('year={year}');
