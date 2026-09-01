@@ -43,7 +43,7 @@ import { usePublicSnapshot } from './hooks/usePublicSnapshot';
 import { useAutoPublishLedger } from './hooks/useAutoPublishLedger';
 import CategoryManageModal from './components/CategoryManageModal';
 import CardPasteModal from './components/CardPasteModal';
-import { MONTHLY_BUDGET } from './utils/ledgerBalances';
+import { getMonthlyBudget } from './utils/ledgerBalances';
 import {
   cloneLedgerTransaction,
   getLedgerYearOptions,
@@ -704,7 +704,7 @@ export default function App() {
     teamAccess.isLeader;
 
   // 필터링된 현재 월의 지출 데이터 집계
-  const monthlyBudget = MONTHLY_BUDGET;
+  const monthlyBudget = getMonthlyBudget(`${selectedYear}-${selectedMonth}`);
   
   // 선택된 연도와 월의 총 지출액 계산
   const currentMonthTxs = transactions.filter(t => {
@@ -1316,7 +1316,7 @@ export default function App() {
                 ? isMemberLedger
                   ? '사용자 장부는 조회 전용입니다. 거래 추가·수정·삭제는 관리자 화면에서만 가능합니다.'
                   : '교육팀 팀 빌딩 지출·잔액을 조회합니다. (작성·수정은 관리자만 가능)'
-                : '매월 150,000원씩 배정되는 교육팀의 팀 빌딩 지출 및 잔액 흐름을 꼼꼼하게 관리합니다.'}
+                : '매월 배정되는 교육팀의 팀 빌딩 지출 및 잔액 흐름을 꼼꼼하게 관리합니다.'}
             </p>
             {isMemberLedger && !isViewer && (
               <p style={{ marginTop: '0.35rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
@@ -1723,7 +1723,7 @@ export default function App() {
                 <div className="activity-avatar" style={{ color: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.08)' }}>이</div>
                 <div className="activity-info">
                   <h5>이월 정책 금지</h5>
-                  <p>당월 미집행된 잔액 15만 원 한도는 다음 달로 이월되지 않고 소멸됩니다.</p>
+                  <p>당월 미집행된 예산 잔액은 다음 달로 이월되지 않고 소멸됩니다.</p>
                 </div>
               </div>
             </div>

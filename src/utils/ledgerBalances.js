@@ -1,6 +1,11 @@
-export const MONTHLY_BUDGET = 150000;
+export function getMonthlyBudget(yyyymm) {
+  if (yyyymm >= '2026-09') {
+    return 45000;
+  }
+  return 150000;
+}
 
-/** 날짜순 정렬 후 월별 15만 원 기준 잔액 계산 */
+/** 날짜순 정렬 후 월별 예산 기준 잔액 계산 */
 export function calculateBalances(items) {
   const sorted = [...items].sort((a, b) => new Date(a.date) - new Date(b.date));
 
@@ -12,7 +17,7 @@ export function calculateBalances(items) {
   });
 
   Object.keys(groups).forEach((yyyymm) => {
-    let runningBalance = MONTHLY_BUDGET;
+    let runningBalance = getMonthlyBudget(yyyymm);
     groups[yyyymm].forEach((tx) => {
       runningBalance -= tx.amount;
       tx.balance = runningBalance;

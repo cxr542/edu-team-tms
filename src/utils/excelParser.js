@@ -3,6 +3,7 @@ import {
   resolveUsageCategory,
   normalizeAttendees,
 } from '../constants/usageCategories';
+import { calculateBalances } from './ledgerBalances';
 
 /**
  * 팀 빌딩비 지출 장부 컬럼 매핑 규칙 (한국어 변이 고려)
@@ -38,24 +39,6 @@ function excelSerialToIso(v) {
     return `${dateObj.y}-${m}-${d}`;
   }
   return null;
-}
-
-function recalculateMonthlyBalances(transactions) {
-  const sorted = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
-  const groups = {};
-  sorted.forEach((t) => {
-    const ym = t.date.slice(0, 7);
-    if (!groups[ym]) groups[ym] = [];
-    groups[ym].push(t);
-  });
-  Object.keys(groups).forEach((ym) => {
-    let runningBalance = 150000;
-    groups[ym].forEach((tx) => {
-      runningBalance -= tx.amount;
-      tx.balance = runningBalance;
-    });
-  });
-  return sorted;
 }
 
 /**
@@ -117,7 +100,7 @@ export function parseTeamBuildingWorkbook(workbook) {
     }
   });
 
-  return recalculateMonthlyBalances(transactions);
+  return calculateBalances(transactions);
 }
 
 function isTeamBuildingWorkbook(workbook) {
@@ -214,7 +197,7 @@ export function parseExcelFile(file) {
           return tx;
         });
 
-        resolve(recalculateMonthlyBalances(parsedTransactions));
+        resolve(calculateBalances(parsedTransactions));
       } catch (error) {
         reject(error);
       }
