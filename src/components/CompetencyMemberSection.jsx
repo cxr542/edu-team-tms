@@ -183,38 +183,44 @@ export default function CompetencyMemberSection({
                     </button>
                   ))}
                 </div>
-                {showManagerTabs && (
-                  <div className="competency-month-cloud-actions">
-                    <button
-                      type="button"
-                      className="btn btn-import-shared btn-sm"
-                      disabled={cloudBusy || readOnly}
-                      aria-label="승인된 월별 레벨 반영"
-                      {...uiTooltip(
-                        '팀장이 확정한 월별 레벨 자체평가만 현재 화면에 반영합니다. 다면·리더·실전 등 분기 평가 입력 내용은 변경하지 않습니다.',
-                        undefined,
-                        { wrap: true }
-                      )}
-                      onClick={async () => {
-                        setCloudBusy(true);
-                        try {
-                          const r = await journal.pullCompetencyCloudSnapshot();
-                          if (r.ok) onToast?.('승인된 월별 레벨을 반영했습니다');
-                          else if (r.reason === 'read-only') onToast?.('조회 모드에서는 가져올 수 없습니다');
-                          else onToast?.(r.error?.message || '승인된 월별 레벨 반영에 실패했습니다');
-                        } finally {
-                          setCloudBusy(false);
+                <div className="competency-month-cloud-actions">
+                  <button
+                    type="button"
+                    className="btn btn-import-shared btn-sm"
+                    disabled={cloudBusy || readOnly}
+                    aria-label={showManagerTabs ? '승인된 월별 레벨 반영' : '팀 공유본 가져오기'}
+                    {...uiTooltip(
+                      showManagerTabs
+                        ? '팀장이 확정한 월별 레벨 자체평가만 현재 화면에 반영합니다. 다면·리더·실전 등 분기 평가 입력 내용은 변경하지 않습니다.'
+                        : '클라우드(팀 공유 저장소)에 저장된 월별 역량 평가 데이터를 가져와 현재 화면에 반영합니다. 분기 평가 입력 내용은 유지됩니다.',
+                      undefined,
+                      { wrap: true }
+                    )}
+                    onClick={async () => {
+                      setCloudBusy(true);
+                      try {
+                        const r = await journal.pullCompetencyCloudSnapshot();
+                        if (r.ok) {
+                          onToast?.(showManagerTabs ? '승인된 월별 레벨을 반영했습니다' : '팀 공유본(월별 역량 평가)을 반영했습니다');
+                        } else if (r.reason === 'read-only') {
+                          onToast?.('조회 모드에서는 가져올 수 없습니다');
+                        } else {
+                          onToast?.(r.error?.message || (showManagerTabs ? '승인된 월별 레벨 반영에 실패했습니다' : '팀 공유본 반영에 실패했습니다'));
                         }
-                      }}
-                    >
-                      <Import size={15} />
-                      {cloudBusy ? '가져오는 중…' : '승인된 월별 레벨 반영'}
-                    </button>
-                    <p className="team-kpi-hint competency-month-cloud-actions__hint">
-                      팀장이 확정한 월별 레벨 자체평가만 반영합니다. 분기 평가 입력 내용은 유지됩니다.
-                    </p>
-                  </div>
-                )}
+                      } finally {
+                        setCloudBusy(false);
+                      }
+                    }}
+                  >
+                    <Import size={15} />
+                    {cloudBusy ? '가져오는 중…' : (showManagerTabs ? '승인된 월별 레벨 반영' : '팀 공유본 가져오기')}
+                  </button>
+                  <p className="team-kpi-hint competency-month-cloud-actions__hint">
+                    {showManagerTabs
+                      ? '팀장이 확정한 월별 레벨 자체평가만 반영합니다. 분기 평가 입력 내용은 유지됩니다.'
+                      : '클라우드에 저장된 월별 역량 평가 데이터를 가져옵니다. 분기 평가 입력 내용은 유지됩니다.'}
+                  </p>
+                </div>
               </>
             )}
           </div>
