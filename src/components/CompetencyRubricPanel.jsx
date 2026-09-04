@@ -334,9 +334,9 @@ export default function CompetencyRubricPanel({
 
       {memberView && !locked && hasValidIntLevel && (
         <p className="team-kpi-hint competency-dim-hint">
-          연속 충족 {consecutiveMet}/{COMPETENCY_DIM_IDS.length}단계
+          충족 차원 {consecutiveMet}/{COMPETENCY_DIM_IDS.length}개
           {' — '}
-          충족한 단계까지만 선택하면 되며, 미충족 이후 차원은 자동으로 미충족 처리됩니다.
+          충족 1개당 +0.2점씩 합산됩니다. (순서 제한 없음)
         </p>
       )}
 

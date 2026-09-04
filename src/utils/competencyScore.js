@@ -47,44 +47,23 @@ export function coerceDimStatus(value) {
 }
 
 /**
- * dims 정규화: 빈 값 보정 + 연속 충족 체인 (직군 누적 순서 기준)
- * 상위(선행) 차원이 unmet이면 이후 차원은 모두 unmet
+ * dims 정규화: 빈 값 보정 (차원별 독립)
  */
 export function normalizeDimsChain(dims, roleId = 'default') {
-  const order = accumulationOrderForRole(roleId);
   const merged = { ...defaultCompetencyDims(), ...(dims || {}) };
   const result = {};
   for (const id of COMPETENCY_DIM_IDS) {
     result[id] = coerceDimStatus(merged[id]);
   }
-  let chainBroken = false;
-  for (const id of order) {
-    if (chainBroken) {
-      result[id] = DIM_UNMET;
-    } else if (result[id] !== DIM_MET) {
-      result[id] = DIM_UNMET;
-      chainBroken = true;
-    }
-  }
   return result;
 }
 
 /**
- * UI 차원 변경 — met: 해당 단계까지 상위 연속 met + 이후 unmet
- * unmet: 해당 차원 및 하위(누적 순서) unmet
+ * UI 차원 변경 — 개별 차원 독립 변경 (연속 체인 강제 없음)
  */
 export function applyDimChange(currentDims, dimId, value, roleId = 'default') {
-  const order = accumulationOrderForRole(roleId);
-  const idx = order.indexOf(dimId);
   const next = { ...defaultCompetencyDims(), ...(currentDims || {}) };
-  if (idx < 0) return normalizeDimsChain(next, roleId);
-
-  if (value === DIM_MET) {
-    for (let i = 0; i <= idx; i += 1) next[order[i]] = DIM_MET;
-    for (let i = idx + 1; i < order.length; i += 1) next[order[i]] = DIM_UNMET;
-  } else {
-    for (let i = idx; i < order.length; i += 1) next[order[i]] = DIM_UNMET;
-  }
+  next[dimId] = coerceDimStatus(value);
   return normalizeDimsChain(next, roleId);
 }
 
@@ -96,32 +75,28 @@ export function isDimsComplete(dims) {
   });
 }
 
-/** 연속 충족 단계 수 (누적 순서 기준, 0~5) */
+/** 충족 단계 수 (0~5) */
 export function countConsecutiveMetFromStart(dims, roleId = 'default') {
-  const order = accumulationOrderForRole(roleId);
   const normalized = normalizeDimsChain(dims, roleId);
   let count = 0;
-  for (const id of order) {
+  for (const id of COMPETENCY_DIM_IDS) {
     if (normalized[id] === DIM_MET) count += 1;
-    else break;
   }
   return count;
 }
 
 /**
- * 소수 누적 (선행 차원 충족 시 +0.2)
+ * 소수 누적 (충족 차원당 +0.2)
  * @param {Record<string, string>} dims
  * @param {string[]} [order]
  */
 export function accumulateFractional(dims, order = ACCUMULATION_ORDER_BY_ROLE.default) {
   if (!dims || !isDimsComplete(dims)) return null;
-  let total = 0;
-  for (let i = 0; i < order.length; i += 1) {
-    const chainMet = order.slice(0, i + 1).every((id) => dims[id] === DIM_MET);
-    if (!chainMet) break;
-    total += 0.2;
+  let count = 0;
+  for (const id of COMPETENCY_DIM_IDS) {
+    if (dims[id] === DIM_MET) count += 1;
   }
-  return Math.round(total * 10) / 10;
+  return Math.round(count * 0.2 * 10) / 10;
 }
 
 /**

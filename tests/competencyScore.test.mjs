@@ -84,7 +84,7 @@ describe('competencyScore', () => {
   });
 
   it('빈 dims 값이 normalize 후 unmet', () => {
-    const normalized = normalizeDimsChain(dims('', null, undefined, DIM_MET, DIM_UNMET));
+    const normalized = normalizeDimsChain(dims('', null, undefined, '', 'invalid'));
     expect(normalized.autonomy).toBe(DIM_UNMET);
     expect(normalized.scope).toBe(DIM_UNMET);
     expect(normalized.collaboration).toBe(DIM_UNMET);
@@ -92,12 +92,12 @@ describe('competencyScore', () => {
     expect(normalized.expertise).toBe(DIM_UNMET);
   });
 
-  it('김윤형 2026-01 — D,E 충족, F 미충족 → 2.4', () => {
+  it('김윤형 2026-01 — 3개 차원 충족 (순서 무관) → 2.6', () => {
     const d = dims(DIM_MET, DIM_MET, DIM_UNMET, DIM_MET, DIM_UNMET);
     const r = computeCompetencyEval({ intLevel: 2, dims: d, roleId: 'default' });
-    expect(r.accumulated).toBe(0.4);
-    expect(r.fractional).toBe(0.4);
-    expect(r.proposed).toBe(2.4);
+    expect(r.accumulated).toBe(0.6);
+    expect(r.fractional).toBe(0.6);
+    expect(r.proposed).toBe(2.6);
   });
 
   it('신혜윤 2026-01 팀장 — D만 충족 → 3.2', () => {
@@ -242,34 +242,33 @@ describe('competencyScore', () => {
     expect(r.proposed).toBe(3);
   });
 
-  it('뒤 차원만 met, 앞 unmet — normalize 후 모두 unmet, fractional 0', () => {
+  it('뒤 차원만 met, 앞 unmet — 충족 개수만큼 0.2씩 합산 (2개 충족 → 0.4)', () => {
     const r = computeCompetencyEval({
       intLevel: 2,
       dims: dims(DIM_UNMET, DIM_UNMET, DIM_UNMET, DIM_MET, DIM_MET),
       roleId: 'default',
     });
-    expect(r.fractional).toBe(0);
-    expect(r.proposed).toBe(2);
-    expect(r.dims).toBeUndefined();
-    expect(normalizeDimsChain(dims(DIM_UNMET, DIM_UNMET, DIM_UNMET, DIM_MET, DIM_MET)).quality).toBe(DIM_UNMET);
+    expect(r.fractional).toBe(0.4);
+    expect(r.proposed).toBe(2.4);
+    expect(normalizeDimsChain(dims(DIM_UNMET, DIM_UNMET, DIM_UNMET, DIM_MET, DIM_MET)).quality).toBe(DIM_MET);
   });
 
-  it('applyDimChange — 두 번째만 met 시도 시 첫 번째까지 met, 이후 unmet', () => {
+  it('applyDimChange — 특정 차원만 독립적으로 met 변경', () => {
     const next = applyDimChange(defaultCompetencyDims(), 'scope', DIM_MET, 'default');
-    expect(next.autonomy).toBe(DIM_MET);
+    expect(next.autonomy).toBe(DIM_UNMET);
     expect(next.scope).toBe(DIM_MET);
     expect(next.collaboration).toBe(DIM_UNMET);
     expect(next.expertise).toBe(DIM_UNMET);
   });
 
-  it('applyDimChange — 중간 unmet 시 하위 차원 unmet', () => {
+  it('applyDimChange — 중간 unmet 변경 시 다른 충족 차원은 유지', () => {
     const base = dims(DIM_MET, DIM_MET, DIM_MET, DIM_MET, DIM_MET);
     const next = applyDimChange(base, 'collaboration', DIM_UNMET, 'default');
     expect(next.autonomy).toBe(DIM_MET);
     expect(next.scope).toBe(DIM_MET);
     expect(next.collaboration).toBe(DIM_UNMET);
-    expect(next.quality).toBe(DIM_UNMET);
-    expect(next.expertise).toBe(DIM_UNMET);
+    expect(next.quality).toBe(DIM_MET);
+    expect(next.expertise).toBe(DIM_MET);
   });
 
   it('normalizeCompetencyEvalSide — stale computed·빈 dims 보정', () => {
