@@ -39,6 +39,19 @@ export default function CompetencyMemberSection({
   const quarterNumber = Number(quarter || Math.floor(monthIndex / 3) + 1);
   const quarterMonthIndexes = [0, 1, 2].map((offset) => (quarterNumber - 1) * 3 + offset);
 
+  const quarterMonthStatuses = quarterMonthIndexes.map((mIdx) => {
+    const rec = journal.getCompetencyMonth(year, mIdx, memberCode);
+    const locked = Boolean(rec?.selfLocked);
+    const score = locked && rec?.self?.computed?.proposed != null ? rec.self.computed.proposed : null;
+    return {
+      mIdx,
+      month: mIdx + 1,
+      locked,
+      score,
+    };
+  });
+  const submittedMonthsCount = quarterMonthStatuses.filter((s) => s.locked).length;
+
   const activeMeta = COMPETENCY_MEMBER_TABS.find((t) => t.id === activeTab) ?? COMPETENCY_MEMBER_TABS[0];
   const monthlyTab = COMPETENCY_MEMBER_TABS.find((tab) => tab.id === 'level') ?? COMPETENCY_MEMBER_TABS[0];
   const quarterlyTabs = COMPETENCY_MEMBER_TABS.filter((tab) =>
@@ -115,7 +128,17 @@ export default function CompetencyMemberSection({
           <div>
             <dt>{selectedMonthIndex + 1}월 자체</dt>
             <dd className={competencyMonthRec?.selfLocked ? 'is-done' : ''}>
-              {competencyMonthRec?.selfLocked ? '확정' : '작성중'}
+              {competencyMonthRec?.selfLocked
+                ? (competencyMonthRec?.self?.computed?.proposed != null
+                    ? `제출 (${competencyMonthRec.self.computed.proposed}점)`
+                    : '제출완료')
+                : '작성중'}
+            </dd>
+          </div>
+          <div>
+            <dt>{quarter}분기 제출</dt>
+            <dd className={submittedMonthsCount === 3 ? 'is-done' : ''}>
+              {submittedMonthsCount}/3개월
             </dd>
           </div>
           <div>
@@ -135,6 +158,54 @@ export default function CompetencyMemberSection({
 
       <div className="competency-member-input-layout">
         <aside className="competency-member-input-menu">
+          <div className="competency-menu-cloud-sync">
+            <button
+              type="button"
+              className="btn btn-import-shared btn-sm btn-block"
+              disabled={cloudBusy || readOnly}
+              aria-label={showManagerTabs ? '승인된 월별 레벨 반영' : '팀 공유본 전체 가져오기'}
+              {...uiTooltip(
+                showManagerTabs
+                  ? '팀장이 확정한 월별 레벨 자체평가만 현재 화면에 반영합니다. 다면·리더·실전 등 분기 평가 입력 내용은 변경하지 않습니다.'
+                  : '클라우드(팀 공유 저장소)에 저장된 1년 전체 월별 역량 평가 데이터를 한 번에 가져옵니다. 분기 평가 입력 내용은 유지됩니다.',
+                undefined,
+                { wrap: true }
+              )}
+              onClick={async () => {
+                setCloudBusy(true);
+                try {
+                  const r = await journal.pullCompetencyCloudSnapshot();
+                  if (r.ok) {
+                    onToast?.(
+                      showManagerTabs
+                        ? '승인된 월별 레벨을 전체 반영했습니다'
+                        : '클라우드에서 전체 월별 역량 평가 데이터를 가져왔습니다'
+                    );
+                  } else if (r.reason === 'read-only') {
+                    onToast?.('조회 모드에서는 가져올 수 없습니다');
+                  } else {
+                    onToast?.(
+                      r.error?.message ||
+                        (showManagerTabs
+                          ? '승인된 월별 레벨 반영에 실패했습니다'
+                          : '팀 공유본 가져오기에 실패했습니다')
+                    );
+                  }
+                } finally {
+                  setCloudBusy(false);
+                }
+              }}
+            >
+              <Import size={14} />
+              {cloudBusy ? '가져오는 중…' : (showManagerTabs ? '승인 레벨 전체 반영' : '팀 공유본 전체 가져오기')}
+            </button>
+            <p className="team-kpi-hint competency-menu-cloud-sync__hint">
+              {showManagerTabs
+                ? '팀장 확정 레벨 전체를 동기화합니다.'
+                : '1년 전체 월별 평가를 한 번에 동기화합니다.'}
+            </p>
+          </div>
+
           <p className="competency-member-input-menu__eyebrow">입력 메뉴</p>
           <nav
             className="competency-member-mode-nav"
@@ -147,7 +218,11 @@ export default function CompetencyMemberSection({
               aria-current={activeTab === 'level' ? 'true' : undefined}
             >
               <span>월별 레벨 자체평가</span>
-              <small>매월 작성</small>
+              <small>
+                {submittedMonthsCount === 3
+                  ? '3/3개월 제출 완료'
+                  : `${submittedMonthsCount}/3개월 제출 (미제출 ${3 - submittedMonthsCount}건)`}
+              </small>
             </button>
             <button
               type="button"
@@ -156,7 +231,7 @@ export default function CompetencyMemberSection({
               aria-current={kpi3Section ? 'true' : undefined}
             >
               <span>분기 평가 입력</span>
-              <small>분기별 작성</small>
+              <small>다면 · 리더 · 실전</small>
             </button>
           </nav>
         </aside>
@@ -169,59 +244,30 @@ export default function CompetencyMemberSection({
             <h3>{kpi3Section ? '분기 평가 입력' : `${year}년 ${selectedMonthIndex + 1}월 ${monthlyTab.label}`}</h3>
             <p className="team-kpi-hint competency-member-tab-hint">{activeMeta.hint}</p>
             {!kpi3Section && (
-              <>
-                <div className="competency-month-selector" aria-label="월별 레벨 자체평가 월 선택">
-                  {quarterMonthIndexes.map((mIdx) => (
-                    <button
-                      key={mIdx}
-                      type="button"
-                      className={`competency-month-selector__btn${selectedMonthIndex === mIdx ? ' is-active' : ''}`}
-                      onClick={() => setSelectedMonthIndex(mIdx)}
-                      aria-current={selectedMonthIndex === mIdx ? 'true' : undefined}
-                    >
-                      {mIdx + 1}월
-                    </button>
-                  ))}
-                </div>
-                <div className="competency-month-cloud-actions">
+              <div className="competency-month-selector" aria-label="월별 레벨 자체평가 월 선택">
+                {quarterMonthStatuses.map(({ mIdx, month, locked, score }) => (
                   <button
+                    key={mIdx}
                     type="button"
-                    className="btn btn-import-shared btn-sm"
-                    disabled={cloudBusy || readOnly}
-                    aria-label={showManagerTabs ? '승인된 월별 레벨 반영' : '팀 공유본 가져오기'}
-                    {...uiTooltip(
-                      showManagerTabs
-                        ? '팀장이 확정한 월별 레벨 자체평가만 현재 화면에 반영합니다. 다면·리더·실전 등 분기 평가 입력 내용은 변경하지 않습니다.'
-                        : '클라우드(팀 공유 저장소)에 저장된 월별 역량 평가 데이터를 가져와 현재 화면에 반영합니다. 분기 평가 입력 내용은 유지됩니다.',
-                      undefined,
-                      { wrap: true }
-                    )}
-                    onClick={async () => {
-                      setCloudBusy(true);
-                      try {
-                        const r = await journal.pullCompetencyCloudSnapshot();
-                        if (r.ok) {
-                          onToast?.(showManagerTabs ? '승인된 월별 레벨을 반영했습니다' : '팀 공유본(월별 역량 평가)을 반영했습니다');
-                        } else if (r.reason === 'read-only') {
-                          onToast?.('조회 모드에서는 가져올 수 없습니다');
-                        } else {
-                          onToast?.(r.error?.message || (showManagerTabs ? '승인된 월별 레벨 반영에 실패했습니다' : '팀 공유본 반영에 실패했습니다'));
-                        }
-                      } finally {
-                        setCloudBusy(false);
-                      }
-                    }}
+                    className={`competency-month-selector__btn${selectedMonthIndex === mIdx ? ' is-active' : ''}${
+                      locked ? ' is-submitted' : ''
+                    }`}
+                    onClick={() => setSelectedMonthIndex(mIdx)}
+                    aria-current={selectedMonthIndex === mIdx ? 'true' : undefined}
                   >
-                    <Import size={15} />
-                    {cloudBusy ? '가져오는 중…' : (showManagerTabs ? '승인된 월별 레벨 반영' : '팀 공유본 가져오기')}
+                    <span className="competency-month-selector__name">{month}월</span>
+                    <span
+                      className={`competency-month-selector__badge ${
+                        locked
+                          ? 'competency-month-selector__badge--done'
+                          : 'competency-month-selector__badge--pending'
+                      }`}
+                    >
+                      {locked ? (score != null ? `${score}점 (제출)` : '제출됨') : '작성중'}
+                    </span>
                   </button>
-                  <p className="team-kpi-hint competency-month-cloud-actions__hint">
-                    {showManagerTabs
-                      ? '팀장이 확정한 월별 레벨 자체평가만 반영합니다. 분기 평가 입력 내용은 유지됩니다.'
-                      : '클라우드에 저장된 월별 역량 평가 데이터를 가져옵니다. 분기 평가 입력 내용은 유지됩니다.'}
-                  </p>
-                </div>
-              </>
+                ))}
+              </div>
             )}
           </div>
 

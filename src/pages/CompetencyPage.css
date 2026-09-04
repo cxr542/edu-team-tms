@@ -520,6 +520,27 @@
   resize: vertical;
 }
 
+.competency-menu-cloud-sync {
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-subtle, #e5e7eb);
+}
+
+.competency-menu-cloud-sync .btn-block {
+  width: 100%;
+  justify-content: center;
+  font-size: 0.8125rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.competency-menu-cloud-sync__hint {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--text-muted, #64748b);
+  text-align: center;
+}
+
 .competency-month-selector {
   display: flex;
   flex-wrap: wrap;
@@ -528,14 +549,18 @@
 }
 
 .competency-month-selector__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   border: 1px solid var(--border-subtle, #e5e7eb);
   border-radius: 999px;
   background: #fff;
   color: var(--text-main, #111827);
-  padding: 7px 12px;
+  padding: 6px 12px;
   font-size: 0.86rem;
   font-weight: 800;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .competency-month-selector__btn:hover {
@@ -546,6 +571,38 @@
   border-color: rgba(37, 99, 235, 0.45);
   background: rgba(37, 99, 235, 0.1);
   color: var(--accent, #2563eb);
+}
+
+.competency-month-selector__badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+  line-height: 1.3;
+}
+
+.competency-month-selector__badge--done {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.competency-month-selector__badge--pending {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+
+.competency-month-selector__btn.is-active .competency-month-selector__badge--done {
+  background: #d1fae5;
+  color: #065f46;
+  border-color: #6ee7b7;
+}
+
+.competency-month-selector__btn.is-active .competency-month-selector__badge--pending {
+  background: #ffedd5;
+  color: #9a3412;
+  border-color: #fdba74;
 }
 
 .competency-self-actions {
