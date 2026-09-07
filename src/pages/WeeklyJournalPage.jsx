@@ -2170,15 +2170,15 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                           <div className="journal-week-notes-head">
                             <span className="journal-week-notes-tag">금주(요약)</span>
                             {!journalReadOnly && (
-                              <>
+                              <div className="journal-week-notes-actions">
                                 {prevWeek && (
                                   <button
                                     type="button"
-                                    className="journal-summary-draft-btn"
+                                    className="journal-summary-draft-btn journal-summary-draft-btn--primary"
                                     title={`${prevWeek.index}주 차주(예정) 내용을 금주(요약)으로 불러옵니다`}
                                     onClick={() => handleImportPrevWeekPlan(week, prevWeek)}
                                   >
-                                    전주 계획 불러오기
+                                    전주 불러오기
                                   </button>
                                 )}
                                 <button
@@ -2191,7 +2191,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                                 >
                                   기본 양식
                                 </button>
-                              </>
+                              </div>
                             )}
                           </div>
                           <JournalWeekColumnTextarea
@@ -2207,16 +2207,18 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                           <div className="journal-week-notes-head">
                             <span className="journal-week-notes-tag">차주(예정)</span>
                             {!journalReadOnly && (
-                              <button
-                                type="button"
-                                className="journal-summary-draft-btn"
-                                onClick={() => {
-                                  journal.applyWeekColumnTemplate(week.key, 'next', memberCode);
-                                  showToast(`${week.index}주 차주(예정) 기본 양식 적용`);
-                                }}
-                              >
-                                기본 양식
-                              </button>
+                              <div className="journal-week-notes-actions">
+                                <button
+                                  type="button"
+                                  className="journal-summary-draft-btn"
+                                  onClick={() => {
+                                    journal.applyWeekColumnTemplate(week.key, 'next', memberCode);
+                                    showToast(`${week.index}주 차주(예정) 기본 양식 적용`);
+                                  }}
+                                >
+                                  기본 양식
+                                </button>
+                              </div>
                             )}
                           </div>
                           <JournalWeekColumnTextarea
