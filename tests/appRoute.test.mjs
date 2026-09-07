@@ -67,6 +67,8 @@ describe('appRoute path scopes', () => {
     expect(getModuleFromLocation({ pathname: '/yhkim', search: '' })).toBe('journal');
     expect(getModuleFromLocation({ pathname: '/admin', search: '?module=announcements' })).toBe('announcements');
     expect(getModuleFromLocation({ pathname: '/admin', search: '?module=csr' })).toBe('csr');
+    expect(getModuleFromLocation({ pathname: '/yhkim', search: '?module=glossary' })).toBe('glossary');
+    expect(resolveAppModuleId('glossary')).toBe('glossary');
   });
 
   it('resolves legacy idea-bank module to csr', () => {

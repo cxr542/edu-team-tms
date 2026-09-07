@@ -36,6 +36,7 @@ const APP_MODULES = new Set([
   'kpi',
   'kpi-approve',
   'kpi-report',
+  'glossary',
 ]);
 
 /** 옛 module 쿼리 → 현재 모듈 id (북마크 호환) */

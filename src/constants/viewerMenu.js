@@ -2,7 +2,7 @@
 
 export const VIEWER_MENU_STORAGE_KEY = 'tms-viewer-menu-v1';
 
-/** @typedef {'ledger' | 'lunch' | 'csr' | 'lecture-journal' | 'kpi-report' | 'kpi-approve' | 'docs'} ViewerMenuModuleId */
+/** @typedef {'ledger' | 'lunch' | 'csr' | 'lecture-journal' | 'kpi-report' | 'kpi-approve' | 'docs' | 'glossary'} ViewerMenuModuleId */
 
 /** @type {ViewerMenuModuleId[]} */
 export const VIEWER_MENU_MODULE_IDS = [
@@ -13,6 +13,7 @@ export const VIEWER_MENU_MODULE_IDS = [
   'kpi-report',
   'kpi-approve',
   'docs',
+  'glossary',
 ];
 
 /** @type {Record<ViewerMenuModuleId, boolean>} */
@@ -24,6 +25,7 @@ export const DEFAULT_VIEWER_MENU_VISIBILITY = {
   'kpi-report': false,
   'kpi-approve': false,
   docs: false,
+  glossary: false,
 };
 
 /** @type {{ id: ViewerMenuModuleId, required: boolean, description: string }[]} */
@@ -62,6 +64,11 @@ export const VIEWER_MENU_OPTIONS = [
     id: 'docs',
     required: false,
     description: '참고문서 (KPI 정의서·릴리즈 노트 등)',
+  },
+  {
+    id: 'glossary',
+    required: false,
+    description: '용어사전 (AI-Synapse Wiki) · 팀원/조회용',
   },
 ];
 
