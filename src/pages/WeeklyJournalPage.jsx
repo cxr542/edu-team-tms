@@ -16,7 +16,7 @@ import {
   Target,
   Upload,
 } from 'lucide-react';
-import { resolveMemberCategories } from '../utils/journalMemberPrefs';
+import { resolveMemberCategories, resolveMemberWeekColumnTemplate } from '../utils/journalMemberPrefs';
 import { useJournal } from '../context/JournalProvider';
 import { useJournalPeriod } from '../hooks/useJournalPeriod';
 import {
@@ -1140,6 +1140,29 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     setEditTask(null);
   };
 
+  const handleImportPrevWeekPlan = (targetWeek, sourcePrevWeek) => {
+    if (journalReadOnly) return;
+    const prevPlan = journal.getNextWeekContent(sourcePrevWeek.key, memberCode);
+    const template = resolveMemberWeekColumnTemplate(journal.getMemberPrefs(memberCode));
+    const isBlankOrTemplate = !prevPlan || !prevPlan.trim() || prevPlan.trim() === template.trim();
+    if (isBlankOrTemplate) {
+      showToast(`${sourcePrevWeek.index}주 차주(예정)에 작성된 내용이 없습니다`);
+      return;
+    }
+
+    const currentSummary = journal.getWeekSummaryContent(targetWeek.key, memberCode);
+    const hasCustomContent = currentSummary && currentSummary.trim() && currentSummary.trim() !== template.trim();
+    if (hasCustomContent) {
+      const ok = window.confirm(
+        `${targetWeek.index}주 금주(요약)에 이미 작성된 내용이 있습니다.\n${sourcePrevWeek.index}주 차주(예정) 내용으로 덮어쓸까요?`
+      );
+      if (!ok) return;
+    }
+
+    journal.setWeekSummary(targetWeek.key, prevPlan, memberCode);
+    showToast(`${sourcePrevWeek.index}주 차주(예정) 내용을 불러왔습니다`);
+  };
+
   const leavePreview = leaveDayKey
     ? (() => {
         const d = { ...getDay(leaveDayKey), mm: { ...getDay(leaveDayKey).mm, leave: Number(leaveLeave) || 0 } };
@@ -2056,7 +2079,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           </div>
         )}
 
-        {weeks.map((week) => {
+        {weeks.map((week, weekIdx) => {
+          const prevWeek = weekIdx > 0 ? weeks[weekIdx - 1] : null;
           const stats = getWeekCompletionStats(week.days, month, getDay);
           const fmt = (dt) => `${dt.getMonth() + 1}/${dt.getDate()}`;
           const start = week.days[0];
@@ -2146,16 +2170,28 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                           <div className="journal-week-notes-head">
                             <span className="journal-week-notes-tag">금주(요약)</span>
                             {!journalReadOnly && (
-                              <button
-                                type="button"
-                                className="journal-summary-draft-btn"
-                                onClick={() => {
-                                  journal.applyWeekColumnTemplate(week.key, 'summary', memberCode);
-                                  showToast(`${week.index}주 금주(요약) 기본 양식 적용`);
-                                }}
-                              >
-                                기본 양식
-                              </button>
+                              <>
+                                {prevWeek && (
+                                  <button
+                                    type="button"
+                                    className="journal-summary-draft-btn"
+                                    title={`${prevWeek.index}주 차주(예정) 내용을 금주(요약)으로 불러옵니다`}
+                                    onClick={() => handleImportPrevWeekPlan(week, prevWeek)}
+                                  >
+                                    전주 계획 불러오기
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  className="journal-summary-draft-btn"
+                                  onClick={() => {
+                                    journal.applyWeekColumnTemplate(week.key, 'summary', memberCode);
+                                    showToast(`${week.index}주 금주(요약) 기본 양식 적용`);
+                                  }}
+                                >
+                                  기본 양식
+                                </button>
+                              </>
                             )}
                           </div>
                           <JournalWeekColumnTextarea
