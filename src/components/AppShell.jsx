@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Award,
   BarChart3,
+  BookMarked,
   BookOpen,
   Calendar,
   ChevronDown,
@@ -368,6 +369,8 @@ export default function AppShell({
                   <span className="nav-item__label project-nav-item__label">접속 안내</span>
                 </a>
               )}
+              {(canShowEditModule('glossary') || (isViewer && showInViewer('glossary'))) &&
+                navBtn('glossary', BookMarked, isViewer ? { viewer: true } : undefined)}
               {(canShowEditModule('docs') || (isViewer && showInViewer('docs'))) &&
                 navBtn('docs', BookOpen, isViewer ? { viewer: true } : undefined)}
             </nav>

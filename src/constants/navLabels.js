@@ -12,6 +12,7 @@ export const NAV_LABEL_IDS = [
   'lunch',
   'csr',
   'lecture-journal',
+  'glossary',
   'docs',
 ];
 
@@ -29,6 +30,7 @@ export const DEFAULT_NAV_LABELS = {
   lunch: '오늘 뭐 먹지',
   csr: '이것도',
   'lecture-journal': '강의일지',
+  glossary: '용어사전',
   docs: '참고문서',
 };
 

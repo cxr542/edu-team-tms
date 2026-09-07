@@ -87,6 +87,7 @@ import CloudChatbotEmbedPage from './pages/CloudChatbotEmbedPage';
 import LunchPickPage from './pages/LunchPickPage';
 import IdeaBankPage from './pages/IdeaBankPage';
 import AnnouncementsPage from './pages/AnnouncementsPage';
+import GlossaryPage from './pages/GlossaryPage';
 import LectureJournalPage from './pages/LectureJournalPage';
 import PublicViewerGuidePage from './pages/PublicViewerGuidePage';
 import { isProductionEnvironment } from './constants/appEnv';
@@ -1113,6 +1114,12 @@ export default function App() {
           teamAccess={teamAccess}
           requesterCode={csrRequester.requesterCode}
           requesterName={csrRequester.requesterName}
+        />
+      ) : displayModule === 'glossary' ? (
+        <GlossaryPage
+          readOnly={isViewer}
+          teamAccess={teamAccess}
+          isAdminShell={isAdminEditAccess || appRoute.scope === 'admin'}
         />
       ) : displayModule === 'announcements' ? (
         <AnnouncementsPage
