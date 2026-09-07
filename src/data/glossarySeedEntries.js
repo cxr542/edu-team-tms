@@ -307,8 +307,31 @@ export const GLOSSARY_SEED_ENTRIES = [
     "sourceUrl": "https://docs.nvidia.com/cuda/cuda-c-programming-guide/",
     "body": "# Streaming Multiprocessor (SM)\n\n**SM(Streaming Multiprocessor)**은 NVIDIA GPU에서 실질적인 연산과 스케줄링을 담당하는 핵심 하드웨어 연산 단위입니다. CPU에 여러 개의 'CPU 코어'가 모여 있듯, 하나의 GPU 칩셋 안에는 수십~수백 개의 SM이 병렬로 탑재되어 대규모 연산을 분할 처리합니다.\n\n## 한 줄 정의\n\nNVIDIA GPU에서 대규모 병렬 연산 및 스레드/워프(Warp) 스케줄링을 전담하는 **핵심 하드웨어 연산 단위**.\n\n## 주요 구성 요소\n\n| 구성 요소 | 설명 |\n|-----------|------|\n| **연산 유닛 (Cores)** | 부동소수점/정수 연산을 수행하는 CUDA 코어, AI 딥러닝 행렬 연산에 특화된 Tensor 코어, 그래픽 가속을 위한 RT(Ray Tracing) 코어 등이 포함됩니다. |\n| **Warp Scheduler & Dispatch Unit** | 스레드 32개 묶음인 'Warp(워프)'를 관리하고 명령어를 실행 유닛으로 할당합니다. |\n| **Register File** | 스레드 실행 시 변수 데이터를 초고속으로 저장·접근하는 레지스터 공간입니다. |\n| **L1 Cache / Shared Memory (SMEM)** | SM 내부의 코어들이 데이터를 신속하게 공유할 수 있는 On-chip 초저지연 메모리입니다. |\n\n## CUDA 프로그래밍 모델과의 관계\n\n- **스레드 블록 매핑**: CUDA 커널을 실행할 때 정의되는 소프트웨어 단위인 Thread Block은 하드웨어 단위인 하나의 SM에 할당되어 처리됩니다.\n- **SIMT 실행**: SM은 여러 스레드가 하나의 명령어를 동시에 수행하는 SIMT(Single Instruction, Multiple Threads) 아키텍처를 기반으로 동작합니다.\n- **자원 독립성**: MIG(Multi-Instance GPU)나 vGPU 분할 시, SM 슬라이스와 메모리 대역폭을 물리적으로 묶어 격리(Isolation)하는 하드웨어 기준 단위가 되기도 합니다.\n\n## 핵심 아키텍처 요약\n\n| 구분 | 소프트웨어 (Software) | 하드웨어 (Hardware) |\n|------|-----------------------|---------------------|\n| 기본 실행 단위 | Thread | CUDA Core |\n| 스케줄링 단위 | Warp (32 Threads) | Warp Scheduler & Dispatcher |\n| 블록 단위 | Thread Block | Streaming Multiprocessor (SM) |\n| 전체 단위 | Grid / Kernel Launch | GPU Device (Chip) |\n\n## 출처\n\n- [NVIDIA CUDA C++ Programming Guide](https://docs.nvidia.com/cuda/cuda-c-programming-guide/)",
     "related": [
+      "mig",
       "gemini",
       "harness-engineering"
+    ],
+    "visibility": "published",
+    "createdAt": "2026-09-07T00:00:00.000Z",
+    "updatedAt": "2026-09-07T00:00:00.000Z"
+  },
+  {
+    "id": "mig",
+    "slug": "mig",
+    "title": "MIG (Multi-Instance GPU)",
+    "category": "topic",
+    "tags": [
+      "topic",
+      "gpu",
+      "hardware",
+      "nvidia",
+      "isolation",
+      "virtualization"
+    ],
+    "sourceUrl": "https://docs.nvidia.com/datacenter/tesla/mig-user-guide/",
+    "body": "# MIG (Multi-Instance GPU)\n\n**MIG(Multi-Instance GPU)**는 하나의 물리적 NVIDIA GPU(Ampere 아키텍처 A100, Hopper 아키텍처 H100 등)를 최대 7개의 완전히 독립된 하드웨어 GPU 인스턴스로 분할하여 사용할 수 있도록 지원하는 가상화 및 하드웨어 파티셔닝 기술입니다.\n\n## 한 줄 정의\n\n하나의 물리적 GPU를 하드웨어 레벨에서 최대 7개의 독립 인스턴스로 격리 분할하여 고유한 연산(SM) 및 메모리 자원을 보장하는 기술.\n\n## 주요 특징\n\n| 특징 | 설명 |\n|------|------|\n| **하드웨어 수준의 격리 (Hardware Isolation)** | 각 인스턴스마다 전용 고대역폭 메모리 버스, 캐시 메모리, 연산 코어가 분할 할당되어 간섭(Noisy Neighbor) 없이 완벽한 서비스 품질(QoS)을 보장합니다. |\n| **장애 격리 (Fault Isolation)** | 특정 인스턴스에서 프로세스 비정상 종료나 CUDA 오류가 발생해도 동일 GPU 내의 다른 MIG 인스턴스에 영향을 주지 않습니다. |\n| **동시 다중 워크로드** | 서로 다른 배치 크기, 대기 시간 요구사항을 가진 여러 추론 모델(또는 경량 학습 작업)을 단일 GPU에서 동시에 안정적으로 구동할 수 있습니다. |\n\n## SM(Streaming Multiprocessor)과의 관계\n\n- **SM 슬라이스 분할**: MIG 인스턴스는 GPU 내부의 **SM(Streaming Multiprocessor)**을 물리적 슬라이스 단위로 묶어 할당합니다.\n- 예를 들어, A100(80GB) GPU에서는 SM 슬라이스와 메모리 슬라이스 조합에 따라 다음과 같은 프로파일로 생성됩니다:\n  - `1g.10gb` (1개의 GPU 슬라이스, 약 10GB 메모리)\n  - `2g.20gb` (2개의 GPU 슬라이스, 약 20GB 메모리)\n  - `3g.40gb` (3개의 GPU 슬라이스, 약 40GB 메모리)\n  - `7g.80gb` (GPU 전체 7개 슬라이스 독점 사용)\n- 각 인스턴스는 독점적인 SM 클러스터를 부여받으므로 연산 병목 없이 확정적인 지연 시간(Deterministic Latency)을 제공합니다.\n\n## 기존 GPU 가상화/공유 기술과의 비교\n\n| 구분 | MIG (Multi-Instance GPU) | Time-Slicing | NVIDIA MPS (Multi-Process Service) |\n|------|---------------------------|--------------|-----------------------------------|\n| **격리 수준** | **하드웨어 완전 격리 (SM + 메모리)** | 소프트웨어 시분할 | 프로세스 메모리 공간 분리 |\n| **QoS 보장** | 매우 높음 (결정론적 성능) | 낮음 (경합 발생 가능) | 중간 |\n| **장애 격리** | 완벽 지원 | 미지원 (전체 영향) | 미지원 (충돌 시 동시 영향) |\n| **지원 아키텍처** | Ampere (A100), Hopper (H100) 이상 | 모든 아키텍처 | Kepler 이상 |\n\n## 출처\n\n- [NVIDIA Multi-Instance GPU User Guide](https://docs.nvidia.com/datacenter/tesla/mig-user-guide/)",
+    "related": [
+      "streaming-multiprocessor"
     ],
     "visibility": "published",
     "createdAt": "2026-09-07T00:00:00.000Z",

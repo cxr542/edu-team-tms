@@ -821,3 +821,35 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Inline Term Auto-link */
+.glossary-inline-link {
+  color: #2563eb;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.05rem 0.25rem;
+  margin: 0 0.1rem;
+  border-radius: 4px;
+  background-color: rgba(37, 99, 235, 0.06);
+  transition: all 0.15s ease-in-out;
+}
+
+.glossary-inline-link:hover {
+  color: #1d4ed8;
+  background-color: rgba(37, 99, 235, 0.15);
+  text-decoration-style: solid;
+}
+
+[data-theme='dark'] .glossary-inline-link {
+  color: #60a5fa;
+  background-color: rgba(96, 165, 250, 0.1);
+}
+
+[data-theme='dark'] .glossary-inline-link:hover {
+  color: #93c5fd;
+  background-color: rgba(96, 165, 250, 0.2);
+}

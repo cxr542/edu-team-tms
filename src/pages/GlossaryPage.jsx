@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { marked } from 'marked';
 import { generateSlug, useGlossary } from '../hooks/useGlossary.js';
+import { autoLinkGlossaryHtml } from '../utils/glossaryLinker.js';
 import { isEditorMode } from '../utils/appMode.js';
 import './GlossaryPage.css';
 
@@ -49,13 +50,44 @@ export default function GlossaryPage({
     resetToSeed,
   } = useGlossary();
 
-  const [selectedSlug, setSelectedSlug] = useState(null);
+  const [selectedSlug, setSelectedSlug] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search);
+      return p.get('slug') || p.get('term') || null;
+    }
+    return null;
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedTag, setSelectedTag] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTerm, setEditingTerm] = useState(null);
   const [toastMsg, setToastMsg] = useState('');
+
+  const handleSelectSlug = (slug) => {
+    setSelectedSlug(slug);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (slug) {
+        url.searchParams.set('slug', slug);
+      } else {
+        url.searchParams.delete('slug');
+      }
+      window.history.replaceState({}, '', `${url.pathname}${url.search}`);
+    }
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (typeof window !== 'undefined') {
+        const p = new URLSearchParams(window.location.search);
+        const urlSlug = p.get('slug') || p.get('term');
+        if (urlSlug) setSelectedSlug(urlSlug);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Form states
   const [formTitle, setFormTitle] = useState('');
@@ -103,7 +135,7 @@ export default function GlossaryPage({
   useEffect(() => {
     if (filteredTerms.length > 0) {
       if (!selectedSlug || !terms.some((t) => t.slug === selectedSlug)) {
-        setSelectedSlug(filteredTerms[0].slug);
+        handleSelectSlug(filteredTerms[0].slug);
       }
     }
   }, [filteredTerms, selectedSlug, terms]);
@@ -115,11 +147,12 @@ export default function GlossaryPage({
   const parsedMarkdown = useMemo(() => {
     if (!currentTerm?.body) return '';
     try {
-      return marked.parse(currentTerm.body);
+      const rawHtml = marked.parse(currentTerm.body);
+      return autoLinkGlossaryHtml(rawHtml, terms, currentTerm.slug);
     } catch {
       return currentTerm.body;
     }
-  }, [currentTerm]);
+  }, [currentTerm, terms]);
 
   // Open Add Modal
   const handleOpenAdd = () => {
@@ -215,6 +248,46 @@ export default function GlossaryPage({
     if (res.ok) {
       showToast('초기 용어 데이터가 복원되었습니다.');
       refresh();
+    }
+  };
+
+  const handleBodyClick = (e) => {
+    const link = e.target.closest('a');
+    if (!link) return;
+    const href = link.getAttribute('href') || '';
+    const slugAttr = link.getAttribute('data-glossary-slug');
+    let targetSlug = slugAttr;
+
+    if (!targetSlug && href.startsWith('#')) {
+      targetSlug = href.slice(1);
+    } else if (!targetSlug && !href.startsWith('http://') && !href.startsWith('https://')) {
+      if (href.includes('slug=')) {
+        try {
+          targetSlug = new URL(href, window.location.origin).searchParams.get('slug');
+        } catch {
+          targetSlug = null;
+        }
+      } else if (!href.includes('/')) {
+        targetSlug = href;
+      }
+    }
+
+    if (targetSlug) {
+      const targetTerm = terms.find((t) => t.slug.toLowerCase() === targetSlug.toLowerCase());
+      if (targetTerm) {
+        e.preventDefault();
+        handleSelectSlug(targetTerm.slug);
+        const panel = document.querySelector('.glossary-detail-panel');
+        if (panel) {
+          panel.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        return;
+      }
+    }
+
+    if (href.startsWith('http://') || href.startsWith('https://')) {
+      link.setAttribute('target', '_blank');
+      link.setAttribute('rel', 'noreferrer noopener');
     }
   };
 
@@ -371,7 +444,7 @@ export default function GlossaryPage({
                   <article
                     key={term.slug}
                     className={`glossary-card${isSelected ? ' is-selected' : ''}`}
-                    onClick={() => setSelectedSlug(term.slug)}
+                    onClick={() => handleSelectSlug(term.slug)}
                   >
                     <div className="glossary-card__head">
                       <h3 className="glossary-card__title">{term.title}</h3>
@@ -491,7 +564,7 @@ export default function GlossaryPage({
                           key={relSlug}
                           type="button"
                           className="glossary-synapse-pill"
-                          onClick={() => setSelectedSlug(relSlug)}
+                          onClick={() => handleSelectSlug(relSlug)}
                         >
                           <span className="glossary-synapse-pill__name">
                             {relTerm ? relTerm.title : relSlug}
@@ -508,6 +581,7 @@ export default function GlossaryPage({
               <div
                 className="glossary-detail__body markdown-body"
                 dangerouslySetInnerHTML={{ __html: parsedMarkdown }}
+                onClick={handleBodyClick}
               />
 
               <div className="glossary-detail__footer">

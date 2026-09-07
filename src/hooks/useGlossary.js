@@ -12,12 +12,15 @@ export const GLOSSARY_STORAGE_KEY = 'tms-glossary-v1';
 function loadLocalGlossary() {
   try {
     const raw = localStorage.getItem(GLOSSARY_STORAGE_KEY);
-    if (!raw) return GLOSSARY_SEED_ENTRIES.map(normalizeGlossaryTerm).filter(Boolean);
+    const seeds = GLOSSARY_SEED_ENTRIES.map(normalizeGlossaryTerm).filter(Boolean);
+    if (!raw) return seeds;
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed.map(normalizeGlossaryTerm).filter(Boolean);
+      const existingSlugs = new Set(parsed.map((p) => p?.slug).filter(Boolean));
+      const missingSeeds = seeds.filter((s) => !existingSlugs.has(s.slug));
+      return [...parsed.map(normalizeGlossaryTerm).filter(Boolean), ...missingSeeds];
     }
-    return GLOSSARY_SEED_ENTRIES.map(normalizeGlossaryTerm).filter(Boolean);
+    return seeds;
   } catch {
     return GLOSSARY_SEED_ENTRIES.map(normalizeGlossaryTerm).filter(Boolean);
   }
@@ -60,7 +63,11 @@ export function useGlossary() {
     const result = await listGlossaryTermsFromSupabase();
 
     if (result.ok && result.data && result.data.length > 0) {
-      const sorted = sortTerms(result.data);
+      const seeds = GLOSSARY_SEED_ENTRIES.map(normalizeGlossaryTerm).filter(Boolean);
+      const remoteSlugs = new Set(result.data.map((d) => d.slug));
+      const missingSeeds = seeds.filter((s) => !remoteSlugs.has(s.slug));
+      const merged = [...result.data, ...missingSeeds];
+      const sorted = sortTerms(merged);
       setTerms(sorted);
       saveLocalGlossary(sorted);
       setSourceStatus('supabase');

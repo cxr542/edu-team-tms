@@ -103,3 +103,38 @@ describe('glossary navigation integration', () => {
     expect(TEAM_COMMON_MODULES.has('glossary')).toBe(true);
   });
 });
+
+describe('MIG entry and auto-linker', () => {
+  it('contains MIG (Multi-Instance GPU) seed entry', () => {
+    const mig = GLOSSARY_SEED_ENTRIES.find((e) => e.slug === 'mig');
+    expect(mig).toBeDefined();
+    expect(mig.title).toBe('MIG (Multi-Instance GPU)');
+    expect(mig.related).toContain('streaming-multiprocessor');
+  });
+
+  it('links streaming-multiprocessor to mig in seed', () => {
+    const sm = GLOSSARY_SEED_ENTRIES.find((e) => e.slug === 'streaming-multiprocessor');
+    expect(sm).toBeDefined();
+    expect(sm.related).toContain('mig');
+  });
+
+  it('auto-links keywords in HTML text while avoiding code and tags', async () => {
+    const { autoLinkGlossaryHtml, buildGlossaryKeywords } = await import('../src/utils/glossaryLinker.js');
+    const sampleTerms = [
+      { slug: 'mig', title: 'MIG (Multi-Instance GPU)' },
+      { slug: 'streaming-multiprocessor', title: 'Streaming Multiprocessor (SM)' },
+    ];
+
+    const keywords = buildGlossaryKeywords(sampleTerms, 'streaming-multiprocessor');
+    expect(keywords.some((k) => k.keyword === 'MIG' && k.slug === 'mig')).toBe(true);
+    expect(keywords.some((k) => k.keyword === 'MIG(Multi-Instance GPU)' && k.slug === 'mig')).toBe(true);
+
+    const inputHtml = '<p>자원 독립성: MIG(Multi-Instance GPU)나 vGPU 분할 시 쓰입니다. <code>MIG in code</code> 및 <a href="http://ex.com">기존 MIG 링크</a>는 유지됩니다.</p>';
+    const outputHtml = autoLinkGlossaryHtml(inputHtml, sampleTerms, 'streaming-multiprocessor');
+
+    expect(outputHtml).toContain('data-glossary-slug="mig"');
+    expect(outputHtml).toContain('<a href="#mig" class="glossary-inline-link" data-glossary-slug="mig" title="MIG (Multi-Instance GPU) 바로가기">MIG(Multi-Instance GPU)</a>');
+    expect(outputHtml).toContain('<code>MIG in code</code>');
+    expect(outputHtml).toContain('<a href="http://ex.com">기존 MIG 링크</a>');
+  });
+});
