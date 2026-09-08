@@ -144,9 +144,23 @@ describe('MIG entry and auto-linker', () => {
     expect(vvf).toBeDefined();
     expect(vvf.title).toBe('VMware VVF (VMware vSphere Foundation)');
     expect(vvf.tags).toContain('vmware');
+    expect(vvf.related).toContain('vmware-vcf');
 
     const keywords = buildGlossaryKeywords([vvf], 'other-slug');
     expect(keywords.some((k) => k.keyword === 'VVF' && k.slug === 'vmware-vvf')).toBe(true);
     expect(keywords.some((k) => k.keyword === 'VMware VVF' && k.slug === 'vmware-vvf')).toBe(true);
+  });
+
+  it('contains VMware VCF seed entry and extracts VCF acronym', async () => {
+    const { buildGlossaryKeywords } = await import('../src/utils/glossaryLinker.js');
+    const vcf = GLOSSARY_SEED_ENTRIES.find((e) => e.slug === 'vmware-vcf');
+    expect(vcf).toBeDefined();
+    expect(vcf.title).toBe('VMware VCF (VMware Cloud Foundation)');
+    expect(vcf.tags).toContain('vcf');
+    expect(vcf.related).toContain('vmware-vvf');
+
+    const keywords = buildGlossaryKeywords([vcf], 'other-slug');
+    expect(keywords.some((k) => k.keyword === 'VCF' && k.slug === 'vmware-vcf')).toBe(true);
+    expect(keywords.some((k) => k.keyword === 'VMware VCF' && k.slug === 'vmware-vcf')).toBe(true);
   });
 });
