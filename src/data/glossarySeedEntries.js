@@ -336,5 +336,28 @@ export const GLOSSARY_SEED_ENTRIES = [
     "visibility": "published",
     "createdAt": "2026-09-07T00:00:00.000Z",
     "updatedAt": "2026-09-07T00:00:00.000Z"
+  },
+  {
+    "id": "vmware-vvf",
+    "slug": "vmware-vvf",
+    "title": "VMware VVF (VMware vSphere Foundation)",
+    "category": "topic",
+    "tags": [
+      "topic",
+      "vmware",
+      "virtualization",
+      "sddc",
+      "cloud",
+      "infrastructure"
+    ],
+    "sourceUrl": "https://www.vmware.com/products/vsphere-foundation.html",
+    "body": "# VMware VVF (VMware vSphere Foundation)\n\n**VMware VVF(VMware vSphere Foundation)**는 Broadcom(브로드컴) 인수 이후 새로 개편된 VMware의 핵심 하이브리드 클라우드 패키지 중 하나로, 엔터프라이즈급 서버 가상화 및 데이터센터 관리를 위한 통합 플랫폼입니다.\n\n기존에 단품으로 제공되던 vSphere Enterprise Plus, vCenter Server, vSAN, Aria Operations(舊 vRealize Operations) 등을 하나로 묶은 중·대규모 데이터센터용 서브스크립션 요금제입니다.\n\n## 한 줄 정의\n\n엔터프라이즈급 서버 가상화(vSphere), 소프트웨어 정의 스토리지(vSAN), 지능형 모니터링(Aria Ops)을 결합한 VMware의 핵심 가상화 인프라 패키지.\n\n## 1. 주요 구성 요소\n\n| 구성 요소 | 설명 |\n|-----------|------|\n| **vSphere Enterprise Plus** | 고성능 가상화 하이퍼바이저(ESXi) 및 통합 관리 솔루션(vCenter Server)을 포함합니다. |\n| **vSAN Enterprise** | 서버 내장 디스크를 공유 스토리지로 변환하는 SDS(소프트웨어 정의 스토리지) 기능을 제공합니다. (기본적으로 코어당 100GiB 용량이 포함되며, 추가 용량은 라이선스 구매 가능) |\n| **Aria Operations (Aria Ops & Aria Logs)** | 가상화 환경의 성능 자원 분석, 모니터링, 로그 분석 및 용량 예측을 지원합니다. |\n| **Tanzu Kubernetes Grid (TKG)** | 가상화 환경에서 컨테이너(Kubernetes)를 손쉽게 배포하고 운영할 수 있도록 지원합니다. |\n\n## 2. 핵심 특징 및 비교\n\n- **구독형 라이선스 (Subscription)**: 기존 영구 라이선스(Perpetual) 방식이 중단되고, CPU 코어 수(Per-Core) 기반의 연간 구독 모델로 전환되었습니다.\n- **VCF(VMware Cloud Foundation)와의 차이**:\n  - **VVF (vSphere Foundation)**: 기존 SDDC/가상화 환경에 최적화된 라인업으로, NSX(네트워크 가상화) 및 풀 스택 클라우드 관리 기능이 제외된 가상화 중심 데이터센터 솔루션입니다.\n  - **VCF (Cloud Foundation)**: vSphere + vSAN + NSX + SDDC Manager + Aria Full Suite가 모두 포함된 최상위 풀 스택 SDDC/프라이빗 클라우드 플랫폼입니다.\n\n| 구분 | VVF (vSphere Foundation) | VCF (Cloud Foundation) |\n|------|--------------------------|------------------------|\n| **목적** | 전통적 가상화 및 스토리지 통합 고도화 | 프라이빗 클라우드 / 풀스택 SDDC 구축 |\n| **네트워크 가상화 (NSX)** | 미포함 (필요 시 애드온) | 기본 포함 |\n| **스토리지 (vSAN)** | 코어당 100GiB 기본 포함 | 테라바이트급 라이선스 번들 포함 |\n| **클라우드 관리/자동화** | Aria Operations & Logs 중심 | Aria Automation 등 풀스택 포함 |\n\n## 3. 도입 대상\n\n- 단순 가상화(vSphere)를 넘어 스토리지 가상화(vSAN) 및 **성능 모니터링(Aria Ops)**까지 통합 관리하고자 하는 기업\n- SDDC 전체 구축(NSX 포함)보다는 기존 네트워크 인프라를 유지하면서 서버 및 스토리지 가상화 인프라를 고도화하려는 데이터센터 환경\n\n## 출처\n\n- [Broadcom VMware vSphere Foundation 공식 소개](https://www.vmware.com/products/vsphere-foundation.html)",
+    "related": [
+      "mig",
+      "streaming-multiprocessor"
+    ],
+    "visibility": "published",
+    "createdAt": "2026-09-08T00:00:00.000Z",
+    "updatedAt": "2026-09-08T00:00:00.000Z"
   }
 ];

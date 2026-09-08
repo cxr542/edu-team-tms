@@ -37,6 +37,16 @@ export function buildGlossaryKeywords(terms, currentSlug) {
           candidates.add(`${inner} (${outer})`);
         }
       }
+
+      // Check uppercase acronyms (e.g. VVF, SM, MIG, TKG, VCF)
+      const acronyms = fullTitle.match(/\b[A-Z]{2,6}\b/g);
+      if (acronyms) {
+        acronyms.forEach((acr) => {
+          if (!['AI', 'IT', 'UI', 'UX', 'TOP', 'ALL', 'THE', 'AND'].includes(acr)) {
+            candidates.add(acr);
+          }
+        });
+      }
     }
 
     for (const cand of candidates) {

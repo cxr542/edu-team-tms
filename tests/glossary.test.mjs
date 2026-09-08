@@ -137,4 +137,16 @@ describe('MIG entry and auto-linker', () => {
     expect(outputHtml).toContain('<code>MIG in code</code>');
     expect(outputHtml).toContain('<a href="http://ex.com">기존 MIG 링크</a>');
   });
+
+  it('contains VMware VVF seed entry and extracts VVF acronym', async () => {
+    const { buildGlossaryKeywords } = await import('../src/utils/glossaryLinker.js');
+    const vvf = GLOSSARY_SEED_ENTRIES.find((e) => e.slug === 'vmware-vvf');
+    expect(vvf).toBeDefined();
+    expect(vvf.title).toBe('VMware VVF (VMware vSphere Foundation)');
+    expect(vvf.tags).toContain('vmware');
+
+    const keywords = buildGlossaryKeywords([vvf], 'other-slug');
+    expect(keywords.some((k) => k.keyword === 'VVF' && k.slug === 'vmware-vvf')).toBe(true);
+    expect(keywords.some((k) => k.keyword === 'VMware VVF' && k.slug === 'vmware-vvf')).toBe(true);
+  });
 });
