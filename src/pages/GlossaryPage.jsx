@@ -12,6 +12,7 @@ import {
   RefreshCw,
   RotateCcw,
   Search,
+  Sparkles,
   Tag,
   Trash2,
   X,
@@ -352,6 +353,26 @@ export default function GlossaryPage({
           )}
         </div>
       </header>
+
+      {/* Mascot Cheer Banner (Stitch Style) */}
+      <div className="glossary-mascot-banner">
+        <div className="glossary-mascot-card">
+          <img
+            src="/okestro-bear-mascot.png"
+            alt="오케 곰돌이 마스코트"
+            className="glossary-mascot-img"
+          />
+        </div>
+        <div className="glossary-mascot-bubble">
+          <div className="glossary-mascot-bubble-badge-row">
+            <span className="glossary-mascot-pill-badge">꿀팁 마스코트 🍯</span>
+            <span className="glossary-mascot-pill-sub">응원 파워 100% ✨</span>
+          </div>
+          <p className="glossary-mascot-text">
+            <strong>용어 사전에서 핵심 인사이트를 찾아볼까요?</strong> AI·클라우드 실무 용어 속에 스마트한 정답이 숨어있어요! 🍯💛
+          </p>
+        </div>
+      </div>
 
       {/* Controls: Search & Category Tabs */}
       <div className="glossary-controls">
