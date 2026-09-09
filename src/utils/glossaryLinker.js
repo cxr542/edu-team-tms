@@ -47,6 +47,11 @@ export function buildGlossaryKeywords(terms, currentSlug) {
           }
         });
       }
+
+      if (fullTitle.includes('SnS')) {
+        candidates.add('S&S');
+        candidates.add('Software Subscription and Support');
+      }
     }
 
     for (const cand of candidates) {

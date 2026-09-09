@@ -354,6 +354,7 @@ export const GLOSSARY_SEED_ENTRIES = [
     "body": "# VMware VVF (VMware vSphere Foundation)\n\n**VMware VVF(VMware vSphere Foundation)**는 Broadcom(브로드컴) 인수 이후 새로 개편된 VMware의 핵심 하이브리드 클라우드 패키지 중 하나로, 엔터프라이즈급 서버 가상화 및 데이터센터 관리를 위한 통합 플랫폼입니다.\n\n기존에 단품으로 제공되던 vSphere Enterprise Plus, vCenter Server, vSAN, Aria Operations(舊 vRealize Operations) 등을 하나로 묶은 중·대규모 데이터센터용 서브스크립션 요금제입니다.\n\n## 한 줄 정의\n\n엔터프라이즈급 서버 가상화(vSphere), 소프트웨어 정의 스토리지(vSAN), 지능형 모니터링(Aria Ops)을 결합한 VMware의 핵심 가상화 인프라 패키지.\n\n## 1. 주요 구성 요소\n\n| 구성 요소 | 설명 |\n|-----------|------|\n| **vSphere Enterprise Plus** | 고성능 가상화 하이퍼바이저(ESXi) 및 통합 관리 솔루션(vCenter Server)을 포함합니다. |\n| **vSAN Enterprise** | 서버 내장 디스크를 공유 스토리지로 변환하는 SDS(소프트웨어 정의 스토리지) 기능을 제공합니다. (기본적으로 코어당 100GiB 용량이 포함되며, 추가 용량은 라이선스 구매 가능) |\n| **Aria Operations (Aria Ops & Aria Logs)** | 가상화 환경의 성능 자원 분석, 모니터링, 로그 분석 및 용량 예측을 지원합니다. |\n| **Tanzu Kubernetes Grid (TKG)** | 가상화 환경에서 컨테이너(Kubernetes)를 손쉽게 배포하고 운영할 수 있도록 지원합니다. |\n\n## 2. 핵심 특징 및 비교\n\n- **구독형 라이선스 (Subscription)**: 기존 영구 라이선스(Perpetual) 방식이 중단되고, CPU 코어 수(Per-Core) 기반의 연간 구독 모델로 전환되었습니다.\n- **VCF(VMware Cloud Foundation)와의 차이**:\n  - **VVF (vSphere Foundation)**: 기존 SDDC/가상화 환경에 최적화된 라인업으로, NSX(네트워크 가상화) 및 풀 스택 클라우드 관리 기능이 제외된 가상화 중심 데이터센터 솔루션입니다.\n  - **VCF (Cloud Foundation)**: vSphere + vSAN + NSX + SDDC Manager + Aria Full Suite가 모두 포함된 최상위 풀 스택 SDDC/프라이빗 클라우드 플랫폼입니다.\n\n| 구분 | VVF (vSphere Foundation) | VCF (Cloud Foundation) |\n|------|--------------------------|------------------------|\n| **목적** | 전통적 가상화 및 스토리지 통합 고도화 | 프라이빗 클라우드 / 풀스택 SDDC 구축 |\n| **네트워크 가상화 (NSX)** | 미포함 (필요 시 애드온) | 기본 포함 |\n| **스토리지 (vSAN)** | 코어당 100GiB 기본 포함 | 테라바이트급 라이선스 번들 포함 |\n| **클라우드 관리/자동화** | Aria Operations & Logs 중심 | Aria Automation 등 풀스택 포함 |\n\n## 3. 도입 대상\n\n- 단순 가상화(vSphere)를 넘어 스토리지 가상화(vSAN) 및 **성능 모니터링(Aria Ops)**까지 통합 관리하고자 하는 기업\n- SDDC 전체 구축(NSX 포함)보다는 기존 네트워크 인프라를 유지하면서 서버 및 스토리지 가상화 인프라를 고도화하려는 데이터센터 환경\n\n## 출처\n\n- [Broadcom VMware vSphere Foundation 공식 소개](https://www.vmware.com/products/vsphere-foundation.html)",
     "related": [
       "vmware-vcf",
+      "sns",
       "mig",
       "streaming-multiprocessor"
     ],
@@ -380,11 +381,38 @@ export const GLOSSARY_SEED_ENTRIES = [
     "body": "# VMware VCF (VMware Cloud Foundation)\n\n**VMware VCF(VMware Cloud Foundation)**는 Broadcom(브로드컴) 인수 이후 VMware의 최상위 플래그십(Flagship) 하이브리드·프라이빗 클라우드 플랫폼입니다. 컴퓨팅, 스토리지, 네트워킹 및 클라우드 관리/자동화 솔루션이 단일 통합 아키텍처로 결합된 **풀 스택(Full-Stack) 소프트웨어 정의 데이터센터(SDDC)** 솔루션입니다.\n\n단순한 가상화 하이퍼바이저를 넘어 클라우드 서비스 공급자(CSP) 및 대규모 엔터프라이즈 환경에서 자체 프라이빗 클라우드를 구축하고 AWS, Azure, Google Cloud 등 퍼블릭 클라우드와 일관된 운영 모델을 구현하도록 지원합니다.\n\n## 한 줄 정의\n\n컴퓨팅(vSphere), 스토리지(vSAN), 네트워크(NSX), 클라우드 자동화(Aria) 및 전체 수명주기 관리(SDDC Manager)를 통합한 VMware의 최상위 풀스택 SDDC 플랫폼.\n\n## 1. 주요 구성 요소\n\n| 구성 요소 | 설명 |\n|-----------|------|\n| **vSphere Enterprise Plus** | 고성능 가상화 하이퍼바이저(ESXi) 및 통합 제어 센터(vCenter Server)를 제공합니다. |\n| **vSAN Enterprise** | 분산 소프트웨어 정의 스토리지(SDS)로, 테라바이트급 고성능 NVMe/SSD 공유 스토리지를 구성합니다. (VCF 라이선스에는 코어당 1TiB 용량이 기본 포함) |\n| **NSX Enterprise Plus** | L2~L7 가상 스위칭/라우팅, 분산 방화벽(DFW), 마이크로 세그멘테이션(보안 격리), 로드 밸런싱을 제공하는 소프트웨어 정의 네트워크(SDN) 솔루션입니다. |\n| **SDDC Manager** | VCF 인프라 전체의 초기 배포(Bring-up), 구성, 모니터링, 패치 및 무중단 버전 업그레이드를 자동화하는 통합 수명주기 관리(LCM) 엔진입니다. |\n| **Aria Suite (Full Stack)** | **Aria Automation**(셀프서비스 카탈로그 & IaC 프로비저닝), **Aria Operations**(성능·용량 예측 분석), **Aria Operations for Logs**(로그 분석), **Aria Operations for Networks**(네트워크 트래픽 가시성)가 모두 포함됩니다. |\n| **Tanzu Kubernetes Grid (TKG)** | 가상 머신과 컨테이너를 단일 인프라 제어 플레인에서 실행·관리할 수 있는 엔터프라이즈 쿠버네티스 런타임입니다. |\n| **HCX Enterprise** | 온프레미스와 멀티 클라우드 간 대규모 워크로드(VM) 무중단 라이브 마이그레이션 및 네트워크 확장을 지원합니다. |\n\n## 2. VCF vs VVF 핵심 비교\n\nBroadcom 체제에서 VMware 라이선스는 크게 **VCF(풀스택 클라우드)**와 **VVF(가상화 인프라)**의 두 가지 주력 라인업으로 양분되었습니다.\n\n| 구분 | VCF (VMware Cloud Foundation) | VVF (VMware vSphere Foundation) |\n|------|-------------------------------|---------------------------------|\n| **포지셔닝** | **최상위 풀스택 프라이빗 클라우드** | 가상화 중심 중·대규모 데이터센터 |\n| **네트워크 가상화** | **NSX Enterprise Plus 기본 포함** | 미포함 (기존 물리 네트워크 의존) |\n| **수명주기 관리** | **SDDC Manager 기본 제공 (원클릭 풀스택 업그레이드)** | vSphere Lifecycle Manager 수준 |\n| **기본 스토리지 용량** | **코어당 1 TiB vSAN 기본 제공** | 코어당 100 GiB 기본 제공 |\n| **클라우드 자동화/관리** | **Aria Suite 풀스택 (Automation, Operations, Logs, Networks)** | Aria Operations & Logs 중심 |\n| **멀티클라우드 연계** | **HCX Enterprise 기본 포함** | 별도 옵션 |\n\n## 3. 핵심 도입 효과\n\n- **클라우드 운영 모델 내재화**: 자체 데이터센터 내에서 퍼블릭 클라우드와 동일한 셀프 서비스 포털 및 자동 프로비저닝 환경 구축 가능\n- **강화된 제로 트러스트 보안**: NSX 마이크로 세그멘테이션을 통해 VM/컨테이너 단위의 초미세 트래픽 제어 및 측면 이동(Lateral Movement) 공격 차단\n- **운영 복잡도 대폭 감소**: SDDC Manager를 통한 하드웨어 펌웨어부터 vSphere, vSAN, NSX, Aria 소프트웨어 전체의 통합 검증 패치 및 라이프사이클 관리\n\n## 4. 도입 대상\n\n- 사내 프라이빗 클라우드를 완성도 높게 구축하고 개발팀에 셀프서비스 인프라를 제공하려는 엔터프라이즈 기업\n- 서버 가상화뿐만 아니라 네트워크 보안(NSX)과 스토리지(vSAN)까지 완벽한 소프트웨어 정의(SDDC) 표준화를 추진하는 대규모 인프라\n\n## 출처\n\n- [Broadcom VMware Cloud Foundation 공식 제품 소개](https://www.vmware.com/products/cloud-foundation.html)\n- [VMware Cloud Foundation Architecture Guide](https://docs.vmware.com/en/VMware-Cloud-Foundation/index.html)",
     "related": [
       "vmware-vvf",
+      "sns",
       "mig",
       "streaming-multiprocessor"
     ],
     "visibility": "published",
     "createdAt": "2026-09-08T00:00:00.000Z",
     "updatedAt": "2026-09-08T00:00:00.000Z"
+  },
+  {
+    "id": "sns",
+    "slug": "sns",
+    "title": "SnS (Subscription and Support)",
+    "category": "topic",
+    "tags": [
+      "topic",
+      "license",
+      "maintenance",
+      "subscription",
+      "support",
+      "enterprise",
+      "vmware",
+      "oracle",
+      "ibm"
+    ],
+    "sourceUrl": "https://www.ibm.com/support/pages/software-subscription-and-support",
+    "body": "# SnS (Subscription and Support)\n\n**SnS(Subscription and Support)**는 IT 인프라 및 엔터프라이즈 소프트웨어 유지보수(Maintenance) 계약에서 **소프트웨어 버전 업그레이드 권한(Subscription)**과 **전문 기술 지원(Support)**을 하나로 묶은 통합 서비스 패키지 모델입니다.\n\n주로 IBM, VMware(Broadcom), Oracle, Red Hat 등 글로벌 엔터프라이즈 소프트웨어 라이선스 정책에서 사용되며, 계약 기간 동안 시스템의 최신성 유지와 안정적인 운영을 보장하는 핵심 계약 요소입니다.\n\n## 한 줄 정의\n\n최신 버전 업그레이드 및 패치 권한(Subscription)과 장애 대응 전문 기술 지원(Support)을 보장하는 엔터프라이즈 소프트웨어 유지보수 체계.\n\n## 1. 두 가지 핵심 구성 요소\n\n| 구성 요소 | 상세 설명 |\n|-----------|-----------|\n| **Subscription (구독 / 버전 업그레이드 권한)** | • 계약 기간 내 출시되는 최신 메이저/마이너 버전 소프트웨어 업데이트 및 패치 제공<br>• 보안 취약점 패치 및 성능 개선 픽스팩(Fix Pack) 무상 지원<br>• 신규 기능 라이선스 제공 및 지속적인 기술 발전 수혜 |\n| **Support (기술 지원)** | • 시스템 장애 발생 시 실시간 기술 지원 및 버그 수정 패치 제공<br>• 심각도(Severity)에 따른 24x7 긴급 기술 문의 및 벤더 엔지니어 에스컬레이션<br>• 공식 기술 포털, 보안 권고문(Security Advisory), 지식베이스(KB) 접근 권한 |\n\n## 2. 왜 SnS 계약 유지가 필수적인가?\n\n- **보안 및 규정 준수(Compliance)**: SnS가 중단되면 신규 발견되는 제로데이 및 보안 취약점(CVE) 패치를 내려받을 수 없어 침해 사고 위험이 급증합니다.\n- **TCO(총 소유 비용) 절감**: 신규 메이저 버전이 출시될 때 별도의 라이선스를 전액 새로 구매할 필요 없이 무상으로 업그레이드할 수 있습니다.\n- **재계약 패널티(Back Support)**: SnS 만료 후 수년 뒤 재계약(Reinstatement) 시, 미계약 기간의 소급 비용 및 추가 수수료(Lapse Fee)가 부과되므로 연속 유지가 권장됩니다.\n\n## 3. 주요 엔터프라이즈 벤더별 적용 사례\n\n- **VMware / Broadcom**: 기존 영구 라이선스(Perpetual) + 연간 SnS 모델에서, 현재는 **VVF(VMware vSphere Foundation)** 및 **VCF(VMware Cloud Foundation)**와 같은 코어 단위 통합 구독형(Subscription) 라이선스로 전면 개편되었습니다.\n- **IBM (Passport Advantage)**: 소프트웨어 라이선스 구매 시 첫 12개월간 Software Subscription and Support(S&S)가 기본 포함되며, 이후 연간 갱신(Annual Renewal)을 통해 유지.\n- **Oracle (Premier Support)**: 데이터베이스 및 미들웨어 라이선스 금액의 일정 비율(통상 22%)로 매년 기술 지원 및 업데이트 계약(Software Update License & Support) 체결.\n\n## 출처\n\n- [IBM Software Subscription and Support Guide](https://www.ibm.com/support/pages/software-subscription-and-support)\n- [Broadcom VMware Support and Subscription Services](https://www.vmware.com/support/services.html)",
+    "related": [
+      "vmware-vvf",
+      "vmware-vcf"
+    ],
+    "visibility": "published",
+    "createdAt": "2026-09-09T00:00:00.000Z",
+    "updatedAt": "2026-09-09T00:00:00.000Z"
   }
 ];

@@ -158,9 +158,25 @@ describe('MIG entry and auto-linker', () => {
     expect(vcf.title).toBe('VMware VCF (VMware Cloud Foundation)');
     expect(vcf.tags).toContain('vcf');
     expect(vcf.related).toContain('vmware-vvf');
+    expect(vcf.related).toContain('sns');
 
     const keywords = buildGlossaryKeywords([vcf], 'other-slug');
     expect(keywords.some((k) => k.keyword === 'VCF' && k.slug === 'vmware-vcf')).toBe(true);
     expect(keywords.some((k) => k.keyword === 'VMware VCF' && k.slug === 'vmware-vcf')).toBe(true);
+  });
+
+  it('contains SnS seed entry and extracts SnS and S&S keywords', async () => {
+    const { buildGlossaryKeywords } = await import('../src/utils/glossaryLinker.js');
+    const sns = GLOSSARY_SEED_ENTRIES.find((e) => e.slug === 'sns');
+    expect(sns).toBeDefined();
+    expect(sns.title).toBe('SnS (Subscription and Support)');
+    expect(sns.tags).toContain('subscription');
+    expect(sns.related).toContain('vmware-vvf');
+    expect(sns.related).toContain('vmware-vcf');
+
+    const keywords = buildGlossaryKeywords([sns], 'other-slug');
+    expect(keywords.some((k) => k.keyword === 'SnS' && k.slug === 'sns')).toBe(true);
+    expect(keywords.some((k) => k.keyword === 'S&S' && k.slug === 'sns')).toBe(true);
+    expect(keywords.some((k) => k.keyword === 'Subscription and Support' && k.slug === 'sns')).toBe(true);
   });
 });
