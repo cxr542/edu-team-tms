@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-09-15
+
+### [수정] fix: kakao-local ALLOWED_HOST_RE 그룹 버그 수정 + 운영 일일 헬스체크 추가
+
+- fix: kakao-local ALLOWED_HOST_RE 그룹 버그 수정 + 운영 일일 헬스체크 추가
+- PR #118: https://github.com/cxr542/edu-team-tms/pull/118
+
 ## 2026-09-07
 
 ### [신규] AI-Synapse Wiki 기반 '용어사전' 메뉴 도입 및 관리자 등록 기능 출시
