@@ -2,8 +2,12 @@
  * Kakao Local API proxy — 키는 서버 환경변수만 사용
  * GET /api/kakao-local?query=&page=1&lat=&lng=&radius=
  */
-const ALLOWED_HOST_RE =
-  /^(https?:\/\/)?([^/]*\.)?(edu-team-tms|okestro-edu-team-tms)\.vercel\.app|localhost(:\d+)?/i;
+// NOTE: 그룹 없이 `|`를 쓰면 두 번째 대안(localhost)에 `^`가 적용되지 않아
+// "localhost"라는 글자만 포함된 아무 문자열이나 통과해버리고, 정작 실제 운영
+// 도메인(-ten 접미사)은 첫 번째 대안에 빠져 있어 막혀버린다. 아래처럼 각 대안을
+// 명시적으로 그룹으로 감싸고 실제 배포 서브도메인 패턴을 반영해야 한다.
+export const ALLOWED_HOST_RE =
+  /^(https?:\/\/)?([^/]*\.)?(edu-team-tms(-[a-z0-9-]+)?|okestro-edu-team-tms)\.vercel\.app(\/.*)?$|^https?:\/\/localhost(:\d+)?(\/.*)?$/i;
 
 function canUse(req) {
   const referer = req.headers.referer || req.headers.origin || '';
