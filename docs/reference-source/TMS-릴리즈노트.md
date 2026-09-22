@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-09-22
+
+### [수정] fix: reset card-paste modal state on cancel/close
+
+- fix: reset card-paste modal state on cancel/close
+- PR #119: https://github.com/cxr542/edu-team-tms/pull/119
+
 ## 2026-09-15
 
 ### [수정] fix: kakao-local ALLOWED_HOST_RE 그룹 버그 수정 + 운영 일일 헬스체크 추가
