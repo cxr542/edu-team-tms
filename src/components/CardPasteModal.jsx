@@ -28,6 +28,12 @@ export default function CardPasteModal({
     }
   };
 
+  const resetState = () => {
+    setText('');
+    setPreview(null);
+    setErrors([]);
+  };
+
   const handleApply = () => {
     if (!preview?.amount) {
       runParse();
@@ -37,9 +43,12 @@ export default function CardPasteModal({
       ...preview,
       category,
     });
-    setText('');
-    setPreview(null);
-    setErrors([]);
+    resetState();
+    onClose();
+  };
+
+  const handleCancel = () => {
+    resetState();
     onClose();
   };
 
@@ -51,7 +60,7 @@ export default function CardPasteModal({
             <MessageSquare size={18} style={{ verticalAlign: 'middle', marginRight: 6 }} />
             법인카드 알림 붙여넣기
           </h3>
-          <button type="button" className="modal-close" onClick={onClose} aria-label="닫기">
+          <button type="button" className="modal-close" onClick={handleCancel} aria-label="닫기">
             <X size={20} />
           </button>
         </div>
@@ -129,7 +138,7 @@ export default function CardPasteModal({
         )}
 
         <div className="modal-actions" style={{ borderTop: '1px solid rgba(16, 185, 129, 0.1)' }}>
-          <button type="button" className="btn btn-secondary" onClick={onClose}>
+          <button type="button" className="btn btn-secondary" onClick={handleCancel}>
             취소
           </button>
           <button
