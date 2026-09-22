@@ -141,7 +141,9 @@ KPI1 계산 기준은 안정화 메모를 남기고, 주차 완료 M/M 정렬 �
 **J7c 완료:** 「팀 공유본 가져오기」가 Preview에서 Supabase `scope=team` 우선, Blob fallback. 비교 UI Supabase-first.
 **J7d 완료:** Preview `MANUAL_MIRROR`일 때 journal Blob **POST demote**(GET 유지). 팀 공유 저장은 Supabase 주 경로. 롤백: `VITE_JOURNAL_BLOB_POST_ENABLED=true`.
 **J7e 완료:** journal upsert 성공 시 `sync_events` 감사 insert(best-effort). 신선도 폴링이 「원격 갱신됨 · 원격이 더 최신」+ J5 pull CTA. 자동 merge·Realtime websocket 없음. 운영 GRANT + Preview 검증 완료 (2026-07-13): [`j7e-grant-service-role-sync-events.sql`](../supabase/j7e-grant-service-role-sync-events.sql).
-**J8-0 완료:** Blob 수동 유지 · Supabase debounce 자동 업로드 설계 — [`j8-journal-supabase-auto-upload-plan.md`](./j8-journal-supabase-auto-upload-plan.md). 자동 pull 비범위. **다음:** J8a Preview 구현 → J8b Production cutover는 별도 승인.
+**J8-0 완료:** Blob 수동 유지 · Supabase debounce 자동 업로드 설계 — [`j8-journal-supabase-auto-upload-plan.md`](./j8-journal-supabase-auto-upload-plan.md). 자동 pull 비범위.
+**J8a 완료 (2026-09-22):** Preview 자동 미러 게이트를 리더 `/admin`(J6)에서 **본인 슬라이스를 편집 중인 구성원 스코프(A/B/C 개인 URL)까지 확장**. `src/App.jsx`의 `autoMirrorSupabase`, 상태 힌트는 `src/pages/WeeklyJournalPage.jsx`. Preview에서 A 계정으로 수동 검증 완료.
+**J8b 완료 (2026-09-22, 명시 승인):** Production `VITE_SUPABASE_MANUAL_MIRROR_ENABLED=true` 적용(Vercel Production 전용 항목 추가, 기존 Preview 값 유지) — A/B/C 전원 대상. 팀 공유 SoT가 Supabase로 전환되고 journal Blob POST는 자동 demote(GET·수동 백업은 유지). 롤백: `VITE_SUPABASE_MANUAL_MIRROR_ENABLED=false` → 재배포.
 
 ---
 
@@ -151,16 +153,16 @@ KPI1 계산 기준은 안정화 메모를 남기고, 주차 완료 M/M 정렬 �
 
 | 데이터 | 저장소 | 운영 상태 |
 |--------|--------|-----------|
-| 업무일지 | localStorage + Blob 수동 공유 | **주 저장소** |
+| 업무일지 | localStorage + Supabase 자동 미러(A/B/C) | **주 저장소** (Blob은 수동 fallback) |
 | KPI 운영·승인 | localStorage + Supabase 미러 | Supabase 읽기/미러 동작 (#52–#56, #68) |
 | 공지 | Supabase (공개 공지 anon 조회, 초안·쓰기 admin auth) | **운영 중** |
 | CSR | Supabase (anon RLS) | **운영 중** |
-| 일지 Supabase 백업 | `journal_snapshots` via `/api/journal-snapshots` | 코드 ✅, **미러 플래그 production off** |
+| 일지 Supabase 백업 | `journal_snapshots` via `/api/journal-snapshots` | 코드 ✅, **미러 플래그 production on (2026-09-22)** |
 
 ### 단계별 진행률
 
 ```
-[████████░░░░░░░░░░░░] 일지 Supabase 트랙 ~40%
+[████████████████████] 일지 Supabase 트랙 100%
 
 J1 admin API           ██████████  완료
 J2 클라이언트 API 전환  ██████████  완료
@@ -175,11 +177,11 @@ J7b member dual-write  ██████████  완료
 J7c pull SoT flip      ██████████  완료
 J7d Blob demote        ██████████  완료
 J7e sync_events 알림   ██████████  완료
-J8-0 자동업로드 설계   ██████████  완료 ←
-J8a Preview 자동 upsert ░░░░░░░░░░  대기
-J8b Production cutover  ░░░░░░░░░░  별도 승인
+J8-0 자동업로드 설계   ██████████  완료
+J8a Preview 자동 upsert ██████████  완료 (2026-09-22)
+J8b Production cutover  ██████████  완료 (2026-09-22, 명시 승인) ←
 
-(인프라: journal_snapshots DDL ✅ · env ✅ · admin-session API ✅ · Preview MANUAL_MIRROR ✅ · service_role GRANT ✅)
+(인프라: journal_snapshots DDL ✅ · env ✅(Production 포함) · admin-session API ✅ · MANUAL_MIRROR ✅(Preview+Production) · service_role GRANT ✅)
 ```
 
 ### 앞으로 할 일 — **일지 우선** (J3→J8)
@@ -197,14 +199,16 @@ J8b Production cutover  ░░░░░░░░░░  별도 승인
 | **J7d** | Journal Blob POST demote | ✅ | MANUAL_MIRROR 시 POST off, GET 유지 |
 | **J7e** | `sync_events` 감사 + 알림 | ✅ | 자동 merge 없음 · 폴링 연동 |
 | **J8-0** | Supabase 자동 업로드 설계 | ✅ | [`j8-journal-supabase-auto-upload-plan.md`](./j8-journal-supabase-auto-upload-plan.md) |
-| **J8a** | Preview B/C debounce 자동 upsert | 대기 | Blob `autoSyncCloud` off 유지 |
-| **J8b** | Production `MANUAL_MIRROR` + 자동 | 별도 승인 | 북마크·릴리즈 동반 |
+| **J8a** | Preview A/B/C debounce 자동 upsert | ✅ (2026-09-22) | Blob `autoSyncCloud` off 유지, Preview에서 A 계정 수동 검증 완료 |
+| **J8b** | Production `MANUAL_MIRROR` + 자동 | ✅ (2026-09-22, 명시 승인) | Vercel Production 전용 env 항목 추가 + 재배포. A/B/C 전원 대상 |
 
 **인증:** `/admin` 비밀번호 → admin-session. 매직링크 불필요.
 
 **J3 운영 체크리스트:** [`supabase-phase0-runbook.md`](./supabase-phase0-runbook.md) §6. Preview env → Redeploy → A/B/C 수동 저장·비교 → Production은 `false` 유지.
 
-**하지 않을 것 (J3 전):** localStorage/Blob 제거, 운영 `MANUAL_MIRROR=true`, 자동 병행
+**J8b 이후 남은 일:** 팀 북마크·릴리즈 노트에 "팀 공유 SoT=Supabase, Blob POST demote" 안내 반영(운영진이 직접 공지), B/C 실사용 회귀 관찰.
+
+**하지 않을 것:** localStorage 제거, Blob `autoSyncCloud` 자동 재활성화, 자동 pull/merge(비범위 유지)
 
 ### 기타 (일지 J3 이후)
 
