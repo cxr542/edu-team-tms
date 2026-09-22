@@ -7,6 +7,11 @@
 
 ## 2026-09-22
 
+### [문서] docs: mark J8a/J8b done (journal Supabase auto-mirror in Production)
+
+- docs: mark J8a/J8b done (journal Supabase auto-mirror in Production)
+- PR #121: https://github.com/cxr542/edu-team-tms/pull/121
+
 ### [신규] feat(journal): extend Supabase auto-mirror to member scope (J8a, Preview only)
 
 - feat(journal): extend Supabase auto-mirror to member scope (J8a, Preview only)
