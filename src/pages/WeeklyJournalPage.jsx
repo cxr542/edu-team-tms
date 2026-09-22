@@ -382,6 +382,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   // Leader /admin: backup + Supabase mirror stay available even when journal body is read-only.
   const showJournalBackupToolbar = showJournalLeaderToolbar;
   const showSupabaseMirrorTools = showJournalLeaderToolbar && SUPABASE_MANUAL_MIRROR_ENABLED;
+  // J8a: B/C(및 A 개인 URL) 본인 탭 자동 미러 상태 힌트 — 관리자 전용 도구(showSupabaseMirrorTools)와 별개로 노출.
+  const showSupabaseAutoMirrorHint =
+    SUPABASE_MANUAL_MIRROR_ENABLED &&
+    (showJournalLeaderToolbar || (isMemberJournalScope && !journalReadOnly));
   const showJournalStatusPanel = !journalReadOnly || showJournalLeaderToolbar;
   const showViewOnlyJsonImport =
     canImportViewOnlyJournalBackup && !showMemberTeamSharePull;
@@ -1679,7 +1683,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                   {supabaseJournalSaveHint}
                 </p>
               )}
-              {showSupabaseMirrorTools && supabaseAutoMirrorHint && (
+              {showSupabaseAutoMirrorHint && supabaseAutoMirrorHint && (
                 <p
                   className={`journal-sync-hint${
                     journal.supabaseMirrorSaveStatus === 'conflict' ||
