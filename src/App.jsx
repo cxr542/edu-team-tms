@@ -239,12 +239,12 @@ export default function App() {
   /** 공개 조회(?mode=view)만 상세 접기 — 구성원 B/C 장부는 거래 목록 항상 표시 */
   const ledgerDetailsCollapsible = isViewer && !teamAccess.isMemberScope;
   const isAdminEditAccess = teamAccess.isAdmin && !teamAccess.isMemberScope;
-  /** Preview leader /admin only — never enable Blob autoSyncCloud. */
+  /** J8a: Preview 자동 미러 — 리더 /admin(기존 J6) 또는 본인 슬라이스를 편집 중인 구성원 스코프(B/C 및 A 개인 URL). Blob autoSyncCloud는 절대 켜지 않음. */
   const autoMirrorSupabase =
     SUPABASE_MANUAL_MIRROR_ENABLED &&
-    teamAccess.isLeader &&
-    !teamAccess.isMemberScope &&
-    !isViewer;
+    !isViewer &&
+    ((teamAccess.isLeader && !teamAccess.isMemberScope) ||
+      (teamAccess.isMemberScope && Boolean(teamAccess.scopedMember)));
   /** 관리자(/admin) 장부에서만 엑셀보내기 */
   const canExportLedgerExcel = !isViewer && isAdminEditAccess;
   const {
