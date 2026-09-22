@@ -1,6 +1,6 @@
 # J8 — Journal Supabase 자동 업로드 설계
 
-> **상태:** J8-0 설계 문서 (2026-07-13)  
+> **상태:** J8b 완료 (2026-09-22, Production 명시 승인) — J8-0 설계 문서(2026-07-13)에서 시작  
 > **범위:** `MANUAL_MIRROR` 환경에서 일지 로컬 persist 후 **Supabase debounce 자동 upsert** (B/C 포함).  
 > **비범위 (리뷰 고정):** Blob `autoSyncCloud` · **자동 pull/merge** · localStorage 제거 · improve-projects/ledger Blob 자동.
 
@@ -151,8 +151,8 @@ autoMirrorSupabase =
 | 단계 | 내용 | 승인 |
 |------|------|------|
 | **J8-0** | 본 설계 문서 | — |
-| **J8a** | Preview: B/C(+기존 admin) `autoMirrorSupabase` 확장 · UI 힌트 · 테스트 | 구현 PR |
-| **J8b** | Production `VITE_SUPABASE_MANUAL_MIRROR_ENABLED=true` + 북마크/릴리즈 (팀 공유 SoT=Supabase, Blob POST demote) | **별도 명시 승인** |
+| **J8a** | Preview: A/B/C(+기존 admin) `autoMirrorSupabase` 확장 · UI 힌트 · 테스트 | ✅ 구현 PR [#120](https://github.com/cxr542/edu-team-tms/pull/120) (2026-09-22) |
+| **J8b** | Production `VITE_SUPABASE_MANUAL_MIRROR_ENABLED=true` + 북마크/릴리즈 (팀 공유 SoT=Supabase, Blob POST demote) | ✅ 명시 승인 및 적용 완료 (2026-09-22) — 북마크/릴리즈 노트 팀 공지는 운영진 진행 필요 |
 | (후속) | 확인 후 pull / 자동 pull — 본 문서 비범위 | 별 설계 |
 
 ### 롤백
@@ -195,7 +195,7 @@ API 스키마/GRANT 추가 없음 (J3·J7e 완료 전제).
 
 ### J8a (Preview)
 
-- [ ] B URL에서 일지 편집 → ~8s 내 `journal_snapshots` 해당 `member_code` `updated_at` 갱신
+- [x] A URL에서 일지 편집 → ~8s 내 자동 미러 상태 힌트 「대기 → 저장 중 → 완료」 확인 (2026-09-22, 육안 확인). B/C는 미검증
 - [ ] 동일 시점 `sync_events` (`source=journal`, `event_type=snapshot_updated`) row (best-effort)
 - [ ] 빈 일지로는 자동 upsert 안 됨
 - [ ] 원격이 더 최신이면 conflict/스킵, 로컬 유지
@@ -205,8 +205,8 @@ API 스키마/GRANT 추가 없음 (J3·J7e 완료 전제).
 
 ### J8b (승인 후)
 
-- [ ] Production env true + 재배포
-- [ ] 북마크·릴리즈: 팀 공유 SoT=Supabase, Blob POST demote 안내
+- [x] Production env true + 재배포 (2026-09-22, Vercel Production 전용 항목 추가 + docs 커밋 push로 재배포)
+- [ ] 북마크·릴리즈: 팀 공유 SoT=Supabase, Blob POST demote 안내 — 운영진 공지 필요
 - [ ] B/C 일상 작성 후 자동 반영·수동 가져오기 회귀
 - [ ] 롤백 절차 숙지 (`MANUAL_MIRROR=false`)
 
