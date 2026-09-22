@@ -7,6 +7,11 @@
 
 ## 2026-09-22
 
+### [신규] feat(journal): extend Supabase auto-mirror to member scope (J8a, Preview only)
+
+- feat(journal): extend Supabase auto-mirror to member scope (J8a, Preview only)
+- PR #120: https://github.com/cxr542/edu-team-tms/pull/120
+
 ### [수정] fix: reset card-paste modal state on cancel/close
 
 - fix: reset card-paste modal state on cancel/close
