@@ -29,4 +29,11 @@ describe('journal Supabase pull SoT flip (J7c)', () => {
     expect(hookSource).toContain("source: 'supabase'");
     expect(hookSource).toContain('fetchJournalSnapshot()');
   });
+
+  it('merges Supabase and Blob per member instead of unconditionally trusting Supabase (post-J8b-incident fix)', () => {
+    expect(hookSource).toContain('mergeTeamSnapshotsPreferRicher');
+    expect(hookSource).toContain("source: 'supabase+blob'");
+    // Regression: both sources must be fetched when MANUAL_MIRROR is on, not just Supabase.
+    expect(hookSource).toMatch(/Promise\.all\(\s*\[\s*fetchTeamJournalSnapshotFromSupabase\(\),\s*fetchJournalSnapshot\(\),/);
+  });
 });

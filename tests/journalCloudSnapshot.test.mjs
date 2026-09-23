@@ -8,6 +8,7 @@ import {
   isMemberJournalWriteStale,
   mergeJournalSnapshotsByMember,
   mergeMemberIntoJournalSnapshot,
+  mergeTeamSnapshotsPreferRicher,
   normalizeJournalCloudSnapshot,
 } from '../src/utils/journalCloudSnapshot.js';
 
@@ -16,6 +17,21 @@ const day = (title) => ({
     holiday: false,
     mm: { work: 0, improve: 0, leave: 0 },
     tasks: [{ id: title, cat: 'other', title, plan: 1, actual: 1, done: true }],
+  },
+});
+
+const daysWithTaskCount = (count, label) => ({
+  '2026-06-09': {
+    holiday: false,
+    mm: { work: 0, improve: 0, leave: 0 },
+    tasks: Array.from({ length: count }, (_, i) => ({
+      id: `${label}-${i}`,
+      cat: 'other',
+      title: `${label} task ${i}`,
+      plan: 1,
+      actual: 1,
+      done: true,
+    })),
   },
 });
 
@@ -263,5 +279,79 @@ describe('journalCloudSnapshot', () => {
     expect(next.memberJournals.B.days['2026-06-09'].tasks[0].title).toBe('B remote newer for B');
     expect(next.meta.memberUpdatedAt.B).toBe('2026-06-11T08:00:00.000Z');
     expect(next.memberJournals.A.days['2026-06-09'].tasks[0].title).toBe('A local');
+  });
+
+  describe('mergeTeamSnapshotsPreferRicher (J8b incident fix)', () => {
+    it('picks the richer (more tasks) side even when the thinner side has a newer updatedAt', () => {
+      const rich = normalizeJournalCloudSnapshot({
+        publishedAt: '2026-09-01T00:00:00.000Z',
+        meta: { memberUpdatedAt: { A: '2026-09-01T00:00:00.000Z' } },
+        memberJournals: { A: { days: daysWithTaskCount(20, 'rich') } },
+      });
+      const thin = normalizeJournalCloudSnapshot({
+        publishedAt: '2026-09-22T09:23:08.000Z',
+        meta: { memberUpdatedAt: { A: '2026-09-22T09:23:08.000Z' } },
+        memberJournals: { A: { days: daysWithTaskCount(1, 'thin') } },
+      });
+
+      const merged = mergeTeamSnapshotsPreferRicher(rich, thin);
+
+      expect(merged.memberJournals.A.days['2026-06-09'].tasks).toHaveLength(20);
+      expect(merged.memberJournals.A.days['2026-06-09'].tasks[0].title).toBe('rich task 0');
+    });
+
+    it('falls back to newer updatedAt when task counts are equal', () => {
+      const older = normalizeJournalCloudSnapshot({
+        publishedAt: '2026-06-09T01:00:00.000Z',
+        meta: { memberUpdatedAt: { B: '2026-06-09T01:00:00.000Z' } },
+        memberJournals: { B: { days: day('B older') } },
+      });
+      const newer = normalizeJournalCloudSnapshot({
+        publishedAt: '2026-06-09T02:00:00.000Z',
+        meta: { memberUpdatedAt: { B: '2026-06-09T02:00:00.000Z' } },
+        memberJournals: { B: { days: day('B newer') } },
+      });
+
+      const merged = mergeTeamSnapshotsPreferRicher(older, newer);
+
+      expect(merged.memberJournals.B.days['2026-06-09'].tasks[0].title).toBe('B newer');
+    });
+
+    it('prefers whichever side is non-empty for a member, regardless of argument order', () => {
+      const hasC = normalizeJournalCloudSnapshot({
+        publishedAt: '2026-06-09T00:00:00.000Z',
+        meta: { memberUpdatedAt: { C: '2026-06-09T00:00:00.000Z' } },
+        memberJournals: { C: { days: day('C only here') } },
+      });
+      const empty = normalizeJournalCloudSnapshot({
+        publishedAt: '2026-06-09T05:00:00.000Z',
+        memberJournals: {},
+      });
+
+      expect(
+        mergeTeamSnapshotsPreferRicher(hasC, empty).memberJournals.C.days['2026-06-09'].tasks[0].title
+      ).toBe('C only here');
+      expect(
+        mergeTeamSnapshotsPreferRicher(empty, hasC).memberJournals.C.days['2026-06-09'].tasks[0].title
+      ).toBe('C only here');
+    });
+
+    it('resolves each member independently from either source', () => {
+      const source1 = normalizeJournalCloudSnapshot({
+        publishedAt: '2026-06-09T00:00:00.000Z',
+        meta: { memberUpdatedAt: { A: '2026-06-09T00:00:00.000Z' } },
+        memberJournals: { A: { days: daysWithTaskCount(10, 'A-rich') } },
+      });
+      const source2 = normalizeJournalCloudSnapshot({
+        publishedAt: '2026-06-09T00:00:00.000Z',
+        meta: { memberUpdatedAt: { B: '2026-06-09T00:00:00.000Z' } },
+        memberJournals: { B: { days: daysWithTaskCount(10, 'B-rich') } },
+      });
+
+      const merged = mergeTeamSnapshotsPreferRicher(source1, source2);
+
+      expect(merged.memberJournals.A.days['2026-06-09'].tasks[0].title).toBe('A-rich task 0');
+      expect(merged.memberJournals.B.days['2026-06-09'].tasks[0].title).toBe('B-rich task 0');
+    });
   });
 });

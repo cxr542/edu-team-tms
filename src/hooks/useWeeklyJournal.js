@@ -29,6 +29,7 @@ import {
 import {
   applyRemoteMemberJournalSave,
   mergeJournalSnapshotsByMember,
+  mergeTeamSnapshotsPreferRicher,
 } from '../utils/journalCloudSnapshot';
 import {
   buildMemberRemoteSnapshotFromSupabase,
@@ -304,11 +305,26 @@ export function useWeeklyJournal({
       try {
         let result = null;
 
-        // J7c: Preview MANUAL_MIRROR → Supabase team snapshot first, Blob fallback.
+        // J7c/후속: MANUAL_MIRROR면 Supabase·Blob을 둘 다 읽어 구성원별로 더 풍부한 쪽을 쓴다.
+        // (Supabase만 무조건 우선하면, 소규모 편집이 updatedAt만 최신이어도 방대한 이력을 가진
+        // Blob을 덮어쓸 수 있다 — 2026-09 J8b 인시던트로 확인됨.)
         if (SUPABASE_MANUAL_MIRROR_ENABLED) {
-          const supabase = await fetchTeamJournalSnapshotFromSupabase();
-          if (supabase?.ok && supabase.snapshot) {
-            result = { snapshot: supabase.snapshot, source: 'supabase' };
+          const [supabase, blob] = await Promise.all([
+            fetchTeamJournalSnapshotFromSupabase(),
+            fetchJournalSnapshot(),
+          ]);
+          const supabaseSnapshot = supabase?.ok && supabase.snapshot ? supabase.snapshot : null;
+          const blobSnapshot = blob?.snapshot || null;
+
+          if (supabaseSnapshot && blobSnapshot) {
+            result = {
+              snapshot: mergeTeamSnapshotsPreferRicher(blobSnapshot, supabaseSnapshot),
+              source: 'supabase+blob',
+            };
+          } else if (supabaseSnapshot) {
+            result = { snapshot: supabaseSnapshot, source: 'supabase' };
+          } else if (blobSnapshot) {
+            result = { snapshot: blobSnapshot, source: blob.source || 'blob' };
           }
         }
 

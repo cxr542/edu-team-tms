@@ -324,6 +324,59 @@ export function mergeJournalSnapshotsByMember(
   });
 }
 
+function countMemberTasks(slice) {
+  const days = slice?.days;
+  if (!days || typeof days !== 'object') return 0;
+  return Object.values(days).reduce(
+    (total, day) => total + (Array.isArray(day?.tasks) ? day.tasks.length : 0),
+    0
+  );
+}
+
+/**
+ * J7c 후속: 두 팀 스냅샷(예: Blob·Supabase) 중 구성원별로 "더 풍부한" 쪽을 고른다.
+ * updatedAt만 보면 소규모 테스트 편집이 방대한 과거 이력보다 "최신"으로 보여 얕은 쪽이
+ * 이길 수 있으므로(2026-09 J8b 인시던트), task 개수를 1차 기준으로 쓰고 동률일 때만
+ * updatedAt으로 tie-break한다. 두 소스 모두 원격이며 로컬 편집본이 아니다.
+ */
+export function mergeTeamSnapshotsPreferRicher(snapshotA, snapshotB) {
+  const a = normalizeJournalCloudSnapshot(snapshotA);
+  const b = normalizeJournalCloudSnapshot(snapshotB);
+  const memberJournals = createEmptyMemberJournals();
+  const memberUpdatedAt = {};
+
+  JOURNAL_MEMBER_CODES.forEach((code) => {
+    const sliceA = a.memberJournals[code] || emptyMemberJournal();
+    const sliceB = b.memberJournals[code] || emptyMemberJournal();
+    const emptyA = isMemberJournalEmpty(sliceA);
+    const emptyB = isMemberJournalEmpty(sliceB);
+
+    let useB;
+    if (emptyA && emptyB) {
+      useB = false;
+    } else if (emptyA || emptyB) {
+      useB = emptyA && !emptyB;
+    } else {
+      const tasksA = countMemberTasks(sliceA);
+      const tasksB = countMemberTasks(sliceB);
+      useB = tasksB !== tasksA ? tasksB > tasksA : isNewer(memberTime(b, code), memberTime(a, code));
+    }
+
+    const selected = useB ? sliceB : sliceA;
+    memberJournals[code] = clone(selected);
+    const selectedAt = useB ? memberTime(b, code) : memberTime(a, code);
+    if (selectedAt && !isMemberJournalEmpty(selected)) memberUpdatedAt[code] = selectedAt;
+  });
+
+  const publishedAt = isNewer(b.publishedAt, a.publishedAt) ? b.publishedAt : a.publishedAt;
+  return normalizeJournalCloudSnapshot({
+    version: JOURNAL_CLOUD_SNAPSHOT_VERSION,
+    publishedAt,
+    meta: { updatedAt: publishedAt, memberUpdatedAt },
+    memberJournals,
+  });
+}
+
 /** 구성원 조회용 — ownMemberCode 슬라이스는 local 유지, 나머지만 remote 병합 */
 export function mergeJournalSnapshotsViewOnlyImport(localSnapshot, remoteSnapshot, ownMemberCode) {
   if (!isValidMemberCode(ownMemberCode)) {
