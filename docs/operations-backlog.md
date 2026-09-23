@@ -105,7 +105,7 @@ KPI1 계산 기준은 안정화 메모를 남기고, 주차 완료 M/M 정렬 �
 | **J7e** | `sync_events` 감사 + 알림(폴링 연동) | ✅ 자동 merge 없음 |
 | **J8-0** | Supabase 자동 업로드 설계 | ✅ [`j8-journal-supabase-auto-upload-plan.md`](./j8-journal-supabase-auto-upload-plan.md) |
 | **J8a** | Preview B/C debounce 자동 upsert | ✅ (2026-09-22) · Blob auto off |
-| **J8b** | Production `MANUAL_MIRROR` cutover + 자동 | 롤백됨 (2026-09-23) — Supabase 백필 완료(2026-09-23), pull 로직 수정 후 재시도 |
+| **J8b** | Production `MANUAL_MIRROR` cutover + 자동 | ✅ 재적용 (2026-09-23) — 백필·pull 로직 수정·오프라인+E2E 검증 후 재승인 |
 
 상세 설계: [`j7-journal-realtime-blob-plan.md`](./j7-journal-realtime-blob-plan.md) · [`j8-journal-supabase-auto-upload-plan.md`](./j8-journal-supabase-auto-upload-plan.md)
 
@@ -144,7 +144,9 @@ KPI1 계산 기준은 안정화 메모를 남기고, 주차 완료 M/M 정렬 �
 **J8-0 완료:** Blob 수동 유지 · Supabase debounce 자동 업로드 설계 — [`j8-journal-supabase-auto-upload-plan.md`](./j8-journal-supabase-auto-upload-plan.md). 자동 pull 비범위.
 **J8a 완료 (2026-09-22):** Preview 자동 미러 게이트를 리더 `/admin`(J6)에서 **본인 슬라이스를 편집 중인 구성원 스코프(A/B/C 개인 URL)까지 확장**. `src/App.jsx`의 `autoMirrorSupabase`, 상태 힌트는 `src/pages/WeeklyJournalPage.jsx`. Preview에서 A 계정으로 수동 검증 완료.
 **J8b 적용 (2026-09-22) → 롤백 (2026-09-23):** Production `VITE_SUPABASE_MANUAL_MIRROR_ENABLED=true`를 A/B/C 전원 대상으로 켰으나, **`journal_snapshots`가 Blob 대비 현저히 얕다는 걸 뒤늦게 발견**(A 34 vs Blob 235 tasks, B 1 vs 215, C 0 vs 211 — Preview 파일럿 기간에만 간헐적으로 채워졌기 때문). `pullFromCloud`(J7c)가 `MANUAL_MIRROR` on일 때 Supabase에 스냅샷이 있으면 무조건 우선하고 Blob은 확인하지 않는 구조라, 「팀 공유본 가져오기」를 누르면 풍부한 Blob 데이터 대신 얕은 Supabase 데이터로 로컬을 덮어쓸 위험이 있었음(실제 클릭·유실 사례는 없었음 — 사전 발견). Vercel Production 전용 env 항목을 삭제(기존 Preview 값은 유지)하고 재배포해 원복.
-**백필 완료 (2026-09-23):** Blob의 A/B/C 전체 스냅샷을 `/api/journal-snapshots`(구성원 referer)로 Supabase에 재기록 — A 117일/237개, B 115일/215개, C 100일/211개로 Blob과 일치 확인. **다만 pull 로직("더 풍부한/최신 쪽" 선택)은 아직 수정 안 함** — 두 저장소가 다시 벌어지면 동일 위험 재발하므로, 그 전에 pull 로직 수정 없이는 J8b 재시도하지 않는다.
+**백필 완료 (2026-09-23):** Blob의 A/B/C 전체 스냅샷을 `/api/journal-snapshots`(구성원 referer)로 Supabase에 재기록 — A 117일/237개, B 115일/215개, C 100일/211개로 Blob과 일치 확인.
+**pull 로직 수정 완료 (2026-09-23, [#124](https://github.com/cxr542/edu-team-tms/pull/124)):** `mergeTeamSnapshotsPreferRicher` 추가 — `pullFromCloud`가 이제 Supabase·Blob을 둘 다 읽어 구성원별로 task 개수가 더 많은 쪽을 고르고, 동률일 때만 `updatedAt`으로 tie-break. 단위테스트 4건 통과.
+**재검증 및 J8b 재적용 (2026-09-23):** 오프라인(실 Blob 데이터 + 사고 재현 가짜 데이터를 병합 함수에 직접 입력) 및 E2E(throwaway Preview 배포에서 브라우저 fetch를 가로채 Supabase 응답만 가짜로 만들고 실제 「가져오기」 버튼 클릭, 실 Supabase 무변경) 검증 모두 통과. Vercel Production에 `VITE_SUPABASE_MANUAL_MIRROR_ENABLED=true` 재적용.
 
 ---
 
@@ -154,16 +156,16 @@ KPI1 계산 기준은 안정화 메모를 남기고, 주차 완료 M/M 정렬 �
 
 | 데이터 | 저장소 | 운영 상태 |
 |--------|--------|-----------|
-| 업무일지 | localStorage + Blob 수동 공유 | **주 저장소** (2026-09-23 롤백 후 원복) |
+| 업무일지 | localStorage + Supabase 자동 미러(A/B/C) | **주 저장소** (2026-09-23 재적용, Blob은 수동 fallback) |
 | KPI 운영·승인 | localStorage + Supabase 미러 | Supabase 읽기/미러 동작 (#52–#56, #68) |
 | 공지 | Supabase (공개 공지 anon 조회, 초안·쓰기 admin auth) | **운영 중** |
 | CSR | Supabase (anon RLS) | **운영 중** |
-| 일지 Supabase 백업 | `journal_snapshots` via `/api/journal-snapshots` | 코드 ✅, **미러 플래그 production off (2026-09-23 롤백)**. 데이터는 Blob과 백필로 동기화됨(2026-09-23) — pull 우선순위 로직은 미수정 |
+| 일지 Supabase 백업 | `journal_snapshots` via `/api/journal-snapshots` | 코드 ✅, **미러 플래그 production on (2026-09-23 재적용)**. 데이터는 Blob과 동기화됨, pull 로직도 richer-wins로 수정됨 |
 
 ### 단계별 진행률
 
 ```
-[██████████████████░░] 일지 Supabase 트랙 ~90% (J8b 롤백)
+[████████████████████] 일지 Supabase 트랙 100% (J8b 재적용)
 
 J1 admin API           ██████████  완료
 J2 클라이언트 API 전환  ██████████  완료
@@ -180,9 +182,9 @@ J7d Blob demote        ██████████  완료
 J7e sync_events 알림   ██████████  완료
 J8-0 자동업로드 설계   ██████████  완료
 J8a Preview 자동 upsert ██████████  완료 (2026-09-22)
-J8b Production cutover  ░░░░░░░░░░  롤백됨 (2026-09-23) — 백필 완료, pull 로직 수정 대기 ←
+J8b Production cutover  ██████████  재적용 완료 (2026-09-23) ←
 
-(인프라: journal_snapshots DDL ✅ · env ✅(Preview만) · admin-session API ✅ · MANUAL_MIRROR Preview만 ✅ · service_role GRANT ✅ · journal_snapshots 데이터 Blob과 동기화됨(2026-09-23) ✅ · pull 우선순위 로직 미수정 ⚠️)
+(인프라: journal_snapshots DDL ✅ · env ✅(Preview+Production) · admin-session API ✅ · MANUAL_MIRROR ✅(Preview+Production) · service_role GRANT ✅ · journal_snapshots 데이터 Blob과 동기화됨 ✅ · pull 로직 richer-wins로 수정됨 ✅)
 ```
 
 ### 앞으로 할 일 — **일지 우선** (J3→J8)
@@ -201,13 +203,13 @@ J8b Production cutover  ░░░░░░░░░░  롤백됨 (2026-09-23) �
 | **J7e** | `sync_events` 감사 + 알림 | ✅ | 자동 merge 없음 · 폴링 연동 |
 | **J8-0** | Supabase 자동 업로드 설계 | ✅ | [`j8-journal-supabase-auto-upload-plan.md`](./j8-journal-supabase-auto-upload-plan.md) |
 | **J8a** | Preview A/B/C debounce 자동 upsert | ✅ (2026-09-22) | Blob `autoSyncCloud` off 유지, Preview에서 A 계정 수동 검증 완료 |
-| **J8b** | Production `MANUAL_MIRROR` + 자동 | 롤백 (2026-09-23) | Vercel Production env 삭제 + 재배포로 원복. 사유: `journal_snapshots`가 Blob 대비 얕아 「가져오기」가 얕은 데이터로 로컬을 덮어쓸 위험 발견 |
+| **J8b** | Production `MANUAL_MIRROR` + 자동 | ✅ 재적용 (2026-09-23) | 백필+pull 로직 수정(#124)+오프라인/E2E 검증 후 Vercel Production env 재추가 + 재배포 |
 
 **인증:** `/admin` 비밀번호 → admin-session. 매직링크 불필요.
 
 **J3 운영 체크리스트:** [`supabase-phase0-runbook.md`](./supabase-phase0-runbook.md) §6. Preview env → Redeploy → A/B/C 수동 저장·비교 → Production은 `false` 유지.
 
-**J8b 재시도 전 필요:** ~~(1) Supabase `journal_snapshots`를 Blob 수준으로 백필~~ 완료(2026-09-23). (2) `pullFromCloud`(J7c)가 Supabase-first 대신 "더 풍부한/최신 소스"를 고르도록 수정 — 아직 미완료, 이거 없이는 재승인하지 않는다. 팀 북마크·릴리즈 노트 안내는 재시도 시점에 운영진이 진행.
+**J8b 재적용 완료 (2026-09-23):** ~~(1) 백필~~ ~~(2) pull 로직 수정~~ 모두 완료 및 검증 후 재승인. **남은 일:** 팀 북마크·릴리즈 노트에 "팀 공유 SoT=Supabase, Blob POST demote" 안내 — 운영진이 직접 공지 필요. B/C 실사용 회귀는 계속 관찰.
 
 **하지 않을 것:** localStorage 제거, Blob `autoSyncCloud` 자동 재활성화, 자동 pull/merge(비범위 유지)
 
