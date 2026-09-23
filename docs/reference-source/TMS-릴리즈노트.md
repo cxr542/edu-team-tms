@@ -7,6 +7,11 @@
 
 ## 2026-09-23
 
+### [수정] fix(ci): stage the whole synced public/docs/reference dir in release-notes workflow
+
+- fix(ci): stage the whole synced public/docs/reference dir in release-notes workflow
+- PR #128: https://github.com/cxr542/edu-team-tms/pull/128
+
 ### [문서] docs: note journal auto-save in the team bookmark guide (J8b)
 
 - docs: note journal auto-save in the team bookmark guide (J8b)
