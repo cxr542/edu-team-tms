@@ -7,6 +7,11 @@
 
 ## 2026-09-23
 
+### [수정] fix: stop telling auto-mirrored editors that cloud sync is off
+
+- fix: stop telling auto-mirrored editors that cloud sync is off
+- PR #129: https://github.com/cxr542/edu-team-tms/pull/129
+
 ### [수정] fix(ci): stage the whole synced public/docs/reference dir in release-notes workflow
 
 - fix(ci): stage the whole synced public/docs/reference dir in release-notes workflow
