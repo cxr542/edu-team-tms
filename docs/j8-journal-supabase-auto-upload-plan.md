@@ -1,6 +1,6 @@
 # J8 — Journal Supabase 자동 업로드 설계
 
-> **상태:** J8b 완료 (2026-09-22, Production 명시 승인) — J8-0 설계 문서(2026-07-13)에서 시작  
+> **상태:** J8b 적용(2026-09-22) → **롤백(2026-09-23)** — `journal_snapshots`가 Blob 대비 얕아 pull 위험 발견, 백필 전까지 보류. J8a는 Preview에서 유지. J8-0 설계 문서(2026-07-13)에서 시작  
 > **범위:** `MANUAL_MIRROR` 환경에서 일지 로컬 persist 후 **Supabase debounce 자동 upsert** (B/C 포함).  
 > **비범위 (리뷰 고정):** Blob `autoSyncCloud` · **자동 pull/merge** · localStorage 제거 · improve-projects/ledger Blob 자동.
 
@@ -152,7 +152,7 @@ autoMirrorSupabase =
 |------|------|------|
 | **J8-0** | 본 설계 문서 | — |
 | **J8a** | Preview: A/B/C(+기존 admin) `autoMirrorSupabase` 확장 · UI 힌트 · 테스트 | ✅ 구현 PR [#120](https://github.com/cxr542/edu-team-tms/pull/120) (2026-09-22) |
-| **J8b** | Production `VITE_SUPABASE_MANUAL_MIRROR_ENABLED=true` + 북마크/릴리즈 (팀 공유 SoT=Supabase, Blob POST demote) | ✅ 명시 승인 및 적용 완료 (2026-09-22) — 북마크/릴리즈 노트 팀 공지는 운영진 진행 필요 |
+| **J8b** | Production `VITE_SUPABASE_MANUAL_MIRROR_ENABLED=true` + 북마크/릴리즈 (팀 공유 SoT=Supabase, Blob POST demote) | 적용(2026-09-22) → **롤백(2026-09-23)**. 사유: 아래 §9a 참고. Supabase 백필 또는 pull 로직 수정 후 재승인 필요 |
 | (후속) | 확인 후 pull / 자동 pull — 본 문서 비범위 | 별 설계 |
 
 ### 롤백
@@ -208,7 +208,25 @@ API 스키마/GRANT 추가 없음 (J3·J7e 완료 전제).
 - [x] Production env true + 재배포 (2026-09-22, Vercel Production 전용 항목 추가 + docs 커밋 push로 재배포)
 - [ ] 북마크·릴리즈: 팀 공유 SoT=Supabase, Blob POST demote 안내 — 운영진 공지 필요
 - [ ] B/C 일상 작성 후 자동 반영·수동 가져오기 회귀
-- [ ] 롤백 절차 숙지 (`MANUAL_MIRROR=false`)
+- [x] 롤백 절차 숙지 (`MANUAL_MIRROR=false`) — 실제로 아래 §9a 사유로 2026-09-23 실행함
+
+### 9a. J8b 롤백 사유 (2026-09-23)
+
+A가 `/yhkim?year=2026&month=9`에서 9월 일지 일부가 안 보인다고 보고, `/admin` 「저장소 비교」로 확인한 결과:
+
+| 구성원 | Supabase tasks | Blob tasks |
+|--------|-----------------|------------|
+| A | 34 | 235 |
+| B | 1 | 215 |
+| C | 0 | 211 |
+
+`journal_snapshots`는 J3~J7 기간 Preview 파일럿 때만 간헐적으로 쓰여서 실제 운영 히스토리(Blob)에 크게 못 미쳤다. `useWeeklyJournal.js`의 `pullFromCloud`(J7c 설계)는 `SUPABASE_MANUAL_MIRROR_ENABLED`가 true면 Supabase에 스냅샷이 하나라도 있으면 **Blob을 아예 확인하지 않고 Supabase를 그대로 채택**한다. Production에서 이 플래그를 켠 상태로 누군가 「팀 공유본 가져오기」를 눌렀다면, 얕은 Supabase 데이터로 로컬(및 이후 Blob)이 덮어써질 뻔했다 — 실제 클릭·유실 사례는 없었고, 사전에 발견해 막았다.
+
+A의 로컬 브라우저에 9/1~9/21 데이터가 없었던 것 자체는 이 pull 위험과는 별개 원인으로 보이며(코드상 자동 pull 경로는 없음), 원인은 미확정인 채로 남아있다. Blob에는 A의 데이터가 온전히 있다.
+
+**조치:** Vercel Production의 `VITE_SUPABASE_MANUAL_MIRROR_ENABLED` 항목 삭제 → 재배포. Preview 값은 그대로 유지, J8a Preview 동작은 계속 유효.
+
+**재개 조건:** (1) `journal_snapshots`를 Blob 스냅샷 기준으로 백필하거나, (2) `pullFromCloud`가 Supabase/Blob 중 `updatedAt` 또는 데이터 크기가 더 큰 쪽을 고르도록 수정 — 둘 중 하나 없이는 J8b 재승인하지 않는다.
 
 ---
 
