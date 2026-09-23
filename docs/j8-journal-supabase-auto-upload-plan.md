@@ -1,6 +1,6 @@
 # J8 — Journal Supabase 자동 업로드 설계
 
-> **상태:** J8b 적용(2026-09-22) → **롤백(2026-09-23)** — `journal_snapshots`가 Blob 대비 얕아 pull 위험 발견, 백필 전까지 보류. J8a는 Preview에서 유지. J8-0 설계 문서(2026-07-13)에서 시작  
+> **상태:** J8b 적용(2026-09-22) → 롤백(2026-09-23) → **A/B/C `journal_snapshots` Blob 기준 백필 완료(2026-09-23)**. pull 로직 수정 전까지 J8b 재승인 보류. J8a는 Preview에서 유지. J8-0 설계 문서(2026-07-13)에서 시작  
 > **범위:** `MANUAL_MIRROR` 환경에서 일지 로컬 persist 후 **Supabase debounce 자동 upsert** (B/C 포함).  
 > **비범위 (리뷰 고정):** Blob `autoSyncCloud` · **자동 pull/merge** · localStorage 제거 · improve-projects/ledger Blob 자동.
 
@@ -227,6 +227,10 @@ A의 로컬 브라우저에 9/1~9/21 데이터가 없었던 것 자체는 이 pu
 **조치:** Vercel Production의 `VITE_SUPABASE_MANUAL_MIRROR_ENABLED` 항목 삭제 → 재배포. Preview 값은 그대로 유지, J8a Preview 동작은 계속 유효.
 
 **재개 조건:** (1) `journal_snapshots`를 Blob 스냅샷 기준으로 백필하거나, (2) `pullFromCloud`가 Supabase/Blob 중 `updatedAt` 또는 데이터 크기가 더 큰 쪽을 고르도록 수정 — 둘 중 하나 없이는 J8b 재승인하지 않는다.
+
+**(1) 백필 완료 (2026-09-23):** `GET /api/journal-snapshot`(Blob, referer 인증)로 A/B/C 전체 스냅샷을 읽어, 각 구성원 슬라이스를 그대로 `POST /api/journal-snapshots`(구성원 referer, `updatedAt`은 Blob의 `meta.memberUpdatedAt[code]`)로 Supabase에 덮어썼다. 검증 결과 A 117일/237개, B 115일/215개, C 100일/211개로 Blob과 완전히 일치. `writeSnapshotAtomically`의 staleness 체크(신규 `updatedAt` > 기존)를 그대로 통과시켜, 앱이 스스로 쓰는 경로와 동일한 검증을 거쳤다.
+
+**(2) pull 로직 수정은 아직 안 함.** 지금 상태는 "이번엔 데이터가 같아서 안전"이지, "구조적으로 항상 안전"은 아니다 — 다음에 또 두 저장소가 벌어지면 같은 위험이 재발한다. J8b 재승인 전에 (2)도 처리하는 걸 권장.
 
 ---
 
