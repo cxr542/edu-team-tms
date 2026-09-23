@@ -7,6 +7,11 @@
 
 ## 2026-09-23
 
+### [문서] docs: J8b re-approved and re-applied to Production
+
+- docs: J8b re-approved and re-applied to Production
+- PR #125: https://github.com/cxr542/edu-team-tms/pull/125
+
 ### [수정] fix: pull richer journal snapshot instead of trusting Supabase unconditionally
 
 - fix: pull richer journal snapshot instead of trusting Supabase unconditionally
