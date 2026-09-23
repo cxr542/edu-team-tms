@@ -23,4 +23,17 @@ describe('journal Supabase auto-mirror member scope (J8a)', () => {
     // The leader-only manual mirror toolbar stays a distinct flag (not widened by this change).
     expect(journalSource).toContain('showSupabaseMirrorTools = showJournalLeaderToolbar');
   });
+
+  it('does not tell an auto-mirrored editor that auto sync is off (2026-09-23 incident)', () => {
+    // The pre-J8 disclaimer must be gated behind showSupabaseAutoMirrorHint, not
+    // rendered unconditionally — otherwise a member with auto-mirror ON still
+    // reads "자동 클라우드 동기화는 꺼져 있으며" and thinks they must click
+    // 「팀 공유 저장」 manually every time.
+    expect(journalSource).toContain(
+      '편집을 멈추면 잠시 후 자동으로 클라우드(Supabase)에도 저장됩니다.'
+    );
+    expect(journalSource).toMatch(
+      /showSupabaseAutoMirrorHint \? \(\s*<>편집을 멈추면 잠시 후 자동으로 클라우드\(Supabase\)에도 저장됩니다\.<\/>\s*\) : \(\s*<>현재 자동 클라우드 동기화는 꺼져 있으며/
+    );
+  });
 });
