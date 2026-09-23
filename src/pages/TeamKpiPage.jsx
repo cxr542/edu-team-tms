@@ -705,7 +705,7 @@ export default function TeamKpiPage() {
                       <button
                         type="button"
                         className="btn btn-primary"
-                        disabled={improveProjectsApi.sharedBusy}
+                        disabled={improveProjectsApi.sharedBusy || improveProjects.length === 0}
                         aria-label="팀 공유 저장"
                         title="수동 — 현재 운영 목록을 팀 공용 snapshot으로 저장합니다"
                         {...uiTooltip(

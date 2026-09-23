@@ -109,6 +109,13 @@ export function useImproveProjects({ readOnly = false } = {}) {
     if (readOnly || sharedBusy) {
       return { ok: false, reason: readOnly ? 'read-only' : 'busy' };
     }
+    if (!projects.length) {
+      return {
+        ok: false,
+        reason: 'empty',
+        message: '향상 과제 운영 목록이 비어 있어 팀 공유 저장할 수 없습니다.',
+      };
+    }
     setSharedBusy(true);
     try {
       const snapshot = await publishSharedImproveProjectsSnapshot(projects, { publishedBy: 'leader' });

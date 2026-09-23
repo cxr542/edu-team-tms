@@ -42,6 +42,7 @@ describe('improveProjectsCloudSnapshot utilities', () => {
 
   it('rejects invalid payload', () => {
     expect(validateImproveProjectsPayload(null).ok).toBe(false);
+    expect(validateImproveProjectsPayload([]).ok).toBe(false);
     expect(validateImproveProjectsPayload([{ name: 'no id' }]).ok).toBe(false);
     expect(validateImproveProjectsPayload([
       { id: 'a', name: 'A', code: 'a' },
