@@ -7,6 +7,11 @@
 
 ## 2026-09-23
 
+### [문서] docs: note journal auto-save in the team bookmark guide (J8b)
+
+- docs: note journal auto-save in the team bookmark guide (J8b)
+- PR #126: https://github.com/cxr542/edu-team-tms/pull/126
+
 ### [문서] docs: J8b re-approved and re-applied to Production
 
 - docs: J8b re-approved and re-applied to Production
