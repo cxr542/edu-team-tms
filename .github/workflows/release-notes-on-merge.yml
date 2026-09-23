@@ -71,9 +71,12 @@ jobs:
       - name: Commit and push
         if: steps.guard.outputs.skip != 'true'
         run: |
+          # append-release-note.mjs also runs sync-reference-docs.mjs, which
+          # rewrites every file under public/docs/reference/ (not just the
+          # release note's own copy). Stage the whole synced output dir, or
+          # leftover unstaged changes there make `git pull --rebase` fail below.
           SOT="docs/reference-source/TMS-릴리즈노트.md"
-          PUB="public/docs/reference/TMS-릴리즈노트.md"
-          git add -- "$SOT" "$PUB"
+          git add -- "$SOT" public/docs/reference
           if git diff --cached --quiet; then
             echo "No release-note file changes; nothing to commit."
             exit 0
