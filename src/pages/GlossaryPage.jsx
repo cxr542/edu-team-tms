@@ -469,41 +469,13 @@ export default function GlossaryPage({
                 return (
                   <article
                     key={term.slug}
-                    className={`glossary-card${isSelected ? ' is-selected' : ''}`}
+                    className={`glossary-row${isSelected ? ' is-selected' : ''}`}
                     onClick={() => handleSelectSlug(term.slug)}
                   >
-                    <div className="glossary-card__head">
-                      <h3 className="glossary-card__title">{term.title}</h3>
-                      <span className={`glossary-card__category ${catInfo.color}`}>
-                        {catInfo.label.split(' ')[0]}
-                      </span>
-                    </div>
-
-                    <div className="glossary-card__slug">
-                      <code>{term.slug}</code>
-                    </div>
-
-                    {term.tags && term.tags.length > 0 && (
-                      <div className="glossary-card__tags">
-                        {term.tags.map((tg) => (
-                          <span key={tg} className="glossary-mini-tag">
-                            #{tg}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    <p className="glossary-card__excerpt">
-                      {term.body.replace(/[#*`_\[\]]/g, '').slice(0, 110)}…
-                    </p>
-
-                    {term.related && term.related.length > 0 && (
-                      <div className="glossary-card__footer">
-                        <span className="glossary-card__related-count">
-                          <Network size={12} /> 연관 {term.related.length}개
-                        </span>
-                      </div>
-                    )}
+                    <h3 className="glossary-row__title">{term.title}</h3>
+                    <span className={`glossary-row__category ${catInfo.color}`}>
+                      {catInfo.label.split(' ')[0]}
+                    </span>
                   </article>
                 );
               })
