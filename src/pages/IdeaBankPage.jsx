@@ -1,10 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Lightbulb, Plus, RotateCcw } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { AlertTriangle, CheckCircle2, Lightbulb, Paperclip, Plus, RotateCcw, X } from 'lucide-react';
 import { CSR_REQUEST_CATEGORY_LIST } from '../constants/csrRequests.js';
 import CsrRequestCard from '../components/CsrRequestCard.jsx';
 import { useCsrRequests } from '../hooks/useCsrRequests.js';
 import { isEditorMode } from '../utils/appMode.js';
 import { resolveCsrRequesterIdentity } from '../utils/csrRequesterIdentity.js';
+import {
+  CSR_ATTACHMENT_MAX_COUNT,
+  formatCsrAttachmentSize,
+  uploadCsrAttachmentToSupabase,
+  validateCsrAttachmentFile,
+} from '../utils/csrAttachmentsSupabase.js';
 import './IdeaBankPage.css';
 
 export default function IdeaBankPage({
@@ -40,6 +46,11 @@ export default function IdeaBankPage({
   const [category, setCategory] = useState('improvement');
   const [message, setMessage] = useState('');
   const [drafts, setDrafts] = useState({});
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [fileError, setFileError] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     setDrafts((prev) => {
@@ -55,6 +66,54 @@ export default function IdeaBankPage({
   }, [requests]);
 
   const visibleRequests = requests;
+
+  const addFiles = (incoming) => {
+    if (!canSubmit || incoming.length === 0) return;
+
+    setFileError('');
+    setSelectedFiles((prev) => {
+      const next = [...prev];
+      for (const file of incoming) {
+        const check = validateCsrAttachmentFile(file, next.length);
+        if (!check.ok) {
+          setFileError(check.message);
+          break;
+        }
+        next.push(file);
+      }
+      return next;
+    });
+  };
+
+  const handleFilesSelected = (event) => {
+    const incoming = Array.from(event.target.files || []);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    addFiles(incoming);
+  };
+
+  const removeSelectedFile = (index) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setFileError('');
+  };
+
+  const handleDragOver = (event) => {
+    event.preventDefault();
+    if (!canSubmit || selectedFiles.length >= CSR_ATTACHMENT_MAX_COUNT) return;
+    setDragActive(true);
+  };
+
+  const handleDragLeave = (event) => {
+    event.preventDefault();
+    setDragActive(false);
+  };
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+    setDragActive(false);
+    if (!canSubmit) return;
+    const incoming = Array.from(event.dataTransfer?.files || []);
+    addFiles(incoming);
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -77,10 +136,37 @@ export default function IdeaBankPage({
       );
       return;
     }
+
     setTitle('');
     setDescription('');
     setCategory('improvement');
-    setMessage('요청이 접수되었습니다.');
+
+    const filesToUpload = selectedFiles;
+    setSelectedFiles([]);
+    setFileError('');
+
+    if (filesToUpload.length === 0) {
+      setMessage('요청이 접수되었습니다.');
+      return;
+    }
+
+    setUploading(true);
+    let uploaded = 0;
+    for (const file of filesToUpload) {
+      const uploadResult = await uploadCsrAttachmentToSupabase({
+        requestId: result.data.id,
+        file,
+        uploadedBy: requesterCode,
+      });
+      if (uploadResult.ok) uploaded += 1;
+    }
+    setUploading(false);
+
+    setMessage(
+      uploaded === filesToUpload.length
+        ? `요청이 접수되었습니다. 첨부파일 ${uploaded}개 업로드 완료.`
+        : `요청은 접수됐지만 첨부파일 ${filesToUpload.length - uploaded}개 업로드에 실패했습니다 (${uploaded}/${filesToUpload.length}개 성공).`
+    );
   };
 
   const handleManagerSave = async (requestId) => {
@@ -203,9 +289,58 @@ export default function IdeaBankPage({
               disabled={!canSubmit}
             />
           </div>
-          <button type="submit" className="btn btn-primary" disabled={!canSubmit || savingId !== null}>
+          <div className="form-group csr-board-form__wide">
+            <label htmlFor="csr-attachments">첨부파일 (선택, 최대 {CSR_ATTACHMENT_MAX_COUNT}개 · 개당 10MB)</label>
+            <div
+              className={`csr-board-dropzone${dragActive ? ' csr-board-dropzone--active' : ''}`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <Paperclip size={16} aria-hidden />
+              <span>파일을 여기에 끌어다 놓거나</span>
+              <input
+                id="csr-attachments"
+                type="file"
+                multiple
+                ref={fileInputRef}
+                onChange={handleFilesSelected}
+                disabled={!canSubmit || selectedFiles.length >= CSR_ATTACHMENT_MAX_COUNT}
+              />
+            </div>
+            {fileError && (
+              <p className="csr-board-alert csr-board-alert--warning">
+                <AlertTriangle size={14} aria-hidden />
+                {fileError}
+              </p>
+            )}
+            {selectedFiles.length > 0 && (
+              <ul className="csr-board-file-list">
+                {selectedFiles.map((file, index) => (
+                  <li key={`${file.name}-${index}`} className="csr-board-file-list__item">
+                    <Paperclip size={12} aria-hidden />
+                    <span>{file.name}</span>
+                    <small>({formatCsrAttachmentSize(file.size)})</small>
+                    <button
+                      type="button"
+                      className="csr-board-file-list__remove"
+                      aria-label={`${file.name} 제거`}
+                      onClick={() => removeSelectedFile(index)}
+                    >
+                      <X size={12} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={!canSubmit || savingId !== null || uploading}
+          >
             <Plus size={14} />
-            요청 등록
+            {uploading ? '첨부파일 업로드 중…' : '요청 등록'}
           </button>
           <button type="button" className="btn btn-secondary" onClick={refresh} disabled={loading}>
             <RotateCcw size={14} />
