@@ -7,6 +7,11 @@
 
 ## 2026-09-28
 
+### [수정] fix(glossary): source 컬럼 NOT NULL 위반으로 저장 실패하던 버그 수정
+
+- fix(glossary): source 컬럼 NOT NULL 위반으로 저장 실패하던 버그 수정
+- PR #139: https://github.com/cxr542/edu-team-tms/pull/139
+
 ### [수정] feat(glossary): 용어 등록/수정 폼에 과목 드롭다운 추가
 
 - feat(glossary): 용어 등록/수정 폼에 과목 드롭다운 추가
