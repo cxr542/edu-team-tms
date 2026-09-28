@@ -54,7 +54,7 @@ export function normalizeGlossaryTerm(row) {
     }
   }
 
-  const rawRelated = row.related;
+  const rawRelated = row.related_terms ?? row.related;
   let related = [];
   if (Array.isArray(rawRelated)) {
     related = rawRelated.map((r) => (typeof r === 'object' && r?.slug ? r.slug : String(r))).filter(Boolean);
@@ -73,8 +73,8 @@ export function normalizeGlossaryTerm(row) {
     title: String(row.title || '').trim(),
     category: String(row.category || 'topic').trim() || 'topic',
     tags,
-    sourceUrl: row.source_url || row.sourceUrl || null,
-    body: typeof row.body === 'string' ? row.body : '',
+    sourceUrl: row.source || row.source_url || row.sourceUrl || null,
+    body: row.markdown || row.body || row.summary || '',
     related,
     visibility: String(row.visibility || 'published').trim(),
     author: row.author ? String(row.author).trim() : null,
@@ -93,12 +93,9 @@ export function toRowPayload(term) {
     title: norm.title,
     category: norm.category,
     tags: norm.tags,
-    source_url: norm.sourceUrl,
-    body: norm.body,
-    related: norm.related,
-    visibility: norm.visibility,
-    author: norm.author,
-    author_code: norm.authorCode,
+    source: norm.sourceUrl,
+    markdown: norm.body,
+    related_terms: norm.related,
     updated_at: nowIso(),
   };
 }

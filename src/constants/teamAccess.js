@@ -22,6 +22,7 @@ export const TEAM_COMMON_MODULES = new Set([
   'lecture-journal',
   'kanban',
   'glossary',
+  'glossary-quiz',
   'docs',
 ]);
 
