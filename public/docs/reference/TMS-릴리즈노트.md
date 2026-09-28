@@ -7,6 +7,11 @@
 
 ## 2026-09-28
 
+### [신규] feat(glossary-quiz): OX/주관식 유형 선택 기능 추가
+
+- feat(glossary-quiz): OX/주관식 유형 선택 기능 추가
+- PR #134: https://github.com/cxr542/edu-team-tms/pull/134
+
 ### [수정] fix(glossary): 목록 컴팩트화 + 퀴즈 문제 수 입력 버그 수정
 
 - fix(glossary): 목록 컴팩트화 + 퀴즈 문제 수 입력 버그 수정
