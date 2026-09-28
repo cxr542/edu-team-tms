@@ -7,6 +7,11 @@
 
 ## 2026-09-28
 
+### [신규] feat(glossary-quiz): 중간 종료 버튼 + OX 키캡 스타일 UI
+
+- feat(glossary-quiz): 중간 종료 버튼 + OX 키캡 스타일 UI
+- PR #135: https://github.com/cxr542/edu-team-tms/pull/135
+
 ### [신규] feat(glossary-quiz): OX/주관식 유형 선택 기능 추가
 
 - feat(glossary-quiz): OX/주관식 유형 선택 기능 추가
