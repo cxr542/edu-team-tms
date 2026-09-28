@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { CheckCircle2, HelpCircle, RotateCcw, Sparkles, XCircle } from 'lucide-react';
 import AppModuleLink from '../components/AppModuleLink.jsx';
 import { useGlossaryQuiz, QUIZ_DEFAULT_COUNT, QUIZ_MIN_COUNT } from '../hooks/useGlossaryQuiz.js';
-import { isOxQuestion } from '../utils/glossaryQuiz.js';
+import { isOxQuestion, QUIZ_SUBJECT_OPTIONS } from '../utils/glossaryQuiz.js';
 import './GlossaryQuizPage.css';
 
 const QUIZ_TYPE_TABS = [
@@ -20,7 +20,7 @@ export default function GlossaryQuizPage() {
   const {
     loading,
     sourceStatus,
-    eligibleCount,
+    eligibleCountsBySubject,
     phase,
     currentIndex,
     questions,
@@ -33,26 +33,35 @@ export default function GlossaryQuizPage() {
     restart,
   } = useGlossaryQuiz();
 
+  const [subject, setSubject] = useState('all');
+  const eligibleCount = eligibleCountsBySubject[subject] ?? 0;
   const minCount = Math.min(QUIZ_MIN_COUNT, eligibleCount || 1);
   const defaultCount = Math.max(minCount, Math.min(QUIZ_DEFAULT_COUNT, eligibleCount));
   const [countInput, setCountInput] = useState(String(defaultCount));
   const [quizType, setQuizType] = useState('mixed');
   const [shortAnswerInput, setShortAnswerInput] = useState('');
 
-  const clampCount = (raw) => {
+  const clampCount = (raw, forCount = eligibleCount) => {
+    const forMin = Math.min(QUIZ_MIN_COUNT, forCount || 1);
     const parsed = parseInt(raw, 10);
-    if (!Number.isFinite(parsed)) return defaultCount;
-    return Math.max(minCount, Math.min(parsed, eligibleCount || minCount));
+    if (!Number.isFinite(parsed)) return Math.max(forMin, Math.min(QUIZ_DEFAULT_COUNT, forCount || forMin));
+    return Math.max(forMin, Math.min(parsed, forCount || forMin));
   };
 
   const handleCountBlur = () => {
     setCountInput(String(clampCount(countInput)));
   };
 
+  const handleSubjectChange = (value) => {
+    setSubject(value);
+    const newEligible = eligibleCountsBySubject[value] ?? 0;
+    setCountInput(String(clampCount(countInput, newEligible)));
+  };
+
   const handleStart = () => {
     const count = clampCount(countInput);
     setCountInput(String(count));
-    startQuiz(count, quizType);
+    startQuiz(count, quizType, subject);
   };
 
   const handleSubmitShortAnswer = (event) => {
@@ -99,10 +108,22 @@ export default function GlossaryQuizPage() {
           <div className="glossary-quiz-loading">용어를 불러오는 중입니다.</div>
         ) : phase === 'setup' ? (
           <div className="glossary-quiz-setup">
+            <div className="glossary-quiz-setup__type-tabs" role="tablist" aria-label="과목">
+              {QUIZ_SUBJECT_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  className={`glossary-quiz-type-tab${subject === opt.value ? ' is-active' : ''}`}
+                  onClick={() => handleSubjectChange(opt.value)}
+                >
+                  {opt.label} ({eligibleCountsBySubject[opt.value] ?? 0})
+                </button>
+              ))}
+            </div>
             {eligibleCount === 0 ? (
               <p className="glossary-quiz-alert glossary-quiz-alert--warning">
                 <HelpCircle size={14} aria-hidden />
-                퀴즈를 만들 수 있는 용어가 아직 없습니다. 용어사전에 항목을 등록한 뒤 다시 시도해 주세요.
+                이 과목으로 퀴즈를 만들 수 있는 용어가 아직 없습니다. 다른 과목을 선택하거나 용어사전에 항목을 등록한 뒤 다시 시도해 주세요.
               </p>
             ) : (
               <>
