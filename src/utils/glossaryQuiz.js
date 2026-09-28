@@ -117,19 +117,27 @@ function buildShortAnswerQuestion(entry) {
   };
 }
 
+export const QUIZ_TYPE_OPTIONS = ['mixed', 'ox', 'short-answer'];
+
 /**
  * Build up to `count` quiz questions from live glossary terms.
  * Never exceeds the number of eligible entries.
+ * `type`: 'mixed' (default) | 'ox' | 'short-answer' — restricts the question
+ * format. Falls back to short-answer per-entry when an OX question can't be
+ * built for that entry (e.g. no distinct donor entry available).
  */
-export function buildQuizQuestions(terms, { count = 8 } = {}) {
+export function buildQuizQuestions(terms, { count = 8, type = 'mixed' } = {}) {
   const pool = getEligibleQuizTerms(terms);
   const total = Math.max(0, Math.min(count, pool.length));
   if (total === 0) return [];
 
   const primaries = shuffle(pool).slice(0, total);
-  const typeOrder = shuffle(
-    Array.from({ length: total }, (_, i) => ['short-answer', 'ox-statement'][i % 2])
-  );
+  const typeOrder =
+    type === 'ox'
+      ? Array.from({ length: total }, () => 'ox-statement')
+      : type === 'short-answer'
+      ? Array.from({ length: total }, () => 'short-answer')
+      : shuffle(Array.from({ length: total }, (_, i) => ['short-answer', 'ox-statement'][i % 2]));
 
   return primaries.map((entry, index) => {
     const preferredType = typeOrder[index];

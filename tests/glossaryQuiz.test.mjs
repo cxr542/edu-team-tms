@@ -126,6 +126,16 @@ describe('buildQuizQuestions', () => {
     expect(buildQuizQuestions([], { count: 5 })).toEqual([]);
   });
 
+  it('type: "ox" builds only OX questions', () => {
+    const questions = buildQuizQuestions(SEED_TERMS, { count: 10, type: 'ox' });
+    questions.forEach((q) => expect(q.type).toBe('ox-statement'));
+  });
+
+  it('type: "short-answer" builds only short-answer questions', () => {
+    const questions = buildQuizQuestions(SEED_TERMS, { count: 10, type: 'short-answer' });
+    questions.forEach((q) => expect(q.type).toBe('short-answer'));
+  });
+
   it('every generated question has a valid type and non-empty prompt', () => {
     const questions = buildQuizQuestions(SEED_TERMS, { count: 12 });
     questions.forEach((q) => {

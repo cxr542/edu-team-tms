@@ -22,8 +22,8 @@ export function useGlossaryQuiz() {
   const eligibleCount = useMemo(() => getEligibleQuizTerms(terms).length, [terms]);
 
   const startQuiz = useCallback(
-    (count) => {
-      const built = buildQuizQuestions(terms, { count });
+    (count, type = 'mixed') => {
+      const built = buildQuizQuestions(terms, { count, type });
       setQuestions(built);
       setAnswers([]);
       setCurrentIndex(0);

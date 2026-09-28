@@ -5,6 +5,12 @@ import { useGlossaryQuiz, QUIZ_DEFAULT_COUNT, QUIZ_MIN_COUNT } from '../hooks/us
 import { isOxQuestion } from '../utils/glossaryQuiz.js';
 import './GlossaryQuizPage.css';
 
+const QUIZ_TYPE_TABS = [
+  { value: 'mixed', label: '전체' },
+  { value: 'ox', label: 'OX만' },
+  { value: 'short-answer', label: '주관식만' },
+];
+
 function formatYourAnswer(question, value) {
   if (isOxQuestion(question)) return value === 'O' ? '참 (O)' : '거짓 (X)';
   return value && value.trim() ? value : '(응답 없음)';
@@ -30,6 +36,7 @@ export default function GlossaryQuizPage() {
   const minCount = Math.min(QUIZ_MIN_COUNT, eligibleCount || 1);
   const defaultCount = Math.max(minCount, Math.min(QUIZ_DEFAULT_COUNT, eligibleCount));
   const [countInput, setCountInput] = useState(String(defaultCount));
+  const [quizType, setQuizType] = useState('mixed');
   const [shortAnswerInput, setShortAnswerInput] = useState('');
 
   const clampCount = (raw) => {
@@ -45,7 +52,7 @@ export default function GlossaryQuizPage() {
   const handleStart = () => {
     const count = clampCount(countInput);
     setCountInput(String(count));
-    startQuiz(count);
+    startQuiz(count, quizType);
   };
 
   const handleSubmitShortAnswer = (event) => {
@@ -92,8 +99,20 @@ export default function GlossaryQuizPage() {
             ) : (
               <>
                 <p className="glossary-quiz-setup__desc">
-                  현재 <strong>{eligibleCount}개</strong>의 용어로 퀴즈를 만들 수 있어요. 문제 수를 정하고 시작해 보세요.
+                  현재 <strong>{eligibleCount}개</strong>의 용어로 퀴즈를 만들 수 있어요. 문제 유형과 수를 정하고 시작해 보세요.
                 </p>
+                <div className="glossary-quiz-setup__type-tabs" role="tablist" aria-label="문제 유형">
+                  {QUIZ_TYPE_TABS.map((tab) => (
+                    <button
+                      key={tab.value}
+                      type="button"
+                      className={`glossary-quiz-type-tab${quizType === tab.value ? ' is-active' : ''}`}
+                      onClick={() => setQuizType(tab.value)}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
                 <div className="glossary-quiz-setup__controls">
                   <label htmlFor="quiz-count">문제 수</label>
                   <input

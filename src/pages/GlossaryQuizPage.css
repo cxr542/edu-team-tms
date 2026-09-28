@@ -74,6 +74,38 @@
   font-size: 0.92rem;
 }
 
+.glossary-quiz-setup__type-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--bg-tertiary);
+  padding: 0.3rem;
+  border-radius: 9999px;
+  border: 1px solid var(--border-color);
+  width: fit-content;
+}
+
+.glossary-quiz-type-tab {
+  background: transparent;
+  border: none;
+  padding: 0.4rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.glossary-quiz-type-tab:hover {
+  color: var(--text-primary);
+}
+
+.glossary-quiz-type-tab.is-active {
+  background: var(--primary);
+  color: #fff;
+}
+
 .glossary-quiz-setup__controls {
   display: flex;
   align-items: center;
