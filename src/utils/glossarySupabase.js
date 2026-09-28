@@ -93,7 +93,7 @@ export function toRowPayload(term) {
     title: norm.title,
     category: norm.category,
     tags: norm.tags,
-    source: norm.sourceUrl,
+    source: norm.sourceUrl || '',
     markdown: norm.body,
     related_terms: norm.related,
     updated_at: nowIso(),

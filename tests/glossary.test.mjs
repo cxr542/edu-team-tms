@@ -108,6 +108,21 @@ describe('glossary normalization and database payload', () => {
     expect(payload).not.toHaveProperty('author');
     expect(payload).not.toHaveProperty('author_code');
   });
+
+  it('never sends null for source (NOT NULL column, no source URL entered)', () => {
+    const payload = toRowPayload({
+      id: 'no-source',
+      slug: 'no-source',
+      title: '출처 없는 용어',
+      category: 'topic',
+      tags: [],
+      sourceUrl: null,
+      body: '본문',
+      related: [],
+    });
+    expect(payload.source).toBe('');
+    expect(payload.source).not.toBeNull();
+  });
 });
 
 describe('generateSlug', () => {
