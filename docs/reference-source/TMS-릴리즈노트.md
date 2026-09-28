@@ -7,6 +7,11 @@
 
 ## 2026-09-28
 
+### [신규] feat(glossary-quiz): OX 버튼 마스코트+팻말 디자인, 카드 너비 제한
+
+- feat(glossary-quiz): OX 버튼 마스코트+팻말 디자인, 카드 너비 제한
+- PR #136: https://github.com/cxr542/edu-team-tms/pull/136
+
 ### [신규] feat(glossary-quiz): 중간 종료 버튼 + OX 키캡 스타일 UI
 
 - feat(glossary-quiz): 중간 종료 버튼 + OX 키캡 스타일 UI
