@@ -7,6 +7,11 @@
 
 ## 2026-09-28
 
+### [신규] feat(glossary-quiz): 과목→유형→시작 단계별 위저드 UI
+
+- feat(glossary-quiz): 과목→유형→시작 단계별 위저드 UI
+- PR #140: https://github.com/cxr542/edu-team-tms/pull/140
+
 ### [수정] fix(glossary): source 컬럼 NOT NULL 위반으로 저장 실패하던 버그 수정
 
 - fix(glossary): source 컬럼 NOT NULL 위반으로 저장 실패하던 버그 수정
