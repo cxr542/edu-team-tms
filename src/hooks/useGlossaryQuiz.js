@@ -5,6 +5,7 @@ import {
   checkAnswer,
   formatCorrectAnswerDisplay,
   getEligibleQuizTerms,
+  QUIZ_SUBJECT_OPTIONS,
 } from '../utils/glossaryQuiz.js';
 
 export const QUIZ_DEFAULT_COUNT = 8;
@@ -21,9 +22,17 @@ export function useGlossaryQuiz() {
 
   const eligibleCount = useMemo(() => getEligibleQuizTerms(terms).length, [terms]);
 
+  const eligibleCountsBySubject = useMemo(() => {
+    const map = {};
+    QUIZ_SUBJECT_OPTIONS.forEach(({ value }) => {
+      map[value] = getEligibleQuizTerms(terms, { subject: value }).length;
+    });
+    return map;
+  }, [terms]);
+
   const startQuiz = useCallback(
-    (count, type = 'mixed') => {
-      const built = buildQuizQuestions(terms, { count, type });
+    (count, type = 'mixed', subject = 'all') => {
+      const built = buildQuizQuestions(terms, { count, type, subject });
       setQuestions(built);
       setAnswers([]);
       setCurrentIndex(0);
@@ -92,6 +101,7 @@ export function useGlossaryQuiz() {
     error,
     refresh,
     eligibleCount,
+    eligibleCountsBySubject,
     phase,
     questions,
     currentIndex,

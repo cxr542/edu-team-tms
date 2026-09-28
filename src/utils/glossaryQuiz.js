@@ -80,10 +80,29 @@ function pickOther(list, excludeSlug) {
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
-/** Terms usable as quiz material: published, with a title and an extractable first paragraph. */
-export function getEligibleQuizTerms(terms) {
+export const QUIZ_SUBJECT_OPTIONS = [
+  { value: 'all', label: '전체', tag: null },
+  { value: 'cloud', label: '클라우드', tag: 'cloud-101' },
+  { value: 'ai', label: 'AI', tag: 'ai-101' },
+];
+
+function matchesSubject(term, subject) {
+  if (!subject || subject === 'all') return true;
+  const option = QUIZ_SUBJECT_OPTIONS.find((o) => o.value === subject);
+  if (!option || !option.tag) return true;
+  return (term.tags || []).includes(option.tag);
+}
+
+/**
+ * Terms usable as quiz material: published, with a title and an extractable
+ * first paragraph. `subject` ('all' | 'cloud' | 'ai') filters by the term's
+ * subject tag (cloud-101 / ai-101) — entries are tagged via the glossary
+ * admin UI, so re-tagging an entry changes its subject with no code change.
+ */
+export function getEligibleQuizTerms(terms, { subject = 'all' } = {}) {
   return (terms || [])
     .filter((t) => (t.visibility || 'published') === 'published')
+    .filter((t) => matchesSubject(t, subject))
     .map((t) => ({ ...t, firstParagraph: extractFirstParagraph(t.body) }))
     .filter((t) => t.title && t.firstParagraph);
 }
@@ -126,8 +145,8 @@ export const QUIZ_TYPE_OPTIONS = ['mixed', 'ox', 'short-answer'];
  * format. Falls back to short-answer per-entry when an OX question can't be
  * built for that entry (e.g. no distinct donor entry available).
  */
-export function buildQuizQuestions(terms, { count = 8, type = 'mixed' } = {}) {
-  const pool = getEligibleQuizTerms(terms);
+export function buildQuizQuestions(terms, { count = 8, type = 'mixed', subject = 'all' } = {}) {
+  const pool = getEligibleQuizTerms(terms, { subject });
   const total = Math.max(0, Math.min(count, pool.length));
   if (total === 0) return [];
 

@@ -5,6 +5,7 @@ export const GLOSSARY_SEED_ENTRIES = [
     "title": "Antigravity Lab (승격 샘플)",
     "category": "hub",
     "tags": [
+      "ai-101",
       "hub",
       "community"
     ],
@@ -23,6 +24,7 @@ export const GLOSSARY_SEED_ENTRIES = [
     "title": "디스콰이엇 (Disquiet) AI 프로덕트 탭",
     "category": "hub",
     "tags": [
+      "ai-101",
       "hub",
       "community"
     ],
@@ -41,6 +43,7 @@ export const GLOSSARY_SEED_ENTRIES = [
     "title": "긱뉴스 (GeekNews) #ai 태그",
     "category": "hub",
     "tags": [
+      "ai-101",
       "hub",
       "community"
     ],
@@ -59,6 +62,7 @@ export const GLOSSARY_SEED_ENTRIES = [
     "title": "모두의연구소 (Modulabs) 블로그",
     "category": "hub",
     "tags": [
+      "ai-101",
       "hub",
       "community",
       "rag"
@@ -79,6 +83,7 @@ export const GLOSSARY_SEED_ENTRIES = [
     "title": "테디노트 (TeddyNote) AI 데이터 공방",
     "category": "hub",
     "tags": [
+      "ai-101",
       "hub",
       "community",
       "rag"
@@ -99,6 +104,7 @@ export const GLOSSARY_SEED_ENTRIES = [
     "title": "지피터스 5월 가장 반응 뜨거웠던 커스텀 GPTs 탑 5 추천",
     "category": "story",
     "tags": [
+      "ai-101",
       "story",
       "prompt"
     ],
@@ -117,6 +123,7 @@ export const GLOSSARY_SEED_ENTRIES = [
     "title": "LLM 에이전트를 활용한 마케팅 콘텐츠 무한 생성 파이프라인 수립기",
     "category": "story",
     "tags": [
+      "ai-101",
       "story",
       "agent",
       "rag"
@@ -138,6 +145,7 @@ export const GLOSSARY_SEED_ENTRIES = [
     "title": "프롬프트 엔지니어링 최고 권위자의 실전 업무 자동화 가이드",
     "category": "story",
     "tags": [
+      "ai-101",
       "story",
       "prompt"
     ],
@@ -157,6 +165,7 @@ export const GLOSSARY_SEED_ENTRIES = [
     "title": "Antigravity 2.0",
     "category": "topic",
     "tags": [
+      "ai-101",
       "topic",
       "agent"
     ],
@@ -177,6 +186,7 @@ export const GLOSSARY_SEED_ENTRIES = [
     "title": "Antigravity CLI",
     "category": "topic",
     "tags": [
+      "ai-101",
       "topic",
       "agent",
       "cli"
@@ -198,6 +208,7 @@ export const GLOSSARY_SEED_ENTRIES = [
     "title": "ChatGPT",
     "category": "topic",
     "tags": [
+      "ai-101",
       "topic",
       "agent"
     ],
@@ -218,6 +229,7 @@ export const GLOSSARY_SEED_ENTRIES = [
     "title": "Claude Code",
     "category": "topic",
     "tags": [
+      "ai-101",
       "topic",
       "agent"
     ],
@@ -237,6 +249,7 @@ export const GLOSSARY_SEED_ENTRIES = [
     "title": "Google Gemini",
     "category": "topic",
     "tags": [
+      "ai-101",
       "topic",
       "agent"
     ],
@@ -258,6 +271,7 @@ export const GLOSSARY_SEED_ENTRIES = [
     "title": "Harness Engineering",
     "category": "topic",
     "tags": [
+      "ai-101",
       "topic",
       "agent"
     ],
@@ -278,6 +292,7 @@ export const GLOSSARY_SEED_ENTRIES = [
     "title": "NousResearch Hermes Agent",
     "category": "topic",
     "tags": [
+      "ai-101",
       "topic",
       "agent"
     ],
@@ -298,6 +313,7 @@ export const GLOSSARY_SEED_ENTRIES = [
     "title": "Streaming Multiprocessor (SM)",
     "category": "topic",
     "tags": [
+      "ai-101",
       "topic",
       "gpu",
       "hardware",
@@ -321,6 +337,7 @@ export const GLOSSARY_SEED_ENTRIES = [
     "title": "MIG (Multi-Instance GPU)",
     "category": "topic",
     "tags": [
+      "ai-101",
       "topic",
       "gpu",
       "hardware",
@@ -343,6 +360,7 @@ export const GLOSSARY_SEED_ENTRIES = [
     "title": "VMware VVF (VMware vSphere Foundation)",
     "category": "topic",
     "tags": [
+      "cloud-101",
       "topic",
       "vmware",
       "virtualization",
@@ -368,6 +386,7 @@ export const GLOSSARY_SEED_ENTRIES = [
     "title": "VMware VCF (VMware Cloud Foundation)",
     "category": "topic",
     "tags": [
+      "cloud-101",
       "topic",
       "vmware",
       "vcf",
@@ -395,6 +414,7 @@ export const GLOSSARY_SEED_ENTRIES = [
     "title": "SnS (Subscription and Support)",
     "category": "topic",
     "tags": [
+      "cloud-101",
       "topic",
       "license",
       "maintenance",

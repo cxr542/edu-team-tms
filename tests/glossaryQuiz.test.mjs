@@ -102,6 +102,18 @@ describe('getEligibleQuizTerms', () => {
   it('finds all real seed entries eligible (they are all published with prose bodies)', () => {
     expect(getEligibleQuizTerms(SEED_TERMS).length).toBe(SEED_TERMS.length);
   });
+
+  it('filters by subject tag (cloud-101 / ai-101), matching the seed data split', () => {
+    const cloud = getEligibleQuizTerms(SEED_TERMS, { subject: 'cloud' });
+    const ai = getEligibleQuizTerms(SEED_TERMS, { subject: 'ai' });
+    expect(cloud.map((t) => t.slug).sort()).toEqual(['sns', 'vmware-vcf', 'vmware-vvf']);
+    expect(ai.length).toBe(SEED_TERMS.length - 3);
+    expect(cloud.length + ai.length).toBe(SEED_TERMS.length);
+  });
+
+  it('subject "all" (or omitted) returns everything, same as no filter', () => {
+    expect(getEligibleQuizTerms(SEED_TERMS, { subject: 'all' }).length).toBe(SEED_TERMS.length);
+  });
 });
 
 describe('buildQuizQuestions', () => {
@@ -134,6 +146,18 @@ describe('buildQuizQuestions', () => {
   it('type: "short-answer" builds only short-answer questions', () => {
     const questions = buildQuizQuestions(SEED_TERMS, { count: 10, type: 'short-answer' });
     questions.forEach((q) => expect(q.type).toBe('short-answer'));
+  });
+
+  it('subject: "cloud" only draws questions from cloud-101-tagged entries', () => {
+    const questions = buildQuizQuestions(SEED_TERMS, { count: 3, subject: 'cloud' });
+    const cloudSlugs = new Set(['vmware-vvf', 'vmware-vcf', 'sns']);
+    questions.forEach((q) => expect(cloudSlugs.has(q.termSlug)).toBe(true));
+  });
+
+  it('subject: "ai" never draws questions from the cloud-101 entries', () => {
+    const questions = buildQuizQuestions(SEED_TERMS, { count: 10, subject: 'ai' });
+    const cloudSlugs = new Set(['vmware-vvf', 'vmware-vcf', 'sns']);
+    questions.forEach((q) => expect(cloudSlugs.has(q.termSlug)).toBe(false));
   });
 
   it('every generated question has a valid type and non-empty prompt', () => {
