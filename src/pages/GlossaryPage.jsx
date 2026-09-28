@@ -22,7 +22,14 @@ import AppModuleLink from '../components/AppModuleLink.jsx';
 import { generateSlug, useGlossary } from '../hooks/useGlossary.js';
 import { autoLinkGlossaryHtml } from '../utils/glossaryLinker.js';
 import { isEditorMode } from '../utils/appMode.js';
+import { QUIZ_SUBJECT_OPTIONS } from '../utils/glossaryQuiz.js';
 import './GlossaryPage.css';
+
+const SUBJECT_TAGS = QUIZ_SUBJECT_OPTIONS.filter((o) => o.tag).map((o) => o.tag);
+const FORM_SUBJECT_OPTIONS = [
+  { value: 'none', label: '없음' },
+  ...QUIZ_SUBJECT_OPTIONS.filter((o) => o.tag),
+];
 
 const CATEGORY_MAP = {
   all: { label: '전체', color: 'cat-all' },
@@ -95,6 +102,7 @@ export default function GlossaryPage({
   const [formTitle, setFormTitle] = useState('');
   const [formSlug, setFormSlug] = useState('');
   const [formCategory, setFormCategory] = useState('topic');
+  const [formSubject, setFormSubject] = useState('none');
   const [formSourceUrl, setFormSourceUrl] = useState('');
   const [formTags, setFormTags] = useState('');
   const [formBody, setFormBody] = useState('');
@@ -162,6 +170,7 @@ export default function GlossaryPage({
     setFormTitle('');
     setFormSlug('');
     setFormCategory('topic');
+    setFormSubject('none');
     setFormSourceUrl('');
     setFormTags('');
     setFormBody('');
@@ -171,12 +180,15 @@ export default function GlossaryPage({
 
   // Open Edit Modal
   const handleOpenEdit = (term) => {
+    const tags = term.tags || [];
+    const matchedSubject = QUIZ_SUBJECT_OPTIONS.find((o) => o.tag && tags.includes(o.tag));
     setEditingTerm(term);
     setFormTitle(term.title);
     setFormSlug(term.slug);
     setFormCategory(term.category || 'topic');
+    setFormSubject(matchedSubject ? matchedSubject.value : 'none');
     setFormSourceUrl(term.sourceUrl || '');
-    setFormTags((term.tags || []).join(', '));
+    setFormTags(tags.filter((t) => !SUBJECT_TAGS.includes(t)).join(', '));
     setFormBody(term.body || '');
     setFormRelated(term.related || []);
     setModalOpen(true);
@@ -194,7 +206,10 @@ export default function GlossaryPage({
     const tagsArr = formTags
       .split(',')
       .map((t) => t.trim())
-      .filter(Boolean);
+      .filter(Boolean)
+      .filter((t) => !SUBJECT_TAGS.includes(t));
+    const subjectOption = QUIZ_SUBJECT_OPTIONS.find((o) => o.value === formSubject);
+    if (subjectOption?.tag) tagsArr.push(subjectOption.tag);
 
     const payload = {
       title: formTitle.trim(),
@@ -661,6 +676,23 @@ export default function GlossaryPage({
                     <option value="story">실전 사례 (Story)</option>
                   </select>
                 </div>
+              </div>
+
+              <div className="glossary-form-group">
+                <label>과목 (퀴즈 분류)</label>
+                <select
+                  value={formSubject}
+                  onChange={(e) => setFormSubject(e.target.value)}
+                >
+                  {FORM_SUBJECT_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <span className="glossary-form-hint">
+                  용어사전 퀴즈에서 과목별로 필터링할 때 쓰입니다.
+                </span>
               </div>
 
               <div className="glossary-form-group">
