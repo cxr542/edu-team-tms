@@ -27,14 +27,25 @@ export default function GlossaryQuizPage() {
     restart,
   } = useGlossaryQuiz();
 
-  const defaultCount = Math.max(QUIZ_MIN_COUNT, Math.min(QUIZ_DEFAULT_COUNT, eligibleCount));
-  const [requestedCount, setRequestedCount] = useState(defaultCount);
+  const minCount = Math.min(QUIZ_MIN_COUNT, eligibleCount || 1);
+  const defaultCount = Math.max(minCount, Math.min(QUIZ_DEFAULT_COUNT, eligibleCount));
+  const [countInput, setCountInput] = useState(String(defaultCount));
   const [shortAnswerInput, setShortAnswerInput] = useState('');
 
-  const effectiveCount = Math.max(1, Math.min(requestedCount || defaultCount, eligibleCount || 1));
+  const clampCount = (raw) => {
+    const parsed = parseInt(raw, 10);
+    if (!Number.isFinite(parsed)) return defaultCount;
+    return Math.max(minCount, Math.min(parsed, eligibleCount || minCount));
+  };
+
+  const handleCountBlur = () => {
+    setCountInput(String(clampCount(countInput)));
+  };
 
   const handleStart = () => {
-    startQuiz(effectiveCount);
+    const count = clampCount(countInput);
+    setCountInput(String(count));
+    startQuiz(count);
   };
 
   const handleSubmitShortAnswer = (event) => {
@@ -89,10 +100,11 @@ export default function GlossaryQuizPage() {
                     id="quiz-count"
                     type="number"
                     className="form-input"
-                    min={Math.min(QUIZ_MIN_COUNT, eligibleCount)}
+                    min={minCount}
                     max={eligibleCount}
-                    value={effectiveCount}
-                    onChange={(e) => setRequestedCount(Number(e.target.value) || 1)}
+                    value={countInput}
+                    onChange={(e) => setCountInput(e.target.value)}
+                    onBlur={handleCountBlur}
                   />
                   <button type="button" className="btn btn-primary" onClick={handleStart}>
                     <Sparkles size={14} />
