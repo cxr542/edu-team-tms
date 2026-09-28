@@ -128,20 +128,96 @@
 }
 
 .glossary-quiz-play__progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
   color: var(--text-muted);
   font-size: 0.82rem;
   font-weight: 600;
 }
 
+.glossary-quiz-play__exit {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.glossary-quiz-play__exit:hover {
+  color: var(--text-primary);
+}
+
 .glossary-quiz-play__prompt {
-  font-size: 1.02rem;
-  line-height: 1.55;
+  font-size: 1.08rem;
+  font-weight: 600;
+  line-height: 1.6;
   white-space: pre-wrap;
+  text-align: center;
+  background: var(--bg-tertiary);
+  border-radius: 18px;
+  padding: 1.25rem 1.4rem;
+  color: var(--text-primary);
 }
 
 .glossary-quiz-play__ox {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.glossary-quiz-ox-btn {
   display: flex;
-  gap: 0.6rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 1.75rem 1rem 1.55rem;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  color: #ffffff;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.12s ease;
+}
+
+.glossary-quiz-ox-btn:hover {
+  filter: brightness(1.05);
+}
+
+.glossary-quiz-ox-btn--o {
+  background: linear-gradient(180deg, #ff9490, #ff6b66);
+  box-shadow: 0 7px 0 #c23b33, 0 10px 18px rgba(194, 59, 51, 0.25);
+}
+
+.glossary-quiz-ox-btn--x {
+  background: linear-gradient(180deg, #74c4ff, #4dabf7);
+  box-shadow: 0 7px 0 #1f6fb0, 0 10px 18px rgba(31, 111, 176, 0.25);
+}
+
+.glossary-quiz-ox-btn--o:active {
+  transform: translateY(6px);
+  box-shadow: 0 1px 0 #c23b33, 0 2px 6px rgba(194, 59, 51, 0.25);
+}
+
+.glossary-quiz-ox-btn--x:active {
+  transform: translateY(6px);
+  box-shadow: 0 1px 0 #1f6fb0, 0 2px 6px rgba(31, 111, 176, 0.25);
+}
+
+.glossary-quiz-ox-btn__letter {
+  font-size: 2.75rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.glossary-quiz-ox-btn__label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  opacity: 0.92;
 }
 
 .glossary-quiz-play__answer-form {
