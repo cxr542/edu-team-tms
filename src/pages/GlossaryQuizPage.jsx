@@ -71,6 +71,14 @@ export default function GlossaryQuizPage() {
     restart();
   };
 
+  const handleExitToSetup = () => {
+    if (!window.confirm('처음 화면으로 돌아가면 지금까지 푼 퀴즈 결과가 반영되지 않습니다. 계속할까요?')) {
+      return;
+    }
+    setShortAnswerInput('');
+    restart();
+  };
+
   return (
     <main className="glossary-quiz-page">
       <header className="glossary-quiz-header">
@@ -141,17 +149,30 @@ export default function GlossaryQuizPage() {
         ) : phase === 'playing' && currentQuestion ? (
           <div className="glossary-quiz-play">
             <div className="glossary-quiz-play__progress">
-              문항 {currentIndex + 1} / {questions.length}
+              <span>문항 {currentIndex + 1} / {questions.length}</span>
+              <button type="button" className="glossary-quiz-play__exit" onClick={handleExitToSetup}>
+                처음 화면으로
+              </button>
             </div>
             <p className="glossary-quiz-play__prompt">{currentQuestion.prompt}</p>
 
             {!lastResult && isOxQuestion(currentQuestion) && (
               <div className="glossary-quiz-play__ox">
-                <button type="button" className="btn btn-primary" onClick={() => submitAnswer('O')}>
-                  ⭕ 참
+                <button
+                  type="button"
+                  className="glossary-quiz-ox-btn glossary-quiz-ox-btn--o"
+                  onClick={() => submitAnswer('O')}
+                >
+                  <span className="glossary-quiz-ox-btn__letter">O</span>
+                  <span className="glossary-quiz-ox-btn__label">참</span>
                 </button>
-                <button type="button" className="btn btn-secondary" onClick={() => submitAnswer('X')}>
-                  ❌ 거짓
+                <button
+                  type="button"
+                  className="glossary-quiz-ox-btn glossary-quiz-ox-btn--x"
+                  onClick={() => submitAnswer('X')}
+                >
+                  <span className="glossary-quiz-ox-btn__letter">X</span>
+                  <span className="glossary-quiz-ox-btn__label">거짓</span>
                 </button>
               </div>
             )}
