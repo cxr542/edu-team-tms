@@ -7,6 +7,11 @@
 
 ## 2026-09-28
 
+### [수정] fix(glossary): 목록 컴팩트화 + 퀴즈 문제 수 입력 버그 수정
+
+- fix(glossary): 목록 컴팩트화 + 퀴즈 문제 수 입력 버그 수정
+- PR #133: https://github.com/cxr542/edu-team-tms/pull/133
+
 ### [수정] feat(glossary): 용어사전 퀴즈 + Supabase 컬럼 매핑 버그 수정
 
 - feat(glossary): 용어사전 퀴즈 + Supabase 컬럼 매핑 버그 수정
