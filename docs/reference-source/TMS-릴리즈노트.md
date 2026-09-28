@@ -7,6 +7,11 @@
 
 ## 2026-09-28
 
+### [수정] feat(glossary): 용어 등록/수정 폼에 과목 드롭다운 추가
+
+- feat(glossary): 용어 등록/수정 폼에 과목 드롭다운 추가
+- PR #138: https://github.com/cxr542/edu-team-tms/pull/138
+
 ### [신규] feat(glossary-quiz): 과목(클라우드/AI) 필터 추가
 
 - feat(glossary-quiz): 과목(클라우드/AI) 필터 추가
