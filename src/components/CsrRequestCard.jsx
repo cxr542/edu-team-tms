@@ -1,5 +1,8 @@
 import React from 'react';
+import { Paperclip } from 'lucide-react';
 import { formatCsrRequestCategoryLabel, formatCsrRequestStatusLabel } from '../constants/csrRequests.js';
+import { useCsrRequestAttachments } from '../hooks/useCsrRequestAttachments.js';
+import { formatCsrAttachmentSize, getCsrAttachmentPublicUrl } from '../utils/csrAttachmentsSupabase.js';
 
 function formatDate(value) {
   if (!value) return '—';
@@ -29,6 +32,7 @@ export default function CsrRequestCard({
   onSave,
 }) {
   const managerStatusEditable = isManager && !saving;
+  const { attachments, loading: attachmentsLoading } = useCsrRequestAttachments(request.id);
 
   return (
     <article className="idea-bank-item csr-board-item">
@@ -43,6 +47,22 @@ export default function CsrRequestCard({
         </div>
         <h3>{request.title}</h3>
         {request.description && <p className="csr-board-item__desc">{request.description}</p>}
+        {!attachmentsLoading && attachments.length > 0 && (
+          <ul className="csr-board-attachments">
+            {attachments.map((attachment) => {
+              const url = getCsrAttachmentPublicUrl(attachment.storagePath);
+              return (
+                <li key={attachment.id}>
+                  <a href={url || '#'} target="_blank" rel="noreferrer">
+                    <Paperclip size={12} aria-hidden />
+                    <span>{attachment.fileName}</span>
+                    <small>({formatCsrAttachmentSize(attachment.fileSizeBytes)})</small>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        )}
         <div className="csr-board-item__meta">
           <span>요청자: {request.requester}</span>
           <span>등록: {formatDate(request.createdAt)}</span>
