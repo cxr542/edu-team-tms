@@ -7,6 +7,11 @@
 
 ## 2026-09-28
 
+### [수정] feat(glossary): 용어사전 퀴즈 + Supabase 컬럼 매핑 버그 수정
+
+- feat(glossary): 용어사전 퀴즈 + Supabase 컬럼 매핑 버그 수정
+- PR #132: https://github.com/cxr542/edu-team-tms/pull/132
+
 ### [신규] feat(csr): CSR 요청 첨부파일 업로드 지원
 
 - feat(csr): CSR 요청 첨부파일 업로드 지원
