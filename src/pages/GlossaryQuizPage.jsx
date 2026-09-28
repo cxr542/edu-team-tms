@@ -163,7 +163,8 @@ export default function GlossaryQuizPage() {
                   className="glossary-quiz-ox-btn glossary-quiz-ox-btn--o"
                   onClick={() => submitAnswer('O')}
                 >
-                  <span className="glossary-quiz-ox-btn__letter">O</span>
+                  <img src="/okestro-bear-mascot.png" alt="" className="glossary-quiz-ox-btn__mascot" />
+                  <span className="glossary-quiz-ox-btn__paddle glossary-quiz-ox-btn__paddle--o">O</span>
                   <span className="glossary-quiz-ox-btn__label">참</span>
                 </button>
                 <button
@@ -171,7 +172,12 @@ export default function GlossaryQuizPage() {
                   className="glossary-quiz-ox-btn glossary-quiz-ox-btn--x"
                   onClick={() => submitAnswer('X')}
                 >
-                  <span className="glossary-quiz-ox-btn__letter">X</span>
+                  <img
+                    src="/okestro-bear-mascot.png"
+                    alt=""
+                    className="glossary-quiz-ox-btn__mascot glossary-quiz-ox-btn__mascot--flip"
+                  />
+                  <span className="glossary-quiz-ox-btn__paddle glossary-quiz-ox-btn__paddle--x">X</span>
                   <span className="glossary-quiz-ox-btn__label">거짓</span>
                 </button>
               </div>

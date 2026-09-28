@@ -39,6 +39,9 @@
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
 }
 
 .glossary-quiz-loading {
@@ -153,71 +156,91 @@
 }
 
 .glossary-quiz-play__prompt {
-  font-size: 1.08rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  line-height: 1.6;
+  line-height: 1.7;
   white-space: pre-wrap;
   text-align: center;
   background: var(--bg-tertiary);
   border-radius: 18px;
-  padding: 1.25rem 1.4rem;
+  padding: 1.5rem 1.6rem;
   color: var(--text-primary);
 }
 
 .glossary-quiz-play__ox {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 1.25rem;
+  margin-top: 0.25rem;
 }
 
 .glossary-quiz-ox-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
-  padding: 1.75rem 1rem 1.55rem;
-  border-radius: 20px;
+  justify-content: flex-end;
+  gap: 0.7rem;
+  padding: 1.5rem 1rem 1.75rem;
+  border-radius: 26px;
   border: none;
   cursor: pointer;
-  color: #ffffff;
-  transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.12s ease;
+  transition: transform 0.12s ease, filter 0.12s ease;
 }
 
 .glossary-quiz-ox-btn:hover {
-  filter: brightness(1.05);
+  filter: brightness(0.98);
+}
+
+.glossary-quiz-ox-btn:active {
+  transform: scale(0.97);
 }
 
 .glossary-quiz-ox-btn--o {
-  background: linear-gradient(180deg, #ff9490, #ff6b66);
-  box-shadow: 0 7px 0 #c23b33, 0 10px 18px rgba(194, 59, 51, 0.25);
+  background: #eaf1ff;
 }
 
 .glossary-quiz-ox-btn--x {
-  background: linear-gradient(180deg, #74c4ff, #4dabf7);
-  box-shadow: 0 7px 0 #1f6fb0, 0 10px 18px rgba(31, 111, 176, 0.25);
+  background: #fff0ef;
 }
 
-.glossary-quiz-ox-btn--o:active {
-  transform: translateY(6px);
-  box-shadow: 0 1px 0 #c23b33, 0 2px 6px rgba(194, 59, 51, 0.25);
+.glossary-quiz-ox-btn__mascot {
+  width: 25%;
+  max-width: 84px;
+  min-width: 56px;
+  height: auto;
+  object-fit: contain;
 }
 
-.glossary-quiz-ox-btn--x:active {
-  transform: translateY(6px);
-  box-shadow: 0 1px 0 #1f6fb0, 0 2px 6px rgba(31, 111, 176, 0.25);
+.glossary-quiz-ox-btn__mascot--flip {
+  transform: scaleX(-1);
 }
 
-.glossary-quiz-ox-btn__letter {
-  font-size: 2.75rem;
+.glossary-quiz-ox-btn__paddle {
+  width: 7.5rem;
+  height: 7.5rem;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.4rem;
   font-weight: 800;
   line-height: 1;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1), inset 0 0 0 6px currentColor;
+}
+
+.glossary-quiz-ox-btn__paddle--o {
+  color: #2f6fe0;
+}
+
+.glossary-quiz-ox-btn__paddle--x {
+  color: #e63946;
 }
 
 .glossary-quiz-ox-btn__label {
   font-size: 0.95rem;
   font-weight: 700;
-  opacity: 0.92;
+  color: var(--text-secondary);
 }
 
 .glossary-quiz-play__answer-form {
