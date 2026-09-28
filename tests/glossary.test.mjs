@@ -77,8 +77,36 @@ describe('glossary normalization and database payload', () => {
     const payload = toRowPayload(term);
     expect(payload.slug).toBe('my-term');
     expect(payload.title).toBe('용어 제목');
-    expect(payload.source_url).toBe('https://foo.com');
+    expect(payload.source).toBe('https://foo.com');
+    expect(payload.markdown).toBe('설명');
     expect(payload.tags).toEqual(['tagA']);
+  });
+
+  it('maps the real production column names (markdown/related_terms/source)', () => {
+    const row = {
+      slug: 'prod-shape',
+      title: '프로덕션 컬럼 테스트',
+      category: 'topic',
+      tags: ['tag1'],
+      source: 'https://prod.example.com',
+      markdown: '실제 프로덕션 컬럼으로 저장된 본문',
+      related_terms: ['other-term'],
+    };
+    const norm = normalizeGlossaryTerm(row);
+    expect(norm.sourceUrl).toBe('https://prod.example.com');
+    expect(norm.body).toBe('실제 프로덕션 컬럼으로 저장된 본문');
+    expect(norm.related).toEqual(['other-term']);
+
+    const payload = toRowPayload(norm);
+    expect(payload.source).toBe('https://prod.example.com');
+    expect(payload.markdown).toBe('실제 프로덕션 컬럼으로 저장된 본문');
+    expect(payload.related_terms).toEqual(['other-term']);
+    expect(payload).not.toHaveProperty('body');
+    expect(payload).not.toHaveProperty('related');
+    expect(payload).not.toHaveProperty('source_url');
+    expect(payload).not.toHaveProperty('visibility');
+    expect(payload).not.toHaveProperty('author');
+    expect(payload).not.toHaveProperty('author_code');
   });
 });
 

@@ -18,6 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import { marked } from 'marked';
+import AppModuleLink from '../components/AppModuleLink.jsx';
 import { generateSlug, useGlossary } from '../hooks/useGlossary.js';
 import { autoLinkGlossaryHtml } from '../utils/glossaryLinker.js';
 import { isEditorMode } from '../utils/appMode.js';
@@ -331,6 +332,10 @@ export default function GlossaryPage({
             <RefreshCw size={15} className={loading ? 'is-spinning' : ''} />
             새로고침
           </button>
+          <AppModuleLink module="glossary-quiz" className="glossary-btn glossary-btn--primary">
+            <Sparkles size={15} />
+            퀴즈로 풀어보기
+          </AppModuleLink>
           {canManage && (
             <>
               <button

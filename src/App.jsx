@@ -88,6 +88,7 @@ import LunchPickPage from './pages/LunchPickPage';
 import IdeaBankPage from './pages/IdeaBankPage';
 import AnnouncementsPage from './pages/AnnouncementsPage';
 import GlossaryPage from './pages/GlossaryPage';
+import GlossaryQuizPage from './pages/GlossaryQuizPage';
 import LectureJournalPage from './pages/LectureJournalPage';
 import PublicViewerGuidePage from './pages/PublicViewerGuidePage';
 import { isProductionEnvironment } from './constants/appEnv';
@@ -1121,6 +1122,8 @@ export default function App() {
           teamAccess={teamAccess}
           isAdminShell={isAdminEditAccess || appRoute.scope === 'admin'}
         />
+      ) : displayModule === 'glossary-quiz' ? (
+        <GlossaryQuizPage />
       ) : displayModule === 'announcements' ? (
         <AnnouncementsPage
           readOnly={isViewer}
