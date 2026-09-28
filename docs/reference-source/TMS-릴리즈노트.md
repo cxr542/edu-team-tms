@@ -7,6 +7,11 @@
 
 ## 2026-09-28
 
+### [신규] feat(glossary-quiz): 과목(클라우드/AI) 필터 추가
+
+- feat(glossary-quiz): 과목(클라우드/AI) 필터 추가
+- PR #137: https://github.com/cxr542/edu-team-tms/pull/137
+
 ### [신규] feat(glossary-quiz): OX 버튼 마스코트+팻말 디자인, 카드 너비 제한
 
 - feat(glossary-quiz): OX 버튼 마스코트+팻말 디자인, 카드 너비 제한
