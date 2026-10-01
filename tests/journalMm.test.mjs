@@ -6,6 +6,7 @@ import {
   getTaskMmAxis,
   getTaskLoggedHours,
   getWeekCompletionStats,
+  getWeeksInMonth,
   normalizeJournalLeaveMm,
   sumCompletedDayMm,
   recalcDayMmFromHours,
@@ -172,5 +173,30 @@ describe('journalMm logged hours', () => {
     expect(stats.logged).toBeCloseTo(1.625, 4);
     expect(stats.shortage).toBeCloseTo(3.375, 4);
     expect(stats.pct).toBeCloseTo((1.625 / 5) * 100, 4);
+  });
+});
+
+describe('getWeeksInMonth week keys', () => {
+  it('qualifies week.key with year/month so the same week-index never collides across months', () => {
+    const june = getWeeksInMonth(2026, 5); // June
+    const july = getWeeksInMonth(2026, 6); // July
+    expect(june[1].key).toBe('2026-06-w2');
+    expect(july[1].key).toBe('2026-07-w2');
+    expect(june[1].key).not.toBe(july[1].key);
+  });
+
+  it('keeps a legacyKey (old flat "wN") alongside the qualified key for backward-compatible reads', () => {
+    const weeks = getWeeksInMonth(2026, 9); // October
+    weeks.forEach((week, i) => {
+      expect(week.legacyKey).toBe(`w${i + 1}`);
+      expect(week.key.endsWith(`-w${i + 1}`)).toBe(true);
+    });
+  });
+
+  it('two different months share the same legacyKey for the same week-index (the original bug surface)', () => {
+    const june = getWeeksInMonth(2026, 5);
+    const july = getWeeksInMonth(2026, 6);
+    expect(june[0].legacyKey).toBe(july[0].legacyKey);
+    expect(june[0].key).not.toBe(july[0].key);
   });
 });

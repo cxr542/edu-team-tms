@@ -530,7 +530,7 @@ export default function TeamKpiPage() {
                         <input
                           type="text"
                           className="team-kpi-memo-input"
-                          value={journal.getKpiWeekMemo(row.weekKey, memberCode)}
+                          value={journal.getKpiWeekMemo(row.weekKey, memberCode, row.weekLegacyKey)}
                           onChange={(e) => journal.setKpiWeekMemo(row.weekKey, e.target.value, memberCode)}
                           placeholder="한두 줄 (선택)"
                           maxLength={240}

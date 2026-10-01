@@ -478,19 +478,21 @@ export function useWeeklyJournal({
   );
 
   const getWeekSummaryContent = useCallback(
-    (weekKey, memberCode = JOURNAL_LINKED_MEMBER_CODE) => {
+    (weekKey, memberCode = JOURNAL_LINKED_MEMBER_CODE, legacyWeekKey) => {
       const slice = getMemberJournal(store, memberCode);
       const template = resolveMemberWeekColumnTemplate(slice.prefs);
-      return resolveWeekColumnText(slice.weekSummaries[weekKey], template);
+      const saved = slice.weekSummaries[weekKey] ?? (legacyWeekKey ? slice.weekSummaries[legacyWeekKey] : undefined);
+      return resolveWeekColumnText(saved, template);
     },
     [store.memberJournals]
   );
 
   const getNextWeekContent = useCallback(
-    (weekKey, memberCode = JOURNAL_LINKED_MEMBER_CODE) => {
+    (weekKey, memberCode = JOURNAL_LINKED_MEMBER_CODE, legacyWeekKey) => {
       const slice = getMemberJournal(store, memberCode);
       const template = resolveMemberWeekColumnTemplate(slice.prefs);
-      return resolveWeekColumnText(slice.nextWeekPlans[weekKey], template);
+      const saved = slice.nextWeekPlans[weekKey] ?? (legacyWeekKey ? slice.nextWeekPlans[legacyWeekKey] : undefined);
+      return resolveWeekColumnText(saved, template);
     },
     [store.memberJournals]
   );
@@ -530,8 +532,11 @@ export function useWeeklyJournal({
   );
 
   const getKpiWeekMemo = useCallback(
-    (weekKey, memberCode = JOURNAL_LINKED_MEMBER_CODE) =>
-      String(getMemberJournal(store, memberCode).kpiWeekMemos?.[weekKey] ?? ''),
+    (weekKey, memberCode = JOURNAL_LINKED_MEMBER_CODE, legacyWeekKey) => {
+      const memos = getMemberJournal(store, memberCode).kpiWeekMemos || {};
+      const saved = memos[weekKey] ?? (legacyWeekKey ? memos[legacyWeekKey] : undefined);
+      return String(saved ?? '');
+    },
     [store.memberJournals]
   );
 
