@@ -202,7 +202,7 @@ describe('computeTeamKpi june', () => {
     const days = { ...JOURNAL_SEED_ACADEMIZER_SCENARIO };
     Object.values(days).forEach((day) => recalcDayMmFromHours(day));
     const devWeek = buildKpi01cRows(2026, 5, days, KPI_WEEK_MEMOS_ACADEMIZER_SCENARIO);
-    const wDev = devWeek.find((r) => r.weekKey === 'w2');
+    const wDev = devWeek.find((r) => r.weekKey === '2026-06-w2');
     expect(wDev).toBeTruthy();
     expect(wDev.생산향상MM).toBeCloseTo(1.25, 2);
     expect(wDev.업무MM).toBeCloseTo(0, 2);

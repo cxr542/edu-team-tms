@@ -180,7 +180,10 @@ export function getWeeksInMonth(year, month) {
       days.push(copy);
     }
     const inMonth = days.some((x) => x.getMonth() === month);
-    if (inMonth) weeks.push({ index: ++w, days, key: `w${w}` });
+    if (inMonth) {
+      w += 1;
+      weeks.push({ index: w, days, key: `${year}-${pad(month + 1)}-w${w}`, legacyKey: `w${w}` });
+    }
     d.setDate(d.getDate() + 7);
     if (weeks.length >= 6) break;
     if (d > last && weeks.length > 0) break;

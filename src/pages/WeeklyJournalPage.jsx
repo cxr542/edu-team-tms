@@ -473,6 +473,14 @@ export default function WeeklyJournalPage({ readOnly = false }) {
 
   const weeks = useMemo(() => getWeeksInMonth(year, month), [year, month]);
 
+  /** 1주차의 "전주"는 이전 달의 마지막 주 — 전월 마지막주 불러오기용 */
+  const prevMonthLastWeek = useMemo(() => {
+    const prevMonthIdx = month === 0 ? 11 : month - 1;
+    const prevYear = month === 0 ? year - 1 : year;
+    const prevMonthWeeks = getWeeksInMonth(prevYear, prevMonthIdx);
+    return prevMonthWeeks[prevMonthWeeks.length - 1] || null;
+  }, [year, month]);
+
   const persistCollapsedWeeks = useCallback(
     (next) => {
       setCollapsedWeeks(next);
@@ -1144,27 +1152,28 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     setEditTask(null);
   };
 
-  const handleImportPrevWeekPlan = (targetWeek, sourcePrevWeek) => {
+  const handleImportPrevWeekPlan = (targetWeek, sourcePrevWeek, sourceIsOtherMonth = false) => {
     if (journalReadOnly) return;
-    const prevPlan = journal.getNextWeekContent(sourcePrevWeek.key, memberCode);
+    const sourceLabel = sourceIsOtherMonth ? `전달 ${sourcePrevWeek.index}주` : `${sourcePrevWeek.index}주`;
+    const prevPlan = journal.getNextWeekContent(sourcePrevWeek.key, memberCode, sourcePrevWeek.legacyKey);
     const template = resolveMemberWeekColumnTemplate(journal.getMemberPrefs(memberCode));
     const isBlankOrTemplate = !prevPlan || !prevPlan.trim() || prevPlan.trim() === template.trim();
     if (isBlankOrTemplate) {
-      showToast(`${sourcePrevWeek.index}주 차주(예정)에 작성된 내용이 없습니다`);
+      showToast(`${sourceLabel} 차주(예정)에 작성된 내용이 없습니다`);
       return;
     }
 
-    const currentSummary = journal.getWeekSummaryContent(targetWeek.key, memberCode);
+    const currentSummary = journal.getWeekSummaryContent(targetWeek.key, memberCode, targetWeek.legacyKey);
     const hasCustomContent = currentSummary && currentSummary.trim() && currentSummary.trim() !== template.trim();
     if (hasCustomContent) {
       const ok = window.confirm(
-        `${targetWeek.index}주 금주(요약)에 이미 작성된 내용이 있습니다.\n${sourcePrevWeek.index}주 차주(예정) 내용으로 덮어쓸까요?`
+        `${targetWeek.index}주 금주(요약)에 이미 작성된 내용이 있습니다.\n${sourceLabel} 차주(예정) 내용으로 덮어쓸까요?`
       );
       if (!ok) return;
     }
 
     journal.setWeekSummary(targetWeek.key, prevPlan, memberCode);
-    showToast(`${sourcePrevWeek.index}주 차주(예정) 내용을 불러왔습니다`);
+    showToast(`${sourceLabel} 차주(예정) 내용을 불러왔습니다`);
   };
 
   const leavePreview = leaveDayKey
@@ -2092,7 +2101,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         )}
 
         {weeks.map((week, weekIdx) => {
-          const prevWeek = weekIdx > 0 ? weeks[weekIdx - 1] : null;
+          const prevWeek = weekIdx > 0 ? weeks[weekIdx - 1] : prevMonthLastWeek;
+          const prevWeekIsOtherMonth = weekIdx === 0 && Boolean(prevWeek);
           const stats = getWeekCompletionStats(week.days, month, getDay);
           const fmt = (dt) => `${dt.getMonth() + 1}/${dt.getDate()}`;
           const start = week.days[0];
@@ -2187,10 +2197,14 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                                   <button
                                     type="button"
                                     className="journal-summary-draft-btn journal-summary-draft-btn--primary"
-                                    title={`${prevWeek.index}주 차주(예정) 내용을 금주(요약)으로 불러옵니다`}
-                                    onClick={() => handleImportPrevWeekPlan(week, prevWeek)}
+                                    title={
+                                      prevWeekIsOtherMonth
+                                        ? `전달 마지막 주(${prevWeek.index}주) 차주(예정) 내용을 금주(요약)으로 불러옵니다`
+                                        : `${prevWeek.index}주 차주(예정) 내용을 금주(요약)으로 불러옵니다`
+                                    }
+                                    onClick={() => handleImportPrevWeekPlan(week, prevWeek, prevWeekIsOtherMonth)}
                                   >
-                                    전주 불러오기
+                                    {prevWeekIsOtherMonth ? '전달 마지막주 불러오기' : '전주 불러오기'}
                                   </button>
                                 )}
                                 <button
@@ -2208,7 +2222,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                           </div>
                           <JournalWeekColumnTextarea
                             readOnly={journalReadOnly}
-                            value={journal.getWeekSummaryContent(week.key, memberCode)}
+                            value={journal.getWeekSummaryContent(week.key, memberCode, week.legacyKey)}
                             onChange={(text) => journal.setWeekSummary(week.key, text, memberCode)}
                             placeholder={journalReadOnly ? '' : '• 카테고리 아래에서 Enter → └ 하위 항목'}
                           />
@@ -2235,7 +2249,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                           </div>
                           <JournalWeekColumnTextarea
                             readOnly={journalReadOnly}
-                            value={journal.getNextWeekContent(week.key, memberCode)}
+                            value={journal.getNextWeekContent(week.key, memberCode, week.legacyKey)}
                             onChange={(text) => journal.setNextWeekPlan(week.key, text, memberCode)}
                             placeholder={journalReadOnly ? '' : '• 카테고리 아래에서 Enter → └ 하위 항목'}
                           />

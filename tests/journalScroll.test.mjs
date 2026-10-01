@@ -9,8 +9,8 @@ import {
 describe('journalScroll helpers', () => {
   it('finds week key for a weekday in the month grid', () => {
     const weeks = getWeeksInMonth(2026, 5);
-    expect(findWeekKeyForDayKey(weeks, '2026-06-10')).toBe('w2');
-    expect(findWeekKeyForDayKey(weeks, '2026-06-15')).toBe('w3');
+    expect(findWeekKeyForDayKey(weeks, '2026-06-10')).toBe('2026-06-w2');
+    expect(findWeekKeyForDayKey(weeks, '2026-06-15')).toBe('2026-06-w3');
   });
 
   it('returns null when day is outside weekday columns', () => {

@@ -94,6 +94,7 @@ export function buildKpi01cRows(year, monthIndex, days, kpiWeekMemos = {}, membe
       주시작일: parseDayKey(weekStartKey).date,
       weekStartKey,
       weekKey: week.key,
+      weekLegacyKey: week.legacyKey,
       구성원: member.code,
       업무MM: round4(work),
       생산향상MM: round4(improve),
