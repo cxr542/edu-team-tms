@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-10-01
+
+### [수정] fix(journal): 주차 키 연·월 구분 + 전달 마지막주 불러오기
+
+- fix(journal): 주차 키 연·월 구분 + 전달 마지막주 불러오기
+- PR #142: https://github.com/cxr542/edu-team-tms/pull/142
+
 ## 2026-09-28
 
 ### [신규] feat(glossary-quiz): 과목→유형→시작 단계별 위저드 UI
