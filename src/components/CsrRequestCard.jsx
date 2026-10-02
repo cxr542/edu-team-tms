@@ -136,8 +136,9 @@ export default function CsrRequestCard({
                 className="btn btn-primary csr-board-side__save"
                 onClick={() => onSave(request.id)}
                 disabled={!managerStatusEditable || !canEdit}
+                title="선택한 상태와 관리자 답변을 함께 저장합니다."
               >
-                저장
+                상태·답변 저장
               </button>
             </div>
           </div>
