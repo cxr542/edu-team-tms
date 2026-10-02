@@ -7,6 +7,11 @@
 
 ## 2026-10-02
 
+### [수정] fix(journal): retry/fallback on transient Gemini errors in monthly AI summary
+
+- fix(journal): retry/fallback on transient Gemini errors in monthly AI summary
+- PR #144: https://github.com/cxr542/edu-team-tms/pull/144
+
 ### [신규] feat(journal): improve monthly AI summary modal design
 
 - feat(journal): improve monthly AI summary modal design
