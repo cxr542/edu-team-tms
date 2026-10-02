@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-10-02
+
+### [신규] feat(journal): improve monthly AI summary modal design
+
+- feat(journal): improve monthly AI summary modal design
+- PR #143: https://github.com/cxr542/edu-team-tms/pull/143
+
 ## 2026-10-01
 
 ### [수정] fix(journal): 주차 키 연·월 구분 + 전달 마지막주 불러오기
