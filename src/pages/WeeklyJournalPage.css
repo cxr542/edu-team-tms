@@ -1193,6 +1193,70 @@
   transform: translate(-50%, -50%) scale(1);
 }
 
+.journal-ai-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 101;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.journal-ai-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.journal-modal.journal-ai-modal {
+  width: min(960px, calc(100vw - 3rem));
+  height: min(80vh, 760px);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--font-family);
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.25);
+}
+
+.journal-ai-title {
+  margin: 0;
+  padding: 1.25rem 1.5rem 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.journal-ai-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0 1.5rem 1rem;
+}
+
+.journal-ai-text {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  resize: none;
+  font-family: var(--font-family);
+  font-size: 1rem;
+  line-height: 1.75;
+  padding: 1.25rem 1.5rem;
+  white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.journal-ai-modal .modal-actions {
+  padding: 0 1.5rem 1.25rem;
+}
+
 .task-mm-pill {
   font-size: 0.6875rem;
   font-weight: 700;

@@ -289,6 +289,15 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [aiSummaryText, setAiSummaryText] = useState('');
 
+  useEffect(() => {
+    if (!aiSummaryModalOpen) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [aiSummaryModalOpen]);
+
   const memberCategoryView = useMemo(
     () => resolveMemberCategories(journal.memberJournals?.[memberCode]?.prefs),
     [journal.memberJournals, memberCode]
@@ -2850,21 +2859,27 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         </div>
       )}
 
-      <div className={`journal-modal${aiSummaryModalOpen ? ' open' : ''}`}>
-        <h3 style={{ padding: '1rem' }}>🤖 월간 일지 AI 요약</h3>
-        <div style={{ padding: '0 1rem 1rem' }}>
+      <div
+        className={`journal-ai-overlay${aiSummaryModalOpen ? ' open' : ''}`}
+        onClick={() => setAiSummaryModalOpen(false)}
+        aria-hidden="true"
+      />
+      <div
+        className={`journal-modal journal-ai-modal${aiSummaryModalOpen ? ' open' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="월간 일지 AI 요약"
+      >
+        <h3 className="journal-ai-title">🤖 월간 일지 AI 요약</h3>
+        <div className="journal-ai-body">
           <p className="journal-add-hint">
             이 달의 모든 일일 업무일지를 바탕으로 AI가 자동 작성한 요약본입니다. 복사하여 필요한 곳에 활용하세요.
           </p>
-          <div className="form-group" style={{ marginTop: '0.5rem' }}>
-            <textarea
-              className="form-input"
-              rows={15}
-              readOnly
-              value={aiSummaryText}
-              style={{ width: '100%', resize: 'vertical' }}
-            />
-          </div>
+          <textarea
+            className="form-input journal-ai-text"
+            readOnly
+            value={aiSummaryText}
+          />
         </div>
         <div className="modal-actions">
           <button
