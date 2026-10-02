@@ -340,6 +340,22 @@
   font-size: 0.8rem;
 }
 
+.csr-board-admin__edit {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.csr-board-admin__edit .csr-board-textarea {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.btn.btn-primary.csr-board-admin__save {
+  flex: 0 0 auto;
+  margin-bottom: 2px;
+}
+
 .csr-board-admin__comment {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);

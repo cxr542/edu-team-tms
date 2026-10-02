@@ -77,20 +77,31 @@ export default function CsrRequestCard({
           <div className="csr-board-admin">
             <label htmlFor={`csr-comment-${request.id}`}>관리자 답변</label>
             {managerStatusEditable ? (
-              <textarea
-                id={`csr-comment-${request.id}`}
-                className="form-input csr-board-textarea"
-                rows={3}
-                value={draft.adminComment}
-                onChange={(e) =>
-                  onDraftChange(request.id, {
-                    ...draft,
-                    adminComment: e.target.value,
-                  })
-                }
-                placeholder="처리 계획 또는 완료 사유를 적어 주세요."
-                disabled={!canEdit}
-              />
+              <div className="csr-board-admin__edit">
+                <textarea
+                  id={`csr-comment-${request.id}`}
+                  className="form-input csr-board-textarea"
+                  rows={3}
+                  value={draft.adminComment}
+                  onChange={(e) =>
+                    onDraftChange(request.id, {
+                      ...draft,
+                      adminComment: e.target.value,
+                    })
+                  }
+                  placeholder="처리 계획 또는 완료 사유를 적어 주세요."
+                  disabled={!canEdit}
+                />
+                <button
+                  type="button"
+                  className="btn btn-primary csr-board-side__save csr-board-admin__save"
+                  onClick={() => onSave(request.id)}
+                  disabled={!managerStatusEditable || !canEdit}
+                  title="선택한 상태와 관리자 답변을 함께 저장합니다."
+                >
+                  저장
+                </button>
+              </div>
             ) : (
               <p className="csr-board-admin__comment">
                 {request.adminComment || '아직 답변이 없습니다.'}
@@ -131,15 +142,6 @@ export default function CsrRequestCard({
                 <option value="hold">보류</option>
                 <option value="rejected">불가</option>
               </select>
-              <button
-                type="button"
-                className="btn btn-primary csr-board-side__save"
-                onClick={() => onSave(request.id)}
-                disabled={!managerStatusEditable || !canEdit}
-                title="선택한 상태와 관리자 답변을 함께 저장합니다."
-              >
-                상태·답변 저장
-              </button>
             </div>
           </div>
         )}
