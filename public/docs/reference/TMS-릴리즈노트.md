@@ -7,6 +7,11 @@
 
 ## 2026-10-02
 
+### [수정] fix(csr): move manager save button next to the reply textarea
+
+- fix(csr): move manager save button next to the reply textarea
+- PR #145: https://github.com/cxr542/edu-team-tms/pull/145
+
 ### [수정] fix(journal): retry/fallback on transient Gemini errors in monthly AI summary
 
 - fix(journal): retry/fallback on transient Gemini errors in monthly AI summary
