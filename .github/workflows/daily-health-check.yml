@@ -2,8 +2,8 @@ name: Daily Health Check
 
 "on":
   schedule:
-    # 매일 00:00 UTC = 한국시간(KST) 09:00
-    - cron: '0 0 * * *'
+    # 매일 14:47 UTC(전날) = 한국시간(KST) 23:47 (GitHub 스케줄 지연 약 4.7~5.4시간 감안, KST 04:30~05:30경 완료 목표)
+    - cron: '47 14 * * *'
   workflow_dispatch: {}
 
 permissions:
