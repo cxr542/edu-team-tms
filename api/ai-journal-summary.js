@@ -91,31 +91,45 @@ ${journalText}
       });
     };
 
-    let response = await fetchGemini('gemini-flash-latest');
-    
-    // Fallback if flash-latest is not found/supported for this API key
-    if (response.status === 404) {
-      console.log('gemini-flash-latest not found, falling back to gemini-pro-latest...');
-      response = await fetchGemini('gemini-pro-latest');
+    // Gemini returns transient 429/5xx under high demand: retry with backoff,
+    // then fall back to the next model. 404 (model unavailable for this key) skips to the next model.
+    const MODELS = ['gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-pro-latest'];
+    const RETRYABLE = new Set([429, 500, 502, 503, 504]);
+    const MAX_ATTEMPTS_PER_MODEL = 2;
+    const sleep = options.sleep || ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
+
+    let response = null;
+    let lastStatus = 0;
+    for (const modelName of MODELS) {
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS_PER_MODEL; attempt += 1) {
+        try {
+          response = await fetchGemini(modelName);
+        } catch (netErr) {
+          console.error(`Gemini fetch failed (${modelName}):`, netErr);
+          response = null;
+          lastStatus = 0;
+        }
+        if (response?.ok) break;
+        if (response) {
+          lastStatus = response.status;
+          console.error(`Gemini ${modelName} HTTP ${response.status} (attempt ${attempt}):`, await response.text());
+          if (!RETRYABLE.has(response.status)) break;
+        }
+        if (attempt < MAX_ATTEMPTS_PER_MODEL) await sleep(1500 * attempt);
+      }
+      if (response?.ok) break;
     }
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      let extraInfo = '';
-      if (response.status === 404) {
-        try {
-          const modelsRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-          const modelsText = await modelsRes.text();
-          extraInfo = `\n\n[Available Models for this Key]:\n${modelsText}`;
-        } catch (e) {
-          extraInfo = `\n\n[Failed to fetch available models]`;
-        }
-      }
-      
-      console.error('Gemini API Error:', errorText);
-      res.statusCode = 502;
+    if (!response?.ok) {
+      const busy = lastStatus === 0 || RETRYABLE.has(lastStatus);
+      res.statusCode = busy ? 503 : 502;
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
-      res.end(JSON.stringify({ ok: false, error: `AI 서버 호출 중 오류가 발생했습니다 (HTTP ${response.status}): ${errorText}${extraInfo}` }));
+      res.end(JSON.stringify({
+        ok: false,
+        error: busy
+          ? 'AI 서버가 일시적으로 혼잡합니다. 잠시 후 다시 시도해 주세요.'
+          : `AI 요약을 생성하지 못했습니다 (HTTP ${lastStatus}). 문제가 계속되면 관리자에게 문의하세요.`,
+      }));
       return;
     }
 
