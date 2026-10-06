@@ -70,3 +70,16 @@ describe('월 KPI1 집계 — 월 경계 (일지 화면과 동일 범위)', () =
     expect(computeMonthKpi1Totals(2026, 8, all).available).toBe(22);
   });
 });
+
+describe('일지 기준 가용 — 월 확정 저장값과 분리', () => {
+  it('저장값 available 이 옛 값(23)이어도 journalAvailable 은 일지 기준(22)', () => {
+    const days = buildSeptemberDays();
+    const stale = { work: 20.5, improve: 0, leave: 4.5, available: 23, status: '제출' };
+    const m = computeTeamKpi({ year: 2026, monthIndex: SEP, days, monthly01: stale });
+    expect(m.kpi1.available).toBe(23); // 화면 표시는 저장값 유지
+    expect(m.journalAvailable).toBe(22);
+    const patch = apply01cToMonthly01(m.month01cTotals, stale, m.journalAvailable);
+    expect(patch.available).toBe(22);
+    expect(patch.work).toBe(20);
+  });
+});

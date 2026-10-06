@@ -312,6 +312,8 @@ export function computeTeamKpi({
     rows01c,
     rows02Effect,
     kpi1,
+    // 일지 기준 가용 M/M — 월 확정 저장값(kpi1.available)과 섞이지 않는 값. 「일지에서 가져오기」·제출에 사용
+    journalAvailable: kpi1Derived.available,
     kpi2,
     month01cTotals,
     member: findKpiMember(memberCode) || { code: memberCode, displayName: memberCode },
