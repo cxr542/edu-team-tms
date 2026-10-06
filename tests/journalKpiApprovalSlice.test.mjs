@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { KPI_STATUS } from '../src/constants/kpiStatuses.js';
 import {
+  mergeKpiApprovalSlices,
   extractMemberKpiApprovalSlice,
   mergeJournalKpiApprovalImport,
   mergeMemberKpiApprovalIntoStore,
@@ -309,5 +310,53 @@ describe('journalKpiApprovalSlice', () => {
     };
     const slice = extractMemberKpiApprovalSlice(operational, 'B', days);
     expect(slice.kpi2RowStatus[kpi2LegacyRowId('2026-06-16', 't1')].status).toBe(KPI_STATUS.SUBMITTED);
+  });
+  describe('월 확정 철회(withdraw) 병합', () => {
+    const wrap = (monthly01) => ({ months: { '2026-09': { monthly01 } }, kpi2RowStatus: {} });
+    const submitted = wrap({
+      status: KPI_STATUS.SUBMITTED,
+      submittedAt: '2026-09-30T01:00:00.000Z',
+      work: 20.5,
+    });
+    const withdrawnLater = wrap({
+      status: KPI_STATUS.DRAFT,
+      submittedAt: null,
+      withdrawnAt: '2026-10-06T05:00:00.000Z',
+      work: 20.5,
+    });
+    const resubmitted = wrap({
+      status: KPI_STATUS.SUBMITTED,
+      submittedAt: '2026-10-06T06:00:00.000Z',
+      withdrawnAt: '2026-10-06T05:00:00.000Z',
+      work: 22,
+    });
+    const status = (slice) => slice.months['2026-09'].monthly01.status;
+
+    it('더 늦은 철회가 기존 제출본을 이긴다', () => {
+      expect(status(mergeKpiApprovalSlices(submitted, withdrawnLater, 'B'))).toBe(KPI_STATUS.DRAFT);
+    });
+
+    it('옛 제출본이 들어와도 더 늦은 철회를 되돌리지 못한다', () => {
+      expect(status(mergeKpiApprovalSlices(withdrawnLater, submitted, 'B'))).toBe(KPI_STATUS.DRAFT);
+    });
+
+    it('철회 이후 재제출은 철회를 이긴다', () => {
+      expect(status(mergeKpiApprovalSlices(withdrawnLater, resubmitted, 'B'))).toBe(KPI_STATUS.SUBMITTED);
+      expect(status(mergeKpiApprovalSlices(resubmitted, withdrawnLater, 'B'))).toBe(KPI_STATUS.SUBMITTED);
+    });
+
+    it('withdrawnAt 없는 옛 철회 기록은 기존 규칙대로 제출본이 이긴다(하위 호환)', () => {
+      const legacy = wrap({ status: KPI_STATUS.DRAFT, submittedAt: null });
+      expect(status(mergeKpiApprovalSlices(submitted, legacy, 'B'))).toBe(KPI_STATUS.SUBMITTED);
+    });
+
+    it('승인된 기록은 철회로 다운그레이드되지 않는다', () => {
+      const approved = wrap({
+        status: KPI_STATUS.APPROVED,
+        submittedAt: '2026-09-30T01:00:00.000Z',
+        approvedAt: '2026-09-30T02:00:00.000Z',
+      });
+      expect(status(mergeKpiApprovalSlices(approved, withdrawnLater, 'B'))).toBe(KPI_STATUS.APPROVED);
+    });
   });
 });

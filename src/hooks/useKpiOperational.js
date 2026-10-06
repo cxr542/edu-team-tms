@@ -370,6 +370,8 @@ export function useKpiOperational({ readOnly = false } = {}) {
         submittedAt: null,
         approvedAt: null,
         approver: '',
+        // 병합 시 옛 제출본에 철회가 덮이지 않도록 철회 시각을 남긴다.
+        withdrawnAt: new Date().toISOString(),
       });
     },
     [updateMonthly01]
