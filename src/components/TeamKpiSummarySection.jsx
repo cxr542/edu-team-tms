@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { buildTeamMonthlyReport, buildTeamQuarterReport } from '../utils/kpiReportData';
 import { buildTeamIntegratedSummary } from '../utils/teamKpiAggregate';
+import { detectKpi1Warnings } from '../utils/kpi1Warnings';
 import { formatKpiMemberLabel } from '../constants/kpiMembers';
 import { formatKpiStatusLabel } from '../constants/kpiStatuses';
 import { KPI1_NAME, KPI2_NAME, KPI3_NAME } from '../constants/kpiDisplayNames';
@@ -81,7 +82,14 @@ export default function TeamKpiSummarySection({
                   aria-label={`${formatKpiMemberLabel(row.member)} 상세 보기`}
                 >
                   <td>{formatKpiMemberLabel(row.member)}</td>
-                  <td>{formatPct(row.kpi1.utilization)}</td>
+                  <td>
+                    {formatPct(row.kpi1.utilization)}
+                    {detectKpi1Warnings(row).map((warning) => (
+                      <span key={warning.code} className="kpi-warn-badge" title={warning.message}>
+                        {warning.label}
+                      </span>
+                    ))}
+                  </td>
                   <td>
                     <span className={`kpi-grade kpi-grade--${row.grade1}`}>{row.grade1}</span>
                   </td>
