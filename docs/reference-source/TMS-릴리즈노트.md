@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-10-06
+
+### [신규] feat(ledger): Supabase ledger tables + flagged viewer read path (step 5)
+
+- feat(ledger): Supabase ledger tables + flagged viewer read path (step 5)
+- PR #146: https://github.com/cxr542/edu-team-tms/pull/146
+
 ## 2026-10-02
 
 ### [수정] fix(csr): move manager save button next to the reply textarea
