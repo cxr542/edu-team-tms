@@ -7,6 +7,8 @@ import { KPI3_ELEMENTS } from '../constants/kpi3Elements';
 import { formatKpiMemberLabel } from '../constants/kpiMembers';
 import { useTeamKpiMetrics } from '../context/JournalProvider';
 import { orderedDimsForDisplay, mapMemberRoleToCompetency } from '../constants/competencyRubric';
+import CompetencyAiSummaryModal from './CompetencyAiSummaryModal';
+import { resolveMemberCategories } from '../utils/journalMemberPrefs';
 import { buildMonthJournalText } from '../utils/monthJournalText';
 import {
   buildCopyPatch,
@@ -39,7 +41,7 @@ export default function CompetencyMemberSection({
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(monthIndex);
   const [cloudBusy, setCloudBusy] = useState(false);
-  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [aiModal, setAiModal] = useState({ open: false, loading: false, error: '', text: '' });
   const memberCode = member.code;
   const competencyMonthRec = journal.getCompetencyMonth(year, selectedMonthIndex, memberCode);
   const quarterRec = journal.getQuarterRecord(year, monthIndex, memberCode);
@@ -71,19 +73,24 @@ export default function CompetencyMemberSection({
   const kpi3Section = activeTab === 'dm' || activeTab === 'leader' || activeTab === 'practice' ? activeTab : null;
   const kpi3El = kpi3Section ? KPI3_BY_KEY[kpi3Section] : null;
 
-  const handleGenerateAiSummary = async () => {
+  const aiMonthLabel = `${year}년 ${selectedMonthIndex + 1}월`;
+
+  const runAiSummary = async () => {
     const controller = new AbortController();
     let timeoutId;
+    setAiModal((m) => ({ ...m, open: true, loading: true, error: '', text: '' }));
     try {
-      setIsGeneratingAi(true);
-      const journalText = buildMonthJournalText(journal.getMemberDays(memberCode), year, selectedMonthIndex);
-
+      const cats = resolveMemberCategories(journal.getMemberPrefs?.(memberCode)).cats;
+      const journalText = buildMonthJournalText(
+        journal.getMemberDays(memberCode),
+        year,
+        selectedMonthIndex,
+        cats
+      );
       if (!journalText.trim()) {
-        onToast?.('요약할 업무일지 내용이 없습니다.');
+        setAiModal((m) => ({ ...m, loading: false, error: '이 달에 요약할 업무일지 내용이 없습니다.' }));
         return;
       }
-
-      onToast?.('AI 요약을 생성하는 중입니다. (보통 10~30초, 최대 1분 소요)');
       timeoutId = setTimeout(() => controller.abort(), AI_SUMMARY_TIMEOUT_MS);
       const res = await fetch('/api/ai-journal-summary', {
         method: 'POST',
@@ -91,29 +98,55 @@ export default function CompetencyMemberSection({
         body: JSON.stringify({ journalText }),
         signal: controller.signal,
       });
-
-      const data = await res.json().catch(() => ({ ok: false, error: `서버 응답을 읽지 못했습니다 (HTTP ${res.status})` }));
-      if (data.ok) {
-        const currentEvidence = competencyMonthRec?.self?.evidence || '';
-        const newEvidence = currentEvidence 
-          ? `${currentEvidence}\n\n[AI 월간 요약]\n${data.summary}` 
-          : `[AI 월간 요약]\n${data.summary}`;
-        journal.updateCompetencySelf(year, selectedMonthIndex, memberCode, { evidence: newEvidence });
-        onToast?.('AI 요약이 증빙 메모에 추가되었습니다!');
-      } else {
-        onToast?.(`요약 실패: ${data.error}`);
-      }
+      const data = await res
+        .json()
+        .catch(() => ({ ok: false, error: `서버 응답을 읽지 못했습니다 (HTTP ${res.status})` }));
+      setAiModal((m) =>
+        data.ok
+          ? { ...m, loading: false, text: data.summary || '' }
+          : { ...m, loading: false, error: `요약 실패: ${data.error}` }
+      );
     } catch (err) {
       console.error(err);
-      onToast?.(
-        err?.name === 'AbortError'
-          ? 'AI 요약이 너무 오래 걸려 중단했습니다. 잠시 후 다시 시도해 주세요.'
-          : '요약 중 오류가 발생했습니다.'
-      );
+      setAiModal((m) => ({
+        ...m,
+        loading: false,
+        error:
+          err?.name === 'AbortError'
+            ? 'AI 요약이 너무 오래 걸려 중단했습니다. 「다시 생성」을 눌러 주세요.'
+            : `요약 중 오류가 발생했습니다: ${err?.message || err}`,
+      }));
     } finally {
       clearTimeout(timeoutId);
-      setIsGeneratingAi(false);
     }
+  };
+
+  const copyEvidence = async () => {
+    const text = competencyMonthRec?.self?.evidence || '';
+    if (!text.trim()) {
+      onToast?.('복사할 자체평가 근거가 없습니다');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      onToast?.('자체평가 근거를 클립보드에 복사했습니다');
+    } catch {
+      onToast?.('복사하지 못했습니다. 브라우저 권한을 확인해 주세요');
+    }
+  };
+
+  const closeAiModal = () => setAiModal((m) => ({ ...m, open: false }));
+
+  const registerAiSummary = () => {
+    const summary = aiModal.text.trim();
+    if (!summary) return;
+    const currentEvidence = competencyMonthRec?.self?.evidence || '';
+    const block = `[AI 월간 요약]\n${summary}`;
+    journal.updateCompetencySelf(year, selectedMonthIndex, memberCode, {
+      evidence: currentEvidence ? `${currentEvidence}\n\n${block}` : block,
+    });
+    closeAiModal();
+    onToast?.('AI 요약이 자체평가 근거에 추가되었습니다');
   };
 
   const copySource = useMemo(
@@ -376,8 +409,9 @@ export default function CompetencyMemberSection({
               memberRole={member.role}
               readOnly={readOnly}
               memberView
-              isGeneratingAi={isGeneratingAi}
-              onGenerateAiSummary={handleGenerateAiSummary}
+              isGeneratingAi={aiModal.loading}
+              onGenerateAiSummary={runAiSummary}
+              onCopyEvidence={copyEvidence}
               onUpdate={(patch) => journal.updateCompetencySelf(year, selectedMonthIndex, memberCode, patch)}
               onLock={async () => {
                 const r = journal.lockCompetencyMonth(year, selectedMonthIndex, memberCode, { side: 'self' });
@@ -449,6 +483,17 @@ export default function CompetencyMemberSection({
         </div>
         </div>
       </div>
+      <CompetencyAiSummaryModal
+        open={aiModal.open}
+        monthLabel={aiMonthLabel}
+        loading={aiModal.loading}
+        error={aiModal.error}
+        text={aiModal.text}
+        onChangeText={(text) => setAiModal((m) => ({ ...m, text }))}
+        onRegister={registerAiSummary}
+        onRegenerate={runAiSummary}
+        onClose={closeAiModal}
+      />
     </article>
   );
 }

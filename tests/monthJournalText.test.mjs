@@ -27,3 +27,15 @@ describe('buildMonthJournalText', () => {
     expect(buildMonthJournalText(null, 2026, 6)).toBe('');
   });
 });
+
+describe('buildMonthJournalText member categories', () => {
+  it('uses the member legend labels when provided', () => {
+    const text = buildMonthJournalText(
+      { '2026-07-01': { tasks: [{ cat: 'edu', title: '강의' }] } },
+      2026,
+      6,
+      { edu: { label: '내 교육' } }
+    );
+    expect(text).toContain('카테고리: 내 교육');
+  });
+});
