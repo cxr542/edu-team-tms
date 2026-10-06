@@ -7,6 +7,11 @@
 
 ## 2026-10-06
 
+### [신규] feat(ledger): row-level Supabase write API + admin login throttle (6a)
+
+- feat(ledger): row-level Supabase write API + admin login throttle (6a)
+- PR #150: https://github.com/cxr542/edu-team-tms/pull/150
+
 ### [수정] fix(kpi): 월 확정 가져오기·제출 시 일지 기준 가용 M/M 사용
 
 - 월 확정 「일지에서 가져오기」·제출이 옛 가용 M/M을 유지하던 문제 수정
