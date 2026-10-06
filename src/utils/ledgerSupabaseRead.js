@@ -82,7 +82,7 @@ async function selectAll(client, table, orderColumns) {
 export async function fetchLedgerSnapshotFromSupabase(client = getSupabaseClient()) {
   if (!client) return null;
   const [transactions, categories, settings] = await Promise.all([
-    selectAll(client, 'ledger_transactions', ['sort_order']),
+    selectAll(client, 'ledger_transactions', ['tx_date', 'sort_order']),
     selectAll(client, 'ledger_categories', ['sort_order']),
     selectAll(client, 'ledger_settings', ['key']),
   ]);
