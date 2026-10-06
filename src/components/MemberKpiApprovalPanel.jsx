@@ -98,7 +98,7 @@ function MemberKpiApprovalBody({
     const mmPatch = apply01cToMonthly01(
       metrics.month01cTotals,
       monthly01,
-      metrics.kpi1.available
+      metrics.journalAvailable
     );
     journal.updateMonthly01(year, month, memberCode, {
       ...mmPatch,

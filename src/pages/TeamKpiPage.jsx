@@ -167,7 +167,7 @@ export default function TeamKpiPage() {
 
   const validation = validate01cVsMonthly(metrics.month01cTotals, monthly01Form);
 
-  const journalAvailableMm = metrics.kpi1.available;
+  const journalAvailableMm = metrics.journalAvailable;
 
   const sync01cToMonthly = () => {
     const next = apply01cToMonthly01(metrics.month01cTotals, monthly01Form, journalAvailableMm);
