@@ -7,6 +7,11 @@
 
 ## 2026-10-06
 
+### [수정] fix(kpi): 월 KPI1 집계를 일지 화면과 동일 기준으로 (월 경계·토요일 공휴일)
+
+- KPI 월 가동률이 일지 화면과 달랐던 문제 수정 (월 밖 날짜·토요일 공휴일 제외)
+- PR #148: https://github.com/cxr542/edu-team-tms/pull/148
+
 ### [수정] fix(ledger): use ledgerReadOnly to pick the Supabase read path
 
 - fix(ledger): use ledgerReadOnly to pick the Supabase read path
