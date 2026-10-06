@@ -1,5 +1,7 @@
 const MM_TOLERANCE = 0.05;
 const OVER_UTILIZATION_PCT = 100.05;
+/** 툴팁 조치 안내 — 값 비교는 생략하고 해야 할 일만 남긴다. */
+const FIX_HINT = '「월 확정」 탭에서 「일지에서 가져오기」를 누르세요. (제출됨이면 먼저 철회)';
 
 function differs(a, b) {
   return Math.abs((Number(a) || 0) - (Number(b) || 0)) > MM_TOLERANCE;
@@ -27,11 +29,7 @@ export function detectKpi1Warnings(row) {
     warnings.push({
       code: 'drift',
       label: '일지와 다름',
-      message:
-        '월 확정 값이 일지와 다릅니다. 「월 확정」 탭에서 「일지에서 가져오기」를 누르세요. ' +
-        '(제출됨이면 먼저 「제출 취소 (철회)」 후 가져오기 → 재제출) ' +
-        `저장값 업무 ${stored.work}·향상 ${stored.improve}·휴일 ${stored.leave}·가용 ${stored.available} / ` +
-        `일지 업무 ${journal.work}·향상 ${journal.improve}·휴일 ${journal.leave}·가용 ${journal.available}`,
+      message: FIX_HINT,
     });
   }
 
@@ -39,8 +37,7 @@ export function detectKpi1Warnings(row) {
     warnings.push({
       code: 'over',
       label: '100% 초과',
-      message:
-        '가동률이 100%를 넘습니다. 「월 확정」 탭에서 「일지에서 가져오기」로 값을 일지 기준으로 맞추세요.',
+      message: FIX_HINT,
     });
   }
   return warnings;
