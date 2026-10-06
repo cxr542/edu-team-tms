@@ -7,6 +7,7 @@ import { KPI3_ELEMENTS } from '../constants/kpi3Elements';
 import { formatKpiMemberLabel } from '../constants/kpiMembers';
 import { useTeamKpiMetrics } from '../context/JournalProvider';
 import { orderedDimsForDisplay, mapMemberRoleToCompetency } from '../constants/competencyRubric';
+import { buildMonthJournalText } from '../utils/monthJournalText';
 import {
   buildCopyPatch,
   findPreviousSelfSource,
@@ -70,21 +71,7 @@ export default function CompetencyMemberSection({
   const handleGenerateAiSummary = async () => {
     try {
       setIsGeneratingAi(true);
-      const days = journal.getMemberDays(memberCode) || [];
-      const targetPrefix = `${year}-${String(selectedMonthIndex + 1).padStart(2, '0')}-`;
-      const monthDays = days.filter(d => d.dayKey.startsWith(targetPrefix));
-      
-      let journalText = '';
-      monthDays.forEach(day => {
-        if (!day.tasks || day.tasks.length === 0) return;
-        journalText += `[${day.dayKey}]\n`;
-        day.tasks.forEach(task => {
-          if (task.content) {
-            journalText += `- 카테고리: ${task.categoryId || '기타'}, 내용: ${task.content}\n`;
-          }
-        });
-        journalText += '\n';
-      });
+      const journalText = buildMonthJournalText(journal.getMemberDays(memberCode), year, selectedMonthIndex);
 
       if (!journalText.trim()) {
         onToast?.('요약할 업무일지 내용이 없습니다.');
