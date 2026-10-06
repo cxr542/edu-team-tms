@@ -163,6 +163,27 @@ export function dateKey(y, m, d) {
   return `${y}-${pad(m + 1)}-${pad(d)}`;
 }
 
+/**
+ * 해당 월에 속한 평일(월~금) 날짜 키 목록.
+ * 일지 화면 「월 KPI1 집계」와 KPI 화면이 같은 범위를 쓰도록 하는 단일 기준.
+ * - 월 밖 날짜(예: 9월 주차 표에 걸린 8/31, 10/1)는 제외
+ * - 토·일 공휴일 레코드(예: 8/15, 9/26)는 제외 (가용·휴일 이중 반영 방지)
+ */
+export function getMonthWeekdayKeys(year, month) {
+  const seen = new Set();
+  const keys = [];
+  getWeeksInMonth(year, month).forEach((week) => {
+    week.days.forEach((d) => {
+      if (d.getMonth() !== month) return;
+      const key = dateKey(d.getFullYear(), d.getMonth(), d.getDate());
+      if (seen.has(key)) return;
+      seen.add(key);
+      keys.push(key);
+    });
+  });
+  return keys;
+}
+
 export function getWeeksInMonth(year, month) {
   const weeks = [];
   const first = new Date(year, month, 1);

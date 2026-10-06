@@ -5,8 +5,10 @@ import { readKpi2RowStatus } from '../constants/kpiOperationalStore.js';
 import { getTaskSlotLabel } from '../constants/journalTaskSlot.js';
 import { LEAVE_MEMO_TASK_RE } from './journalLeavePresets.js';
 import { isMonthly01ContentUnset } from './kpiMonthlyClose.js';
+import { resolveJournalDay } from './journalHoliday2026.js';
 import {
   getDayAvailableMm,
+  getMonthWeekdayKeys,
   getTaskLoggedHours,
   getTaskMmAxis,
   getWeeksInMonth,
@@ -79,9 +81,10 @@ export function buildKpi01cRows(year, monthIndex, days, kpiWeekMemos = {}, membe
     let leave = 0;
 
     week.days.forEach((d) => {
+      // 월 경계 주차: 해당 월 날짜만 합산 (월 밖 날짜는 인접 월에서 집계)
+      if (d.getMonth() !== monthIndex) return;
       const key = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-      const day = days[key];
-      if (!day) return;
+      const day = resolveJournalDay(key, days[key]);
       work += Number(day.mm?.work) || 0;
       improve += Number(day.mm?.improve) || 0;
       leave += Number(day.mm?.leave) || 0;
@@ -194,14 +197,14 @@ export function buildKpi02Rows(year, monthIndex, days) {
 }
 
 export function computeMonthKpi1Totals(year, monthIndex, days) {
-  const prefix = `${year}-${pad(monthIndex + 1)}`;
   let work = 0;
   let improve = 0;
   let leave = 0;
   let available = 0;
 
-  Object.entries(days).forEach(([key, day]) => {
-    if (!key.startsWith(prefix)) return;
+  // 일지 화면(월 KPI1 집계)과 동일: 해당 월 평일만, 미등록일·공휴일은 resolveJournalDay 규칙 적용
+  getMonthWeekdayKeys(year, monthIndex).forEach((key) => {
+    const day = resolveJournalDay(key, days[key]);
     work += Number(day.mm?.work) || 0;
     improve += Number(day.mm?.improve) || 0;
     leave += Number(day.mm?.leave) || 0;

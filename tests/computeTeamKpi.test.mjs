@@ -159,8 +159,11 @@ describe('computeTeamKpi june', () => {
       '2026-07-01': { holiday: false, mm: { work: 0.5, improve: 0, leave: 0 }, tasks: [] },
     };
     const totals = computeMonthKpi1Totals(2026, 5, days);
+    // 6/30 업무만 반영, 7/1 은 제외. (6/3 지방선거일 = 휴일 1.0 자동 반영)
     expect(totals.work).toBeCloseTo(0.25, 4);
-    expect(totals.available).toBeCloseTo(1, 4);
+    expect(totals.leave).toBeCloseTo(1, 4);
+    // 가용 = 6월 평일 22일 (일지 화면 「월 KPI1 집계」와 동일 기준, 토요일 공휴일 6/6 제외)
+    expect(totals.available).toBeCloseTo(22, 4);
   });
 
   it('buildKpi01cRows — KPI 탭 주간메모만 01c에 반영', () => {
