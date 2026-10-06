@@ -270,8 +270,10 @@ export default function App() {
   } = usePublicSnapshot(ledgerSnapshotEnabled, {
     pollMs: 0,
     reloadCooldownMs: 30000,
-    // 조회 전용 화면만 Supabase 에서 읽는다. 관리자(편집) 화면은 작성본↔Blob 비교를 그대로 유지.
-    preferSupabase: isViewer,
+    // 읽기 전용 장부 화면(?mode=view, 구성원 /yhkim 등 장부 조회)만 Supabase 에서 읽는다.
+    // isViewer 는 /yhkim 같은 작업 경로에서 항상 false 이므로 ledgerReadOnly 를 쓴다.
+    // 관리자(편집) 화면은 작성본↔Blob 비교를 그대로 유지.
+    preferSupabase: ledgerReadOnly,
   });
   const sharedViewerMenuVisibility = useMemo(
     () => normalizeViewerMenuVisibility(snapshot?.viewerMenuVisibility),
