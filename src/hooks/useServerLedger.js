@@ -4,6 +4,7 @@ import { createLedgerApi, describeLedgerClientError } from '../utils/ledgerApiCl
 import { planLedgerChanges, stripLedgerMeta } from '../utils/ledgerDiff';
 import { applyLedgerPlan, describeCounts } from '../utils/ledgerPlanRunner';
 import { classifyLegacyDraft } from '../utils/ledgerLegacyDraft';
+import { checkDeletionGuard } from '../utils/ledgerDeleteGuard';
 import { buildTeamSnapshot, downloadTeamSnapshot } from '../utils/publishSnapshot';
 import { loadUsageCategories } from '../constants/usageCategories';
 import {
@@ -133,6 +134,11 @@ export function useServerLedgerWrites({ enabled, data, categories, blocked, bloc
         return;
       }
       if (plan.isEmpty) return;
+      const guard = checkDeletionGuard(plan.removes.length, txRef.current.length);
+      if (!guard.ok) {
+        notify?.('warning', guard.message);
+        return;
+      }
       const optimistic = prepareLedger(newList, categories);
       txRef.current = optimistic;
       setTxState(optimistic);
