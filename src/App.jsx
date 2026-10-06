@@ -44,6 +44,7 @@ import { useAutoPublishLedger } from './hooks/useAutoPublishLedger';
 import { useLegacyLedgerDraft, useServerLedgerData, useServerLedgerWrites } from './hooks/useServerLedger';
 import LedgerLegacyDraftNotice from './components/LedgerLegacyDraftNotice';
 import { getLedgerWriteSource } from './utils/ledgerWriteSource';
+import { bulkDeleteConfirmation, isTypedConfirmationValid } from './utils/ledgerDeleteGuard';
 import CategoryManageModal from './components/CategoryManageModal';
 import CardPasteModal from './components/CardPasteModal';
 import { getMonthlyBudget } from './utils/ledgerBalances';
@@ -1077,12 +1078,32 @@ export default function App() {
     }
   };
 
+  /**
+   * 여러 건 삭제 확인. 서버 모드에서는 건수를 직접 입력해야 진행한다(전체 삭제 보호).
+   * 기존(Blob) 모드는 이전과 같은 확인창을 쓴다.
+   */
+  const confirmBulkDelete = ({ count, scopeLabel, kind, legacyMessage }) => {
+    if (!serverWriteActive) return window.confirm(legacyMessage);
+    const c = bulkDeleteConfirmation({ count, scopeLabel, kind });
+    if (c.mode === 'confirm') return window.confirm(c.message);
+    const typed = window.prompt(c.message, '');
+    if (typed === null) return false;
+    if (!isTypedConfirmationValid(typed, c.phrase)) {
+      showAlert(`입력이 일치하지 않아 삭제하지 않았습니다. (필요한 입력: ${c.phrase})`, 'warning', 6000);
+      return false;
+    }
+    return true;
+  };
+
   const handleDeleteSelected = () => {
     if (selectedCount === 0) return;
     if (
-      !window.confirm(
-        `선택한 ${selectedCount}건의 지출 내역을 삭제할까요?\n삭제 후에는 되돌릴 수 없습니다.`
-      )
+      !confirmBulkDelete({
+        count: selectedCount,
+        scopeLabel: `선택한 ${selectedCount}건`,
+        kind: 'selected',
+        legacyMessage: `선택한 ${selectedCount}건의 지출 내역을 삭제할까요?\n삭제 후에는 되돌릴 수 없습니다.`,
+      })
     ) {
       return;
     }
@@ -1097,9 +1118,12 @@ export default function App() {
       ? `현재 필터·검색에 보이는 ${ids.length}건`
       : `${selectedYear}년 ${parseInt(selectedMonth, 10)}월 ${ids.length}건`;
     if (
-      !window.confirm(
-        `${scope}을 모두 삭제할까요?\n다른 달·필터에 숨겨진 내역은 삭제되지 않습니다.\n삭제 후에는 되돌릴 수 없습니다.`
-      )
+      !confirmBulkDelete({
+        count: ids.length,
+        scopeLabel: scope,
+        kind: 'all-visible',
+        legacyMessage: `${scope}을 모두 삭제할까요?\n다른 달·필터에 숨겨진 내역은 삭제되지 않습니다.\n삭제 후에는 되돌릴 수 없습니다.`,
+      })
     ) {
       return;
     }
