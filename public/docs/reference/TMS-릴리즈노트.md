@@ -7,6 +7,11 @@
 
 ## 2026-10-06
 
+### [수정] fix(api): journal-snapshots 500 — add .js extensions to journalHoliday2026 imports
+
+- fix(api): journal-snapshots 500 — add .js extensions to journalHoliday2026 imports
+- PR #155: https://github.com/cxr542/edu-team-tms/pull/155
+
 ### [문서] docs(supabase): record anon hardening phase 1 (applied to production)
 
 - docs(supabase): record anon hardening phase 1 (applied to production)
