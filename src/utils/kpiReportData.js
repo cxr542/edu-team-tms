@@ -55,6 +55,7 @@ export function buildTeamMonthlyReport({
       rows01c: metrics.rows01c,
       rows02: metrics.rows02Effect,
       kpi1: metrics.kpi1,
+      kpi1Journal: metrics.kpi1Journal,
       kpi2: metrics.kpi2,
       kpi2Preview: metrics.kpi2Preview,
       kpi2DisplayPct: kpi2Disp.displayPct,
