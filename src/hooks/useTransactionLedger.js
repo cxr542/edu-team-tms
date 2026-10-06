@@ -10,7 +10,7 @@ import {
   saveStoredTransactions,
 } from '../utils/transactionStorage';
 
-function prepareLedger(rawList, categories) {
+export function prepareLedger(rawList, categories) {
   const normalized = rawList.map((tx) => normalizeTransaction(tx, categories));
   return calculateBalances(normalized);
 }

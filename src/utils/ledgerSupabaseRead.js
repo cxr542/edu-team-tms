@@ -4,6 +4,14 @@
  * 쓰기는 하지 않는다. 쓰기 전환은 별도 단계(서버 API + service role).
  */
 import { getSupabaseClient } from './supabaseClient';
+import { buildEditDataFromRows, buildSnapshotFromRows } from './ledgerSnapshotMapping';
+
+export {
+  buildEditDataFromRows,
+  buildSnapshotFromRows,
+  categoryFromRow,
+  transactionFromRow,
+} from './ledgerSnapshotMapping';
 
 /**
  * 어느 저장소에서 읽을지 결정한다. URL `?ledgerSource=supabase|blob` 이 환경변수보다 우선하므로
@@ -23,53 +31,6 @@ export function getLedgerReadSource() {
   });
 }
 
-function dropNullish(obj) {
-  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== null && v !== undefined));
-}
-
-export function transactionFromRow(row) {
-  const extra = row.extra_data && typeof row.extra_data === 'object' ? row.extra_data : {};
-  return dropNullish({
-    id: row.id,
-    date: row.tx_date,
-    category: row.category,
-    description: row.description,
-    amount: row.amount,
-    balance: row.balance,
-    paymentMethod: row.payment_method,
-    attendees: row.attendees,
-    extraData: Object.keys(extra).length ? extra : undefined,
-  });
-}
-
-export function categoryFromRow(row) {
-  return dropNullish({
-    id: row.id,
-    label: row.label,
-    color: row.color,
-    description: row.description,
-    matchKeywords: Array.isArray(row.match_keywords) ? row.match_keywords : [],
-  });
-}
-
-/**
- * ledger_* 행 → 공개 스냅샷 모양. 거래가 하나도 없으면 null (Blob 경로로 되돌리기 위함).
- * publishedAt 은 세 테이블 중 가장 늦은 updated_at.
- */
-export function buildSnapshotFromRows({ transactions = [], categories = [], settings = [] }) {
-  if (!transactions.length) return null;
-  const stamps = [...transactions, ...categories, ...settings]
-    .map((r) => Date.parse(r.updated_at))
-    .filter(Number.isFinite);
-  const menu = settings.find((s) => s.key === 'viewer_menu_visibility')?.value;
-  return {
-    publishedAt: new Date(stamps.length ? Math.max(...stamps) : Date.now()).toISOString(),
-    categories: categories.map(categoryFromRow),
-    transactions: transactions.map(transactionFromRow),
-    viewerMenuVisibility: menu && typeof menu === 'object' ? menu : undefined,
-  };
-}
-
 async function selectAll(client, table, orderColumns) {
   let query = client.from(table).select('*');
   for (const col of orderColumns) query = query.order(col, { ascending: true });
@@ -87,4 +48,15 @@ export async function fetchLedgerSnapshotFromSupabase(client = getSupabaseClient
     selectAll(client, 'ledger_settings', ['key']),
   ]);
   return buildSnapshotFromRows({ transactions, categories, settings });
+}
+
+/** 편집 화면(쓰기 경로)용 읽기: 거래마다 `_version`, 메뉴 설정 버전 포함. Supabase 미설정이면 null. */
+export async function fetchLedgerEditDataFromSupabase(client = getSupabaseClient()) {
+  if (!client) return null;
+  const [transactions, categories, settings] = await Promise.all([
+    selectAll(client, 'ledger_transactions', ['tx_date', 'sort_order']),
+    selectAll(client, 'ledger_categories', ['sort_order']),
+    selectAll(client, 'ledger_settings', ['key']),
+  ]);
+  return buildEditDataFromRows({ transactions, categories, settings });
 }
