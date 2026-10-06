@@ -7,6 +7,11 @@
 
 ## 2026-10-06
 
+### [신규] feat(ledger): flagged Supabase write path for the admin editor (6b)
+
+- feat(ledger): flagged Supabase write path for the admin editor (6b)
+- PR #151: https://github.com/cxr542/edu-team-tms/pull/151
+
 ### [신규] feat(ledger): row-level Supabase write API + admin login throttle (6a)
 
 - feat(ledger): row-level Supabase write API + admin login throttle (6a)
