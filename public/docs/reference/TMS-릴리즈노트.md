@@ -7,6 +7,11 @@
 
 ## 2026-10-06
 
+### [수정] fix(kpi): 월 확정 철회가 병합 시 제출됨으로 되돌아가는 문제
+
+- fix(kpi): 월 확정 철회가 병합 시 제출됨으로 되돌아가는 문제
+- PR #156: https://github.com/cxr542/edu-team-tms/pull/156
+
 ### [수정] fix(api): journal-snapshots 500 — add .js extensions to journalHoliday2026 imports
 
 - fix(api): journal-snapshots 500 — add .js extensions to journalHoliday2026 imports
