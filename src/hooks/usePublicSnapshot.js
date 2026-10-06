@@ -4,7 +4,7 @@ import { recordCloudFailure, recordCloudSuccess } from '../utils/cloudHealth';
 
 export function usePublicSnapshot(
   enabled,
-  { pollMs = 0, silentPoll = true, reloadCooldownMs = 30000 } = {}
+  { pollMs = 0, silentPoll = true, reloadCooldownMs = 30000, preferSupabase = false } = {}
 ) {
   const [loading, setLoading] = useState(enabled);
   const [refreshing, setRefreshing] = useState(false);
@@ -34,7 +34,7 @@ export function usePublicSnapshot(
         setSnapshotEmpty(false);
       }
 
-      return fetchPublicSnapshot()
+      return fetchPublicSnapshot({ preferSupabase })
         .then((next) => {
           setData(next);
           setSnapshotEmpty(next === null);
@@ -66,7 +66,7 @@ export function usePublicSnapshot(
           }
         });
     },
-    [enabled, reloadCooldownMs, cooldownUntil]
+    [enabled, reloadCooldownMs, cooldownUntil, preferSupabase]
   );
 
   const reloadBlockedByCooldown = refreshing || (reloadCooldownMs > 0 && cooldownUntil > Date.now());
