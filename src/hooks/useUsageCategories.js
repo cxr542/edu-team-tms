@@ -8,7 +8,11 @@ import {
   DEFAULT_USAGE_CATEGORIES,
 } from '../constants/usageCategories';
 
-export function useUsageCategories({ readOnly = false, seedCategories = null } = {}) {
+/**
+ * persistOverride: 서버 장부 모드에서 localStorage 대신 서버에 저장하는 콜백.
+ * 화면 상태는 즉시 바꾸고(낙관적), 서버 저장 실패 시 호출자가 다시 불러와 seedCategories 로 되돌린다.
+ */
+export function useUsageCategories({ readOnly = false, seedCategories = null, persistOverride = null } = {}) {
   const [categories, setCategories] = useState(() => {
     if (seedCategories?.length) return seedCategories;
     return loadUsageCategories();
@@ -27,11 +31,16 @@ export function useUsageCategories({ readOnly = false, seedCategories = null } =
   const persist = useCallback(
     (next) => {
       if (readOnly) return next;
+      if (persistOverride) {
+        setCategories(next);
+        persistOverride(next);
+        return next;
+      }
       const saved = saveUsageCategories(next);
       setCategories(saved);
       return saved;
     },
-    [readOnly]
+    [readOnly, persistOverride]
   );
 
   const readOnlyError = { ok: false, error: '조회 전용 모드에서는 수정할 수 없습니다.' };

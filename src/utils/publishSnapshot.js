@@ -7,7 +7,8 @@ export function buildTeamSnapshot(transactions, categories, viewerMenuVisibility
   return {
     publishedAt: new Date().toISOString(),
     categories,
-    transactions,
+    // 편집 화면의 낙관적 잠금용 `_version` 은 백업·게시 파일에 넣지 않는다.
+    transactions: transactions.map(({ _version, ...tx }) => tx),
     viewerMenuVisibility:
       viewerMenuVisibility && typeof viewerMenuVisibility === 'object'
         ? normalizeViewerMenuVisibility(viewerMenuVisibility)

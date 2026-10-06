@@ -38,9 +38,12 @@ import {
   getCategoryStyle,
 } from './constants/usageCategories';
 import { useUsageCategories } from './hooks/useUsageCategories';
-import { useTransactionLedger } from './hooks/useTransactionLedger';
+import { useTransactionLedger, validateLedgerSnapshotAdoption } from './hooks/useTransactionLedger';
 import { usePublicSnapshot } from './hooks/usePublicSnapshot';
 import { useAutoPublishLedger } from './hooks/useAutoPublishLedger';
+import { useLegacyLedgerDraft, useServerLedgerData, useServerLedgerWrites } from './hooks/useServerLedger';
+import LedgerLegacyDraftNotice from './components/LedgerLegacyDraftNotice';
+import { getLedgerWriteSource } from './utils/ledgerWriteSource';
 import CategoryManageModal from './components/CategoryManageModal';
 import CardPasteModal from './components/CardPasteModal';
 import { getMonthlyBudget } from './utils/ledgerBalances';
@@ -256,6 +259,8 @@ export default function App() {
 
   const { labels: navLabels, updateLabel: onNavLabelSave, resetLabels: onNavLabelsReset, defaults: navDefaults } =
     useNavLabels();
+  /** 관리자 편집 화면이 서버(Supabase)에 행 단위로 즉시 저장하는 모드 (VITE_LEDGER_SUPABASE_WRITE / ?ledgerWrite=supabase) */
+  const serverWriteActive = canEditLedgerNow && getLedgerWriteSource() === 'supabase';
   const provisionalDisplayModule = isViewer ? resolveViewerModule(module, viewerMenuVisibility) : module;
   const ledgerSnapshotEnabled = !isPublicViewer && provisionalDisplayModule === 'ledger';
   const {
@@ -267,7 +272,7 @@ export default function App() {
     reload,
     refreshing,
     reloadBlockedByCooldown,
-  } = usePublicSnapshot(ledgerSnapshotEnabled, {
+  } = usePublicSnapshot(ledgerSnapshotEnabled && !serverWriteActive, {
     pollMs: 0,
     reloadCooldownMs: 30000,
     // 읽기 전용 장부 화면(?mode=view, 구성원 /yhkim 등 장부 조회)만 Supabase 에서 읽는다.
@@ -320,6 +325,14 @@ export default function App() {
     return snapshot.transactions;
   }, [usesPublishedLedgerData, snapshot?.publishedAt, snapshot?.transactions]);
 
+  // 서버 장부 모드: 데이터·카테고리를 Supabase 에서 읽고, 변경은 서버 API 로 행 단위 저장한다.
+  const serverData = useServerLedgerData(serverWriteActive);
+  const serverSeedCategories = serverWriteActive && serverData.data?.categories?.length ? serverData.data.categories : null;
+  const saveCategoriesRef = useRef(null);
+  const persistCategoriesToServer = useCallback((next) => saveCategoriesRef.current?.(next), []);
+  const notifyRef = useRef(null);
+  const notifyLedger = useCallback((type, message) => notifyRef.current?.(message, type, 6500), []);
+
   const {
     categories,
     addCategory,
@@ -327,7 +340,42 @@ export default function App() {
     removeCategory,
     resetToDefault,
     setCategories,
-  } = useUsageCategories({ readOnly: usesPublishedLedgerData, seedCategories });
+  } = useUsageCategories({
+    readOnly: usesPublishedLedgerData,
+    seedCategories: serverWriteActive ? serverSeedCategories : seedCategories,
+    persistOverride: serverWriteActive ? persistCategoriesToServer : null,
+  });
+
+  // 서버 모드에서는 localStorage 기반 훅을 읽기 전용(비활성)으로 두어 작성본을 더 이상 쓰지 않는다.
+  const localLedger = useTransactionLedger(categories, {
+    readOnly: usesPublishedLedgerData || serverWriteActive,
+    seedTransactions,
+    publishedSnapshot: snapshot,
+  });
+  const legacyDraft = useLegacyLedgerDraft({
+    enabled: serverWriteActive,
+    serverTransactions: serverData.data?.transactions,
+    loaded: Boolean(serverData.data),
+  });
+  const serverLedger = useServerLedgerWrites({
+    enabled: serverWriteActive,
+    data: serverData.data,
+    categories,
+    blocked: legacyDraft.blocking || !serverData.data,
+    blockedMessage: legacyDraft.blocking
+      ? '이 브라우저의 옛 작성본을 먼저 정리해야 수정할 수 있습니다. 위 안내를 확인해 주세요.'
+      : '서버 장부를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.',
+    notify: notifyLedger,
+    reload: serverData.reload,
+  });
+  saveCategoriesRef.current = serverLedger.saveCategories;
+
+  // 서버에 저장된 조회 메뉴 공개 설정을 편집 화면 상태에 반영
+  useEffect(() => {
+    if (!serverWriteActive || !serverData.data?.menuVisibility) return;
+    applyViewerMenuVisibility(normalizeViewerMenuVisibility(serverData.data.menuVisibility));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverWriteActive, serverData.data?.menuVersion]);
 
   const {
     transactions,
@@ -336,11 +384,7 @@ export default function App() {
     pullFromPublished,
     syncStatus,
     markPublishedLocally,
-  } = useTransactionLedger(categories, {
-    readOnly: usesPublishedLedgerData,
-    seedTransactions,
-    publishedSnapshot: snapshot,
-  });
+  } = serverWriteActive ? serverLedger : localLedger;
 
   const onLivePublishSuccess = useCallback(
     (payload) => {
@@ -354,7 +398,7 @@ export default function App() {
   const [livePublishBlockReason, setLivePublishBlockReason] = useState(null); // 'not-configured' | 'quota-exceeded'
 
   const autoPublish = useAutoPublishLedger({
-    enabled: canEditLedgerNow,
+    enabled: canEditLedgerNow && !serverWriteActive,
     transactions,
     categories,
     viewerMenuVisibility: activeViewerMenuVisibility,
@@ -471,6 +515,8 @@ export default function App() {
     }, durationMs);
   };
 
+  notifyRef.current = showAlert;
+
   const toggleViewerDetails = useCallback(() => {
     setViewerDetailsOpen((open) => {
       const next = !open;
@@ -492,6 +538,8 @@ export default function App() {
   }, [ledgerReadOnly, selectedYear, selectedMonth]);
 
   const notifyLedgerChanged = (baseMessage) => {
+    // 서버 모드는 저장 결과(성공/충돌/실패)를 useServerLedgerWrites 가 알린다.
+    if (serverWriteActive) return;
     if (isViewer) {
       showAlert(baseMessage, 'success');
       return;
@@ -589,6 +637,35 @@ export default function App() {
       return;
     }
     try {
+      if (serverWriteActive) {
+        const incoming = await readLedgerSnapshotFile(file);
+        if (!incoming.transactions?.length) {
+          showAlert('장부 백업에 거래 내역이 없습니다.', 'warning');
+          return;
+        }
+        let replace = false;
+        if (
+          window.confirm(
+            '파일에 없는 기존 서버 항목까지 삭제하고 파일 내용으로 완전히 교체할까요?\n\n확인 = 교체(파일에 없는 항목 삭제)\n취소 = 병합(같은 id는 덮어쓰고 새 항목만 추가)'
+          )
+        ) {
+          const check = validateLedgerSnapshotAdoption(transactions, incoming.transactions);
+          if (!check.ok) {
+            showAlert(getLedgerAdoptionBlockMessage(check) || '교체를 중단했습니다.', 'warning', 9000);
+            return;
+          }
+          replace = true;
+        }
+        await serverLedger.importSnapshot({
+          transactions: incoming.transactions,
+          categories: incoming.categories,
+          menuVisibility: incoming.viewerMenuVisibility
+            ? normalizeViewerMenuVisibility(incoming.viewerMenuVisibility)
+            : null,
+          replace,
+        });
+        return;
+      }
       autoPublish.suppressNextPublish();
       const snap = await readLedgerSnapshotFile(file);
       const r = pullFromPublished(snap);
@@ -625,6 +702,10 @@ export default function App() {
       const normalized = normalizeViewerMenuVisibility(next);
       applyViewerMenuVisibility(normalized);
       if (isViewer) return;
+      if (serverWriteActive) {
+        await serverLedger.saveMenuVisibility(normalized);
+        return;
+      }
 
       const payload = buildTeamSnapshot(transactions, categories, normalized);
       const remote = await publishSnapshotToServer(payload);
@@ -643,7 +724,7 @@ export default function App() {
         6500
       );
     },
-    [applyViewerMenuVisibility, isViewer, transactions, categories, markPublishedLocally, reload]
+    [applyViewerMenuVisibility, isViewer, serverWriteActive, serverLedger, transactions, categories, markPublishedLocally, reload]
   );
 
   const handleResetViewerMenuVisibility = useCallback(() => {
@@ -1071,7 +1152,10 @@ export default function App() {
 
   const categoryStats = getCategoryStats();
 
-  const publishedLabel = formatPublishedAt(snapshot?.publishedAt);
+  const guideRows = serverWriteActive
+    ? LEDGER_BUTTON_GUIDE_ROWS.filter((row) => !['조회 데이터 맞추기', '지금 조회에 반영'].includes(row.label))
+    : LEDGER_BUTTON_GUIDE_ROWS;
+  const publishedLabel = formatPublishedAt(serverWriteActive ? serverData.data?.publishedAt : snapshot?.publishedAt);
 
   if (needsAdminGate) {
     return (
@@ -1221,7 +1305,38 @@ export default function App() {
           </div>
         )}
 
-        {canEditLedgerNow && livePublishBlocked && (
+        {serverWriteActive && serverData.error && (
+          <div
+            className="custom-alert"
+            style={{
+              marginBottom: '1rem',
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.4)',
+              borderLeft: '4px solid #ef4444',
+            }}
+          >
+            <AlertCircle size={18} style={{ color: '#ef4444' }} />
+            <div className="custom-alert-content">
+              <h4 style={{ color: '#fca5a5' }}>서버 장부를 불러오지 못했습니다</h4>
+              <p style={{ fontSize: '0.85rem' }}>
+                {serverData.error} 저장은 막혀 있습니다.{' '}
+                <button type="button" className="btn btn-secondary" onClick={() => serverData.reload()}>
+                  다시 불러오기
+                </button>
+              </p>
+            </div>
+          </div>
+        )}
+
+        {serverWriteActive && (
+          <LedgerLegacyDraftNotice
+            draft={legacyDraft}
+            onDownloadBackup={legacyDraft.downloadBackup}
+            onDiscard={legacyDraft.discard}
+          />
+        )}
+
+        {canEditLedgerNow && !serverWriteActive && livePublishBlocked && (
           <div
             className="custom-alert"
             style={{
@@ -1254,7 +1369,7 @@ export default function App() {
           </div>
         )}
 
-        {canEditLedgerNow && !livePublishBlocked && autoPublish.liveReady && (
+        {canEditLedgerNow && !serverWriteActive && !livePublishBlocked && autoPublish.liveReady && (
           <div
             className="custom-alert"
             style={{
@@ -1277,7 +1392,7 @@ export default function App() {
           </div>
         )}
 
-        {canEditLedgerNow && !autoPublish.liveReady && unpublishedToView.length > 0 && (
+        {canEditLedgerNow && !serverWriteActive && !autoPublish.liveReady && unpublishedToView.length > 0 && (
           <div
             className="custom-alert"
             style={{
@@ -1341,19 +1456,19 @@ export default function App() {
             {publishedLabel && (
               <p style={{ marginTop: '0.35rem', fontSize: '0.8rem', color: 'var(--accent)' }}>
                 <Eye size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                {ledgerReadOnly ? '공개 기준' : '조회 화면 기준'}: {publishedLabel}
+                {ledgerReadOnly ? '공개 기준' : serverWriteActive ? '서버 저장 기준' : '조회 화면 기준'}: {publishedLabel}
                 {isViewer && (
                   <span style={{ marginLeft: 8, color: 'var(--text-muted)' }}>
                     · 「{LEDGER_SNAPSHOT_REFRESH_LABEL}」으로 최신 조회 데이터 불러오기
                   </span>
                 )}
-                {!ledgerReadOnly && autoPublish.liveReady && (
+                {!ledgerReadOnly && !serverWriteActive && autoPublish.liveReady && (
                   <span style={{ marginLeft: 8, color: '#6ee7b7' }}>· 조회 반영 가능</span>
                 )}
-                {!ledgerReadOnly && syncStatus === 'local-ahead' && !autoPublish.liveReady && (
+                {!ledgerReadOnly && !serverWriteActive && syncStatus === 'local-ahead' && !autoPublish.liveReady && (
                   <span style={{ marginLeft: 8, color: '#f59e0b' }}>· 작성본이 더 최신 → 「지금 조회에 반영」</span>
                 )}
-                {!ledgerReadOnly && syncStatus === 'remote-ahead' && (
+                {!ledgerReadOnly && !serverWriteActive && syncStatus === 'remote-ahead' && (
                   <span style={{ marginLeft: 8, color: '#f59e0b' }}>· 조회가 더 최신 → 「조회 데이터 맞추기」</span>
                 )}
               </p>
@@ -1362,8 +1477,9 @@ export default function App() {
           <details className="ledger-button-guide">
             <summary className="ledger-button-guide__summary">버튼 설명 보기</summary>
             <p className="ledger-button-guide__lead">
-              장부를 추가·수정한 뒤 팀원 조회 화면에도 반영하려면 「지금 조회에 반영」을 눌러주세요. 내
-              브라우저 작성 장부에는 저장되지만, 공개 조회 화면에는 별도 반영이 필요합니다.
+              {serverWriteActive
+                ? '장부를 추가·수정·삭제하면 서버(Supabase)에 바로 저장되고 팀원 조회 화면에도 즉시 반영됩니다. 별도의 게시 버튼은 없습니다.'
+                : '장부를 추가·수정한 뒤 팀원 조회 화면에도 반영하려면 「지금 조회에 반영」을 눌러주세요. 내 브라우저 작성 장부에는 저장되지만, 공개 조회 화면에는 별도 반영이 필요합니다.'}
             </p>
             <div className="ledger-button-guide__table-wrap">
               <table className="ledger-button-guide__table">
@@ -1376,7 +1492,7 @@ export default function App() {
                   </tr>
                 </thead>
                 <tbody>
-                  {LEDGER_BUTTON_GUIDE_ROWS.map((row) => (
+                  {guideRows.map((row) => (
                     <tr key={row.label}>
                       <th scope="row">{row.label}</th>
                       <td data-label="의미">{row.meaning}</td>
@@ -1387,7 +1503,7 @@ export default function App() {
                 </tbody>
               </table>
               <div className="ledger-button-guide__cards" aria-label="버튼 설명 카드 목록">
-                {LEDGER_BUTTON_GUIDE_ROWS.map((row) => (
+                {guideRows.map((row) => (
                   <article className="ledger-button-guide__card" key={row.label}>
                     <h3>{row.label}</h3>
                     <dl>
@@ -1427,7 +1543,7 @@ export default function App() {
               </>
             ) : (
             <>
-            {showDevProdLedgerImport && (
+            {showDevProdLedgerImport && !serverWriteActive && (
               <button
                 type="button"
                 className="btn btn-import-shared"
@@ -1445,6 +1561,7 @@ export default function App() {
                 <span className="btn-dev-chip">개발</span>
               </button>
             )}
+            {!serverWriteActive && (
             <button
               type="button"
               className="btn btn-secondary"
@@ -1455,6 +1572,7 @@ export default function App() {
               <RefreshCw size={16} />
               조회 데이터 맞추기
             </button>
+            )}
             <button
               type="button"
               className="btn btn-secondary"
@@ -1485,6 +1603,7 @@ export default function App() {
                 e.target.value = '';
               }}
             />
+            {!serverWriteActive && (
             <button
               type="button"
               className="btn btn-primary"
@@ -1496,6 +1615,7 @@ export default function App() {
               <Share2 size={16} />
               {autoPublish.publishing ? '반영 중…' : '지금 조회에 반영'}
             </button>
+            )}
 
             {/* 엑셀 가져오기 */}
             <div className="file-upload-wrapper">
@@ -2031,7 +2151,7 @@ export default function App() {
               </div>
               <h3>해당 월에 등록된 지출 내역이 없습니다</h3>
               <p>{ledgerReadOnly ? '다른 월을 선택해 보세요.' : '오른쪽 상단의 엑셀 불러오기를 하거나 신규 지출 내역을 직접 추가해 보세요.'}</p>
-              {canEditLedgerNow && (
+              {canEditLedgerNow && !serverWriteActive && (
               <button
                 className="btn btn-secondary"
                 style={{ borderColor: 'var(--color-success-bg)' }}
@@ -2210,6 +2330,10 @@ export default function App() {
         onUpdate={updateCategory}
         onRemove={(id) => removeCategory(id, transactions)}
         onReset={() => {
+          if (serverWriteActive) {
+            showAlert('서버 장부 모드에서는 사용 유형 기본값 복원을 지원하지 않습니다. 필요한 항목을 직접 수정해 주세요.', 'warning', 7000);
+            return;
+          }
           const defaults = resetToDefault();
           updateTransactionsList(transactions.map((t) => normalizeTransaction(t, defaults)));
         }}
