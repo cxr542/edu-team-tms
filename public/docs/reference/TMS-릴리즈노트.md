@@ -7,6 +7,11 @@
 
 ## 2026-10-06
 
+### [수정] fix(ledger): use ledgerReadOnly to pick the Supabase read path
+
+- fix(ledger): use ledgerReadOnly to pick the Supabase read path
+- PR #147: https://github.com/cxr542/edu-team-tms/pull/147
+
 ### [신규] feat(ledger): Supabase ledger tables + flagged viewer read path (step 5)
 
 - feat(ledger): Supabase ledger tables + flagged viewer read path (step 5)
