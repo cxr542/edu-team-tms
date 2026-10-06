@@ -1,5 +1,5 @@
-import { is2026PublicHoliday, KR_PUBLIC_HOLIDAY_DATES_2026 } from '../data/krPublicHolidays2026';
-import { FULL_LEAVE_MM, recalcDayMmFromHours } from './journalMm';
+import { is2026PublicHoliday, KR_PUBLIC_HOLIDAY_DATES_2026 } from '../data/krPublicHolidays2026.js';
+import { FULL_LEAVE_MM, recalcDayMmFromHours } from './journalMm.js';
 export { is2026PublicHoliday };
 export const PUBLIC_HOLIDAY_OVERRIDE_FIELD = 'publicHolidayOverride';
 
