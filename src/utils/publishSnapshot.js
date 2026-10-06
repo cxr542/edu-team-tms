@@ -1,6 +1,7 @@
 import { PUBLIC_SNAPSHOT_PATH } from './appMode';
 import { normalizeViewerMenuVisibility } from '../constants/viewerMenu';
 import { canAttemptCloudWrite, recordCloudFailure, recordCloudSuccess } from './cloudHealth';
+import { fetchLedgerSnapshotFromSupabase, getLedgerReadSource } from './ledgerSupabaseRead';
 
 export function buildTeamSnapshot(transactions, categories, viewerMenuVisibility = null) {
   return {
@@ -95,8 +96,28 @@ async function fetchStaticPublicSnapshot(cacheBust) {
   }
 }
 
+/**
+ * 조회용 장부.
+ * `preferSupabase`(조회 전용 화면)이고 읽기 소스가 supabase 이면 ledger_* 를 먼저 읽는다.
+ * Supabase 실패/비어 있음이면 기존 Blob 경로로 그대로 대체한다.
+ */
+export async function fetchPublicSnapshot({ preferSupabase = false } = {}) {
+  if (preferSupabase && getLedgerReadSource() === 'supabase') {
+    try {
+      const fromSupabase = await fetchLedgerSnapshotFromSupabase();
+      if (fromSupabase) {
+        recordCloudSuccess();
+        return fromSupabase;
+      }
+    } catch (e) {
+      console.warn('[ledger] Supabase 읽기 실패 — Blob 경로로 대체합니다.', e?.message || e);
+    }
+  }
+  return fetchBlobPublicSnapshot();
+}
+
 /** 조회용 장부 — API(Blob) 우선, 없으면 정적 ledger-snapshot.json */
-export async function fetchPublicSnapshot() {
+async function fetchBlobPublicSnapshot() {
   const cacheBust = `t=${Date.now()}`;
   try {
     const apiRes = await fetch(`/api/ledger-snapshot?${cacheBust}`);

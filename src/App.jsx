@@ -270,6 +270,8 @@ export default function App() {
   } = usePublicSnapshot(ledgerSnapshotEnabled, {
     pollMs: 0,
     reloadCooldownMs: 30000,
+    // 조회 전용 화면만 Supabase 에서 읽는다. 관리자(편집) 화면은 작성본↔Blob 비교를 그대로 유지.
+    preferSupabase: isViewer,
   });
   const sharedViewerMenuVisibility = useMemo(
     () => normalizeViewerMenuVisibility(snapshot?.viewerMenuVisibility),
