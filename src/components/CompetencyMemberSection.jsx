@@ -15,6 +15,9 @@ import {
 } from '../utils/competencyCopyPrevious';
 import { uiTooltip } from '../utils/uiTooltip';
 
+/** 서버 maxDuration(60초)보다 먼저 끊어 무한 로딩을 막는다 */
+const AI_SUMMARY_TIMEOUT_MS = 55000;
+
 const KPI3_BY_KEY = Object.fromEntries(KPI3_ELEMENTS.map((el) => [el.key, el]));
 
 /**
@@ -69,6 +72,8 @@ export default function CompetencyMemberSection({
   const kpi3El = kpi3Section ? KPI3_BY_KEY[kpi3Section] : null;
 
   const handleGenerateAiSummary = async () => {
+    const controller = new AbortController();
+    let timeoutId;
     try {
       setIsGeneratingAi(true);
       const journalText = buildMonthJournalText(journal.getMemberDays(memberCode), year, selectedMonthIndex);
@@ -78,14 +83,16 @@ export default function CompetencyMemberSection({
         return;
       }
 
-      onToast?.('AI 요약을 생성하는 중입니다. (약 5~10초 소요)');
+      onToast?.('AI 요약을 생성하는 중입니다. (보통 10~30초, 최대 1분 소요)');
+      timeoutId = setTimeout(() => controller.abort(), AI_SUMMARY_TIMEOUT_MS);
       const res = await fetch('/api/ai-journal-summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ journalText }),
+        signal: controller.signal,
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({ ok: false, error: `서버 응답을 읽지 못했습니다 (HTTP ${res.status})` }));
       if (data.ok) {
         const currentEvidence = competencyMonthRec?.self?.evidence || '';
         const newEvidence = currentEvidence 
@@ -98,8 +105,13 @@ export default function CompetencyMemberSection({
       }
     } catch (err) {
       console.error(err);
-      onToast?.('요약 중 오류가 발생했습니다.');
+      onToast?.(
+        err?.name === 'AbortError'
+          ? 'AI 요약이 너무 오래 걸려 중단했습니다. 잠시 후 다시 시도해 주세요.'
+          : '요약 중 오류가 발생했습니다.'
+      );
     } finally {
+      clearTimeout(timeoutId);
       setIsGeneratingAi(false);
     }
   };
