@@ -7,6 +7,11 @@
 
 ## 2026-10-06
 
+### [문서] docs(supabase): record anon hardening phase 1 (applied to production)
+
+- docs(supabase): record anon hardening phase 1 (applied to production)
+- PR #153: https://github.com/cxr542/edu-team-tms/pull/153
+
 ### [신규] feat(ledger): delete protection for the server write mode
 
 - feat(ledger): delete protection for the server write mode
