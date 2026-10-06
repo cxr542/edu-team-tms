@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { buildTeamMonthlyReport, buildTeamQuarterReport } from '../utils/kpiReportData';
 import { buildTeamIntegratedSummary } from '../utils/teamKpiAggregate';
 import { detectKpi1Warnings } from '../utils/kpi1Warnings';
+import { uiTooltip } from '../utils/uiTooltip';
 import { formatKpiMemberLabel } from '../constants/kpiMembers';
 import { formatKpiStatusLabel } from '../constants/kpiStatuses';
 import { KPI1_NAME, KPI2_NAME, KPI3_NAME } from '../constants/kpiDisplayNames';
@@ -85,7 +86,12 @@ export default function TeamKpiSummarySection({
                   <td>
                     {formatPct(row.kpi1.utilization)}
                     {detectKpi1Warnings(row).map((warning) => (
-                      <span key={warning.code} className="kpi-warn-badge" title={warning.message}>
+                      <span
+                        key={warning.code}
+                        className="kpi-warn-badge"
+                        tabIndex={0}
+                        {...uiTooltip(warning.message, 'below', { wrap: true })}
+                      >
                         {warning.label}
                       </span>
                     ))}

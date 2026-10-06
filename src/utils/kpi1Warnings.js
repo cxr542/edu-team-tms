@@ -28,9 +28,10 @@ export function detectKpi1Warnings(row) {
       code: 'drift',
       label: '일지와 다름',
       message:
-        `월 확정 저장값(업무 ${stored.work}·향상 ${stored.improve}·휴일 ${stored.leave}·가용 ${stored.available})이 ` +
-        `일지 기준(업무 ${journal.work}·향상 ${journal.improve}·휴일 ${journal.leave}·가용 ${journal.available})과 다릅니다. ` +
-        '「월 확정」 탭에서 철회 후 「일지에서 가져오기」·재제출로 맞추세요.',
+        '월 확정 값이 일지와 다릅니다. 「월 확정」 탭에서 「일지에서 가져오기」를 누르세요. ' +
+        '(제출됨이면 먼저 「제출 취소 (철회)」 후 가져오기 → 재제출) ' +
+        `저장값 업무 ${stored.work}·향상 ${stored.improve}·휴일 ${stored.leave}·가용 ${stored.available} / ` +
+        `일지 업무 ${journal.work}·향상 ${journal.improve}·휴일 ${journal.leave}·가용 ${journal.available}`,
     });
   }
 
@@ -38,7 +39,8 @@ export function detectKpi1Warnings(row) {
     warnings.push({
       code: 'over',
       label: '100% 초과',
-      message: '가동률이 100%를 넘습니다. 반영 M/M이 가용 M/M보다 큰 값은 입력 오류일 수 있습니다.',
+      message:
+        '가동률이 100%를 넘습니다. 「월 확정」 탭에서 「일지에서 가져오기」로 값을 일지 기준으로 맞추세요.',
     });
   }
   return warnings;
