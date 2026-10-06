@@ -18,8 +18,25 @@ function timeValue(value) {
   return Number.isFinite(time) ? time : null;
 }
 
+/** 철회(제출 취소)로 작성 중에 돌아온 기록 — withdrawnAt 이 있어야 제출본과 시각으로 비교할 수 있다. */
+function isWithdrawnRecord(record) {
+  return record?.status === KPI_STATUS.DRAFT && timeValue(record?.withdrawnAt) !== null;
+}
+
 function shouldUseIncomingApproval(existing, incoming) {
   if (!existing) return true;
+
+  // 철회는 서열(rank)이 낮아 제출본에 매번 덮이므로, 제출·철회 충돌은 이벤트 시각으로 가린다.
+  const withdrawVsSubmit =
+    (isWithdrawnRecord(incoming) && existing?.status === KPI_STATUS.SUBMITTED) ||
+    (isWithdrawnRecord(existing) && incoming?.status === KPI_STATUS.SUBMITTED);
+  if (withdrawVsSubmit) {
+    const incomingIsWithdrawn = isWithdrawnRecord(incoming);
+    const withdrawnAt = timeValue((incomingIsWithdrawn ? incoming : existing).withdrawnAt);
+    const submittedAt = timeValue((incomingIsWithdrawn ? existing : incoming).submittedAt);
+    const withdrawalWins = submittedAt === null || withdrawnAt > submittedAt;
+    return incomingIsWithdrawn ? withdrawalWins : !withdrawalWins;
+  }
   const incomingRank = approvalStatusRank(incoming?.status);
   const existingRank = approvalStatusRank(existing?.status);
   const incomingTime = timeValue(approvalEventAt(incoming));
