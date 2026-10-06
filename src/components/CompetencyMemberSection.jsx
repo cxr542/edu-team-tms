@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Import } from 'lucide-react';
 import CompetencyRubricPanel from './CompetencyRubricPanel';
 import Kpi3ElementsPanel from './Kpi3ElementsPanel';
@@ -6,6 +6,12 @@ import { COMPETENCY_MEMBER_TABS } from '../constants/competencyTabs';
 import { KPI3_ELEMENTS } from '../constants/kpi3Elements';
 import { formatKpiMemberLabel } from '../constants/kpiMembers';
 import { useTeamKpiMetrics } from '../context/JournalProvider';
+import { orderedDimsForDisplay, mapMemberRoleToCompetency } from '../constants/competencyRubric';
+import {
+  buildCopyPatch,
+  findPreviousSelfSource,
+  hasSelfLevelInput,
+} from '../utils/competencyCopyPrevious';
 import { uiTooltip } from '../utils/uiTooltip';
 
 const KPI3_BY_KEY = Object.fromEntries(KPI3_ELEMENTS.map((el) => [el.key, el]));
@@ -109,6 +115,41 @@ export default function CompetencyMemberSection({
     } finally {
       setIsGeneratingAi(false);
     }
+  };
+
+  const copySource = useMemo(
+    () =>
+      findPreviousSelfSource(
+        (y, m) => journal.getCompetencyMonth(y, m, memberCode),
+        year,
+        selectedMonthIndex
+      ),
+    [journal, year, selectedMonthIndex, memberCode]
+  );
+  const [copyNotice, setCopyNotice] = useState('');
+  useEffect(() => setCopyNotice(''), [year, selectedMonthIndex, memberCode]);
+
+  const handleCopyPreviousMonth = () => {
+    if (!copySource) return;
+    const label = `${copySource.monthIndex + 1}월`;
+    const dimIds = orderedDimsForDisplay(
+      competencyMonthRec?.roleId ?? mapMemberRoleToCompetency(member.role)
+    ).map((d) => d.id);
+    if (
+      hasSelfLevelInput(competencyMonthRec?.self, dimIds) &&
+      !window.confirm(`이번 달에 입력한 값이 ${label} 내용으로 덮어써집니다. 계속할까요?`)
+    ) {
+      return;
+    }
+    journal.updateCompetencySelf(
+      year,
+      selectedMonthIndex,
+      memberCode,
+      buildCopyPatch(copySource.self, dimIds)
+    );
+    const msg = `${label} 내용을 가져왔어요. 이번 달에 맞게 수정해 주세요`;
+    setCopyNotice(msg);
+    onToast?.(msg);
   };
 
   return (
@@ -312,6 +353,24 @@ export default function CompetencyMemberSection({
                   : '자체평가를 제출하면 제안 레벨이 자동으로 표시됩니다.'}
               </p>
             </div>
+            {!readOnly && !competencyMonthRec?.selfLocked && (
+              <div className="competency-copy-prev">
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  disabled={!copySource}
+                  onClick={handleCopyPreviousMonth}
+                >
+                  지난달 내용 가져오기
+                </button>
+                <span className="team-kpi-hint" role="status">
+                  {copyNotice ||
+                    (copySource
+                      ? `${copySource.monthIndex + 1}월 정수레벨·충족 여부·근거·링크를 가져옵니다.`
+                      : '가져올 이전 달 기록이 없습니다.')}
+                </span>
+              </div>
+            )}
             <CompetencyRubricPanel
               side="self"
               record={competencyMonthRec}

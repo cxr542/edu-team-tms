@@ -939,3 +939,11 @@
   font-size: 0.82rem;
   line-height: 1.4;
 }
+
+.competency-copy-prev {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 12px;
+}
