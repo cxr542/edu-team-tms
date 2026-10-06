@@ -7,6 +7,11 @@
 
 ## 2026-10-06
 
+### [신규] feat(ledger): delete protection for the server write mode
+
+- feat(ledger): delete protection for the server write mode
+- PR #152: https://github.com/cxr542/edu-team-tms/pull/152
+
 ### [신규] feat(ledger): flagged Supabase write path for the admin editor (6b)
 
 - feat(ledger): flagged Supabase write path for the admin editor (6b)
