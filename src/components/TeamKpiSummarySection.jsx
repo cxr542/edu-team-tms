@@ -3,6 +3,7 @@ import { buildTeamMonthlyReport, buildTeamQuarterReport } from '../utils/kpiRepo
 import { buildTeamIntegratedSummary } from '../utils/teamKpiAggregate';
 import { detectKpi1Warnings } from '../utils/kpi1Warnings';
 import { formatScoreTenth } from '../utils/kpiGrades';
+import { execApprovalStatus } from '../utils/kpiExecApproval';
 import Kpi3PartialNote from './Kpi3PartialNote';
 import { uiTooltip } from '../utils/uiTooltip';
 import { formatKpiMemberLabel } from '../constants/kpiMembers';
@@ -163,7 +164,14 @@ export default function TeamKpiSummarySection({
                   tabIndex={0}
                   role="button"
                 >
-                  <td>{formatKpiMemberLabel(row.member)}</td>
+                  <td>
+                    {formatKpiMemberLabel(row.member)}
+                    {execApprovalStatus(row.quarter?.level, row.execApproval) === 'missing' && (
+                      <span className="kpi3-exec-approval-tag is-missing" title="Level 4 이상: 본부장/CEO 승인 기록이 없습니다">
+                        상위 승인 필요
+                      </span>
+                    )}
+                  </td>
                   {KPI3_ELEMENTS.map((el) => (
                     <td key={el.key}>{row.breakdown?.[el.key] > 0 ? row.breakdown[el.key] : '—'}</td>
                   ))}
