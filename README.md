@@ -1,6 +1,6 @@
 # 교육팀 TMS (Team Management System) · v1.0
 
-팀 빌딩비 장부·주간 업무일지(KPI M/M) 웹 앱.
+팀 빌딩비 장부·주간 업무일지(KPI M/D) 웹 앱.
 
 > **워크스페이스:** 이 repo(`edu-team-tms`)만 clone·열어도 개발·배포 가능합니다.  
 > 개인 포털(`cxr542-portal`)과 분리 운영 — [docs/workspace-guide.md](docs/workspace-guide.md)
