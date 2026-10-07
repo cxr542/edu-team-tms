@@ -822,3 +822,19 @@ p.kpi3-partial-note {
   width: fit-content;
   margin-left: 0;
 }
+
+.kpi3-notice-deadline {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+p.kpi3-notice-deadline {
+  margin: 0.25rem 0 0;
+}
+.kpi3-notice-deadline.is-urgent {
+  color: var(--color-warning);
+  font-weight: 600;
+}
+.kpi3-notice-deadline-note {
+  font-weight: 400;
+}

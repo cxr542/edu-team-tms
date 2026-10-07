@@ -35,6 +35,7 @@ import {
 } from '../utils/kpi3DmMm';
 import Kpi3CoachingReport from './Kpi3CoachingReport';
 import Kpi3PartialNote from './Kpi3PartialNote';
+import Kpi3NoticeDeadline from './Kpi3NoticeDeadline';
 import './Kpi3ElementsPanel.css';
 
 function num(v) {
@@ -939,6 +940,7 @@ export default function Kpi3ElementsPanel({
             <strong>{gradeKpi3(compositeLive || q.composite)}</strong>
             {locked ? ' · 확정됨' : ''}
           </p>
+          <Kpi3NoticeDeadline yq={yq} confirmedAt={q.confirmedAt} block />
           {!locked && !readOnly && (
             <button
               type="button"
