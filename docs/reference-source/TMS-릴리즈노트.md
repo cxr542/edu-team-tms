@@ -7,6 +7,11 @@
 
 ## 2026-10-07
 
+### [문서] docs(kpi): rename M/M to M/D in the reference docs and README
+
+- docs(kpi): rename M/M to M/D in the reference docs and README
+- PR #178: https://github.com/cxr542/edu-team-tms/pull/178
+
 ### [문서] docs(kpi): reflect the confirmed KPI definition v6 changes (draft, pending approval)
 
 - docs(kpi): reflect the confirmed KPI definition v6 changes (draft, pending approval)
