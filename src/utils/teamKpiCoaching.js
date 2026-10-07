@@ -1,6 +1,7 @@
 import { KPI1_NAME, KPI2_NAME, KPI3_NAME } from '../constants/kpiDisplayNames';
 import { formatKpiMemberLabel } from '../constants/kpiMembers';
 import { buildKpi3Coaching } from './kpi3Coaching';
+import { formatScoreTenth } from './kpiGrades';
 
 const KPI1_TIPS = {
   strong: '팀 M/M이 가용 대비 충분히 채워져 본부 가동률 기준에 근접합니다.',
@@ -114,12 +115,12 @@ export function buildTeamKpiCoaching(team, monthly, quarterly, ctx = {}) {
   const lowKpi3 = lowestMemberRow(
     quarterly,
     (r) => (r.quarter?.composite > 0 ? r.quarter.composite : null),
-    (n) => String(n)
+    formatScoreTenth
   );
 
   recommendations.push({
     type: 'headline',
-    text: `**교육팀(통합)** ${ctx.yq || ''} — ${KPI1_NAME} ${formatPct(kpi1Pct)}(등급 ${team.grade1}) · ${KPI2_NAME} ${formatPct(kpi2Pct)}(등급 ${team.grade2}) · ${KPI3_NAME} ${team.kpi3.composite ?? '—'}점(등급 ${team.grade3}).`,
+    text: `**교육팀(통합)** ${ctx.yq || ''} — ${KPI1_NAME} ${formatPct(kpi1Pct)}(등급 ${team.grade1}) · ${KPI2_NAME} ${formatPct(kpi2Pct)}(등급 ${team.grade2}) · ${KPI3_NAME} ${formatScoreTenth(team.kpi3.composite)}점(등급 ${team.grade3}).`,
   });
 
   if (kpi3Report.headline) {
