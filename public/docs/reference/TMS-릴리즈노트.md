@@ -7,6 +7,11 @@
 
 ## 2026-10-07
 
+### [업데이트] refactor(kpi): rename user-facing M/M labels to M/D (1 M/D = 8h)
+
+- refactor(kpi): rename user-facing M/M labels to M/D (1 M/D = 8h)
+- PR #171: https://github.com/cxr542/edu-team-tms/pull/171
+
 ### [신규] feat(kpi): re-judge the KPI3 grade column of the Excel analysis workbook like the screens
 
 - feat(kpi): re-judge the KPI3 grade column of the Excel analysis workbook like the screens
