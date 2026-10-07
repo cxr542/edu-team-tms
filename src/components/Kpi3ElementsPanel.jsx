@@ -36,6 +36,7 @@ import {
 import Kpi3CoachingReport from './Kpi3CoachingReport';
 import Kpi3PartialNote from './Kpi3PartialNote';
 import Kpi3NoticeDeadline from './Kpi3NoticeDeadline';
+import Kpi3NoticeAppealPanel from './Kpi3NoticeAppealPanel';
 import './Kpi3ElementsPanel.css';
 
 function num(v) {
@@ -940,7 +941,19 @@ export default function Kpi3ElementsPanel({
             <strong>{gradeKpi3(compositeLive || q.composite)}</strong>
             {locked ? ' · 확정됨' : ''}
           </p>
-          <Kpi3NoticeDeadline yq={yq} confirmedAt={q.confirmedAt} block />
+          <Kpi3NoticeDeadline yq={yq} confirmedAt={q.confirmedAt} noticedAt={q.noticedAt} block />
+          <Kpi3NoticeAppealPanel
+            noticedAt={q.noticedAt}
+            appeals={quarterRec.appeals}
+            readOnly={readOnly}
+            onSetNoticeDate={(dateKey) => journal.setKpi3NoticeDate(year, month, memberCode, dateKey)}
+            onAddAppeal={(input) => {
+              const res = journal.addKpi3Appeal(year, month, memberCode, input);
+              onToast?.(res?.ok ? '이의 접수를 기록했습니다' : '접수일과 이의 내용을 확인해 주세요');
+              return res;
+            }}
+            onUpdateAppeal={(id, patch) => journal.updateKpi3Appeal(year, month, memberCode, id, patch)}
+          />
           {!locked && !readOnly && (
             <button
               type="button"
