@@ -40,6 +40,7 @@ import { kpi3AcademizerSeedPatch } from '../data/kpi3SeedAcademizerScenario';
 import { computeKpi3Composite, gradeKpi3 } from '../utils/kpiGrades';
 import { applyAppealPatch, createAppeal, isDateKey, normalizeAppeals } from '../utils/kpiAppeals';
 import { PRACTICE_SCORE_NO_EVIDENCE } from '../utils/kpi3ElementScores';
+import { createExecApproval } from '../utils/kpiExecApproval';
 import { isProductionEnvironment } from '../constants/appEnv';
 import {
   isCompetencyMonthRecordSaveable,
@@ -553,6 +554,22 @@ export function useKpiOperational({ readOnly = false } = {}) {
         quarter: { ...rec.quarter, noticedAt: dateKey || null },
       }));
       return { ok: true };
+    },
+    [readOnly, patchQuarterRecord]
+  );
+
+  /** 상위 승인 기록 저장/삭제 — input=null 이면 기록 삭제. composite/grade 는 건드리지 않는다 */
+  const setKpi3ExecApproval = useCallback(
+    (year, monthIndex, memberCode, input) => {
+      if (readOnly) return { ok: false, reason: 'readonly' };
+      if (input === null) {
+        patchQuarterRecord(year, monthIndex, memberCode, (rec) => ({ ...rec, execApproval: null }));
+        return { ok: true, cleared: true };
+      }
+      const record = createExecApproval(input);
+      if (!record) return { ok: false, reason: 'invalid' };
+      patchQuarterRecord(year, monthIndex, memberCode, (rec) => ({ ...rec, execApproval: record }));
+      return { ok: true, record };
     },
     [readOnly, patchQuarterRecord]
   );
@@ -1104,6 +1121,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
     getQuarterRecord,
     addKpi3Memo,
     setKpi3NoticeDate,
+    setKpi3ExecApproval,
     addKpi3Appeal,
     updateKpi3Appeal,
     updateKpi3Quarter,

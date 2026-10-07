@@ -903,3 +903,51 @@ p.kpi3-notice-deadline {
   gap: 0.4rem;
   margin-top: 0.5rem;
 }
+
+.kpi3-exec-approval {
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px dashed var(--border, #d2d2d7);
+}
+.kpi3-exec-approval-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.3rem;
+  font-size: 0.85rem;
+}
+.kpi3-exec-approval-tag {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: rgba(128, 128, 128, 0.12);
+}
+.kpi3-exec-approval-title .kpi3-exec-approval-tag {
+  margin-left: 0;
+}
+.kpi3-exec-approval-tag.is-missing {
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+}
+.kpi3-exec-approval-warn {
+  color: var(--color-warning);
+}
+.kpi3-exec-approval-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.6rem;
+}
+.kpi3-exec-approval-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.78rem;
+}
+.kpi3-exec-approval-note {
+  flex: 1 1 14rem;
+}

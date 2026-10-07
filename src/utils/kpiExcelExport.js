@@ -22,6 +22,7 @@ import { computeUtilization } from './kpiMonthlyClose';
 import { COMPETENCY_USE_4060 } from '../constants/competencyConfig';
 import { monthlyFinalScore } from './competencyScore';
 import { gradeKpi3, roundScoreToTenth } from './kpiGrades';
+import { execApprovalStatus, isExecApprovalRecorded } from './kpiExecApproval';
 import { pad } from './journalMm';
 
 export function sheetFromRows(headers, rows, titleRow, dateColumnIndexes = []) {
@@ -65,6 +66,12 @@ export function buildKpiExportFilename(year, monthIndex, { overwriteMonthly = fa
 
 export { buildKpi01cRows, buildKpi02EffectRows };
 
+/** 엑셀 '상위승인' 열: 해당없음 / 기록 / 미기록 */
+export function kpi3ExecApprovalLabel(level, execApproval) {
+  const status = execApprovalStatus(level, execApproval);
+  return status === 'recorded' ? '기록' : status === 'missing' ? '미기록' : '해당없음';
+}
+
 /** KPI3 종합 — 정의서 v6: 둘째 자리 반올림, 첫째 자리 숫자 (값 없음은 그대로) */
 /** KPI3 등급 — 화면과 동일하게 종합(첫째 자리 반올림)으로 다시 판정. 종합이 없으면 저장된 등급 그대로 */
 export function kpi3GradeForExport(composite, storedGrade) {
@@ -77,7 +84,7 @@ export function kpi3CompositeForExport(composite) {
 }
 
 const KPI_03_HEADERS = ['연도', '분기', '구성원', '월', '유형', '메모'];
-const KPI_03_Q_HEADERS = ['연도', '분기', '구성원', '레벨', '다면N', '리더', '실전', '종합', '등급', '확정', 'level자동', '통보일', '이의건수'];
+const KPI_03_Q_HEADERS = ['연도', '분기', '구성원', '레벨', '다면N', '리더', '실전', '종합', '등급', '확정', 'level자동', '통보일', '이의건수', '상위승인', '상위승인일'];
 const KPI_04_COMP_HEADERS = [
   '평가월',
   '구성원',
@@ -155,6 +162,8 @@ export function exportKpiAnalysisWorkbook({
         level자동: q.levelAuto ? 'Y' : 'N',
         통보일: q.noticedAt || '',
         이의건수: Array.isArray(rec?.appeals) ? rec.appeals.length : 0,
+        상위승인: kpi3ExecApprovalLabel(q.level, rec?.execApproval),
+        상위승인일: isExecApprovalRecorded(rec?.execApproval) ? rec.execApproval.approvedAt : '',
       });
     }
 

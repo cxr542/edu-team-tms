@@ -91,6 +91,8 @@ export function defaultQuarterRecord(memberCode) {
     },
     /** 이의 제기 기록 (정의서 v6: 확정 통보 후 5영업일 이내 접수) */
     appeals: [],
+    /** 상위(본부장/CEO) 승인 기록 — Level 4 이상 (정의서 v6). 기록 전용 */
+    execApproval: null,
     dmDetail: defaultDmDetailForRole(member?.role),
     leaderDetail: defaultLeaderDetail(),
     practiceDetail: defaultPracticeDetail(),
@@ -185,6 +187,7 @@ export function normalizeKpiOperationalStore(raw) {
       if (rec?.quarter && rec.quarter.noticedAt === undefined) rec.quarter.noticedAt = null;
       if (rec?.quarter && rec.quarter.practiceDefaulted === undefined) rec.quarter.practiceDefaulted = false;
       if (!Array.isArray(rec.appeals)) rec.appeals = [];
+      if (rec.execApproval === undefined) rec.execApproval = null;
       if (!rec.dmDetail) rec.dmDetail = defaultDmDetail();
       if (!rec.leaderDetail) rec.leaderDetail = defaultLeaderDetail();
       if (!rec.practiceDetail) rec.practiceDetail = defaultPracticeDetail();

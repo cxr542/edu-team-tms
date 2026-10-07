@@ -75,6 +75,7 @@ export function buildTeamQuarterReport({ year, monthIndex, kpiOperational }) {
     return {
       member,
       memos: rec?.memos || [],
+      execApproval: rec?.execApproval ?? null,
       quarter: q,
       grade3: gradeKpi3(q.composite),
       locked: Boolean(q.locked),

@@ -38,6 +38,8 @@ import Kpi3CoachingReport from './Kpi3CoachingReport';
 import Kpi3PartialNote from './Kpi3PartialNote';
 import Kpi3NoticeDeadline from './Kpi3NoticeDeadline';
 import Kpi3NoticeAppealPanel from './Kpi3NoticeAppealPanel';
+import Kpi3ExecApprovalPanel from './Kpi3ExecApprovalPanel';
+import { execApprovalStatus } from '../utils/kpiExecApproval';
 import './Kpi3ElementsPanel.css';
 
 function num(v) {
@@ -946,6 +948,21 @@ export default function Kpi3ElementsPanel({
             {locked ? ' · 확정됨' : ''}
           </p>
           <Kpi3NoticeDeadline yq={yq} confirmedAt={q.confirmedAt} noticedAt={q.noticedAt} block />
+          <Kpi3ExecApprovalPanel
+            key={`${quarterRec.execApproval?.approver || ''}|${quarterRec.execApproval?.approvedAt || ''}`}
+            level={q.level}
+            execApproval={quarterRec.execApproval}
+            readOnly={readOnly}
+            onSave={(input) => {
+              const res = journal.setKpi3ExecApproval(year, month, memberCode, input);
+              onToast?.(res?.ok ? '상위 승인 기록을 저장했습니다' : '승인자와 승인일을 확인해 주세요');
+              return res;
+            }}
+            onClear={() => {
+              journal.setKpi3ExecApproval(year, month, memberCode, null);
+              onToast?.('상위 승인 기록을 삭제했습니다');
+            }}
+          />
           <Kpi3NoticeAppealPanel
             noticedAt={q.noticedAt}
             appeals={quarterRec.appeals}
@@ -963,6 +980,15 @@ export default function Kpi3ElementsPanel({
               type="button"
               className="btn btn-primary"
               onClick={() => {
+                // 상위 승인(본부장/CEO) 기록이 필요한데 없으면 경고만 하고 확정은 허용한다
+                if (
+                  execApprovalStatus(q.level, quarterRec.execApproval) === 'missing' &&
+                  !window.confirm(
+                    `분기 레벨 ${formatScoreTenth(q.level)}점은 본부장/CEO 최종 승인이 필요한데 승인 기록이 없습니다. 이대로 확정할까요?`
+                  )
+                ) {
+                  return;
+                }
                 const practice = resolvePracticeForConfirmation(practiceDetail, q.practice);
                 if (practice.action === 'default-no-evidence') {
                   if (
