@@ -7,6 +7,11 @@
 
 ## 2026-10-07
 
+### [업데이트] refactor(kpi): show M/D instead of MM in Excel, clipboard and table headers
+
+- refactor(kpi): show M/D instead of MM in Excel, clipboard and table headers
+- PR #176: https://github.com/cxr542/edu-team-tms/pull/176
+
 ### [수정] fix(kpi): report the real result of the quarter-level rollup button in the toast
 
 - fix(kpi): report the real result of the quarter-level rollup button in the toast
