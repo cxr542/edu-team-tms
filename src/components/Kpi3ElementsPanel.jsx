@@ -15,6 +15,7 @@ import {
   computeDmScore,
   computeLeaderScore,
   computePracticeScore,
+  resolvePracticeForConfirmation,
   leaderScoreFromKpiGrades,
 } from '../utils/kpi3ElementScores';
 import {
@@ -928,6 +929,9 @@ export default function Kpi3ElementsPanel({
             action={renderManagerReviewActions('practice', practiceDetail, computePracticeScore(practiceDetail))}
           >
             산출 미리보기: <strong>{computePracticeScore(practiceDetail) ?? '—'}</strong>
+            {q.practiceDefaulted && (
+              <span className="team-kpi-hint"> · 분기 확정 시 증빙 미제출로 1점 처리됨</span>
+            )}
           </Kpi3PreviewRow>
         )}
         {renderMemberSubmissionActions('practice', practiceDetail)}
@@ -959,6 +963,28 @@ export default function Kpi3ElementsPanel({
               type="button"
               className="btn btn-primary"
               onClick={() => {
+                const practice = resolvePracticeForConfirmation(practiceDetail, q.practice);
+                if (practice.action === 'default-no-evidence') {
+                  if (
+                    !window.confirm(
+                      '역량 실전 적용 사례가 제출되지 않아 실전 적용 점수가 1점(증빙 미제출)으로 확정됩니다. 계속할까요?'
+                    )
+                  ) {
+                    return;
+                  }
+                  journal.lockKpi3Quarter(year, month, memberCode, { practiceDefault: true });
+                  onToast?.('분기 확정 잠금 · 실전 적용 1점(증빙 미제출) 처리');
+                  return;
+                }
+                if (practice.action === 'pending-review') {
+                  if (
+                    !window.confirm(
+                      `실전 적용 사례 ${practice.caseCount}건이 팀장 검토 전이라 실전 적용 점수가 비어 있습니다. 이대로 확정할까요?`
+                    )
+                  ) {
+                    return;
+                  }
+                }
                 journal.lockKpi3Quarter(year, month, memberCode);
                 onToast?.('분기 확정 잠금');
               }}

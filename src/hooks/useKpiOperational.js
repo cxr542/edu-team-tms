@@ -39,6 +39,7 @@ import {
 import { kpi3AcademizerSeedPatch } from '../data/kpi3SeedAcademizerScenario';
 import { computeKpi3Composite, gradeKpi3 } from '../utils/kpiGrades';
 import { applyAppealPatch, createAppeal, isDateKey, normalizeAppeals } from '../utils/kpiAppeals';
+import { PRACTICE_SCORE_NO_EVIDENCE } from '../utils/kpi3ElementScores';
 import { isProductionEnvironment } from '../constants/appEnv';
 import {
   isCompetencyMonthRecordSaveable,
@@ -640,10 +641,12 @@ export function useKpiOperational({ readOnly = false } = {}) {
   );
 
   const lockKpi3Quarter = useCallback(
-    (year, monthIndex, memberCode) => {
+    (year, monthIndex, memberCode, { practiceDefault = false } = {}) => {
       updateKpi3Quarter(year, monthIndex, memberCode, {
         locked: true,
         confirmedAt: new Date().toISOString(),
+        // 증빙 미제출(사례 0건)로 확정되는 경우 실전 적용 1점 (정의서 v6 5점 척도)
+        ...(practiceDefault ? { practice: PRACTICE_SCORE_NO_EVIDENCE, practiceDefaulted: true } : {}),
       });
     },
     [updateKpi3Quarter]
