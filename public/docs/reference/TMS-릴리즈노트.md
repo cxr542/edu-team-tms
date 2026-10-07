@@ -7,6 +7,11 @@
 
 ## 2026-10-07
 
+### [신규] feat(kpi): confirm the practice score as 1 point when no evidence was submitted
+
+- feat(kpi): confirm the practice score as 1 point when no evidence was submitted
+- PR #184: https://github.com/cxr542/edu-team-tms/pull/184
+
 ### [신규] feat(kpi): record the confirmation notice date and appeals for a quarter
 
 - feat(kpi): record the confirmation notice date and appeals for a quarter
