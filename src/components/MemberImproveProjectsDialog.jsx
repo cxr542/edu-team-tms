@@ -22,7 +22,7 @@ export default function MemberImproveProjectsDialog({
       wide
     >
       <p className="journal-field-help journal-member-dialog__lead">
-        본인 일지의 생산성향상 M/M으로 등록되어 팀장이 운영 목록에 올린 과제입니다.
+        본인 일지의 생산성향상 M/D로 등록되어 팀장이 운영 목록에 올린 과제입니다.
       </p>
       {IMPROVE_PROJECT_BLOB_SHARE_ENABLED && (
         <div className="journal-member-dialog__actions">
@@ -32,7 +32,7 @@ export default function MemberImproveProjectsDialog({
             disabled={shareBusy}
             aria-label="향상 과제 팀 공유본 가져오기"
             {...uiTooltip(
-              '팀장이 운영 목록에 등록·공유 저장한 본인 생산성향상 M/M 과제만 가져옵니다.',
+              '팀장이 운영 목록에 등록·공유 저장한 본인 생산성향상 M/D 과제만 가져옵니다.',
               undefined,
               { wrap: true }
             )}
@@ -45,7 +45,7 @@ export default function MemberImproveProjectsDialog({
       )}
       {projects.length === 0 ? (
         <p className="journal-improve-projects-panel__empty">
-          본인 담당 과제가 없습니다. 생산성향상 M/M 업무 작성 후 팀장이 KPI2 운영 목록에 등록하면 여기에
+          본인 담당 과제가 없습니다. 생산성향상 M/D 업무 작성 후 팀장이 KPI2 운영 목록에 등록하면 여기에
           표시됩니다.
         </p>
       ) : (

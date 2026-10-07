@@ -92,7 +92,7 @@ export function computeDmScore(dmDetail, options = {}) {
       score = round2(lecturePart * lw + opsPart * ow);
       const pctL = Math.round(lw * 100);
       const pctO = Math.round(ow * 100);
-      note = `${lectureNote} + ${opsNote} (겸업 M/M ${pctL}:${pctO})`;
+      note = `${lectureNote} + ${opsNote} (겸업 M/D ${pctL}:${pctO})`;
     } else {
       score = round2(lecturePart * 0.7 + opsPart * 0.3);
       note = `${lectureNote} + ${opsNote} (70:30)`;

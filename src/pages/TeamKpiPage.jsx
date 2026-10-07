@@ -77,7 +77,7 @@ import './TeamKpiPage.css';
 
 const TABS = [
   { id: 'overview', label: '개요', hint: '월 KPI 요약·제출 상태' },
-  { id: 'kpi1', label: KPI1_NAME, hint: '주간 M/M·가동률 (01c)' },
+  { id: 'kpi1', label: KPI1_NAME, hint: '주간 M/D·가동률 (01c)' },
   {
     id: 'kpi2',
     label: KPI2_NAME,
@@ -85,7 +85,7 @@ const TABS = [
     ariaLabel: `${KPI2_NAME} (KPI2 · 생산성향상 관리)`,
   },
   { id: 'kpi3', label: KPI3_NAME, hint: '역량 팀장평가·분기 KPI3 확정' },
-  { id: 'close', label: '월 확정', hint: '월 M/M 확정·제출·철회' },
+  { id: 'close', label: '월 확정', hint: '월 M/D 확정·제출·철회' },
   { id: 'export', label: '보내기', hint: 'Excel·클립보드·스냅샷' },
 ];
 
@@ -187,7 +187,7 @@ export default function TeamKpiPage() {
   };
 
   const clearMonthlyDraftFromJournal = () => {
-    if (!window.confirm('월 확정 M/M을 비우고 작성 중으로 되돌릴까요?')) return;
+    if (!window.confirm('월 확정 M/D를 비우고 작성 중으로 되돌릴까요?')) return;
     journal.updateMonthly01(year, month, memberCode, {
       work: 0,
       improve: 0,
@@ -197,7 +197,7 @@ export default function TeamKpiPage() {
       approvedAt: null,
       approver: '',
     });
-    showToast('가져온 M/M을 비웠습니다');
+    showToast('가져온 M/D를 비웠습니다');
   };
 
   const hasMonthlyDraftValues =
@@ -262,9 +262,9 @@ export default function TeamKpiPage() {
       showToast('제출 취소 기능을 불러올 수 없습니다. npm run dev 로 최신 코드를 실행했는지 확인하세요.');
       return;
     }
-    if (!window.confirm('월 확정 제출을 취소하고 M/M을 다시 수정할까요?')) return;
+    if (!window.confirm('월 확정 제출을 취소하고 M/D를 다시 수정할까요?')) return;
     journal.withdrawMonthly01(year, month, memberCode);
-    showToast('제출을 취소했습니다 (작성 중). M/M 수정 후 다시 제출할 수 있습니다.');
+    showToast('제출을 취소했습니다 (작성 중). M/D 수정 후 다시 제출할 수 있습니다.');
   };
 
   if (!teamAccess.isLeader) {
@@ -380,10 +380,10 @@ export default function TeamKpiPage() {
                 )}
               </p>
               <ul>
-                <li>업무 M/M {metrics.kpi1.work.toFixed(2)}</li>
-                <li>생산향상 M/M {metrics.kpi1.improve.toFixed(2)}</li>
-                <li>휴일 M/M {metrics.kpi1.leave.toFixed(2)}</li>
-                <li>가용 M/M {metrics.kpi1.available.toFixed(2)}</li>
+                <li>업무 M/D {metrics.kpi1.work.toFixed(2)}</li>
+                <li>생산향상 M/D {metrics.kpi1.improve.toFixed(2)}</li>
+                <li>휴일 M/D {metrics.kpi1.leave.toFixed(2)}</li>
+                <li>가용 M/D {metrics.kpi1.available.toFixed(2)}</li>
               </ul>
               <span className="team-kpi-card-detail">상세보기 →</span>
             </article>
@@ -495,7 +495,7 @@ export default function TeamKpiPage() {
             </button>
           </div>
           <p className="team-kpi-hint">
-            구성원별 <strong>일일 업무일지</strong>에서 M/M·KPI2가 집계됩니다. 구성원 역량 자체평가는{' '}
+            구성원별 <strong>일일 업무일지</strong>에서 M/D·KPI2가 집계됩니다. 구성원 역량 자체평가는{' '}
             <strong>역량 평가</strong> 메뉴, 팀장 평가·분기 KPI3는 위 <strong>{KPI3_NAME}</strong> 탭에서
             처리합니다.
           </p>
@@ -506,7 +506,7 @@ export default function TeamKpiPage() {
         <section className="team-kpi-section">
           <h2>주간 메모 · {KPI_WEEKLY_MM_SUM_LABEL}</h2>
           <p className="team-kpi-hint" style={{ marginTop: 0 }}>
-            주간 메모는 일지 「금주」와 별도입니다. M/M은 일지에서 주차별로 자동 계산됩니다.
+            주간 메모는 일지 「금주」와 별도입니다. M/D는 일지에서 주차별로 자동 계산됩니다.
           </p>
           <div className="team-kpi-table-wrap team-kpi-table-wrap--kpi1">
               <table className="team-kpi-table team-kpi-table--kpi1">
@@ -568,16 +568,16 @@ export default function TeamKpiPage() {
           </div>
           <h2>KPI2 · 생산성향상 도구/과제 관리</h2>
           <p className="team-kpi-section-lead">
-            생산성향상 M/M 후보를 확인하고, 운영 목록에 등록한 뒤, KPI2 효과 제출 대상을 관리합니다.
+            생산성향상 M/D 후보를 확인하고, 운영 목록에 등록한 뒤, KPI2 효과 제출 대상을 관리합니다.
           </p>
           <p className="team-kpi-hint team-kpi-local-scope-notice">{IMPROVE_PROJECT_LOCAL_SCOPE_NOTICE}</p>
           <div className="team-kpi-improve-flow" aria-label="생산성향상 관리 흐름">
             <p className="team-kpi-improve-flow__lead">
-              업무일지에서 생산성향상 M/M으로 기록된 업무를 후보로 확인하고, 팀장이 운영 목록에 등록한 뒤, KPI2
+              업무일지에서 생산성향상 M/D로 기록된 업무를 후보로 확인하고, 팀장이 운영 목록에 등록한 뒤, KPI2
               효과 제출 여부와 상태를 관리합니다.
             </p>
             <ol className="team-kpi-improve-flow__steps">
-              <li>구성원이 일지에 <strong>생산성향상 M/M</strong>을 입력합니다.</li>
+              <li>구성원이 일지에 <strong>생산성향상 M/D</strong>을 입력합니다.</li>
               <li>팀장은 <strong>후보</strong>를 확인합니다.</li>
               <li>필요한 항목을 <strong>운영 목록</strong>에 등록합니다.</li>
               <li>
@@ -589,7 +589,7 @@ export default function TeamKpiPage() {
           <div className="team-kpi-improve-candidates">
             <h3 className="team-kpi-improve-candidates__title">업무일지에서 발견된 후보</h3>
             <p className="team-kpi-hint team-kpi-improve-candidates__hint">
-              {year}년 {month + 1}월 일지의 생산성향상 M/M 또는 개선 성격 업무에서 자동으로 모입니다.{' '}
+              {year}년 {month + 1}월 일지의 생산성향상 M/D 또는 개선 성격 업무에서 자동으로 모입니다.{' '}
               <strong>후보 등록</strong>은 KPI2 운영 목록에 올리는 작업이며, 원본 일지를 수정하지 않습니다.
             </p>
             {improveMmCandidates.length === 0 ? (
@@ -684,7 +684,7 @@ export default function TeamKpiPage() {
             <h3 className="team-kpi-projects-panel__title">운영 중인 생산성향상 도구/과제</h3>
             <p className="team-kpi-hint team-kpi-projects-panel__hint">
               팀에서 관리하는 생산성향상 도구/과제 목록입니다. 일지 편집 시 KPI2 효과 건의 「향상 과제」 선택에
-              사용됩니다. KPI2 효과는 개선 효과로 제출할 항목에만 표시합니다 — 생산성향상 M/M 전체가 자동으로
+              사용됩니다. KPI2 효과는 개선 효과로 제출할 항목에만 표시합니다 — 생산성향상 M/D 전체가 자동으로
               KPI2 효과가 되지는 않습니다.
             </p>
             <div className="team-kpi-improve-share">
@@ -905,7 +905,7 @@ export default function TeamKpiPage() {
           <div className="team-kpi-kpi2-effects">
             <h3 className="team-kpi-kpi2-effects__title">{KPI2_NAME} 효과 제출 관리</h3>
             <p className="team-kpi-hint team-kpi-kpi2-effects__hint">
-              아래 목록은 일지에서 <strong>KPI2 효과</strong>로 체크한 항목만 표시됩니다. 실작업 M/M은 일지에서{' '}
+              아래 목록은 일지에서 <strong>KPI2 효과</strong>로 체크한 항목만 표시됩니다. 실작업 M/D는 일지에서{' '}
               <strong>완료 체크한 업무</strong>만 반영됩니다. 승인 큐에는 「승인 요청」을 누른 건만 올라갑니다.
             </p>
           </div>
@@ -1083,7 +1083,7 @@ export default function TeamKpiPage() {
             isMonthly01ContentUnset(monthly01Stored) &&
             monthly01Form.status === KPI_STATUS.SUBMITTED && (
               <p className="team-kpi-warn">
-                제출됐지만 M/M이 비어 있습니다. 「{KPI_UI.pullWeeklyToMonthly}」 후 다시 「{KPI_UI.submitMonthly}
+                제출됐지만 M/D가 비어 있습니다. 「{KPI_UI.pullWeeklyToMonthly}」 후 다시 「{KPI_UI.submitMonthly}
                 」하세요.
               </p>
             )}
@@ -1147,7 +1147,7 @@ export default function TeamKpiPage() {
               type="button"
               className="btn btn-secondary"
               onClick={copy01c}
-              {...uiTooltip('주간 M/M 표를 클립보드에 복사')}
+              {...uiTooltip('주간 M/D 표를 클립보드에 복사')}
             >
               <ClipboardCopy size={16} /> 주간 표 복사
             </button>

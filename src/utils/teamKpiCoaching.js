@@ -4,9 +4,9 @@ import { buildKpi3Coaching } from './kpi3Coaching';
 import { formatScoreTenth } from './kpiGrades';
 
 const KPI1_TIPS = {
-  strong: '팀 M/M이 가용 대비 충분히 채워져 본부 가동률 기준에 근접합니다.',
-  weak: '팀 총 가용 M/M 대비 업무·생산향상·휴일 합산이 낮아 유휴가 큽니다.',
-  action: '구성원별 일지·월 확정 M/M을 맞추고, 팀 통합 가동률 96%(B) 이상을 목표로 주간 M/M를 채우세요.',
+  strong: '팀 M/D가 가용 대비 충분히 채워져 본부 가동률 기준에 근접합니다.',
+  weak: '팀 총 가용 M/D 대비 업무·생산향상·휴일 합산이 낮아 유휴가 큽니다.',
+  action: '구성원별 일지·월 확정 M/D를 맞추고, 팀 통합 가동률 96%(B) 이상을 목표로 주간 M/D를 채우세요.',
 };
 
 const KPI2_TIPS = {
