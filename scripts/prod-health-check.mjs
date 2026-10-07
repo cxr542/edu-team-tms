@@ -18,8 +18,14 @@ const TARGETS = [
 
 const TIMEOUT_MS = 10_000;
 const SLOW_MS = 3_000;
+const MAX_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 2_000;
 
-async function checkOne(target) {
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function attemptOnce(target) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   const start = Date.now();
@@ -44,6 +50,17 @@ async function checkOne(target) {
   }
 }
 
+async function checkOne(target) {
+  let result = await attemptOnce(target);
+  let attempts = 1;
+  while (!result.healthy && attempts < MAX_ATTEMPTS) {
+    await sleep(RETRY_DELAY_MS);
+    result = await attemptOnce(target);
+    attempts += 1;
+  }
+  return { ...result, attempts };
+}
+
 async function main() {
   const results = await Promise.all(TARGETS.map(checkOne));
 
@@ -56,7 +73,8 @@ async function main() {
     if (!r.healthy) hasFailure = true;
     if (r.healthy && r.slow) hasWarning = true;
     const detail = r.error ? r.error : `HTTP ${r.status} · ${r.elapsed}ms`;
-    console.log(`${icon} ${r.name} — ${detail}`);
+    const retrySuffix = r.attempts > 1 ? ` (${r.attempts}번째 시도에서 ${r.healthy ? '성공' : '실패'})` : '';
+    console.log(`${icon} ${r.name} — ${detail}${retrySuffix}`);
     console.log(`   ${r.url}`);
   }
 
