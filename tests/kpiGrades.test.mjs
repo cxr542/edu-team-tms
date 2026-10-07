@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeKpi3Composite, gradeKpi3, roundScoreToTenth } from '../src/utils/kpiGrades.js';
+import { computeKpi3Composite, formatScoreTenth, gradeKpi3, roundScoreToTenth } from '../src/utils/kpiGrades.js';
 
 describe('kpiGrades KPI3 — 소수 둘째 자리 반올림 후 등급 비교 (정의서 v6)', () => {
   it.each([
@@ -26,5 +26,15 @@ describe('kpiGrades KPI3 — 소수 둘째 자리 반올림 후 등급 비교 (�
     const composite = computeKpi3Composite({ level: 3.7, dm: 3.7, leader: 3.8, practice: 3.8 });
     expect(composite).toBe(3.75);
     expect(gradeKpi3(composite)).toBe('B');
+  });
+});
+
+describe('formatScoreTenth — 화면 표기', () => {
+  it('첫째 자리 문자열, 값 없음은 —', () => {
+    expect(formatScoreTenth(3.75)).toBe('3.8');
+    expect(formatScoreTenth(3.74)).toBe('3.7');
+    expect(formatScoreTenth(4)).toBe('4.0');
+    expect(formatScoreTenth(null)).toBe('—');
+    expect(formatScoreTenth(NaN)).toBe('—');
   });
 });

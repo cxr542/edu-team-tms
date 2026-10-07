@@ -22,6 +22,12 @@ export function roundScoreToTenth(score) {
   return Math.round(Number(score) * 10 + 1e-9) / 10;
 }
 
+/** 화면 표기용 — 첫째 자리 문자열 ('—' = 값 없음) */
+export function formatScoreTenth(score) {
+  if (score == null || Number.isNaN(Number(score))) return '—';
+  return roundScoreToTenth(score).toFixed(1);
+}
+
 export function gradeKpi3(compositeScore) {
   if (compositeScore == null || Number.isNaN(compositeScore)) return '—';
   const rounded = roundScoreToTenth(compositeScore);

@@ -6,6 +6,7 @@ import { previousQuarterLastMonthIndex } from '../constants/kpiOperationalStore'
 import { quarterMonthKeys } from '../utils/competencyScore';
 import {
   computeKpi3Composite,
+  formatScoreTenth,
   gradeKpi1,
   gradeKpi2,
   gradeKpi3,
@@ -461,7 +462,7 @@ export default function Kpi3ElementsPanel({
           ))}
           <div className="kpi3-elements-chip kpi3-elements-chip--total">
             <span className="kpi3-elements-chip-label">종합</span>
-            <strong>{compositeLive > 0 ? compositeLive : scoreDisplay(q.composite)}</strong>
+            <strong>{compositeLive > 0 ? formatScoreTenth(compositeLive) : q.composite > 0 ? formatScoreTenth(q.composite) : '—'}</strong>
             <span className="kpi3-elements-grade">등급 {gradeKpi3(compositeLive || q.composite)}</span>
           </div>
         </div>
@@ -926,7 +927,7 @@ export default function Kpi3ElementsPanel({
       {showManagerTabs && !section && (
         <section className="kpi3-elements-section kpi3-elements-lock">
           <p>
-            종합 <strong>{compositeLive > 0 ? compositeLive : '—'}</strong> · 등급{' '}
+            종합 <strong>{compositeLive > 0 ? formatScoreTenth(compositeLive) : '—'}</strong> · 등급{' '}
             <strong>{gradeKpi3(compositeLive || q.composite)}</strong>
             {locked ? ' · 확정됨' : ''}
           </p>

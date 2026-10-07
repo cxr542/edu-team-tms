@@ -5,6 +5,7 @@ import { KPI1_GRADES, KPI2_GRADES } from '../constants/kpiRules';
 import { KPI1_NAME, KPI2_NAME, KPI3_NAME } from '../constants/kpiDisplayNames';
 import { KPI3_ELEMENTS } from '../constants/kpi3Elements';
 import { buildTeamIntegratedSummary } from '../utils/teamKpiAggregate';
+import { formatScoreTenth, roundScoreToTenth } from '../utils/kpiGrades';
 import Kpi3HqTargetTable from './Kpi3HqTargetTable';
 import TeamKpiCoachingReport from './TeamKpiCoachingReport';
 import './TeamKpiIntegratedSummary.css';
@@ -12,11 +13,6 @@ import './TeamKpiIntegratedSummary.css';
 function formatPct(n) {
   if (n == null || Number.isNaN(n)) return '—';
   return `${Number(n).toFixed(1)}%`;
-}
-
-function formatScore(n) {
-  if (n == null || Number.isNaN(n)) return '—';
-  return Number(n).toFixed(2);
 }
 
 function formatMm(n) {
@@ -97,7 +93,7 @@ export default function TeamKpiIntegratedSummary({
           <h3>
             {KPI3_NAME} · {yq}
           </h3>
-          <p className="team-kpi-integrated-big">{formatScore(team.kpi3.composite)}</p>
+          <p className="team-kpi-integrated-big">{formatScoreTenth(team.kpi3.composite)}</p>
           <p className="team-kpi-integrated-grade">
             팀 등급 <span className={`kpi-grade kpi-grade--${team.grade3}`}>{team.grade3}</span>
           </p>
@@ -110,12 +106,12 @@ export default function TeamKpiIntegratedSummary({
           </ul>
           {hqTarget?.minScore != null && team.kpi3.composite != null && (
             <p
-              className={`team-kpi-integrated-meta${team.kpi3.composite >= hqTarget.minScore ? ' is-met' : ' is-gap'}`}
+              className={`team-kpi-integrated-meta${roundScoreToTenth(team.kpi3.composite) >= hqTarget.minScore ? ' is-met' : ' is-gap'}`}
             >
               본부 {hqTarget.label} 목표 {hqTarget.minScore}점
-              {team.kpi3.composite >= hqTarget.minScore
+              {roundScoreToTenth(team.kpi3.composite) >= hqTarget.minScore
                 ? ' · 달성'
-                : ` · ${(hqTarget.minScore - team.kpi3.composite).toFixed(2)}점 부족`}
+                : ` · ${(hqTarget.minScore - roundScoreToTenth(team.kpi3.composite)).toFixed(1)}점 부족`}
             </p>
           )}
           <p className="team-kpi-integrated-formula">{team.kpi3.formula}</p>
