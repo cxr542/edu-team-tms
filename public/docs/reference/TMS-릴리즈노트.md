@@ -7,6 +7,11 @@
 
 ## 2026-10-07
 
+### [수정] fix(kpi): report the real result of the quarter-level rollup button in the toast
+
+- fix(kpi): report the real result of the quarter-level rollup button in the toast
+- PR #175: https://github.com/cxr542/edu-team-tms/pull/175
+
 ### [신규] feat(kpi): flag a partially entered KPI3 composite as provisional
 
 - feat(kpi): flag a partially entered KPI3 composite as provisional
