@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx';
 import {
   KPI_01C_HEADERS,
   KPI_01_HEADERS,
+  kpiHeaderLabel,
   KPI_02_HEADERS,
   KPI_JOURNAL_MEMBER,
   KPI_SHEET_01,
@@ -23,8 +24,8 @@ import { monthlyFinalScore } from './competencyScore';
 import { gradeKpi3, roundScoreToTenth } from './kpiGrades';
 import { pad } from './journalMm';
 
-function sheetFromRows(headers, rows, titleRow, dateColumnIndexes = []) {
-  const aoa = [titleRow, headers];
+export function sheetFromRows(headers, rows, titleRow, dateColumnIndexes = []) {
+  const aoa = [titleRow, headers.map(kpiHeaderLabel)];
   rows.forEach((row) => {
     aoa.push(headers.map((h) => row[h] ?? ''));
   });
