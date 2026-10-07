@@ -7,6 +7,11 @@
 
 ## 2026-10-07
 
+### [수정] fix(kpi): correct the particle after the 월 확정 M/D label (이 -&gt; 가)
+
+- fix(kpi): correct the particle after the 월 확정 M/D label (이 -&gt; 가)
+- PR #172: https://github.com/cxr542/edu-team-tms/pull/172
+
 ### [업데이트] refactor(kpi): rename user-facing M/M labels to M/D (1 M/D = 8h)
 
 - refactor(kpi): rename user-facing M/M labels to M/D (1 M/D = 8h)
