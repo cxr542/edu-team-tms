@@ -34,6 +34,7 @@ import {
   resolveDualDmWeights,
 } from '../utils/kpi3DmMm';
 import Kpi3CoachingReport from './Kpi3CoachingReport';
+import Kpi3PartialNote from './Kpi3PartialNote';
 import './Kpi3ElementsPanel.css';
 
 function num(v) {
@@ -464,6 +465,7 @@ export default function Kpi3ElementsPanel({
             <span className="kpi3-elements-chip-label">종합</span>
             <strong>{compositeLive > 0 ? formatScoreTenth(compositeLive) : q.composite > 0 ? formatScoreTenth(q.composite) : '—'}</strong>
             <span className="kpi3-elements-grade">등급 {gradeKpi3(compositeLive || q.composite)}</span>
+            <Kpi3PartialNote source={q} />
           </div>
         </div>
       )}
