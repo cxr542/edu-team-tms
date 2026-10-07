@@ -29,7 +29,8 @@ export function formatScoreTenth(score) {
 }
 
 export function gradeKpi3(compositeScore) {
-  if (compositeScore == null || Number.isNaN(compositeScore)) return '—';
+  // 점수가 없거나 0 이하(4요소 미입력)이면 등급을 매기지 않는다
+  if (compositeScore == null || Number.isNaN(compositeScore) || compositeScore <= 0) return '—';
   const rounded = roundScoreToTenth(compositeScore);
   const sorted = [...KPI3_GRADES].sort((a, b) => b.minScore - a.minScore);
   for (const row of sorted) {

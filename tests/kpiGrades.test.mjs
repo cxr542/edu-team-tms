@@ -22,6 +22,14 @@ describe('kpiGrades KPI3 — 소수 둘째 자리 반올림 후 등급 비교 (�
     expect(gradeKpi3(NaN)).toBe('—');
   });
 
+  it('점수가 없거나 0 이하이면 D가 아니라 — (4요소 미입력)', () => {
+    expect(gradeKpi3(0)).toBe('—');
+    expect(gradeKpi3(-1)).toBe('—');
+    expect(gradeKpi3(undefined)).toBe('—');
+    expect(gradeKpi3(0.1)).toBe('D');
+    expect(gradeKpi3(3.44)).toBe('D');
+  });
+
   it('computeKpi3Composite는 둘째 자리까지 유지(표시용), 등급만 첫째 자리 기준', () => {
     const composite = computeKpi3Composite({ level: 3.7, dm: 3.7, leader: 3.8, practice: 3.8 });
     expect(composite).toBe(3.75);
