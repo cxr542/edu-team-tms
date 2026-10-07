@@ -7,6 +7,11 @@
 
 ## 2026-10-07
 
+### [신규] feat(kpi): flag a partially entered KPI3 composite as provisional
+
+- feat(kpi): flag a partially entered KPI3 composite as provisional
+- PR #174: https://github.com/cxr542/edu-team-tms/pull/174
+
 ### [수정] fix(kpi): show no KPI3 grade instead of D when there is no score
 
 - fix(kpi): show no KPI3 grade instead of D when there is no score
