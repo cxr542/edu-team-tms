@@ -7,6 +7,11 @@
 
 ## 2026-10-07
 
+### [문서] docs(kpi): reflect the confirmed KPI definition v6 changes (draft, pending approval)
+
+- docs(kpi): reflect the confirmed KPI definition v6 changes (draft, pending approval)
+- PR #177: https://github.com/cxr542/edu-team-tms/pull/177
+
 ### [업데이트] refactor(kpi): show M/D instead of MM in Excel, clipboard and table headers
 
 - refactor(kpi): show M/D instead of MM in Excel, clipboard and table headers
