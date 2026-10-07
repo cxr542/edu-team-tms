@@ -96,3 +96,15 @@ export function noticeDeadlineStatus(yq, now = new Date()) {
   else state = 'overdue';
   return { deadline: info.deadline, remainingDays, state, holidayDataComplete: info.holidayDataComplete };
 }
+
+/**
+ * 이의 제기 기한 — 정의서 v6: 확정 통보 후 5영업일 이내 (통보일 다음 날부터 센다)
+ * @returns {{ deadline: string, remainingDays: number, state: 'open'|'today'|'overdue', holidayDataComplete: boolean } | null}
+ */
+export function appealDeadlineStatus(noticedAtKey, now = new Date(), businessDays = 5) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(noticedAtKey || '')) return null;
+  const { date, holidayDataComplete } = addBusinessDays(noticedAtKey, businessDays);
+  const remainingDays = diffCalendarDays(todayKey(now), date);
+  const state = remainingDays > 0 ? 'open' : remainingDays === 0 ? 'today' : 'overdue';
+  return { deadline: date, remainingDays, state, holidayDataComplete };
+}

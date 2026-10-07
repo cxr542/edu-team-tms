@@ -77,7 +77,7 @@ export function kpi3CompositeForExport(composite) {
 }
 
 const KPI_03_HEADERS = ['연도', '분기', '구성원', '월', '유형', '메모'];
-const KPI_03_Q_HEADERS = ['연도', '분기', '구성원', '레벨', '다면N', '리더', '실전', '종합', '등급', '확정', 'level자동'];
+const KPI_03_Q_HEADERS = ['연도', '분기', '구성원', '레벨', '다면N', '리더', '실전', '종합', '등급', '확정', 'level자동', '통보일', '이의건수'];
 const KPI_04_COMP_HEADERS = [
   '평가월',
   '구성원',
@@ -153,6 +153,8 @@ export function exportKpiAnalysisWorkbook({
         등급: kpi3GradeForExport(q.composite, q.grade),
         확정: q.locked ? 'Y' : 'N',
         level자동: q.levelAuto ? 'Y' : 'N',
+        통보일: q.noticedAt || '',
+        이의건수: Array.isArray(rec?.appeals) ? rec.appeals.length : 0,
       });
     }
 

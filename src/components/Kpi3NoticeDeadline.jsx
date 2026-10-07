@@ -1,6 +1,6 @@
 import React from 'react';
 import { parseYq } from '../constants/kpi3HeadquartersGoals';
-import { noticeDeadlineStatus } from '../utils/businessDays';
+import { appealDeadlineStatus, noticeDeadlineStatus } from '../utils/businessDays';
 
 /** 마감이 이 일수 넘게 지난 분기는 표시하지 않는다 (과거 분기 안내 방지) */
 const HIDE_AFTER_OVERDUE_DAYS = 30;
@@ -17,11 +17,31 @@ function confirmedDateKey(confirmedAt) {
  * 화면용 문구. 표시하지 않으면 null.
  * @returns {{ text: string, urgent: boolean, note: string|null } | null}
  */
-export function describeNoticeDeadline(yq, { now = new Date(), confirmedAt = null } = {}) {
+export function describeNoticeDeadline(yq, { now = new Date(), confirmedAt = null, noticedAt = null } = {}) {
   const { quarter } = parseYq(yq);
   if (!quarter || quarter === 1) return null; // 1Q는 베이스라인(등급 평가 미적용)
   const s = noticeDeadlineStatus(yq, now);
   if (!s) return null;
+
+  // 통보일이 기록된 분기: 통보 완료 + 이의 제기 기한을 보여 준다 (숨기지 않음)
+  const appeal = appealDeadlineStatus(noticedAt, now);
+  if (appeal) {
+    let text = `확정 통보 완료 ${noticedAt} · 이의 제기 기한 ${appeal.deadline}`;
+    let urgent = false;
+    if (appeal.state === 'open') {
+      text += ` · D-${appeal.remainingDays}`;
+      urgent = appeal.remainingDays <= 2;
+    } else if (appeal.state === 'today') {
+      text += ' · 오늘 마감';
+      urgent = true;
+    } else {
+      text += ' · 기한 경과';
+    }
+    const notes = [];
+    if (noticedAt > s.deadline) notes.push(`통보가 마감(${s.deadline}) 후에 기록되었습니다.`);
+    if (!appeal.holidayDataComplete) notes.push('공휴일 데이터가 없는 연도를 포함해 주말만 제외한 추정입니다.');
+    return { text, urgent, note: notes.length ? notes.join(' ') : null };
+  }
   if (s.state === 'overdue' && -s.remainingDays > HIDE_AFTER_OVERDUE_DAYS) return null;
 
   let text;
@@ -47,8 +67,8 @@ export function describeNoticeDeadline(yq, { now = new Date(), confirmedAt = nul
 }
 
 /** 분기 확정 통보 마감(분기 말 + 5영업일) 표시 — 표시 전용 */
-export default function Kpi3NoticeDeadline({ yq, confirmedAt = null, block = false }) {
-  const info = describeNoticeDeadline(yq, { confirmedAt });
+export default function Kpi3NoticeDeadline({ yq, confirmedAt = null, noticedAt = null, block = false }) {
+  const info = describeNoticeDeadline(yq, { confirmedAt, noticedAt });
   if (!info) return null;
   const Tag = block ? 'p' : 'span';
   return (

@@ -85,8 +85,11 @@ export function defaultQuarterRecord(memberCode) {
       grade: '',
       locked: false,
       confirmedAt: null,
+      noticedAt: null,
       levelAuto: false,
     },
+    /** 이의 제기 기록 (정의서 v6: 확정 통보 후 5영업일 이내 접수) */
+    appeals: [],
     dmDetail: defaultDmDetailForRole(member?.role),
     leaderDetail: defaultLeaderDetail(),
     practiceDetail: defaultPracticeDetail(),
@@ -178,6 +181,8 @@ export function normalizeKpiOperationalStore(raw) {
   Object.values(quarters).forEach((q) => {
     Object.values(q).forEach((rec) => {
       if (rec?.quarter && rec.quarter.levelAuto == null) rec.quarter.levelAuto = false;
+      if (rec?.quarter && rec.quarter.noticedAt === undefined) rec.quarter.noticedAt = null;
+      if (!Array.isArray(rec.appeals)) rec.appeals = [];
       if (!rec.dmDetail) rec.dmDetail = defaultDmDetail();
       if (!rec.leaderDetail) rec.leaderDetail = defaultLeaderDetail();
       if (!rec.practiceDetail) rec.practiceDetail = defaultPracticeDetail();

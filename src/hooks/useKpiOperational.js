@@ -38,6 +38,7 @@ import {
 } from '../data/journalSeedAcademizerScenario';
 import { kpi3AcademizerSeedPatch } from '../data/kpi3SeedAcademizerScenario';
 import { computeKpi3Composite, gradeKpi3 } from '../utils/kpiGrades';
+import { applyAppealPatch, createAppeal, isDateKey, normalizeAppeals } from '../utils/kpiAppeals';
 import { isProductionEnvironment } from '../constants/appEnv';
 import {
   isCompetencyMonthRecordSaveable,
@@ -519,6 +520,67 @@ export function useKpiOperational({ readOnly = false } = {}) {
       });
     },
     [readOnly, persist]
+  );
+
+  /** 통보일·이의 기록 전용 저장 — 저장된 composite/grade 는 다시 계산하지 않는다 */
+  const patchQuarterRecord = useCallback(
+    (year, monthIndex, memberCode, patchFn) => {
+      const yq = quarterKey(year, monthIndex);
+      setStore((prev) => {
+        const ensured = ensureQuarterMember(prev, yq, memberCode);
+        const rec = ensured.quarters[yq][memberCode];
+        const nextRec = patchFn(rec);
+        if (nextRec === rec) return prev;
+        return persist({
+          ...ensured,
+          quarters: {
+            ...ensured.quarters,
+            [yq]: { ...ensured.quarters[yq], [memberCode]: nextRec },
+          },
+        });
+      });
+    },
+    [persist]
+  );
+
+  const setKpi3NoticeDate = useCallback(
+    (year, monthIndex, memberCode, dateKey) => {
+      if (readOnly) return { ok: false, reason: 'readonly' };
+      if (dateKey && !isDateKey(dateKey)) return { ok: false, reason: 'invalid-date' };
+      patchQuarterRecord(year, monthIndex, memberCode, (rec) => ({
+        ...rec,
+        quarter: { ...rec.quarter, noticedAt: dateKey || null },
+      }));
+      return { ok: true };
+    },
+    [readOnly, patchQuarterRecord]
+  );
+
+  const addKpi3Appeal = useCallback(
+    (year, monthIndex, memberCode, input) => {
+      if (readOnly) return { ok: false, reason: 'readonly' };
+      const appeal = createAppeal(input);
+      if (!appeal) return { ok: false, reason: 'invalid' };
+      patchQuarterRecord(year, monthIndex, memberCode, (rec) => ({
+        ...rec,
+        appeals: [...normalizeAppeals(rec.appeals), appeal],
+      }));
+      return { ok: true, appeal };
+    },
+    [readOnly, patchQuarterRecord]
+  );
+
+  const updateKpi3Appeal = useCallback(
+    (year, monthIndex, memberCode, appealId, patch) => {
+      if (readOnly) return { ok: false, reason: 'readonly' };
+      patchQuarterRecord(year, monthIndex, memberCode, (rec) => {
+        const list = normalizeAppeals(rec.appeals);
+        if (!list.some((a) => a.id === appealId)) return rec;
+        return { ...rec, appeals: list.map((a) => (a.id === appealId ? applyAppealPatch(a, patch) : a)) };
+      });
+      return { ok: true };
+    },
+    [readOnly, patchQuarterRecord]
   );
 
   const updateKpi3Quarter = useCallback(
@@ -1038,6 +1100,9 @@ export function useKpiOperational({ readOnly = false } = {}) {
     rejectKpi2Row,
     getQuarterRecord,
     addKpi3Memo,
+    setKpi3NoticeDate,
+    addKpi3Appeal,
+    updateKpi3Appeal,
     updateKpi3Quarter,
     updateKpi3QuarterExtras,
     lockKpi3Quarter,
