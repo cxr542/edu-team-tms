@@ -7,6 +7,11 @@
 
 ## 2026-10-07
 
+### [신규] feat(kpi): record the executive (본부장/CEO) approval for Level 4+ and warn when it is missing
+
+- feat(kpi): record the executive (본부장/CEO) approval for Level 4+ and warn when it is missing
+- PR #185: https://github.com/cxr542/edu-team-tms/pull/185
+
 ### [신규] feat(kpi): confirm the practice score as 1 point when no evidence was submitted
 
 - feat(kpi): confirm the practice score as 1 point when no evidence was submitted
