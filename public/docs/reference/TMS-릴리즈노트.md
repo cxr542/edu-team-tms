@@ -7,6 +7,11 @@
 
 ## 2026-10-07
 
+### [신규] feat(kpi): show the KPI3 confirmation-notice deadline (quarter end + 5 business days)
+
+- feat(kpi): show the KPI3 confirmation-notice deadline (quarter end + 5 business days)
+- PR #182: https://github.com/cxr542/edu-team-tms/pull/182
+
 ### [문서] docs(kpi): add the v6 definition vs system implementation change proposal
 
 - docs(kpi): add the v6 definition vs system implementation change proposal
