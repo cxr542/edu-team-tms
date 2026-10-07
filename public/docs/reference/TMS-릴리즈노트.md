@@ -7,6 +7,11 @@
 
 ## 2026-10-07
 
+### [신규] feat(kpi): re-judge the KPI3 grade column of the Excel analysis workbook like the screens
+
+- feat(kpi): re-judge the KPI3 grade column of the Excel analysis workbook like the screens
+- PR #170: https://github.com/cxr542/edu-team-tms/pull/170
+
 ### [신규] feat(kpi): export the KPI3 composite to one decimal in the Excel analysis workbook
 
 - feat(kpi): export the KPI3 composite to one decimal in the Excel analysis workbook
