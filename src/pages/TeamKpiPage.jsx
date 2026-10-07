@@ -470,7 +470,7 @@ export default function TeamKpiPage() {
             <p>
               {showWithdrawMonthly ? (
                 <>
-                  <strong>{KPI_UI.monthlyMm}</strong>이 <strong>제출됨</strong> 상태입니다. 수정하려면 아래 버튼을
+                  <strong>{KPI_UI.monthlyMm}</strong>가 <strong>제출됨</strong> 상태입니다. 수정하려면 아래 버튼을
                   누르세요.
                 </>
               ) : (
