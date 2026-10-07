@@ -7,6 +7,11 @@
 
 ## 2026-10-07
 
+### [문서] docs(kpi): mark KPI definition v6 as approved (2026-10-07)
+
+- docs(kpi): mark KPI definition v6 as approved (2026-10-07)
+- PR #180: https://github.com/cxr542/edu-team-tms/pull/180
+
 ### [기타] ci(deploy): sync reference docs before the production build
 
 - ci(deploy): sync reference docs before the production build
