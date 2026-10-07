@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-10-07
+
+### [수정] fix(kpi): cap individual level at 5.0 and grade KPI3 on the score rounded to one decimal
+
+- fix(kpi): cap individual level at 5.0 and grade KPI3 on the score rounded to one decimal
+- PR #164: https://github.com/cxr542/edu-team-tms/pull/164
+
 ## 2026-10-06
 
 ### [신규] feat(kpi): 월간 일지 AI 요약 모달 + 자체평가 근거 복사하기
