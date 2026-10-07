@@ -7,6 +7,11 @@
 
 ## 2026-10-07
 
+### [수정] fix(competency): explain why the self-evaluation submit button does nothing
+
+- fix(competency): explain why the self-evaluation submit button does nothing
+- PR #186: https://github.com/cxr542/edu-team-tms/pull/186
+
 ### [신규] feat(kpi): record the executive (본부장/CEO) approval for Level 4+ and warn when it is missing
 
 - feat(kpi): record the executive (본부장/CEO) approval for Level 4+ and warn when it is missing
