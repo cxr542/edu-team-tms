@@ -39,6 +39,13 @@ export function gradeKpi3(compositeScore) {
   return 'D';
 }
 
+export const KPI3_ELEMENT_KEYS = ['level', 'dm', 'leader', 'practice'];
+
+/** 4요소 중 입력된(0 초과) 요소 수 — 일부만 입력된 종합은 잠정 값 */
+export function countKpi3ElementsEntered(source) {
+  return KPI3_ELEMENT_KEYS.filter((key) => Number(source?.[key]) > 0).length;
+}
+
 export function computeKpi3Composite({ level, dm, leader, practice }) {
   const l = Number(level) || 0;
   const d = Number(dm) || 0;

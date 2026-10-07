@@ -9,6 +9,7 @@ import { KPI1_NAME, KPI2_NAME, KPI3_NAME } from '../constants/kpiDisplayNames';
 import { KPI3_ELEMENTS } from '../constants/kpi3Elements';
 import TeamKpiIntegratedSummary from '../components/TeamKpiIntegratedSummary';
 import { formatScoreTenth } from '../utils/kpiGrades';
+import Kpi3PartialNote from '../components/Kpi3PartialNote';
 import { uiTooltip } from '../utils/uiTooltip';
 import './TeamKpiPage.css';
 import './KpiReportPage.css';
@@ -220,7 +221,10 @@ export default function KpiReportPage() {
                 {KPI3_ELEMENTS.map((el) => (
                   <td key={el.key}>{row.breakdown?.[el.key] > 0 ? row.breakdown[el.key] : '—'}</td>
                 ))}
-                <td>{row.quarter.composite > 0 ? formatScoreTenth(row.quarter.composite) : '—'}</td>
+                <td>
+                    {row.quarter.composite > 0 ? formatScoreTenth(row.quarter.composite) : '—'}
+                    <Kpi3PartialNote source={row.breakdown} />
+                  </td>
                 <td>
                   <span className={`kpi-grade kpi-grade--${row.grade3}`}>{row.grade3}</span>
                 </td>
@@ -235,7 +239,10 @@ export default function KpiReportPage() {
               {KPI3_ELEMENTS.map((el) => (
                 <td key={el.key}>{team.kpi3[el.key] > 0 ? team.kpi3[el.key] : '—'}</td>
               ))}
-              <td>{team.kpi3.composite > 0 ? formatScoreTenth(team.kpi3.composite) : '—'}</td>
+              <td>
+                  {team.kpi3.composite > 0 ? formatScoreTenth(team.kpi3.composite) : '—'}
+                  <Kpi3PartialNote source={team.kpi3} />
+                </td>
               <td>
                 <span className={`kpi-grade kpi-grade--${team.grade3}`}>{team.grade3}</span>
               </td>

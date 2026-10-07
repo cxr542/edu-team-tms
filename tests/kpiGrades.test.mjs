@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeKpi3Composite, formatScoreTenth, gradeKpi3, roundScoreToTenth } from '../src/utils/kpiGrades.js';
+import { computeKpi3Composite, countKpi3ElementsEntered, formatScoreTenth, gradeKpi3, roundScoreToTenth } from '../src/utils/kpiGrades.js';
 
 describe('kpiGrades KPI3 — 소수 둘째 자리 반올림 후 등급 비교 (정의서 v6)', () => {
   it.each([
@@ -44,5 +44,15 @@ describe('formatScoreTenth — 화면 표기', () => {
     expect(formatScoreTenth(4)).toBe('4.0');
     expect(formatScoreTenth(null)).toBe('—');
     expect(formatScoreTenth(NaN)).toBe('—');
+  });
+});
+
+describe('countKpi3ElementsEntered — 일부 요소 미입력 판정', () => {
+  it('0 초과인 요소만 센다', () => {
+    expect(countKpi3ElementsEntered({ level: 3.67, dm: 0, leader: 0, practice: 0 })).toBe(1);
+    expect(countKpi3ElementsEntered({ level: 3, dm: 4, leader: 3.3, practice: 5 })).toBe(4);
+    expect(countKpi3ElementsEntered({})).toBe(0);
+    expect(countKpi3ElementsEntered(undefined)).toBe(0);
+    expect(countKpi3ElementsEntered({ level: '', dm: null, leader: undefined, practice: 'x' })).toBe(0);
   });
 });

@@ -806,3 +806,19 @@
 .muted {
   color: var(--text-muted);
 }
+
+.kpi3-partial-note {
+  display: inline-block;
+  margin: 0.2rem 0 0 0.4rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+}
+p.kpi3-partial-note {
+  display: block;
+  width: fit-content;
+  margin-left: 0;
+}

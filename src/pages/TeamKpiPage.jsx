@@ -51,6 +51,7 @@ import {
   validate01cVsMonthly,
 } from '../utils/kpiMonthlyClose';
 import { gradeKpi1, gradeKpi2, gradeKpi3, computeKpi3Composite, formatScoreTenth } from '../utils/kpiGrades';
+import Kpi3PartialNote from '../components/Kpi3PartialNote';
 import { downloadTeamKpiSnapshot, fetchTeamKpiSnapshot, normalizeTeamKpiSnapshot } from '../utils/teamKpiSnapshot';
 import { defaultMonthly01, quarterKey } from '../constants/kpiOperationalStore';
 import { KPI1_NAME, KPI2_NAME, KPI3_NAME } from '../constants/kpiDisplayNames';
@@ -446,6 +447,7 @@ export default function TeamKpiPage() {
                     : computeKpi3Composite(quarterRec.quarter)
                 )}
               </p>
+              <Kpi3PartialNote source={quarterRec.quarter} block />
               <ul className="team-kpi-kpi3-mini">
                 {KPI3_ELEMENTS.map((el) => (
                   <li key={el.key}>
