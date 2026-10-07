@@ -20,7 +20,7 @@ import {
 import { computeUtilization } from './kpiMonthlyClose';
 import { COMPETENCY_USE_4060 } from '../constants/competencyConfig';
 import { monthlyFinalScore } from './competencyScore';
-import { roundScoreToTenth } from './kpiGrades';
+import { gradeKpi3, roundScoreToTenth } from './kpiGrades';
 import { pad } from './journalMm';
 
 function sheetFromRows(headers, rows, titleRow, dateColumnIndexes = []) {
@@ -65,6 +65,11 @@ export function buildKpiExportFilename(year, monthIndex, { overwriteMonthly = fa
 export { buildKpi01cRows, buildKpi02EffectRows };
 
 /** KPI3 종합 — 정의서 v6: 둘째 자리 반올림, 첫째 자리 숫자 (값 없음은 그대로) */
+/** KPI3 등급 — 화면과 동일하게 종합(첫째 자리 반올림)으로 다시 판정. 종합이 없으면 저장된 등급 그대로 */
+export function kpi3GradeForExport(composite, storedGrade) {
+  return Number(composite) > 0 ? gradeKpi3(composite) : storedGrade;
+}
+
 export function kpi3CompositeForExport(composite) {
   if (composite == null || composite === '' || Number.isNaN(Number(composite))) return composite;
   return roundScoreToTenth(composite);
@@ -144,7 +149,7 @@ export function exportKpiAnalysisWorkbook({
         리더: q.leader,
         실전: q.practice,
         종합: kpi3CompositeForExport(q.composite),
-        등급: q.grade,
+        등급: kpi3GradeForExport(q.composite, q.grade),
         확정: q.locked ? 'Y' : 'N',
         level자동: q.levelAuto ? 'Y' : 'N',
       });
