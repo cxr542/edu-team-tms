@@ -7,6 +7,11 @@
 
 ## 2026-10-07
 
+### [문서] docs(supabase): record anon hardening phase 1 + health-check retry
+
+- docs(supabase): record anon hardening phase 1 + health-check retry
+- PR #167: https://github.com/cxr542/edu-team-tms/pull/167
+
 ### [수정] fix(kpi): show the KPI3 composite to one decimal in the quarterly member tables
 
 - fix(kpi): show the KPI3 composite to one decimal in the quarterly member tables
