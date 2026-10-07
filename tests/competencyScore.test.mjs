@@ -67,14 +67,14 @@ describe('competencyScore', () => {
     expect(r.proposed).toBe(1);
   });
 
-  it('intLevel=5 + 5차원 met — cap 적용 후 proposed 6', () => {
+  it('intLevel=5 + 5차원 met — 상한 5.0 적용 후 proposed 5', () => {
     const r = computeCompetencyEval({
       intLevel: 5,
       dims: dims(DIM_MET, DIM_MET, DIM_MET, DIM_MET, DIM_MET),
       roleId: 'default',
     });
     expect(r.fractional).toBe(1.0);
-    expect(r.proposed).toBe(6);
+    expect(r.proposed).toBe(5);
   });
 
   it('기본 dims — 5개 모두 unmet', () => {
@@ -285,6 +285,21 @@ describe('competencyScore', () => {
     expect(side.computed.proposed).toBe(2.8);
     expect(side.computed.fractional).not.toBeNull();
     expect(side.computed.proposed).toBeLessThanOrEqual(2 + (side.computed.fractional || 0) + 0.001);
+  });
+
+  it('개인 레벨 점수 상한 5.0 (정의서 v6)', () => {
+    const all = dims(DIM_MET, DIM_MET, DIM_MET, DIM_MET, DIM_MET);
+    const one = dims(DIM_MET, DIM_UNMET, DIM_UNMET, DIM_UNMET, DIM_UNMET);
+    const none = dims(DIM_UNMET, DIM_UNMET, DIM_UNMET, DIM_UNMET, DIM_UNMET);
+    expect(computeCompetencyEval({ intLevel: 3, dims: none, roleId: 'default' }).proposed).toBe(3);
+    expect(computeCompetencyEval({ intLevel: 3, dims: all, roleId: 'default' }).proposed).toBe(4);
+    expect(computeCompetencyEval({ intLevel: 4, dims: all, roleId: 'default' }).proposed).toBe(5);
+    expect(computeCompetencyEval({ intLevel: 5, dims: one, roleId: 'default' }).proposed).toBe(5);
+    ['default', 'instructor', 'concurrent', 'planner'].forEach((roleId) => {
+      expect(computeCompetencyEval({ intLevel: 5, dims: all, roleId }).proposed).toBe(5);
+    });
+    expect(proposedComposite(5, 0.2)).toBe(5);
+    expect(proposedComposite(4, 0.8)).toBe(4.8);
   });
 
   it('fractional === null이면 proposed가 intLevel보다 커지지 않음', () => {
