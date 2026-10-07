@@ -414,22 +414,32 @@ export default function CompetencyMemberSection({
               onCopyEvidence={copyEvidence}
               onUpdate={(patch) => journal.updateCompetencySelf(year, selectedMonthIndex, memberCode, patch)}
               onLock={async () => {
-                const r = journal.lockCompetencyMonth(year, selectedMonthIndex, memberCode, { side: 'self' });
-                if (r.ok) {
-                  onToast?.(`${member.displayName} · ${year}-${String(selectedMonthIndex + 1).padStart(2, '0')} 레벨 자체평가 제출`);
-                  const ymStr = `${year}-${String(selectedMonthIndex + 1).padStart(2, '0')}`;
-                  const uploadResult = await journal.saveCompetencyMemberCloudSnapshot?.(memberCode, ymStr, r.record);
-                  if (uploadResult && !uploadResult.ok) {
-                    if (uploadResult.reason === 'dev-blocked') {
-                      onToast?.('제출 완료 (개발 환경으로 클라우드 저장은 생략되었습니다)');
-                    } else {
-                      onToast?.(`클라우드 저장 실패: ${uploadResult.error?.message || uploadResult.reason}`);
+                // 처리 중 오류가 나도 아무 반응이 없어 보이지 않도록 이유를 화면에 알린다
+                try {
+                  const r = journal.lockCompetencyMonth(year, selectedMonthIndex, memberCode, { side: 'self' });
+                  if (r.ok) {
+                    onToast?.(`${member.displayName} · ${year}-${String(selectedMonthIndex + 1).padStart(2, '0')} 레벨 자체평가 제출`);
+                    const ymStr = `${year}-${String(selectedMonthIndex + 1).padStart(2, '0')}`;
+                    const uploadResult = await journal.saveCompetencyMemberCloudSnapshot?.(memberCode, ymStr, r.record);
+                    if (uploadResult && !uploadResult.ok) {
+                      if (uploadResult.reason === 'dev-blocked') {
+                        onToast?.('제출 완료 (개발 환경으로 클라우드 저장은 생략되었습니다)');
+                      } else {
+                        onToast?.(`클라우드 저장 실패: ${uploadResult.error?.message || uploadResult.reason}`);
+                      }
+                    } else if (uploadResult?.ok) {
+                      onToast?.('제출 및 클라우드 동기화 완료');
                     }
-                  } else if (uploadResult?.ok) {
-                    onToast?.('제출 및 클라우드 동기화 완료');
+                  } else if (r.reason === 'invalid-int-level') {
+                    onToast?.('정수 레벨을 1~5 중에서 선택해 주세요');
+                  } else if (r.reason === 'read-only') {
+                    onToast?.('조회 모드에서는 제출할 수 없습니다. 본인 주소(예: /hyshin)로 접속했는지 확인해 주세요');
+                  } else {
+                    onToast?.(`제출하지 못했습니다 (${r.reason || '알 수 없는 사유'})`);
                   }
-                } else if (r.reason === 'invalid-int-level') {
-                  onToast?.('정수 레벨을 1~5 중에서 선택해 주세요');
+                } catch (e) {
+                  console.error('[competency] 월별 자체평가 제출 오류', e);
+                  onToast?.(`제출 중 오류가 발생했습니다: ${e?.message || e}`);
                 }
               }}
               onUnlockSelf={async () => {

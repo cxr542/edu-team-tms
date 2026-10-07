@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   COMPETENCY_DIMS,
   COMPETENCY_DIM_IDS,
@@ -62,6 +62,9 @@ export default function CompetencyRubricPanel({
   onCopyEvidence = null,
 }) {
   const [showIntLevelRef, setShowIntLevelRef] = useState(false);
+  // 정수 레벨 없이 제출을 눌렀을 때 — 이유를 보여 주고 선택칸으로 안내한다
+  const [triedSubmitWithoutLevel, setTriedSubmitWithoutLevel] = useState(false);
+  const levelSelectRef = useRef(null);
   const [showDimRef, setShowDimRef] = useState(false);
   const evalSide = side === 'self' ? record?.self : record?.manager;
   const selfLocked = record?.selfLocked;
@@ -143,7 +146,8 @@ export default function CompetencyRubricPanel({
         <label>
           정수레벨
           <select
-            className="form-input"
+            ref={levelSelectRef}
+            className={`form-input${triedSubmitWithoutLevel && !hasValidIntLevel ? ' competency-int-level-select--attention' : ''}`}
             value={hasValidIntLevel ? liveEvalSide.intLevel : ''}
             disabled={readOnly || locked}
             onChange={(e) => handleIntLevel(e.target.value)}
@@ -461,20 +465,32 @@ export default function CompetencyRubricPanel({
           {!readOnly && !locked && (
             <button
               type="button"
-              className="btn btn-primary btn-sm competency-self-lock-btn"
-              disabled={!hasValidIntLevel}
+              className={`btn btn-primary btn-sm competency-self-lock-btn${hasValidIntLevel ? '' : ' is-needs-level'}`}
+              // 진짜 disabled 로 두면 눌러도 아무 반응이 없어 "버튼이 안 된다"로 보이므로, 눌렀을 때 이유를 알려 준다
+              aria-disabled={!hasValidIntLevel}
               title={
                 !hasValidIntLevel
-                  ? '정수 레벨을 1~5 중에서 선택해야 확정할 수 있습니다.'
+                  ? '정수 레벨을 1~5 중에서 선택해야 제출할 수 있습니다.'
                   : undefined
               }
               onClick={() => {
-                if (!hasValidIntLevel) return;
+                if (!hasValidIntLevel) {
+                  setTriedSubmitWithoutLevel(true);
+                  levelSelectRef.current?.focus();
+                  levelSelectRef.current?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+                  return;
+                }
+                setTriedSubmitWithoutLevel(false);
                 onLock();
               }}
             >
               팀장에게 제출
             </button>
+          )}
+          {!readOnly && !locked && triedSubmitWithoutLevel && !hasValidIntLevel && (
+            <p className="competency-self-actions__hint competency-int-level-alert" role="alert">
+              정수 레벨을 1~5 중에서 선택한 뒤 「팀장에게 제출」을 다시 눌러 주세요.
+            </p>
           )}
           {locked && (
             <>
