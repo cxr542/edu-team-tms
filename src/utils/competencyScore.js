@@ -18,6 +18,8 @@ import {
 
 export const COMPETENCY_INT_LEVEL_MIN = 1;
 export const COMPETENCY_INT_LEVEL_MAX = 5;
+/** 개인 레벨 점수 상한 (KPI 정의서 v6: 상한 5.0) */
+export const COMPETENCY_LEVEL_SCORE_MAX = 5.0;
 
 /** 정수 레벨 1~5만 유효 (0·null·undefined·""·NaN·범위 밖은 미입력) */
 export function isValidCompetencyIntLevel(value) {
@@ -119,12 +121,13 @@ export function mround02(value) {
   return Math.round(Math.round(value / 0.2) * 2) / 10;
 }
 
-/** 제안 종합 = 정수레벨 + fractional (fractional이 null이면 정수만) */
+/** 제안 종합 = 정수레벨 + fractional (fractional이 null이면 정수만), 상한 5.0 */
 export function proposedComposite(intLevel, fractionalMround) {
   if (!isValidCompetencyIntLevel(intLevel)) return null;
   const base = Number(intLevel);
   if (fractionalMround == null) return base;
-  return Math.round((base + Number(fractionalMround)) * 10) / 10;
+  const total = Math.round((base + Number(fractionalMround)) * 10) / 10;
+  return Math.min(total, COMPETENCY_LEVEL_SCORE_MAX);
 }
 
 export function mergeCompetencyEvalSidePatch(existingSide, patch = {}, roleId = 'default') {

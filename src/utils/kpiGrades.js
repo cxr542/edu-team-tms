@@ -17,11 +17,17 @@ export function gradeKpi2(productivityPct) {
   return gradeFromPct(productivityPct, KPI2_GRADES);
 }
 
+/** 소수 둘째 자리에서 반올림(half-up)하여 첫째 자리까지 — 분기 목표·등급 비교용 (KPI 정의서 v6) */
+export function roundScoreToTenth(score) {
+  return Math.round(Number(score) * 10 + 1e-9) / 10;
+}
+
 export function gradeKpi3(compositeScore) {
   if (compositeScore == null || Number.isNaN(compositeScore)) return '—';
+  const rounded = roundScoreToTenth(compositeScore);
   const sorted = [...KPI3_GRADES].sort((a, b) => b.minScore - a.minScore);
   for (const row of sorted) {
-    if (compositeScore >= row.minScore) return row.grade;
+    if (rounded >= row.minScore) return row.grade;
   }
   return 'D';
 }
