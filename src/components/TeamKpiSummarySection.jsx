@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { buildTeamMonthlyReport, buildTeamQuarterReport } from '../utils/kpiReportData';
 import { buildTeamIntegratedSummary } from '../utils/teamKpiAggregate';
 import { detectKpi1Warnings } from '../utils/kpi1Warnings';
+import { formatScoreTenth } from '../utils/kpiGrades';
 import { uiTooltip } from '../utils/uiTooltip';
 import { formatKpiMemberLabel } from '../constants/kpiMembers';
 import { formatKpiStatusLabel } from '../constants/kpiStatuses';
@@ -165,7 +166,7 @@ export default function TeamKpiSummarySection({
                   {KPI3_ELEMENTS.map((el) => (
                     <td key={el.key}>{row.breakdown?.[el.key] > 0 ? row.breakdown[el.key] : '—'}</td>
                   ))}
-                  <td>{row.quarter.composite > 0 ? row.quarter.composite : '—'}</td>
+                  <td>{row.quarter.composite > 0 ? formatScoreTenth(row.quarter.composite) : '—'}</td>
                   <td>
                     <span className={`kpi-grade kpi-grade--${row.grade3}`}>{row.grade3}</span>
                   </td>
@@ -178,7 +179,7 @@ export default function TeamKpiSummarySection({
                 {KPI3_ELEMENTS.map((el) => (
                   <td key={el.key}>{team.kpi3[el.key] > 0 ? team.kpi3[el.key] : '—'}</td>
                 ))}
-                <td>{team.kpi3.composite > 0 ? team.kpi3.composite : '—'}</td>
+                <td>{team.kpi3.composite > 0 ? formatScoreTenth(team.kpi3.composite) : '—'}</td>
                 <td>
                   <span className={`kpi-grade kpi-grade--${team.grade3}`}>{team.grade3}</span>
                 </td>
