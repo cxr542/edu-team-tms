@@ -50,7 +50,7 @@ import {
   isMonthly01ContentUnset,
   validate01cVsMonthly,
 } from '../utils/kpiMonthlyClose';
-import { gradeKpi1, gradeKpi2, gradeKpi3, computeKpi3Composite } from '../utils/kpiGrades';
+import { gradeKpi1, gradeKpi2, gradeKpi3, computeKpi3Composite, formatScoreTenth } from '../utils/kpiGrades';
 import { downloadTeamKpiSnapshot, fetchTeamKpiSnapshot, normalizeTeamKpiSnapshot } from '../utils/teamKpiSnapshot';
 import { defaultMonthly01, quarterKey } from '../constants/kpiOperationalStore';
 import { KPI1_NAME, KPI2_NAME, KPI3_NAME } from '../constants/kpiDisplayNames';
@@ -435,7 +435,7 @@ export default function TeamKpiPage() {
                     quarterRec.quarter.composite > 0
                       ? quarterRec.quarter.composite
                       : computeKpi3Composite(quarterRec.quarter);
-                  return c > 0 ? c : '—';
+                  return c > 0 ? formatScoreTenth(c) : '—';
                 })()}
               </p>
               <p className="team-kpi-grade">

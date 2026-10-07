@@ -1,7 +1,7 @@
 import { KPI3_ELEMENTS } from '../constants/kpi3Elements';
 import { getKpi3HqTargetForYq } from '../constants/kpi3HeadquartersGoals';
 import { KPI3_WEIGHTS } from '../constants/kpiRules';
-import { computeKpi3Composite, gradeKpi3 } from './kpiGrades';
+import { computeKpi3Composite, gradeKpi3, roundScoreToTenth } from './kpiGrades';
 
 const ELEMENT_TIPS = {
   level: {
@@ -41,8 +41,10 @@ function hasScores(quarter) {
  * @param {string} [ctx.memberLabel]
  */
 export function buildKpi3Coaching(quarter, ctx = {}) {
-  const composite =
-    (quarter?.composite > 0 ? quarter.composite : null) ?? computeKpi3Composite(quarter || {}) ?? 0;
+  // 정의서 v6: 둘째 자리 반올림, 첫째 자리 값으로 목표·등급 비교
+  const composite = roundScoreToTenth(
+    (quarter?.composite > 0 ? quarter.composite : null) ?? computeKpi3Composite(quarter || {}) ?? 0
+  );
 
   if (!hasScores(quarter)) {
     return {
@@ -58,7 +60,7 @@ export function buildKpi3Coaching(quarter, ctx = {}) {
   const grade = gradeKpi3(composite);
   const hqTarget = getKpi3HqTargetForYq(ctx.yq);
   const hqMin = hqTarget?.minScore ?? null;
-  const gap = hqMin != null ? round2(Math.max(0, hqMin - composite)) : 0;
+  const gap = hqMin != null ? roundScoreToTenth(Math.max(0, hqMin - composite)) : 0;
   const hqMet = hqMin != null && composite >= hqMin;
 
   const items = KPI3_ELEMENTS.map((el) => {

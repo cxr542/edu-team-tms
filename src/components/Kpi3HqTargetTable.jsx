@@ -6,9 +6,11 @@ import {
   getKpi3HqTargetForYq,
   parseYq,
 } from '../constants/kpi3HeadquartersGoals';
+import { roundScoreToTenth } from '../utils/kpiGrades';
 import './Kpi3HqTargetTable.css';
 
-export default function Kpi3HqTargetTable({ yq, currentComposite }) {
+export default function Kpi3HqTargetTable({ yq, currentComposite: rawComposite }) {
+  const currentComposite = rawComposite > 0 ? roundScoreToTenth(rawComposite) : rawComposite;
   const { quarter: currentQ } = parseYq(yq);
   const activeHq = getKpi3HqTargetForYq(yq);
 
@@ -31,7 +33,7 @@ export default function Kpi3HqTargetTable({ yq, currentComposite }) {
                 <span className={currentComposite >= activeHq.minScore ? ' kpi3-hq-met' : ' kpi3-hq-gap'}>
                   {' '}
                   (현재 {currentComposite}점
-                  {currentComposite >= activeHq.minScore ? ' · 달성' : ` · ${(activeHq.minScore - currentComposite).toFixed(2)}점 부족`})
+                  {currentComposite >= activeHq.minScore ? ' · 달성' : ` · ${(activeHq.minScore - currentComposite).toFixed(1)}점 부족`})
                 </span>
               )}
             </>
