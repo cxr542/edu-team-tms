@@ -7,6 +7,7 @@ import { KPI3_ELEMENTS } from '../constants/kpi3Elements';
 import { buildTeamIntegratedSummary } from '../utils/teamKpiAggregate';
 import { formatScoreTenth, roundScoreToTenth } from '../utils/kpiGrades';
 import Kpi3PartialNote from './Kpi3PartialNote';
+import Kpi3NoticeDeadline from './Kpi3NoticeDeadline';
 import Kpi3HqTargetTable from './Kpi3HqTargetTable';
 import TeamKpiCoachingReport from './TeamKpiCoachingReport';
 import './TeamKpiIntegratedSummary.css';
@@ -99,6 +100,7 @@ export default function TeamKpiIntegratedSummary({
             팀 등급 <span className={`kpi-grade kpi-grade--${team.grade3}`}>{team.grade3}</span>
           </p>
           <Kpi3PartialNote source={team.kpi3} block />
+          <Kpi3NoticeDeadline yq={yq} block />
           <ul className="team-kpi-integrated-kpi3">
             {KPI3_ELEMENTS.map((el) => (
               <li key={el.key}>
