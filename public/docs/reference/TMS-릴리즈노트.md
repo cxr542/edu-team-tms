@@ -7,6 +7,11 @@
 
 ## 2026-10-07
 
+### [기타] ci(deploy): sync reference docs before the production build
+
+- ci(deploy): sync reference docs before the production build
+- PR #179: https://github.com/cxr542/edu-team-tms/pull/179
+
 ### [문서] docs(kpi): rename M/M to M/D in the reference docs and README
 
 - docs(kpi): rename M/M to M/D in the reference docs and README
