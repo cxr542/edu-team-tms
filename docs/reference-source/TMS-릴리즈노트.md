@@ -7,6 +7,11 @@
 
 ## 2026-10-07
 
+### [문서] docs(kpi): add the v6 definition vs system implementation change proposal
+
+- docs(kpi): add the v6 definition vs system implementation change proposal
+- PR #181: https://github.com/cxr542/edu-team-tms/pull/181
+
 ### [문서] docs(kpi): mark KPI definition v6 as approved (2026-10-07)
 
 - docs(kpi): mark KPI definition v6 as approved (2026-10-07)
