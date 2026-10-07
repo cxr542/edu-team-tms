@@ -7,6 +7,11 @@
 
 ## 2026-10-07
 
+### [신규] feat(kpi): export the KPI3 composite to one decimal in the Excel analysis workbook
+
+- feat(kpi): export the KPI3 composite to one decimal in the Excel analysis workbook
+- PR #169: https://github.com/cxr542/edu-team-tms/pull/169
+
 ### [수정] fix(kpi): show the KPI3 composite to one decimal in the team coaching sentences
 
 - fix(kpi): show the KPI3 composite to one decimal in the team coaching sentences
