@@ -215,7 +215,7 @@ Blob 공유 UI는 꺼져 있습니다. **JSON 파일**만 사용합니다.
 ## 8. 관련 문서
 
 - [TMS 접속 URL · 북마크](./TMS-접속URL-북마크.md) — 역할별 URL
-- [일지 ↔ TMS 연계 가이드](./KPI-일지-TMS-연계-가이드.md) — KPI·M/M 규칙
+- [일지 ↔ TMS 연계 가이드](./KPI-일지-TMS-연계-가이드.md) — KPI·M/D 규칙
 - [TMS · KPI 릴리즈 노트](./TMS-릴리즈노트.md) — Blob 핫픽스 이력
 - [팀 KPI 메뉴·URL](./KPI-TMS-팀KPI메뉴.md)
 
