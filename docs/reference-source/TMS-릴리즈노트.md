@@ -7,6 +7,11 @@
 
 ## 2026-10-07
 
+### [신규] feat(kpi): record the confirmation notice date and appeals for a quarter
+
+- feat(kpi): record the confirmation notice date and appeals for a quarter
+- PR #183: https://github.com/cxr542/edu-team-tms/pull/183
+
 ### [신규] feat(kpi): show the KPI3 confirmation-notice deadline (quarter end + 5 business days)
 
 - feat(kpi): show the KPI3 confirmation-notice deadline (quarter end + 5 business days)
