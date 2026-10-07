@@ -7,6 +7,11 @@
 
 ## 2026-10-07
 
+### [수정] fix(kpi): show the KPI3 composite to one decimal in the quarterly member tables
+
+- fix(kpi): show the KPI3 composite to one decimal in the quarterly member tables
+- PR #166: https://github.com/cxr542/edu-team-tms/pull/166
+
 ### [신규] feat(kpi): show the KPI3 composite score to one decimal and compare targets on the rounded value
 
 - feat(kpi): show the KPI3 composite score to one decimal and compare targets on the rounded value
