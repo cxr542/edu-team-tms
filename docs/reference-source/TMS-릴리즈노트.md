@@ -7,6 +7,11 @@
 
 ## 2026-10-07
 
+### [신규] feat(kpi): show the KPI3 composite score to one decimal and compare targets on the rounded value
+
+- feat(kpi): show the KPI3 composite score to one decimal and compare targets on the rounded value
+- PR #165: https://github.com/cxr542/edu-team-tms/pull/165
+
 ### [수정] fix(kpi): cap individual level at 5.0 and grade KPI3 on the score rounded to one decimal
 
 - fix(kpi): cap individual level at 5.0 and grade KPI3 on the score rounded to one decimal
