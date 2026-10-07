@@ -505,8 +505,14 @@ export default function Kpi3ElementsPanel({
             type="button"
             className="btn btn-secondary btn-sm"
             onClick={() => {
-              journal.rollupCompetencyToKpi3Quarter(year, month, memberCode);
-              onToast?.('월간 역량 평가 → 분기 레벨 반영');
+              const result = journal.rollupCompetencyToKpi3Quarter(year, month, memberCode);
+              if (result?.ok) {
+                onToast?.(`분기 레벨 ${result.level} 반영 (팀장 확정 월 평균)`);
+              } else if (result?.reason === 'readonly') {
+                onToast?.('읽기 전용이라 반영할 수 없습니다');
+              } else {
+                onToast?.('팀장 확정된 월간 평가가 없어 분기 레벨을 반영하지 않았습니다');
+              }
             }}
           >
             월간 확정 평균 → 분기 레벨 반영

@@ -866,10 +866,11 @@ export function useKpiOperational({ readOnly = false } = {}) {
 
   const rollupCompetencyToKpi3Quarter = useCallback(
     (year, monthIndex, memberCode) => {
-      if (readOnly) return;
+      if (readOnly) return { ok: false, reason: 'readonly' };
       const level = rollupQuarterLevelFromMonths(store.competencyMonths, year, monthIndex, memberCode, COMPETENCY_USE_4060);
-      if (level == null) return;
+      if (level == null) return { ok: false, reason: 'no-confirmed-month' };
       updateKpi3Quarter(year, monthIndex, memberCode, { level, levelAuto: true });
+      return { ok: true, level };
     },
     [readOnly, store.competencyMonths, updateKpi3Quarter]
   );

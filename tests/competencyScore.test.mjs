@@ -13,6 +13,7 @@ import {
   normalizeCompetencyIntLevel,
   proposedComposite,
   quarterAverageLevel,
+  rollupQuarterLevelFromMonths,
   mergeCompetencyEvalSidePatch,
 } from '../src/utils/competencyScore.js';
 import {
@@ -395,5 +396,22 @@ describe('competencyScore', () => {
     expect(normalized.evidence).toBe('수정된 전체 근거');
     expect(normalized.dimEvidences.autonomy).toBe('자율성 근거');
     expect(normalized.dimLinks.scope).toBe('https://example.com/scope');
+  });
+  it('rollupQuarterLevelFromMonths — 팀장 확정 월이 없으면 null, 있으면 확정 월만 평균', () => {
+    const rec = (proposed, managerLocked) => ({
+      self: { computed: { proposed: null } },
+      manager: { computed: { proposed } },
+      managerLocked,
+    });
+    const none = { '2026-07': { A: rec(3.6, false) }, '2026-08': { A: rec(3.6, false) } };
+    expect(rollupQuarterLevelFromMonths(none, 2026, 6, 'A', false)).toBeNull();
+    expect(rollupQuarterLevelFromMonths({}, 2026, 6, 'A', false)).toBeNull();
+
+    const some = {
+      '2026-07': { A: rec(3.6, true) },
+      '2026-08': { A: rec(3.8, true) },
+      '2026-09': { A: rec(5, false) },
+    };
+    expect(rollupQuarterLevelFromMonths(some, 2026, 6, 'A', false)).toBe(3.7);
   });
 });
