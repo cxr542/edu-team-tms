@@ -244,3 +244,25 @@
   outline-offset: 2px;
   background-color: #fef3c7;
 }
+
+/* 정수 레벨 미선택 — 제출 버튼은 눌러 볼 수 있지만 흐리게 보이고, 누르면 이유를 알려 준다 */
+.competency-self-lock-btn.is-needs-level {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.competency-int-level-hint {
+  color: var(--color-warning, #bf4800);
+  font-weight: 600;
+}
+
+.competency-int-level-alert {
+  color: var(--color-warning, #bf4800);
+  font-weight: 600;
+}
+
+.competency-int-level-select--attention {
+  border-color: var(--color-warning, #bf4800);
+  outline: 2px solid var(--color-warning, #bf4800);
+  outline-offset: 1px;
+}
