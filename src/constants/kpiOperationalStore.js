@@ -86,6 +86,7 @@ export function defaultQuarterRecord(memberCode) {
       locked: false,
       confirmedAt: null,
       noticedAt: null,
+      practiceDefaulted: false,
       levelAuto: false,
     },
     /** 이의 제기 기록 (정의서 v6: 확정 통보 후 5영업일 이내 접수) */
@@ -182,6 +183,7 @@ export function normalizeKpiOperationalStore(raw) {
     Object.values(q).forEach((rec) => {
       if (rec?.quarter && rec.quarter.levelAuto == null) rec.quarter.levelAuto = false;
       if (rec?.quarter && rec.quarter.noticedAt === undefined) rec.quarter.noticedAt = null;
+      if (rec?.quarter && rec.quarter.practiceDefaulted === undefined) rec.quarter.practiceDefaulted = false;
       if (!Array.isArray(rec.appeals)) rec.appeals = [];
       if (!rec.dmDetail) rec.dmDetail = defaultDmDetail();
       if (!rec.leaderDetail) rec.leaderDetail = defaultLeaderDetail();

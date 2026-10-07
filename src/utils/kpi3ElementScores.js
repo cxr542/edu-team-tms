@@ -138,6 +138,26 @@ export function leaderScoreFromKpiGrades(gradeKpi1, gradeKpi2) {
   return Math.min(a, b);
 }
 
+/** 정의서 v6 5점 척도: 1점 = 증빙 미제출 또는 미인정 */
+export const PRACTICE_SCORE_NO_EVIDENCE = 1;
+
+/**
+ * 분기 확정 시 실전 적용 점수 처리.
+ * - keep: 이미 점수가 있음 → 그대로
+ * - default-no-evidence: 점수가 없고 제출된 사례도 0건 → 1점(증빙 미제출)으로 확정
+ * - pending-review: 점수가 없지만 제출된 사례가 있음(팀장 검토 전) → 임의로 점수를 매기지 않음
+ * @returns {{ action: 'keep'|'default-no-evidence'|'pending-review', score: number|null, caseCount: number }}
+ */
+export function resolvePracticeForConfirmation(practiceDetail, currentPractice) {
+  const current = Number(currentPractice) || 0;
+  const caseCount = (practiceDetail?.cases || []).length;
+  if (current > 0) return { action: 'keep', score: current, caseCount };
+  if (caseCount === 0) {
+    return { action: 'default-no-evidence', score: PRACTICE_SCORE_NO_EVIDENCE, caseCount };
+  }
+  return { action: 'pending-review', score: null, caseCount };
+}
+
 /**
  * 실전 적용 5점 척도 (팀장 인정 건수)
  */
