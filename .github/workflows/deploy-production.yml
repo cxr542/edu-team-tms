@@ -24,6 +24,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # docs/reference-source (SoT) -> public/docs/reference. The release-note bot
+      # syncs this copy in a follow-up commit, but pushes made with GITHUB_TOKEN do not
+      # retrigger this workflow (RELEASE_NOTES_PUSH_TOKEN is not set), so the committed
+      # copy can lag the SoT at the deployed commit. Regenerate it here (working tree
+      # only, nothing is committed) so every deploy ships the docs of its own commit.
+      - name: Sync reference docs
+        run: node scripts/sync-reference-docs.mjs
+
       - name: Run tests
         run: npm test
 
