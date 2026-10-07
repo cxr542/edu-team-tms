@@ -7,6 +7,11 @@
 
 ## 2026-10-07
 
+### [수정] fix(kpi): show the KPI3 composite to one decimal in the team coaching sentences
+
+- fix(kpi): show the KPI3 composite to one decimal in the team coaching sentences
+- PR #168: https://github.com/cxr542/edu-team-tms/pull/168
+
 ### [문서] docs(supabase): record anon hardening phase 1 + health-check retry
 
 - docs(supabase): record anon hardening phase 1 + health-check retry
