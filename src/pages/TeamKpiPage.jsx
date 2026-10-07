@@ -515,9 +515,9 @@ export default function TeamKpiPage() {
                 <thead>
                   <tr>
                     <th>주시작</th>
-                    <th>업무MM</th>
-                    <th>생산향상MM</th>
-                    <th>휴일MM</th>
+                    <th>업무MD</th>
+                    <th>생산향상MD</th>
+                    <th>휴일MD</th>
                     <th className="col-memo">주간메모</th>
                   </tr>
                 </thead>
@@ -1115,7 +1115,7 @@ export default function TeamKpiPage() {
           <div className="team-kpi-close-grid">
             {['work', 'improve', 'leave', 'available'].map((field) => (
               <label key={field}>
-                {field === 'work' ? '업무MM' : field === 'improve' ? '향상MM' : field === 'leave' ? '휴일MM' : '가용MM'}
+                {field === 'work' ? '업무MD' : field === 'improve' ? '향상MD' : field === 'leave' ? '휴일MD' : '가용MD'}
                 <input
                   type="number"
                   step="0.0001"

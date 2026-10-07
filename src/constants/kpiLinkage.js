@@ -1,4 +1,11 @@
-import { KPI_JOURNAL_MEMBER, KPI_SHEET_01C, KPI_SHEET_02, KPI_01C_HEADERS, KPI_02_HEADERS } from './kpiSchema';
+import {
+  KPI_JOURNAL_MEMBER,
+  KPI_SHEET_01C,
+  KPI_SHEET_02,
+  KPI_01C_HEADERS,
+  KPI_02_HEADERS,
+  kpiHeaderLabel,
+} from './kpiSchema';
 import { JOURNAL_CATS } from './journalCategories';
 import { getTaskLoggedHours, getTaskMmAxis, hoursToMm } from '../utils/journalMm';
 import { LEAVE_MEMO_TASK_RE } from '../utils/journalLeavePresets';
@@ -22,7 +29,7 @@ export const KPI_JOURNAL_LINKAGE_GUIDE_PATH = '/docs/KPI-일지-TMS-연계-가�
 export const KPI_LINKAGE_ROWS = [
   {
     journal: '일별 업무 (실작업 h, M/D 구분)',
-    kpi: `${KPI1_NAME} — 업무MM / 생산향상MM`,
+    kpi: `${KPI1_NAME} — 업무MD / 생산향상MD`,
     sheet: KPI_SHEET_01C,
     note: '실작업÷8(M/D) · 완료 건 · 주/월 합산은 KPI1 M/D',
   },
@@ -40,7 +47,7 @@ export const KPI_LINKAGE_ROWS = [
   },
   {
     journal: '휴일 M/D · 휴일 메모',
-    kpi: `${KPI1_NAME} — 휴일MM`,
+    kpi: `${KPI1_NAME} — 휴일MD`,
     sheet: KPI_SHEET_01C,
     note: `휴일 메모 업무는 ${KPI2_NAME} 제외`,
   },
@@ -118,7 +125,7 @@ export function rowsToTsv(headers, rows) {
     }
     return s;
   };
-  const lines = [headers.map(escape).join('\t')];
+  const lines = [headers.map((h) => escape(kpiHeaderLabel(h))).join('\t')];
   rows.forEach((row) => {
     lines.push(headers.map((h) => escape(row[h])).join('\t'));
   });

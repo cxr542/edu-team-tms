@@ -11,6 +11,21 @@ export const KPI_SHEET_03 = '03_KPI3';
 export const KPI_SHEET_01C = '01c_KPI1_주간메모';
 export const KPI_SHEET_02 = '02_KPI2_입력';
 
+/**
+ * 엑셀·복사(TSV)·화면 표에 보이는 헤더 라벨 (정의서 v6: M/M → M/D).
+ * 행 객체의 키(업무MM 등)와 KPI_*_HEADERS 값은 호환을 위해 그대로 두고, 표시만 바꾼다.
+ */
+export const KPI_HEADER_LABELS = {
+  업무MM: '업무MD',
+  생산향상MM: '생산향상MD',
+  휴일MM: '휴일MD',
+  가용MM: '가용MD',
+};
+
+export function kpiHeaderLabel(header) {
+  return KPI_HEADER_LABELS[header] ?? header;
+}
+
 export const KPI_01C_HEADERS = [
   '연도',
   '주시작일',
