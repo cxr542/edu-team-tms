@@ -47,7 +47,7 @@ export function applyLeavePresetToDay(day, preset, { publicHoliday = false } = {
         ...day,
         holiday: true,
         mm: { work: 0, improve: 0, leave: FULL_LEAVE_MM },
-        tasks: appendMemoTask(day.tasks, '공휴일', `휴일 M/M ${FULL_LEAVE_MM}`),
+        tasks: appendMemoTask(day.tasks, '공휴일', `휴일 M/D ${FULL_LEAVE_MM}`),
       },
       false
     );
@@ -58,7 +58,7 @@ export function applyLeavePresetToDay(day, preset, { publicHoliday = false } = {
         ...day,
         holiday: true,
         mm: { work: 0, improve: 0, leave: FULL_LEAVE_MM },
-        tasks: appendMemoTask(day.tasks, '연차', `휴일 M/M ${FULL_LEAVE_MM}`),
+        tasks: appendMemoTask(day.tasks, '연차', `휴일 M/D ${FULL_LEAVE_MM}`),
       },
       false
     );
@@ -69,7 +69,7 @@ export function applyLeavePresetToDay(day, preset, { publicHoliday = false } = {
         ...day,
         holiday: true,
         mm: { work: 0, improve: 0, leave: FULL_LEAVE_MM },
-        tasks: appendMemoTask(day.tasks, '외근', `휴일 M/M ${FULL_LEAVE_MM}`),
+        tasks: appendMemoTask(day.tasks, '외근', `휴일 M/D ${FULL_LEAVE_MM}`),
       },
       false
     );
@@ -80,7 +80,7 @@ export function applyLeavePresetToDay(day, preset, { publicHoliday = false } = {
         ...day,
         holiday: true,
         mm: { work: 0, improve: 0, leave: FULL_LEAVE_MM },
-        tasks: appendMemoTask(day.tasks, '출장', `휴일 M/M ${FULL_LEAVE_MM}`),
+        tasks: appendMemoTask(day.tasks, '출장', `휴일 M/D ${FULL_LEAVE_MM}`),
       },
       false
     );
@@ -96,7 +96,7 @@ export function applyLeavePresetToDay(day, preset, { publicHoliday = false } = {
         plan: 0,
         actual: 0,
         done: true,
-        note: `휴일 M/M ${HALF_LEAVE_MM}`,
+        note: `휴일 M/D ${HALF_LEAVE_MM}`,
       });
     }
     return withPublicHolidayOverride(
@@ -114,7 +114,7 @@ export function applyLeavePresetToDay(day, preset, { publicHoliday = false } = {
         plan: 0,
         actual: 0,
         done: true,
-        note: `휴일 M/M ${QUARTER_LEAVE_MM}`,
+        note: `휴일 M/D ${QUARTER_LEAVE_MM}`,
       });
     }
     return withPublicHolidayOverride(

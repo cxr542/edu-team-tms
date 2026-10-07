@@ -386,7 +386,7 @@ export default function Kpi3ElementsPanel({
     const body =
       mode === DM_WEIGHT_MODE_MANUAL
         ? `강의 ${resolved.lecturePct}% · 운영 ${resolved.opsPct}% 비중이 이 분기 다면 산출에 반영되었습니다. (${ratioText})`
-        : `분기 일지 M/M 기준 가중 ${ratioText}이(가) 다면 산출에 반영되었습니다.`;
+        : `분기 일지 M/D 기준 가중 ${ratioText}이(가) 다면 산출에 반영되었습니다.`;
     setDmWeightApplyModal({ title: '가중 비율 반영 완료', body });
     onToast?.('다면 가중 비율이 반영되었습니다');
   };

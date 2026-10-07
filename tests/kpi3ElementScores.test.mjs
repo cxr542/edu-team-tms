@@ -31,13 +31,13 @@ describe('computeDmScore', () => {
     ).toBe(4.25);
   });
 
-  it('dual uses M/M activity weights when both axes valid', () => {
+  it('dual uses M/D activity weights when both axes valid', () => {
     const r = computeDmScore(
       { lectureAvg: 4, lectureN: 5, opsAvg: 3, opsN: 3 },
       { dmProfile: DM_PROFILE.DUAL, activityWeights: { lectureWeight: 0.6, opsWeight: 0.4 } }
     );
     expect(r.score).toBe(3.6);
-    expect(r.note).toContain('겸업 M/M');
+    expect(r.note).toContain('겸업 M/D');
   });
 
   it('ops only when lecture N low', () => {

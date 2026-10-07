@@ -83,7 +83,7 @@ export function buildTeamIntegratedSummary(monthly, quarterly) {
       available,
       totalMm,
       utilization: kpi1Util,
-      formula: '(팀 총 업무+생산향상+휴일 M/M ÷ 팀 총 가용 M/M)×100',
+      formula: '(팀 총 업무+생산향상+휴일 M/D ÷ 팀 총 가용 M/D)×100',
     },
     kpi2: {
       ...kpi2Official,

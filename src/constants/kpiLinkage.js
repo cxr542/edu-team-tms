@@ -24,7 +24,7 @@ export const KPI_LINKAGE_ROWS = [
     journal: '일별 업무 (실작업 h, M/D 구분)',
     kpi: `${KPI1_NAME} — 업무MM / 생산향상MM`,
     sheet: KPI_SHEET_01C,
-    note: '실작업÷8(M/D) · 완료 건 · 주/월 합산은 KPI1 M/M',
+    note: '실작업÷8(M/D) · 완료 건 · 주/월 합산은 KPI1 M/D',
   },
   {
     journal: 'KPI 탭 — 주간메모 (별도 입력)',

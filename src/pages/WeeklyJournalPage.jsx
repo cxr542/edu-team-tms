@@ -1988,7 +1988,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           {journalReadOnly && showLeaderTeamSharePull && (
             <p className="journal-sync-hint">
               관리자 일지는 <strong>조회 전용</strong>입니다. 작성·수정은 구성원 URL에서 하세요. 팀 KPI에
-              효과 건·일지 M/M를 반영하려면 상단 <strong>「팀 공유본 가져오기」</strong>로 공유 저장소를
+              효과 건·일지 M/D를 반영하려면 상단 <strong>「팀 공유본 가져오기」</strong>로 공유 저장소를
               이 브라우저에 불러오세요.
             </p>
           )}
