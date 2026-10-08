@@ -13,7 +13,7 @@ export const KPI3_ELEMENTS = [
     label: '레벨',
     fullLabel: '레벨 (본부 기준표·5차원)',
     weightPct: Math.round(KPI3_WEIGHTS.level * 100),
-    summary: '월간 역량 평가(자체·팀장) 분기 평균 → 팀 레벨(35%)',
+    summary: '월간 역량 평가(자체·팀장) 분기 마지막 달 확정 레벨 → 팀 레벨(35%)',
     docSection: '세부 지표 ①',
   },
   {

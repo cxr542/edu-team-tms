@@ -621,15 +621,15 @@ export default function Kpi3ElementsPanel({
             onClick={() => {
               const result = journal.rollupCompetencyToKpi3Quarter(year, month, memberCode);
               if (result?.ok) {
-                onToast?.(`분기 레벨 ${result.level} 반영 (팀장 확정 월 평균)`);
+                onToast?.(`분기 레벨 ${result.level} 반영 (분기 마지막 달 팀장 확정 레벨)`);
               } else if (result?.reason === 'readonly') {
                 onToast?.('읽기 전용이라 반영할 수 없습니다');
               } else {
-                onToast?.('팀장 확정된 월간 평가가 없어 분기 레벨을 반영하지 않았습니다');
+                onToast?.('분기 마지막 달의 팀장 확정 평가가 없어 분기 레벨을 반영하지 않았습니다');
               }
             }}
           >
-            월간 확정 평균 → 분기 레벨 반영
+            분기 마지막 달 확정 레벨 → 분기 레벨 반영
           </button>
         )}
         {showManagerTabs && (
@@ -652,7 +652,7 @@ export default function Kpi3ElementsPanel({
             />
           </label>
         )}
-        {q.levelAuto && <p className="team-kpi-kpi3-level-auto">레벨: 역량 평가 분기 평균 자동 반영</p>}
+        {q.levelAuto && <p className="team-kpi-kpi3-level-auto">레벨: 역량 평가 분기 마지막 달 확정 레벨 자동 반영</p>}
         {!showManagerTabs && (
           <p className="team-kpi-hint">
             월간 레벨은 「레벨·자체평가」에서 작성하고, 팀장 확정 후 분기 레벨에 반영됩니다.

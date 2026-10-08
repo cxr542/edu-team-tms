@@ -137,3 +137,54 @@
     padding: 0;
   }
 }
+
+.kpi-report-view-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.65rem;
+}
+
+.kpi-report-view-tabs .btn.is-active {
+  background: var(--primary, #1d4ed8);
+  color: #fff;
+}
+
+.kpi-report-period-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem;
+  margin: 0.5rem 0 1rem;
+}
+
+.kpi-report-period-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 10px;
+  background: var(--bg-card, #fff);
+}
+
+.kpi-report-period-card strong {
+  font-size: 1.8rem;
+  line-height: 1.1;
+}
+
+.kpi-report-period-card__label {
+  font-size: 0.85rem;
+  color: var(--text-muted, #64748b);
+}
+
+.kpi-report-period-card small {
+  color: var(--text-muted, #64748b);
+}
+
+.kpi-report-level-months {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.78rem;
+  color: var(--text-muted, #64748b);
+}

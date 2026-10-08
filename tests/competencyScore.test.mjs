@@ -397,21 +397,32 @@ describe('competencyScore', () => {
     expect(normalized.dimEvidences.autonomy).toBe('자율성 근거');
     expect(normalized.dimLinks.scope).toBe('https://example.com/scope');
   });
-  it('rollupQuarterLevelFromMonths — 팀장 확정 월이 없으면 null, 있으면 확정 월만 평균', () => {
+  it('rollupQuarterLevelFromMonths — 분기 마지막 달의 팀장 확정 레벨을 쓴다', () => {
     const rec = (proposed, managerLocked) => ({
       self: { computed: { proposed: null } },
       manager: { computed: { proposed } },
       managerLocked,
     });
-    const none = { '2026-07': { A: rec(3.6, false) }, '2026-08': { A: rec(3.6, false) } };
-    expect(rollupQuarterLevelFromMonths(none, 2026, 6, 'A', false)).toBeNull();
-    expect(rollupQuarterLevelFromMonths({}, 2026, 6, 'A', false)).toBeNull();
-
-    const some = {
+    // 마지막 달(9월)이 팀장 확정 전이면 앞선 달이 확정돼 있어도 null
+    const notLast = {
       '2026-07': { A: rec(3.6, true) },
       '2026-08': { A: rec(3.8, true) },
       '2026-09': { A: rec(5, false) },
     };
-    expect(rollupQuarterLevelFromMonths(some, 2026, 6, 'A', false)).toBe(3.7);
+    expect(rollupQuarterLevelFromMonths(notLast, 2026, 6, 'A', false)).toBeNull();
+    expect(rollupQuarterLevelFromMonths({}, 2026, 6, 'A', false)).toBeNull();
+
+    // 마지막 달 확정 → 그 달 값 (7·8월 값은 평균에 들어가지 않는다)
+    const last = {
+      '2026-07': { A: rec(3.6, true) },
+      '2026-08': { A: rec(3.8, true) },
+      '2026-09': { A: rec(4.0, true) },
+    };
+    expect(rollupQuarterLevelFromMonths(last, 2026, 6, 'A', false)).toBe(4);
+
+    // 분기 판정은 분기 안의 어느 달을 넘겨도 같다 (2분기 = 6월)
+    const q2 = { '2026-06': { A: rec(3.2, true) }, '2026-04': { A: rec(5, true) } };
+    expect(rollupQuarterLevelFromMonths(q2, 2026, 3, 'A', false)).toBe(3.2);
+    expect(rollupQuarterLevelFromMonths(q2, 2026, 5, 'A', false)).toBe(3.2);
   });
 });

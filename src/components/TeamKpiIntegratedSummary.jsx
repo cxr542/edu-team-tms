@@ -29,6 +29,9 @@ export default function TeamKpiIntegratedSummary({
   monthly,
   quarterly,
   variant = 'manage',
+  /** 월간 리포트: 분기 KPI3 카드 대신 표시할 카드 (월별 레벨 평가) */
+  kpi3Slot = null,
+  showCoaching = true,
   children,
 }) {
   const team = useMemo(() => buildTeamIntegratedSummary(monthly, quarterly), [monthly, quarterly]);
@@ -91,6 +94,7 @@ export default function TeamKpiIntegratedSummary({
           <p className="team-kpi-integrated-formula">{team.kpi2.formula}</p>
         </article>
 
+        {kpi3Slot || (
         <article className="team-kpi-integrated-card kpi3">
           <h3>
             {KPI3_NAME} · {yq}
@@ -120,9 +124,10 @@ export default function TeamKpiIntegratedSummary({
           )}
           <p className="team-kpi-integrated-formula">{team.kpi3.formula}</p>
         </article>
+        )}
       </div>
 
-      {variant === 'report' && (
+      {variant === 'report' && showCoaching && (
         <TeamKpiCoachingReport team={team} monthly={monthly} quarterly={quarterly} yq={yq} />
       )}
 
