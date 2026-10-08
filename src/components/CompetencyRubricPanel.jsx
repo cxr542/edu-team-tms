@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react';
 import AutoGrowTextarea from './AutoGrowTextarea';
+import { formatNumberedItems, needsNumberedItemBreaks } from '../utils/evidenceText';
 import {
   COMPETENCY_DIMS,
   COMPETENCY_DIM_IDS,
@@ -223,8 +224,8 @@ export default function CompetencyRubricPanel({
               <th>정수레벨 {liveEvalSide.intLevel} 관찰 문구</th>
             ) : null}
             <th>충족 여부</th>
-            <th>차원별 근거</th>
-            <th>첨부 링크</th>
+            <th className="competency-dim-col-evidence">차원별 근거</th>
+            <th className="competency-dim-col-link">첨부 링크</th>
           </tr>
         </thead>
         <tbody>
@@ -250,25 +251,38 @@ export default function CompetencyRubricPanel({
                     onChange={(v) => handleDim(dim.id, v)}
                   />
                 </td>
-                <td>
-                  <AutoGrowTextarea
-                    rows={1}
-                    className="form-input competency-dim-evidence-input"
-                    value={liveEvalSide?.dimEvidences?.[dim.id] || ''}
-                    disabled={readOnly || locked}
-                    placeholder={readOnly || locked ? '' : '달성 근거 입력'}
-                    onChange={(e) => {
+                <td className="competency-dim-col-evidence">
+                  {(() => {
+                    const raw = liveEvalSide?.dimEvidences?.[dim.id] || '';
+                    const frozen = readOnly || locked;
+                    const writeEvidence = (next) => {
                       const currentEvidences = liveEvalSide?.dimEvidences || {};
-                      onUpdate({
-                        dimEvidences: {
-                          ...currentEvidences,
-                          [dim.id]: e.target.value,
-                        },
-                      });
-                    }}
-                  />
+                      onUpdate({ dimEvidences: { ...currentEvidences, [dim.id]: next } });
+                    };
+                    return (
+                      <>
+                        <AutoGrowTextarea
+                          rows={1}
+                          className="form-input competency-dim-evidence-input"
+                          value={frozen ? formatNumberedItems(raw) : raw}
+                          disabled={frozen}
+                          placeholder={frozen ? '' : '달성 근거 입력'}
+                          onChange={(e) => writeEvidence(e.target.value)}
+                        />
+                        {!frozen && needsNumberedItemBreaks(raw) && (
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm competency-evidence-format-btn"
+                            onClick={() => writeEvidence(formatNumberedItems(raw))}
+                          >
+                            번호 항목 줄바꿈
+                          </button>
+                        )}
+                      </>
+                    );
+                  })()}
                 </td>
-                <td>
+                <td className="competency-dim-col-link">
                   <div className="competency-dim-link-wrapper">
                     <input
                       type="text"
@@ -335,11 +349,20 @@ export default function CompetencyRubricPanel({
           <AutoGrowTextarea
             className="form-input"
             rows={4}
-            value={liveEvalSide.evidence || ''}
+            value={readOnly || locked ? formatNumberedItems(liveEvalSide.evidence || '') : liveEvalSide.evidence || ''}
             disabled={readOnly || locked}
             placeholder="업무일지 날짜, 산출물, 링크, 개선 사례 등 자체평가 근거를 입력하세요."
             onChange={(e) => onUpdate({ evidence: e.target.value })}
           />
+          {!readOnly && !locked && needsNumberedItemBreaks(liveEvalSide.evidence || '') && (
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm competency-evidence-format-btn"
+              onClick={() => onUpdate({ evidence: formatNumberedItems(liveEvalSide.evidence || '') })}
+            >
+              번호 항목 줄바꿈
+            </button>
+          )}
         </label>
       )}
 
