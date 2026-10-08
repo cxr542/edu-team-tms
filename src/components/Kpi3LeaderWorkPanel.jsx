@@ -81,7 +81,7 @@ export default function Kpi3LeaderWorkPanel({
               if (r.ok) {
                 onToast?.('팀장 평가 확정 처리 중…');
                 const ymStr = `${year}-${String(month + 1).padStart(2, '0')}`;
-                const uploadResult = await journal.saveCompetencyMemberCloudSnapshot?.(memberCode, ymStr);
+                const uploadResult = await journal.saveCompetencyMemberCloudSnapshot?.(memberCode, ymStr, r.record);
                 if (uploadResult && !uploadResult.ok) {
                   if (uploadResult.reason === 'dev-blocked') {
                     onToast?.('팀장 평가 확정 완료 (개발 환경으로 클라우드 저장은 생략되었습니다)');
@@ -102,7 +102,7 @@ export default function Kpi3LeaderWorkPanel({
               if (r.ok) {
                 onToast?.('팀장 평가 확정 취소 처리 중…');
                 const ymStr = `${year}-${String(month + 1).padStart(2, '0')}`;
-                const uploadResult = await journal.saveCompetencyMemberCloudSnapshot?.(memberCode, ymStr);
+                const uploadResult = await journal.saveCompetencyMemberCloudSnapshot?.(memberCode, ymStr, r.record);
                 if (uploadResult && !uploadResult.ok) {
                   if (uploadResult.reason === 'dev-blocked') {
                     onToast?.('확정 취소 완료 (개발 환경으로 클라우드 저장은 생략되었습니다)');

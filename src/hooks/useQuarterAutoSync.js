@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { needsQuarterBackfillPush } from '../utils/kpiQuarterCloudSnapshot';
+import { listUnsharedManagerLocks, normalizeCompetencyCloudSnapshot } from '../utils/kpiOperationalCloudSnapshot';
 
 /** 세션 내 (역할·구성원·분기) 단위로 1회만 — 성공 시에만 기록하고 실패하면 다음 진입에서 재시도 */
 const autoSyncedQuarterKeys = new Set();
@@ -81,7 +82,24 @@ export async function runCompetencyAutoPull({ journal, role, yq, onToast }) {
     return 'failed';
   }
   if (r.changed) onToast?.('월간 역량 평가 공유본을 자동으로 반영했습니다');
-  return r.changed ? 'pulled' : 'in-sync';
+
+  // 팀장: 확정은 로컬에만 있고 공유본에 없는 월(과거 저장 누락분)을 한 번 보충 저장한다
+  let pushed = 0;
+  if (role === 'manager' && r.store && journal.saveCompetencyMemberCloudSnapshot) {
+    const remoteMonths = normalizeCompetencyCloudSnapshot(r.remote).competencyMonths;
+    const targets = listUnsharedManagerLocks(r.store.competencyMonths, remoteMonths);
+    for (const t of targets) {
+      const res = await journal.saveCompetencyMemberCloudSnapshot(t.memberCode, t.ym, t.record);
+      if (res?.ok) pushed += 1;
+      else if (res?.reason === 'dev-blocked' || res?.reason === 'read-only') break;
+      else {
+        onToast?.(`팀장 확정 ${t.ym} 공유 저장에 실패했습니다 (${res?.error?.message || res?.reason})`);
+        break;
+      }
+    }
+    if (pushed > 0) onToast?.(`공유되지 않았던 팀장 확정 ${pushed}건을 팀 공유 저장소에 저장했습니다`);
+  }
+  return pushed > 0 ? 'backfilled' : r.changed ? 'pulled' : 'in-sync';
 }
 
 export function useCompetencyAutoPull({ enabled, journal, role, yq, onToast }) {
