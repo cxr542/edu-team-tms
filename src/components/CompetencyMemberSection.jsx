@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Import } from 'lucide-react';
 import CompetencyRubricPanel from './CompetencyRubricPanel';
 import Kpi3ElementsPanel from './Kpi3ElementsPanel';
-import { useQuarterAutoSync } from '../hooks/useQuarterAutoSync';
+import { useCompetencyAutoPull, useQuarterAutoSync } from '../hooks/useQuarterAutoSync';
 import { COMPETENCY_MEMBER_TABS } from '../constants/competencyTabs';
 import { KPI3_ELEMENTS } from '../constants/kpi3Elements';
 import { formatKpiMemberLabel } from '../constants/kpiMembers';
@@ -73,6 +73,15 @@ export default function CompetencyMemberSection({
 
   const kpi3Section = activeTab === 'dm' || activeTab === 'leader' || activeTab === 'practice' ? activeTab : null;
   const kpi3El = kpi3Section ? KPI3_BY_KEY[kpi3Section] : null;
+
+  // 월간 역량 평가 공유본도 화면 진입 시 한 번 자동으로 가져온다
+  useCompetencyAutoPull({
+    enabled: !journal.kpiOperationalReadOnly,
+    journal,
+    role: showManagerTabs ? 'manager' : 'member',
+    yq,
+    onToast,
+  });
 
   // 분기 입력 탭을 열지 않아도 이 화면에 들어오면 한 번 동기화한다 (구성원: 미공유 제출분 보충 저장 / 팀장: 가져오기)
   useQuarterAutoSync({

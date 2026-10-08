@@ -4,6 +4,7 @@ import Kpi3ElementsPanel from './Kpi3ElementsPanel';
 import { KPI3_MEMO_TYPES } from '../constants/kpiRules';
 import { findKpiMember } from '../constants/kpiMembers';
 import { isEditorMode } from '../utils/appMode';
+import { useCompetencyAutoPull } from '../hooks/useQuarterAutoSync';
 
 const LEADER_SUBTABS = [
   ['rubric-manager', '레벨·팀장평가'],
@@ -31,6 +32,9 @@ export default function Kpi3LeaderWorkPanel({
   const canEdit = isEditorMode();
   const readOnly = journal.kpiOperationalReadOnly;
   const memberRole = findKpiMember(memberCode)?.role;
+
+  // 팀장 화면 진입 시 월간 역량 평가 공유본을 한 번 자동으로 가져온다
+  useCompetencyAutoPull({ enabled: !readOnly, journal, role: 'manager', yq, onToast });
 
   return (
     <div className="kpi3-leader-work">

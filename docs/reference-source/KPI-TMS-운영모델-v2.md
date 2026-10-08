@@ -31,7 +31,7 @@
 - 로컬: `tms-kpi-operational-v1` (localStorage)
 - 팀 공유: `public/team-kpi-snapshot.json` (`npm run publish:kpi`)
 - 일지 스냅샷과 병행 가능 (`journal-snapshot.json`)
-- 월간 역량 평가: `/api/kpi-operational-snapshot` (Blob) — 수동 저장·가져오기
+- 월간 역량 평가: `/api/kpi-operational-snapshot` (Blob) — 수동 저장·가져오기. 가져오기는 역량 평가 화면(구성원·팀장)에 들어갈 때 세션당 1회 자동으로도 실행된다(병합 규칙 동일, 저장은 수동 유지)
 - 분기 4요소(다면·리더·실전) 제출·검토·확정: `/api/kpi-operational-snapshot?scope=quarters` (월간 역량과 같은 서버리스 함수, Vercel Hobby 함수 12개 한도 때문. Blob `kpi-operational/quarters-latest.json`) — 「분기 공유 저장」·「분기 공유본 가져오기」 수동 사용, 구성원 제출/취소·팀장 검토/분기 확정 시에는 저장이 자동 실행된다. 또한 구성원 역량 평가 화면(탭 무관) 또는 팀장 분기 평가 화면에 들어갈 때(세션당 1회, 실패 시 토스트 후 다음 진입에서 재시도) 팀장은 공유본을 자동으로 가져오고(구성원 제출분만 갱신, 팀장 입력 유지), 구성원은 공유본에 없는 본인 제출분을 자동으로 보충 저장한다(수동 전용 원칙의 예외). 구성원은 입력·제출만, 팀장은 검토·점수·확정·이의·상위 승인 기록을 쓰며(서버가 요청 경로로 권한 판단), 팀장 메모는 공유하지 않는다.
 
 ## 관련 문서

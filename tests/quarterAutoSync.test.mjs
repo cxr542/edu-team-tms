@@ -70,3 +70,42 @@ describe('분기 공유 자동 동기화 (화면 진입 시)', () => {
     expect(journal.saveKpi3QuarterCloudSnapshot).not.toHaveBeenCalled();
   });
 });
+
+import { resetCompetencyAutoPullSession, runCompetencyAutoPull } from '../src/hooks/useQuarterAutoSync.js';
+
+describe('월간 역량 평가 자동 가져오기 (화면 진입 시)', () => {
+  beforeEach(() => resetCompetencyAutoPullSession());
+  const make = (result) => {
+    const journal = { pullCompetencyCloudSnapshot: vi.fn(async () => result) };
+    const onToast = vi.fn();
+    return { journal, onToast, run: () => runCompetencyAutoPull({ journal, role: 'manager', yq: '2026-3Q', onToast }) };
+  };
+
+  it('변경이 있으면 알리고, 세션 내 같은 화면은 다시 가져오지 않는다', async () => {
+    const { journal, onToast, run } = make({ ok: true, changed: true });
+    expect(await run()).toBe('pulled');
+    expect(onToast).toHaveBeenCalledWith(expect.stringContaining('자동으로 반영'));
+    expect(await run()).toBe('skipped');
+    expect(journal.pullCompetencyCloudSnapshot).toHaveBeenCalledTimes(1);
+  });
+
+  it('변경이 없으면 조용히 끝난다', async () => {
+    const { onToast, run } = make({ ok: true, changed: false });
+    expect(await run()).toBe('in-sync');
+    expect(onToast).not.toHaveBeenCalled();
+  });
+
+  it('실패하면 알리고 다음 진입에서 재시도한다', async () => {
+    const { journal, onToast, run } = make({ ok: false, reason: 'error', error: new Error('503') });
+    expect(await run()).toBe('failed');
+    expect(onToast).toHaveBeenCalledWith(expect.stringContaining('확인하지 못했습니다'));
+    await run();
+    expect(journal.pullCompetencyCloudSnapshot).toHaveBeenCalledTimes(2);
+  });
+
+  it('조회 전용이면 알림 없이 재시도 가능 상태로 둔다', async () => {
+    const { onToast, run } = make({ ok: false, reason: 'read-only' });
+    expect(await run()).toBe('failed');
+    expect(onToast).not.toHaveBeenCalled();
+  });
+});
