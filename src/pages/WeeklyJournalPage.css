@@ -1566,10 +1566,3 @@
     width: 100%;
   }
 }\n
-.journal-kpi-strip-sub {
-  display: block;
-  margin-top: 0.1rem;
-  font-size: 0.68rem;
-  line-height: 1.3;
-  color: var(--text-secondary);
-}

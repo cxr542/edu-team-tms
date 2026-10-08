@@ -26,3 +26,11 @@ export function summarizeKpi2ForDisplay(kpi2, kpi2Preview) {
     count: Number(source?.submittedCount) || 0,
   };
 }
+
+/** 구성원 일지 상단 KPI2 칸의 툴팁 문구 (화면에는 % 만 보이고 상세는 마우스를 올리면 표시) */
+export function kpi2TileTooltip(tile) {
+  const rule = 'KPI 지표 2 — 이 달 KPI2 효과 건의 계획 시간 합 ÷ 실작업 시간 합 × 100';
+  if (!tile?.hasData) return `${rule}\n효과 건 없음`;
+  const detail = `계획 ${tile.planSum.toFixed(1)}h ÷ 실적 ${tile.actualSum.toFixed(1)}h · ${tile.count}건`;
+  return `${rule}\n${detail}${tile.usesPreview ? ' · 제출 전 건 포함' : ''}`;
+}

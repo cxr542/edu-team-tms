@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { resolveMemberCategories, resolveMemberWeekColumnTemplate } from '../utils/journalMemberPrefs';
 import { useJournal, useTeamKpiMetrics } from '../context/JournalProvider';
-import { summarizeKpi2ForDisplay } from '../utils/kpi2Display';
+import { kpi2TileTooltip, summarizeKpi2ForDisplay } from '../utils/kpi2Display';
 import { useJournalPeriod } from '../hooks/useJournalPeriod';
 import {
   dateKey,
@@ -2035,16 +2035,9 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               생산성향상 비율
               <strong>{formatSummaryPct(kpiMonth.improveRatio)}</strong>
             </div>
-            <div title="KPI 지표 2 — 이 달 KPI2 효과 건의 계획 시간 합 ÷ 실작업 시간 합 × 100">
+            <div title={kpi2TileTooltip(kpi2Tile)}>
               {KPI2_NAME} (KPI2)
               <strong>{kpi2Tile.hasData ? `${kpi2Tile.displayPct.toFixed(1)}%` : '—'}</strong>
-              <span className="journal-kpi-strip-sub">
-                {kpi2Tile.hasData
-                  ? `계획 ${kpi2Tile.planSum.toFixed(1)}h ÷ 실적 ${kpi2Tile.actualSum.toFixed(1)}h · ${kpi2Tile.count}건${
-                      kpi2Tile.usesPreview ? ' · 제출 전 건 포함' : ''
-                    }`
-                  : '효과 건 없음'}
-              </span>
             </div>
             <div>
               {KPI2_NAME} 효과 (완료)

@@ -46,3 +46,21 @@ describe('summarizeKpi2ForDisplay — 구성원 일지 상단 집계', () => {
     expect(summarizeKpi2ForDisplay(undefined, undefined).hasData).toBe(false);
   });
 });
+
+import { kpi2TileTooltip } from '../src/utils/kpi2Display.js';
+
+describe('kpi2TileTooltip — 상세는 툴팁으로', () => {
+  const rule = 'KPI 지표 2 — 이 달 KPI2 효과 건의 계획 시간 합 ÷ 실작업 시간 합 × 100';
+  it('공식 값: 산식 + 계획·실적·건수', () => {
+    const tip = kpi2TileTooltip({ hasData: true, planSum: 14, actualSum: 8.5, count: 2, usesPreview: false });
+    expect(tip).toBe(`${rule}\n계획 14.0h ÷ 실적 8.5h · 2건`);
+  });
+  it('미리보기: 제출 전 건 포함 표시', () => {
+    const tip = kpi2TileTooltip({ hasData: true, planSum: 8, actualSum: 5, count: 1, usesPreview: true });
+    expect(tip).toBe(`${rule}\n계획 8.0h ÷ 실적 5.0h · 1건 · 제출 전 건 포함`);
+  });
+  it('효과 건이 없으면 안내', () => {
+    expect(kpi2TileTooltip({ hasData: false })).toBe(`${rule}\n효과 건 없음`);
+    expect(kpi2TileTooltip(undefined)).toBe(`${rule}\n효과 건 없음`);
+  });
+});
