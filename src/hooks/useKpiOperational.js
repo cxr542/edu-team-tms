@@ -1068,13 +1068,13 @@ export function useKpiOperational({ readOnly = false } = {}) {
     if (readOnly) return { ok: false, reason: 'read-only' };
     try {
       const remote = await fetchCompetencyCloudSnapshot();
-      console.log(`[TMS Debug] pullCompetencyCloudSnapshot remote:`, JSON.stringify(remote, null, 2));
-      let mergedStore = null;
-      setStore((prev) => {
-        mergedStore = mergeCompetencyMonthsIntoKpiStore(prev, remote);
-        return persist(mergedStore);
-      });
-      return { ok: true, remote, store: mergedStore };
+      // 변경 여부는 최신 저장 상태(ref)로 계산한다 — setState 업데이터는 즉시 실행되지 않을 수 있다
+      const before = storeRef.current;
+      const mergedStore = mergeCompetencyMonthsIntoKpiStore(before, remote);
+      const changed =
+        JSON.stringify(before?.competencyMonths) !== JSON.stringify(mergedStore.competencyMonths);
+      setStore((prev) => persist(mergeCompetencyMonthsIntoKpiStore(prev, remote)));
+      return { ok: true, remote, store: mergedStore, changed };
     } catch (e) {
       console.error(`[TMS Debug] pullCompetencyCloudSnapshot error:`, e);
       return { ok: false, reason: 'error', error: e };

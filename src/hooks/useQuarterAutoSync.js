@@ -56,3 +56,39 @@ export function useQuarterAutoSync({ enabled, journal, role, memberCode, year, m
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, role, memberCode, yq]);
 }
+
+/** 월간 역량 평가 — 세션 내 (역할·분기) 단위 1회 */
+const autoPulledCompetencyKeys = new Set();
+
+export function resetCompetencyAutoPullSession() {
+  autoPulledCompetencyKeys.clear();
+}
+
+/**
+ * 월간 역량 평가 공유본을 화면 진입 시 한 번 자동으로 가져온다 (수동 「팀 공유본 가져오기」는 그대로).
+ * 병합은 기존 규칙(잠금 우선·더 새로운 쪽 우선)이며 실패하면 알리고 다음 진입에서 재시도한다.
+ */
+export async function runCompetencyAutoPull({ journal, role, yq, onToast }) {
+  const key = `${role}:${yq}`;
+  if (autoPulledCompetencyKeys.has(key)) return 'skipped';
+  autoPulledCompetencyKeys.add(key);
+  const r = await journal.pullCompetencyCloudSnapshot();
+  if (!r?.ok) {
+    autoPulledCompetencyKeys.delete(key);
+    if (r?.reason === 'error') {
+      onToast?.(`월간 역량 평가 공유본을 확인하지 못했습니다 (${r.error?.message || '오류'})`);
+    }
+    return 'failed';
+  }
+  if (r.changed) onToast?.('월간 역량 평가 공유본을 자동으로 반영했습니다');
+  return r.changed ? 'pulled' : 'in-sync';
+}
+
+export function useCompetencyAutoPull({ enabled, journal, role, yq, onToast }) {
+  useEffect(() => {
+    if (!enabled || !journal?.pullCompetencyCloudSnapshot) return;
+    runCompetencyAutoPull({ journal, role, yq, onToast });
+    // onToast 변경으로 재실행하지 않는다 (세션 1회)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, role, yq]);
+}
