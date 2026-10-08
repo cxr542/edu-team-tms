@@ -7,6 +7,11 @@
 
 ## 2026-10-08
 
+### [수정] fix(competency): 월간 팀장 확정이 공유 저장소에 올라가지 않던 문제 수정 + 누락분 보충
+
+- fix(competency): 월간 팀장 확정이 공유 저장소에 올라가지 않던 문제 수정 + 누락분 보충
+- PR #198: https://github.com/cxr542/edu-team-tms/pull/198
+
 ### [신규] feat(competency): 월간 역량 평가 공유본 화면 진입 시 자동 가져오기
 
 - feat(competency): 월간 역량 평가 공유본 화면 진입 시 자동 가져오기
