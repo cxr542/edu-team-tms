@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { uiTooltip } from '../utils/uiTooltip';
-import { needsQuarterBackfillPush } from '../utils/kpiQuarterCloudSnapshot';
+import { useQuarterAutoSync } from '../hooks/useQuarterAutoSync';
 import { buildDocsModuleUrl } from '../constants/referenceDocs';
 import { KPI3_ELEMENTS, KPI3_FORMULA_TEXT } from '../constants/kpi3Elements';
 import { KPI3_WEIGHTS } from '../constants/kpiRules';
@@ -101,9 +101,6 @@ function Kpi3PreviewRow({ children, action }) {
   );
 }
 
-/** 화면을 열 때 한 번만 자동 동기화 — 세션 내 (역할·구성원·분기) 단위 */
-const autoSyncedQuarterKeys = new Set();
-
 export default function Kpi3ElementsPanel({
   year,
   month,
@@ -196,33 +193,18 @@ export default function Kpi3ElementsPanel({
     }
   };
 
-  // 자동 동기화(정책 예외, 화면을 열 때 1회): 팀장은 구성원 제출분 가져오기, 구성원은 미공유 제출분 보충 저장
-  const autoSyncEligible = !readOnly && (showManagerTabs ? !compact && !section : Boolean(section));
-  useEffect(() => {
-    if (!autoSyncEligible || !journal.pullKpi3QuarterCloudSnapshot) return undefined;
-    const key = `${quarterShareRole}:${memberCode}:${yq}`;
-    if (autoSyncedQuarterKeys.has(key)) return undefined;
-    autoSyncedQuarterKeys.add(key);
-    (async () => {
-      const pulled = await journal.pullKpi3QuarterCloudSnapshot(quarterShareRole);
-      if (!pulled?.ok) {
-        // 실패하면 다음 화면 진입 때 다시 시도
-        autoSyncedQuarterKeys.delete(key);
-        return;
-      }
-      if (quarterShareRole === 'manager') {
-        if (pulled.changedCount > 0) onToast?.(`구성원 분기 평가 공유본 ${pulled.changedCount}건을 자동으로 반영했습니다`);
-        return;
-      }
-      if (needsQuarterBackfillPush(quarterRec, pulled.remote, yq, memberCode)) {
-        const r = await journal.saveKpi3QuarterCloudSnapshot?.(memberCode, year, month);
-        if (r?.ok) onToast?.('제출한 분기 평가를 팀 공유 저장소에 자동 저장했습니다');
-        else if (r && r.reason !== 'dev-blocked' && r.reason !== 'read-only') autoSyncedQuarterKeys.delete(key);
-      }
-    })();
-    return undefined;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoSyncEligible, quarterShareRole, memberCode, yq]);
+  // 자동 동기화는 화면 단위(useQuarterAutoSync)에서 처리 — 구성원은 CompetencyMemberSection, 팀장은 여기
+  useQuarterAutoSync({
+    enabled: !readOnly && showManagerTabs && !compact && !section,
+    journal,
+    role: 'manager',
+    memberCode,
+    year,
+    monthIndex: month,
+    yq,
+    quarterRec,
+    onToast,
+  });
 
   const updateQuarterSubmission = (sectionKey, submitted) => {
     const detailKey = detailKeyForQuarterSection(sectionKey);
