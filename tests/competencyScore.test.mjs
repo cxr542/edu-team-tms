@@ -397,22 +397,30 @@ describe('competencyScore', () => {
     expect(normalized.dimEvidences.autonomy).toBe('자율성 근거');
     expect(normalized.dimLinks.scope).toBe('https://example.com/scope');
   });
-  it('rollupQuarterLevelFromMonths — 분기 마지막 달의 팀장 확정 레벨을 쓴다', () => {
+  it('rollupQuarterLevelFromMonths — 분기 마지막 달 레벨을 쓰고 팀장 확정 전이어도 반영한다', () => {
     const rec = (proposed, managerLocked) => ({
       self: { computed: { proposed: null } },
       manager: { computed: { proposed } },
       managerLocked,
     });
-    // 마지막 달(9월)이 팀장 확정 전이면 앞선 달이 확정돼 있어도 null
-    const notLast = {
+    // 마지막 달(9월)이 확정 전이어도 팀장 평가 점수가 있으면 그 값 (앞선 달 값은 쓰지 않는다)
+    const draft = {
       '2026-07': { A: rec(3.6, true) },
       '2026-08': { A: rec(3.8, true) },
-      '2026-09': { A: rec(5, false) },
+      '2026-09': { A: rec(4.4, false) },
     };
-    expect(rollupQuarterLevelFromMonths(notLast, 2026, 6, 'A', false)).toBeNull();
+    expect(rollupQuarterLevelFromMonths(draft, 2026, 6, 'A', false)).toBe(4.4);
+
+    // 마지막 달에 팀장 평가 점수가 없으면 앞선 달이 확정돼 있어도 null
+    const missing = {
+      '2026-07': { A: rec(3.6, true) },
+      '2026-08': { A: rec(3.8, true) },
+      '2026-09': { A: rec(0, false) },
+    };
+    expect(rollupQuarterLevelFromMonths(missing, 2026, 6, 'A', false)).toBeNull();
     expect(rollupQuarterLevelFromMonths({}, 2026, 6, 'A', false)).toBeNull();
 
-    // 마지막 달 확정 → 그 달 값 (7·8월 값은 평균에 들어가지 않는다)
+    // 확정 후에는 같은 방식으로 확정 값을 쓴다 (7·8월은 평균에 들어가지 않는다)
     const last = {
       '2026-07': { A: rec(3.6, true) },
       '2026-08': { A: rec(3.8, true) },

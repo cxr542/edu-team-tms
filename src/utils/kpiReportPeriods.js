@@ -65,6 +65,45 @@ export function buildMonthlyCompetencyReport({ year, monthIndex, kpiOperational 
   };
 }
 
+/**
+ * 분기 레벨 표시값 — 반영된(저장된) 분기 레벨이 있으면 그 값, 없으면 분기 마지막 달의
+ * 월 최종 레벨을 보여 준다 (applied=false → 아직 분기 점수에는 반영 전, confirmed=false → 팀장 확정 전).
+ */
+export function resolveQuarterLevel(storedLevel, lastMonthRow) {
+  // 팀장 확정 전이어도 마지막 달 월 최종 레벨이 있으면 반영 대상이다 (confirmed=false 로 표시)
+  const confirmed = lastMonthRow ? Boolean(lastMonthRow.managerLocked) : true;
+  const stored = Number(storedLevel) || 0;
+  if (stored > 0) return { value: stored, applied: true, confirmed };
+  const last = Number(lastMonthRow?.monthlyFinal) || 0;
+  if (last > 0) {
+    return { value: Math.round(last * 100) / 100, applied: false, confirmed };
+  }
+  return null;
+}
+
+/** 분기 구성원별 표시 레벨과 팀 값(표시값 평균) */
+export function buildQuarterLevels({ quarterly, lastMonthReport, teamStoredLevel }) {
+  const byMember = {};
+  quarterly.forEach((row) => {
+    const lastRow = lastMonthReport?.rows.find((r) => r.member.code === row.member.code);
+    const resolved = resolveQuarterLevel(row.breakdown?.level ?? row.quarter?.level, lastRow);
+    if (resolved) byMember[row.member.code] = resolved;
+  });
+  const values = Object.values(byMember).map((v) => v.value);
+  const stored = Number(teamStoredLevel) || 0;
+  const team =
+    stored > 0
+      ? { value: stored, applied: true, confirmed: true }
+      : values.length
+        ? {
+            value: roundScoreToTenth(values.reduce((a, b) => a + b, 0) / values.length),
+            applied: false,
+            confirmed: Object.values(byMember).every((v) => v.confirmed),
+          }
+        : null;
+  return { byMember, team };
+}
+
 /** 월별 리포트 묶음 — 월마다 구성원 행과 팀 통합 요약을 함께 만든다 */
 export function buildMonthReports({ year, monthIndexes, ...ctx }) {
   return monthIndexes.map((monthIndex) => {
@@ -122,7 +161,12 @@ export function buildQuarterView({ year, quarter, kpiOperational, ...ctx }) {
   const competencyMonths = monthIndexes.map((monthIndex) =>
     buildMonthlyCompetencyReport({ year, monthIndex, kpiOperational })
   );
-  return { quarter, monthIndexes, months, memberRows, quarterly, team, competencyMonths };
+  const levels = buildQuarterLevels({
+    quarterly,
+    lastMonthReport: competencyMonths[competencyMonths.length - 1],
+    teamStoredLevel: team.kpi3.level,
+  });
+  return { quarter, monthIndexes, months, memberRows, quarterly, team, competencyMonths, levels };
 }
 
 /** 연간 리포트: 12개월 추이 + 분기별 KPI3 + 구성원별 연간 요약 */
@@ -145,6 +189,12 @@ export function buildAnnualView({ year, kpiOperational, ...ctx }) {
       kpiOperational,
     });
     const teamQ = buildTeamIntegratedSummary([], quarterly);
+    const lastMonthReport = buildMonthlyCompetencyReport({
+      year,
+      monthIndex: monthIndexesOfQuarter(q)[2],
+      kpiOperational,
+    });
+    const levels = buildQuarterLevels({ quarterly, lastMonthReport, teamStoredLevel: teamQ.kpi3.level });
     const confirmedCount = quarterly.filter((r) => r.locked && Number(r.quarter?.composite) > 0).length;
     return {
       quarter: q,
@@ -152,19 +202,19 @@ export function buildAnnualView({ year, kpiOperational, ...ctx }) {
       composite: teamQ.kpi3.composite,
       grade3: teamQ.grade3,
       confirmedCount,
-      teamLevel: teamQ.kpi3.level > 0 ? teamQ.kpi3.level : null,
+      teamLevel: levels.team,
+      levels,
     };
   });
 
   const memberKpi3 = memberRows.map((row) => {
-    const perQuarter = quarters.map(({ quarter, quarterly }) => {
+    const perQuarter = quarters.map(({ quarter, quarterly, levels }) => {
       const rec = quarterly.find((r) => r.member.code === row.member.code);
       const composite = Number(rec?.quarter?.composite) || 0;
-      const level = Number(rec?.breakdown?.level ?? rec?.quarter?.level) || 0;
       return {
         quarter,
         composite: composite > 0 ? composite : null,
-        level: level > 0 ? level : null,
+        level: levels.byMember[row.member.code] ?? null,
         locked: Boolean(rec?.locked),
       };
     });

@@ -95,7 +95,7 @@ describe('분기·연간 리포트 집계', () => {
     const row = view.memberKpi3.find((m) => m.member.code === member.code);
     expect(row.confirmedCount).toBe(3);
     expect(row.annualComposite).toBe(4.6);
-    expect(row.annualLevel).toBe(5);
+    expect(row.annualLevel).toMatchObject({ value: 5, applied: true });
     expect(row.grade3).not.toBe('—');
     expect(view.teamKpi3.memberCount).toBe(1);
     expect(view.teamKpi3.composite).toBeGreaterThan(0);
@@ -125,7 +125,7 @@ describe('분기·연간 리포트 집계', () => {
   });
 });
 
-import { buildMonthlyCompetencyReport } from '../src/utils/kpiReportPeriods.js';
+import { buildMonthlyCompetencyReport, buildQuarterLevels, resolveQuarterLevel } from '../src/utils/kpiReportPeriods.js';
 
 describe('월별 레벨(역량) 평가 리포트', () => {
   const side = (intLevel, proposed) => ({ intLevel, computed: { proposed } });
@@ -181,7 +181,54 @@ describe('연간 리포트 분기별 합산', () => {
     expect(view.quarterRows[0].memberRows).toHaveLength(TEAM_KPI_MEMBERS.length);
     expect(view.quarterRows[0].memberRows[0].monthCount).toBe(3);
     const row = view.memberKpi3.find((m) => m.member.code === member.code);
-    expect(row.perQuarter[2].level).toBe(4);
+    expect(row.perQuarter[2].level).toMatchObject({ value: 4, applied: true });
     expect(row.perQuarter[0].level).toBeNull();
+  });
+});
+
+describe('분기 레벨 표시값', () => {
+  it('저장된 분기 레벨이 있으면 반영값으로 쓴다', () => {
+    expect(resolveQuarterLevel(3.9, { monthlyFinal: 4.2, managerLocked: true })).toEqual({
+      value: 3.9,
+      applied: true,
+      confirmed: true,
+    });
+  });
+
+  it('저장된 값이 없으면 마지막 달 레벨을 미반영 값으로 보여 준다 (확정 여부 포함)', () => {
+    expect(resolveQuarterLevel(0, { monthlyFinal: 3.8, managerLocked: true })).toEqual({
+      value: 3.8,
+      applied: false,
+      confirmed: true,
+    });
+    // 팀장 확정 전이어도 값이 있으면 보여 준다
+    expect(resolveQuarterLevel(0, { monthlyFinal: 4.0, managerLocked: false })).toEqual({
+      value: 4,
+      applied: false,
+      confirmed: false,
+    });
+  });
+
+  it('마지막 달 값이 없으면 비어 있다', () => {
+    expect(resolveQuarterLevel(0, { monthlyFinal: null, managerLocked: true })).toBeNull();
+    expect(resolveQuarterLevel(0, { monthlyFinal: 0, managerLocked: false })).toBeNull();
+    expect(resolveQuarterLevel(0, undefined)).toBeNull();
+  });
+
+  it('구성원별 표시값과 팀 값을 만든다 (팀 저장값이 없으면 표시값 평균, 미확정이 섞이면 팀도 미확정)', () => {
+    const quarterly = TEAM_KPI_MEMBERS.map((m) => ({ member: m, breakdown: {}, quarter: {} }));
+    const lastMonthReport = {
+      rows: [
+        { member: TEAM_KPI_MEMBERS[0], monthlyFinal: 3.6, managerLocked: true },
+        { member: TEAM_KPI_MEMBERS[1], monthlyFinal: 4.0, managerLocked: true },
+        { member: TEAM_KPI_MEMBERS[2], monthlyFinal: 4.4, managerLocked: false },
+      ],
+    };
+    const levels = buildQuarterLevels({ quarterly, lastMonthReport, teamStoredLevel: 0 });
+    expect(Object.keys(levels.byMember)).toHaveLength(3);
+    expect(levels.byMember[TEAM_KPI_MEMBERS[2].code].confirmed).toBe(false);
+    expect(levels.team).toEqual({ value: 4, applied: false, confirmed: false });
+    const stored = buildQuarterLevels({ quarterly, lastMonthReport, teamStoredLevel: 4.1 });
+    expect(stored.team).toEqual({ value: 4.1, applied: true, confirmed: true });
   });
 });

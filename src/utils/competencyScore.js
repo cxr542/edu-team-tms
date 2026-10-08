@@ -254,7 +254,8 @@ export function buildCompetencyQuartersFromMonths(competencyMonths) {
 
 /**
  * competencyMonths에서 분기 level 롤업 — 분기 **마지막 달**(2분기=6월, 3분기=9월)의
- * 팀장 확정 레벨을 분기 레벨로 쓴다. 마지막 달이 팀장 확정 전이면 null (이전 달로 대체하지 않는다).
+ * 월 최종 레벨을 분기 레벨로 쓴다. 팀장 확정 전이어도 팀장 평가 점수가 입력돼 있으면 반영하고,
+ * 점수가 없으면 null (이전 달로 대체하지 않는다). 확정되면 다시 반영해 갱신한다.
  */
 export function rollupQuarterLevelFromMonths(competencyMonths, year, monthIndex, memberCode, use4060) {
   const yms = quarterMonthKeys(year, monthIndex);
@@ -263,7 +264,6 @@ export function rollupQuarterLevelFromMonths(competencyMonths, year, monthIndex,
   if (!rec) return null;
   const selfScore = rec.self?.computed?.proposed ?? null;
   const mgrScore = rec.manager?.computed?.proposed ?? null;
-  if (!(rec.managerLocked && mgrScore != null)) return null;
   const score = monthlyFinalScore(selfScore, mgrScore, use4060 ?? COMPETENCY_USE_4060);
-  return score == null ? null : Math.round(score * 100) / 100;
+  return score > 0 ? Math.round(score * 100) / 100 : null;
 }

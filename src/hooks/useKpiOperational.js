@@ -42,6 +42,7 @@ import { applyAppealPatch, createAppeal, isDateKey, normalizeAppeals } from '../
 import { PRACTICE_SCORE_NO_EVIDENCE } from '../utils/kpi3ElementScores';
 import { createExecApproval } from '../utils/kpiExecApproval';
 import { isProductionEnvironment } from '../constants/appEnv';
+import { syncQuarterLevelsFromCompetencyMonths } from '../utils/kpiQuarterLevelSync';
 import {
   isQuarterRecordSaveable,
   mergeQuartersIntoKpiStore,
@@ -631,6 +632,16 @@ export function useKpiOperational({ readOnly = false } = {}) {
     },
     [readOnly, patchQuarterRecord]
   );
+
+  // 분기 마지막 달의 월 최종 레벨을 분기 레벨로 자동 반영한다 (수동 조정·확정된 분기는 건드리지 않음)
+  useEffect(() => {
+    if (readOnly) return;
+    if (!syncQuarterLevelsFromCompetencyMonths(storeRef.current).changed) return;
+    setStore((prev) => {
+      const r = syncQuarterLevelsFromCompetencyMonths(prev);
+      return r.changed ? persist(r.store) : prev;
+    });
+  }, [store.competencyMonths, readOnly, persist]);
 
   const updateKpi3Quarter = useCallback(
     (year, monthIndex, memberCode, patch) => {

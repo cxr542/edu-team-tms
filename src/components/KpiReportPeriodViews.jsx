@@ -252,6 +252,20 @@ export function MonthlyProductivityTable({ monthly, team, ym }) {
   );
 }
 
+function ReflectedLevel({ level, auto }) {
+  if (!level) return <>—</>;
+  const notes = [];
+  if (!level.applied) notes.push('미반영');
+  if (level.confirmed === false) notes.push('미확정');
+  return (
+    <>
+      {formatScoreTenth(level.value)}
+      {level.applied && auto && notes.length === 0 ? ' *' : ''}
+      {notes.length ? ` (${notes.join('·')})` : ''}
+    </>
+  );
+}
+
 function levelText(v) {
   return v == null ? '—' : formatScoreTenth(v);
 }
@@ -544,8 +558,7 @@ export function KpiReportQuarterView({ view, year, quarter }) {
                         })}
                       </div>
                       <strong>
-                        {row.breakdown?.level > 0 ? row.breakdown.level : '—'}
-                        {row.breakdown?.levelAuto ? ' *' : ''}
+                        <ReflectedLevel level={view.levels.byMember[row.member.code]} auto={row.breakdown?.levelAuto} />
                       </strong>
                     </td>
                   ) : (
@@ -576,7 +589,9 @@ export function KpiReportQuarterView({ view, year, quarter }) {
                         </span>
                       ))}
                     </div>
-                    <strong>{team.kpi3.level > 0 ? team.kpi3.level : '—'}</strong>
+                    <strong>
+                      <ReflectedLevel level={view.levels.team} />
+                    </strong>
                   </td>
                 ) : (
                   <td key={el.key}>{team.kpi3[el.key] > 0 ? team.kpi3[el.key] : '—'}</td>
@@ -594,7 +609,8 @@ export function KpiReportQuarterView({ view, year, quarter }) {
           </tbody>
         </table>
         <p className="team-kpi-hint">
-          팀 {KPI3_NAME}: {team.kpi3.formula} · 레벨은 월별 레벨 평가(월 최종)를 매월 진행하고, 분기 마지막 달(2분기=6월, 3분기=9월)의 팀장 확정 레벨이 분기 레벨로 반영됩니다 (* = 자동 반영). 다면·리더·실전은 분기에 한 번 평가합니다.
+          분기 레벨은 마지막 달 레벨이 자동으로 반영됩니다 — (미확정) = 팀장 확정 전 값(확정 후 갱신), (미반영) = 이 브라우저에서 아직 분기 점수에 반영되기 전, 분기 확정 후에는 고정됩니다. {' '}
+          팀 {KPI3_NAME}: {team.kpi3.formula} · 레벨은 월별 레벨 평가(월 최종)를 매월 진행하고, 분기 마지막 달(2분기=6월, 3분기=9월)의 레벨이 분기 레벨로 반영됩니다 (팀장 확정 전이어도 반영 가능, * = 자동 반영). 다면·리더·실전은 분기에 한 번 평가합니다.
         </p>
       </section>
 
@@ -672,14 +688,14 @@ export function KpiReportAnnualView({ view, year }) {
                     {p.composite != null ? formatScoreTenth(p.composite) : '—'}
                     {p.composite != null && !p.locked ? ' (작성중)' : ''}
                     <div className="kpi-report-level-months">
-                      <span>레벨 {p.level != null ? p.level : '—'}</span>
+                      <span>레벨 <ReflectedLevel level={p.level} /></span>
                     </div>
                   </td>
                 ))}
                 <td>
                   <strong>{row.annualComposite != null ? formatScoreTenth(row.annualComposite) : '—'}</strong>
                   <div className="kpi-report-level-months">
-                    <span>레벨 {row.annualLevel != null ? row.annualLevel : '—'}</span>
+                    <span>레벨 <ReflectedLevel level={row.annualLevel} /></span>
                   </div>
                 </td>
                 <td>
@@ -697,14 +713,14 @@ export function KpiReportAnnualView({ view, year }) {
                   {q.composite > 0 ? formatScoreTenth(q.composite) : '—'}
                   {q.composite > 0 ? ` (확정 ${q.confirmedCount}명)` : ''}
                   <div className="kpi-report-level-months">
-                    <span>레벨 {q.teamLevel != null ? q.teamLevel : '—'}</span>
+                    <span>레벨 <ReflectedLevel level={q.teamLevel} /></span>
                   </div>
                 </td>
               ))}
               <td>
                 <strong>{teamKpi3.composite != null ? formatScoreTenth(teamKpi3.composite) : '—'}</strong>
                 <div className="kpi-report-level-months">
-                  <span>레벨 {quarters[3]?.teamLevel != null && teamKpi3.composite != null ? quarters[3].teamLevel : '—'}</span>
+                  <span>레벨 <ReflectedLevel level={teamKpi3.composite != null ? quarters[3]?.teamLevel : null} /></span>
                 </div>
               </td>
               <td>
@@ -715,7 +731,7 @@ export function KpiReportAnnualView({ view, year }) {
           </tbody>
         </table>
         <p className="team-kpi-hint">
-          연간 {KPI3_NAME} = 4분기(연말)의 확정 종합 점수와 레벨입니다. 평균하지 않으며 4분기가 확정되기 전에는 비어 있습니다. 분기 레벨은 분기 마지막 달의 팀장 확정 레벨입니다.
+          연간 {KPI3_NAME} = 4분기(연말)의 확정 종합 점수와 레벨입니다. 평균하지 않으며 4분기가 확정되기 전에는 비어 있습니다. 분기 레벨은 분기 마지막 달의 레벨입니다.
         </p>
       </section>
     </>
