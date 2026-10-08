@@ -7,6 +7,11 @@
 
 ## 2026-10-08
 
+### [수정] feat(journal): 향상 과제 다이얼로그 월 필터 + KPI 타일 툴팁 수정
+
+- feat(journal): 향상 과제 다이얼로그 월 필터 + KPI 타일 툴팁 수정
+- PR #191: https://github.com/cxr542/edu-team-tms/pull/191
+
 ### [신규] feat(journal): show the KPI2 productivity in the member journal KPI summary
 
 - feat(journal): show the KPI2 productivity in the member journal KPI summary
