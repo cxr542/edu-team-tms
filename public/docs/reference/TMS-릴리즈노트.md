@@ -7,6 +7,11 @@
 
 ## 2026-10-08
 
+### [신규] feat(kpi3): 분기 4요소(다면·리더·실전) 제출 공유 저장
+
+- feat(kpi3): 분기 4요소(다면·리더·실전) 제출 공유 저장
+- PR #192: https://github.com/cxr542/edu-team-tms/pull/192
+
 ### [수정] feat(journal): 향상 과제 다이얼로그 월 필터 + KPI 타일 툴팁 수정
 
 - feat(journal): 향상 과제 다이얼로그 월 필터 + KPI 타일 툴팁 수정
