@@ -7,6 +7,11 @@
 
 ## 2026-10-08
 
+### [신규] feat(journal): show the KPI2 productivity in the member journal KPI summary
+
+- feat(journal): show the KPI2 productivity in the member journal KPI summary
+- PR #190: https://github.com/cxr542/edu-team-tms/pull/190
+
 ### [수정] fix(kpi): refresh the approval list after approve/reject, mirror reliably, add bulk approve
 
 - fix(kpi): refresh the approval list after approve/reject, mirror reliably, add bulk approve
