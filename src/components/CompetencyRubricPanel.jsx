@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
+import AutoGrowTextarea from './AutoGrowTextarea';
 import {
   COMPETENCY_DIMS,
   COMPETENCY_DIM_IDS,
@@ -250,8 +251,8 @@ export default function CompetencyRubricPanel({
                   />
                 </td>
                 <td>
-                  <input
-                    type="text"
+                  <AutoGrowTextarea
+                    rows={1}
                     className="form-input competency-dim-evidence-input"
                     value={liveEvalSide?.dimEvidences?.[dim.id] || ''}
                     disabled={readOnly || locked}
@@ -331,7 +332,7 @@ export default function CompetencyRubricPanel({
               )}
             </span>
           </div>
-          <textarea
+          <AutoGrowTextarea
             className="form-input"
             rows={4}
             value={liveEvalSide.evidence || ''}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import AutoGrowTextarea from './AutoGrowTextarea';
 import { appealDeadlineStatus, todayKey } from '../utils/businessDays';
 import {
   APPEAL_STATUS_LIST,
@@ -109,7 +110,7 @@ export default function Kpi3NoticeAppealPanel({
               <input type="date" className="form-input" value={receivedAt} onChange={(e) => setReceivedAt(e.target.value)} />
             </label>
           </div>
-          <textarea
+          <AutoGrowTextarea
             className="form-input"
             rows={2}
             placeholder="이의 내용 (서면 제출 요지)"

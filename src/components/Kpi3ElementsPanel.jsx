@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { uiTooltip } from '../utils/uiTooltip';
+import AutoGrowTextarea from './AutoGrowTextarea';
 import { useQuarterAutoSync } from '../hooks/useQuarterAutoSync';
 import { buildDocsModuleUrl } from '../constants/referenceDocs';
 import { KPI3_ELEMENTS, KPI3_FORMULA_TEXT } from '../constants/kpi3Elements';
@@ -970,7 +971,7 @@ export default function Kpi3ElementsPanel({
             <div key={c.id} className="kpi3-practice-case-row" style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'flex-start' }}>
               {!readOnly && !locked && !practiceSubmittedForReview ? (
                 <>
-                  <textarea
+                  <AutoGrowTextarea
                     className="form-input"
                     value={c.text}
                     onChange={(e) => {
@@ -979,7 +980,7 @@ export default function Kpi3ElementsPanel({
                       journal.updateKpi3QuarterExtras(year, month, memberCode, { practiceDetail: { cases } });
                     }}
                     rows={2}
-                    style={{ flex: 1, resize: 'vertical' }}
+                    style={{ flex: 1 }}
                     placeholder={`실전 적용 사례 ${idx + 1} (증빙 요약)`}
                   />
                   <button
