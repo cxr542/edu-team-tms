@@ -75,6 +75,7 @@ import JournalCategoryLegend from '../components/JournalCategoryLegend';
 import JournalMemberPrefsModal from '../components/JournalMemberPrefsModal';
 import MemberKpiApprovalPanel, { useMemberKpiApprovalToolbarState } from '../components/MemberKpiApprovalPanel';
 import MemberImproveProjectsDialog from '../components/MemberImproveProjectsDialog';
+import { filterImproveProjectsForMonth } from '../utils/improveProjectMonth';
 import { isEditorMode } from '../utils/appMode';
 import {
   filterImproveProjectsForMember,
@@ -472,6 +473,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     SUPABASE_AUTO_MIRROR_STATUS_LABEL[journal.supabaseMirrorSaveStatus] || '';
 
   const memberDays = journal.getMemberDays(memberCode);
+  const memberMonthImproveProjects = useMemo(
+    () => filterImproveProjectsForMonth(memberOwnedImproveProjects, memberDays, year, month),
+    [memberOwnedImproveProjects, memberDays, year, month]
+  );
   const knownTaskTitles = useMemo(
     () => collectJournalTaskTitles(memberDays),
     [memberDays]
@@ -1476,8 +1481,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 >
                   <Sparkles size={16} />
                   향상 과제
-                  {memberOwnedImproveProjects.length > 0 && (
-                    <span className="journal-member-tool-badge">{memberOwnedImproveProjects.length}</span>
+                  {memberMonthImproveProjects.length > 0 && (
+                    <span className="journal-member-tool-badge">{memberMonthImproveProjects.length}</span>
                   )}
                 </button>
               )}
@@ -2027,11 +2032,17 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               가용 M/D
               <strong>{kpiMonth.available.toFixed(2)}</strong>
             </div>
-            <div title="KPI 지표 1 — (업무 + 생산향상 + 휴일 M/D) ÷ 가용 M/D × 100. 완료 체크한 업무 기준의 현재까지 값입니다.">
+            <div
+              {...uiTooltip(
+                'KPI 지표 1 — (업무 + 생산향상 + 휴일 M/D) ÷ 가용 M/D × 100. 완료 체크한 업무 기준의 현재까지 값입니다.',
+                'below',
+                { wrap: true }
+              )}
+            >
               {KPI1_NAME} (KPI1)
               <strong>{formatSummaryPct(kpiMonth.utilization)}</strong>
             </div>
-            <div title={kpi2TileTooltip(kpi2Tile)}>
+            <div {...uiTooltip(kpi2TileTooltip(kpi2Tile), 'below', { wrap: true })}>
               {KPI2_NAME} (KPI2)
               <strong>{kpi2Tile.hasData ? `${kpi2Tile.displayPct.toFixed(1)}%` : '—'}</strong>
             </div>
@@ -2039,7 +2050,9 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               {KPI2_NAME} 효과 (완료)
               <strong>{kpiMonth.kpi2EffectDone}건</strong>
             </div>
-            <div title="반영 M/D 중 생산향상 M/D가 차지하는 비율 (가동률 안의 구성)">
+            <div
+              {...uiTooltip('반영 M/D 중 생산향상 M/D가 차지하는 비율 (가동률 안의 구성)', 'below', { wrap: true })}
+            >
               생산성향상 비율
               <strong>{formatSummaryPct(kpiMonth.improveRatio)}</strong>
             </div>
@@ -2930,6 +2943,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
           open={improveProjectsModalOpen}
           onClose={() => setImproveProjectsModalOpen(false)}
           projects={memberOwnedImproveProjects}
+          monthProjects={memberMonthImproveProjects}
+          monthLabel={`${year}년 ${month + 1}월`}
           shareBusy={journal.improveProjectsApi.sharedBusy}
           onPullShare={async () => {
             const pullCode = teamAccess.scopedMember || memberCode;
