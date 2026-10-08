@@ -2031,10 +2031,6 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               현재 가동률 (KPI1)
               <strong>{formatSummaryPct(kpiMonth.utilization)}</strong>
             </div>
-            <div title="반영 M/D 중 생산향상 M/D가 차지하는 비율 (가동률 안의 구성)">
-              생산성향상 비율
-              <strong>{formatSummaryPct(kpiMonth.improveRatio)}</strong>
-            </div>
             <div title={kpi2TileTooltip(kpi2Tile)}>
               {KPI2_NAME} (KPI2)
               <strong>{kpi2Tile.hasData ? `${kpi2Tile.displayPct.toFixed(1)}%` : '—'}</strong>
@@ -2042,6 +2038,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
             <div>
               {KPI2_NAME} 효과 (완료)
               <strong>{kpiMonth.kpi2EffectDone}건</strong>
+            </div>
+            <div title="반영 M/D 중 생산향상 M/D가 차지하는 비율 (가동률 안의 구성)">
+              생산성향상 비율
+              <strong>{formatSummaryPct(kpiMonth.improveRatio)}</strong>
             </div>
             <div>
               8h 미만 근무일
