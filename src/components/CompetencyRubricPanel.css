@@ -112,9 +112,30 @@
   max-width: 100%;
 }
 
+.competency-dim-table {
+  table-layout: auto;
+}
+
+/* 차원별 근거를 넓게, 링크는 좁게 */
+.competency-dim-table th.competency-dim-col-evidence,
+.competency-dim-table td.competency-dim-col-evidence {
+  width: 46%;
+  min-width: 18rem;
+}
+
+.competency-dim-table th.competency-dim-col-link,
+.competency-dim-table td.competency-dim-col-link {
+  width: 16%;
+}
+
+.competency-evidence-format-btn {
+  margin-top: 0.35rem;
+}
+
 .competency-dim-evidence-input {
   width: 100%;
   min-width: 12rem;
+  line-height: 1.5;
   font-size: 0.8rem;
   padding: 0.35rem 0.5rem;
 }
