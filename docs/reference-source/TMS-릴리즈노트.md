@@ -7,6 +7,11 @@
 
 ## 2026-10-08
 
+### [신규] feat(competency): 월간 역량 평가 공유본 화면 진입 시 자동 가져오기
+
+- feat(competency): 월간 역량 평가 공유본 화면 진입 시 자동 가져오기
+- PR #197: https://github.com/cxr542/edu-team-tms/pull/197
+
 ### [신규] feat(competency): 차원별 근거 폭 확대 + 번호 항목 줄바꿈
 
 - feat(competency): 차원별 근거 폭 확대 + 번호 항목 줄바꿈
