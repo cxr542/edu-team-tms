@@ -43,6 +43,11 @@ import { PRACTICE_SCORE_NO_EVIDENCE } from '../utils/kpi3ElementScores';
 import { createExecApproval } from '../utils/kpiExecApproval';
 import { isProductionEnvironment } from '../constants/appEnv';
 import {
+  isQuarterRecordSaveable,
+  mergeQuartersIntoKpiStore,
+  pickSharedQuarterRecord,
+} from '../utils/kpiQuarterCloudSnapshot';
+import {
   isCompetencyMonthRecordSaveable,
   isValidCompetencyMemberCode,
   mergeApprovedCompetencyMonthsIntoKpiStore,
@@ -58,6 +63,15 @@ import {
 } from '../utils/kpi2LegacyMigration';
 
 const KPI_OPERATIONAL_SNAPSHOT_API = '/api/kpi-operational-snapshot';
+const KPI_QUARTER_SNAPSHOT_API = '/api/kpi-quarter-snapshot';
+
+async function fetchQuarterCloudSnapshot() {
+  const res = await fetch(`${KPI_QUARTER_SNAPSHOT_API}?t=${Date.now()}`, { cache: 'no-store' });
+  if (!res.ok) {
+    throw new Error(`공유 분기 평가를 불러오지 못했습니다 (${res.status})`);
+  }
+  return res.json();
+}
 
 async function fetchCompetencyCloudSnapshot() {
   const res = await fetch(`${KPI_OPERATIONAL_SNAPSHOT_API}?t=${Date.now()}`, { cache: 'no-store' });
@@ -1109,6 +1123,54 @@ export function useKpiOperational({ readOnly = false } = {}) {
     [readOnly, persist, getCompetencyMonth]
   );
 
+  /** 분기 4요소 공유본 가져오기 — role: 'manager'(팀장) | 'member'(구성원) */
+  const pullKpi3QuarterCloudSnapshot = useCallback(
+    async (role = 'member') => {
+      if (readOnly) return { ok: false, reason: 'read-only' };
+      try {
+        const remote = await fetchQuarterCloudSnapshot();
+        let changedCount = 0;
+        setStore((prev) => {
+          const merged = mergeQuartersIntoKpiStore(prev, remote, role);
+          changedCount = merged.changedCount;
+          return changedCount > 0 ? persist(merged.store) : prev;
+        });
+        return { ok: true, changedCount, remote };
+      } catch (e) {
+        return { ok: false, reason: 'error', error: e };
+      }
+    },
+    [readOnly, persist]
+  );
+
+  /** 분기 4요소 공유 저장 — 서버가 요청 경로(관리자 세션/본인 URL)로 작성 권한을 판단한다 */
+  const saveKpi3QuarterCloudSnapshot = useCallback(
+    async (memberCode, year, monthIndex) => {
+      if (readOnly) return { ok: false, reason: 'read-only' };
+      if (!isProductionEnvironment()) {
+        return { ok: false, reason: 'dev-blocked', error: new Error('개발 환경에서는 공유 저장이 차단됩니다.') };
+      }
+      const yq = quarterKey(year, monthIndex);
+      const rec = storeRef.current?.quarters?.[yq]?.[memberCode];
+      if (!isQuarterRecordSaveable(rec)) return { ok: false, reason: 'empty' };
+      try {
+        const res = await fetch(KPI_QUARTER_SNAPSHOT_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ memberCode, yearQuarter: yq, quarter: pickSharedQuarterRecord(rec) }),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(body.message || body.error || `공유 분기 평가 저장 실패 (${res.status})`);
+        }
+        return { ok: true, role: body.role, applied: body.applied || [], skipped: body.skipped || [] };
+      } catch (e) {
+        return { ok: false, reason: 'error', error: e };
+      }
+    },
+    [readOnly]
+  );
+
   const mergeJournalKpiApproval = useCallback(
     (snapshot, options) => {
       if (readOnly) return;
@@ -1164,5 +1226,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
     getStore,
     pullCompetencyCloudSnapshot,
     saveCompetencyMemberCloudSnapshot,
+    pullKpi3QuarterCloudSnapshot,
+    saveKpi3QuarterCloudSnapshot,
   };
 }

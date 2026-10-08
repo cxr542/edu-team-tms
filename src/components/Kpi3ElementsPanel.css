@@ -269,3 +269,10 @@
   color: #b45309;
   font-weight: 500;
 }
+
+.kpi3-quarter-share-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
