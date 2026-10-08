@@ -7,6 +7,11 @@
 
 ## 2026-10-08
 
+### [수정] fix(api): 분기 공유 API를 기존 함수로 통합 (Vercel Hobby 함수 12개 한도)
+
+- fix(api): 분기 공유 API를 기존 함수로 통합 (Vercel Hobby 함수 12개 한도)
+- PR #193: https://github.com/cxr542/edu-team-tms/pull/193
+
 ### [신규] feat(kpi3): 분기 4요소(다면·리더·실전) 제출 공유 저장
 
 - feat(kpi3): 분기 4요소(다면·리더·실전) 제출 공유 저장
