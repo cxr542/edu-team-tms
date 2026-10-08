@@ -17,7 +17,8 @@ import {
   Upload,
 } from 'lucide-react';
 import { resolveMemberCategories, resolveMemberWeekColumnTemplate } from '../utils/journalMemberPrefs';
-import { useJournal } from '../context/JournalProvider';
+import { useJournal, useTeamKpiMetrics } from '../context/JournalProvider';
+import { summarizeKpi2ForDisplay } from '../utils/kpi2Display';
 import { useJournalPeriod } from '../hooks/useJournalPeriod';
 import {
   dateKey,
@@ -418,6 +419,12 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     [journal.improveProjects, memberCode]
   );
   const memberKpiApprovalToolbar = useMemberKpiApprovalToolbarState(year, month, memberCode);
+  // 상단 집계의 KPI2(업무 리소스 생산성) — 팀 KPI 화면과 같은 계산을 쓴다
+  const kpi2Metrics = useTeamKpiMetrics(year, month, memberCode);
+  const kpi2Tile = useMemo(
+    () => summarizeKpi2ForDisplay(kpi2Metrics.kpi2, kpi2Metrics.kpi2Preview),
+    [kpi2Metrics]
+  );
   const showMemberImproveProjectsToolbar =
     isMemberJournalScope && showImproveProjectPanel && !journalReadOnly;
 
@@ -1997,7 +2004,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         <div className="journal-summary-blocks">
           <div className="journal-kpi-strip">
             <p className="journal-kpi-strip-member">
-              {formatKpiMemberLabel(selectedMember)} · {month + 1}월 KPI1 집계
+              {formatKpiMemberLabel(selectedMember)} · {month + 1}월 KPI 집계
             </p>
             <div className="journal-kpi-strip-grid">
             <div>
@@ -2021,12 +2028,23 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               <strong>{kpiMonth.available.toFixed(2)}</strong>
             </div>
             <div>
-              현재 가동률
+              현재 가동률 (KPI1)
               <strong>{formatSummaryPct(kpiMonth.utilization)}</strong>
             </div>
-            <div>
+            <div title="반영 M/D 중 생산향상 M/D가 차지하는 비율 (가동률 안의 구성)">
               생산성향상 비율
               <strong>{formatSummaryPct(kpiMonth.improveRatio)}</strong>
+            </div>
+            <div title="KPI 지표 2 — 이 달 KPI2 효과 건의 계획 시간 합 ÷ 실작업 시간 합 × 100">
+              {KPI2_NAME} (KPI2)
+              <strong>{kpi2Tile.hasData ? `${kpi2Tile.displayPct.toFixed(1)}%` : '—'}</strong>
+              <span className="journal-kpi-strip-sub">
+                {kpi2Tile.hasData
+                  ? `계획 ${kpi2Tile.planSum.toFixed(1)}h ÷ 실적 ${kpi2Tile.actualSum.toFixed(1)}h · ${kpi2Tile.count}건${
+                      kpi2Tile.usesPreview ? ' · 제출 전 건 포함' : ''
+                    }`
+                  : '효과 건 없음'}
+              </span>
             </div>
             <div>
               {KPI2_NAME} 효과 (완료)
