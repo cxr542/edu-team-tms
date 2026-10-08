@@ -3,6 +3,7 @@ import { Send, Undo2 } from 'lucide-react';
 import { KPI_APPROVAL_REQUEST } from '../constants/kpiApprovalRequest';
 import { KPI1_NAME, KPI2_NAME } from '../constants/kpiDisplayNames';
 import { defaultMonthly01 } from '../constants/kpiOperationalStore';
+import { WAIVED_APPROVAL_LABEL, kpiStatusLabelFor, ymKey } from '../constants/kpiApprovalPolicy';
 import {
   canSubmitKpiRecord,
   canWithdrawMonthly01,
@@ -53,7 +54,7 @@ export function useMemberKpiApprovalToolbarState(year, month, memberCode) {
 
     return {
       summaryMeta: [
-        `${month + 1}월 KPI1 ${formatKpiStatusLabel(monthly01.status)}`,
+        `${month + 1}월 KPI1 ${kpiStatusLabelFor(monthly01.status, ymKey(year, month))}`,
         pendingKpi2 > 0
           ? `KPI2 대기 ${pendingKpi2}`
           : actionableKpi2.length > 0
@@ -144,7 +145,7 @@ function MemberKpiApprovalBody({
             <div className="member-kpi-approval__row-main">
               <strong>{KPI1_NAME} 월 확정</strong>
               <span className={`member-kpi-approval__status ${statusClass(monthly01.status)}`}>
-                {formatKpiStatusLabel(monthly01.status)}
+                {kpiStatusLabelFor(monthly01.status, ymKey(year, month))}
               </span>
             </div>
             <div className="member-kpi-approval__actions">
@@ -182,7 +183,7 @@ function MemberKpiApprovalBody({
               <div className="member-kpi-approval__row-main">
                 <strong>{row.업무명}</strong>
                 <span className={`member-kpi-approval__status ${statusClass(row.상태)}`}>
-                  {formatKpiStatusLabel(row.상태)}
+                  {row.간주승인 ? WAIVED_APPROVAL_LABEL : formatKpiStatusLabel(row.상태)}
                 </span>
               </div>
               <div className="member-kpi-approval__actions">

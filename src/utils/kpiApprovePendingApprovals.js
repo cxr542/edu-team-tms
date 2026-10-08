@@ -23,6 +23,8 @@ function buildKpi1PendingItem(year, monthIndex, row) {
   const member = memberForCode(row.member_code);
   return {
     type: 'KPI1',
+    year,
+    monthIndex,
     member,
     label: `${member.displayName} · ${formatMonthLabel(monthIndex)} ${KPI1_NAME} · 승인 요청`,
     submittedAt: row.submitted_at || row.monthly01?.submittedAt || null,
@@ -69,6 +71,8 @@ function buildKpi2PendingItem({
 
   return {
     type: 'KPI2',
+    year,
+    monthIndex,
     member,
     dayKey: row.day_key,
     taskId: row.task_id,

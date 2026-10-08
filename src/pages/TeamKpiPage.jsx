@@ -52,6 +52,7 @@ import {
 } from '../utils/kpiMonthlyClose';
 import { gradeKpi1, gradeKpi2, gradeKpi3, computeKpi3Composite, formatScoreTenth } from '../utils/kpiGrades';
 import Kpi3PartialNote from '../components/Kpi3PartialNote';
+import { WAIVED_APPROVAL_LABEL, kpiStatusLabelFor, ymKey } from '../constants/kpiApprovalPolicy';
 import { downloadTeamKpiSnapshot, fetchTeamKpiSnapshot, normalizeTeamKpiSnapshot } from '../utils/teamKpiSnapshot';
 import { defaultMonthly01, quarterKey } from '../constants/kpiOperationalStore';
 import { KPI1_NAME, KPI2_NAME, KPI3_NAME } from '../constants/kpiDisplayNames';
@@ -248,7 +249,10 @@ export default function TeamKpiPage() {
     ? metrics.kpi1.utilization
     : utilization;
 
-  const kpi2ApprovedCount = metrics.rows02Effect.filter((r) => r.상태 === KPI_STATUS.APPROVED).length;
+  // 승인 생략(구두 승인 간주) 건도 승인으로 센다
+  const kpi2ApprovedCount = metrics.rows02Effect.filter(
+    (r) => r.상태 === KPI_STATUS.APPROVED || r.간주승인
+  ).length;
   const kpi2DisplayPct = metrics.kpi2.productivityPct ?? metrics.kpi2Preview?.productivityPct;
   const kpi2ShowsPreview =
     metrics.kpi2.productivityPct == null && metrics.kpi2Preview?.productivityPct != null;
@@ -934,7 +938,7 @@ export default function TeamKpiPage() {
                       <td>{row.projectName || '-'}</td>
                       <td>{row.계획시간}</td>
                       <td>{row.실작업시간}</td>
-                      <td>{row.상태}</td>
+                      <td>{row.간주승인 ? WAIVED_APPROVAL_LABEL : row.상태}</td>
                       <td>
                         {canSubmitKpiRecord(row.상태) && row.taskId && (
                           <button
@@ -1064,7 +1068,7 @@ export default function TeamKpiPage() {
               가동률 <strong>{formatPct(closeUtilizationPct)}</strong>
             </span>
             <span>
-              진행 상태 <strong>{formatKpiStatusLabel(monthly01Form.status)}</strong>
+              진행 상태 <strong>{kpiStatusLabelFor(monthly01Form.status, ymKey(year, month))}</strong>
               {monthly01Stored?.submittedAt && (
                 <span className="team-kpi-hint-inline">
                   {' '}

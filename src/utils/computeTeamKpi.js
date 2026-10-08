@@ -6,6 +6,7 @@ import { getTaskSlotLabel } from '../constants/journalTaskSlot.js';
 import { LEAVE_MEMO_TASK_RE } from './journalLeavePresets.js';
 import { isMonthly01ContentUnset } from './kpiMonthlyClose.js';
 import { resolveJournalDay } from './journalHoliday2026.js';
+import { effectiveKpiStatus, isDeemedApproved } from '../constants/kpiApprovalPolicy.js';
 import {
   getDayAvailableMm,
   getMonthWeekdayKeys,
@@ -179,6 +180,8 @@ export function buildKpi02EffectRows(
         '생산성%': productivity,
         계획승인: task.approved === false ? 'N' : 'Y',
         상태: status,
+        // 승인 생략 기간의 「제출」은 구두 승인으로 간주 (저장 상태는 그대로)
+        간주승인: isDeemedApproved(status, key.slice(0, 7)),
         코멘트: buildEffectComment(task, project?.name),
         승인자: opStatus?.approver || '',
         승인일: opStatus?.approvedAt ? String(opStatus.approvedAt).slice(0, 10) : '',
@@ -232,7 +235,7 @@ export function computeMonthKpi2Summary(effectRows, approvedOnly = true) {
   const counted = effectRows.filter((r) => {
     const status = r.상태;
     const okStatus = approvedOnly
-      ? status === KPI_STATUS.APPROVED
+      ? effectiveKpiStatus(status, String(r.dayKey || '').slice(0, 7)) === KPI_STATUS.APPROVED
       : status !== KPI_STATUS.REJECTED;
     return okStatus && Number(r.실작업시간) > 0;
   });
