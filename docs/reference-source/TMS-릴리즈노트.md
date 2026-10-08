@@ -7,6 +7,11 @@
 
 ## 2026-10-08
 
+### [수정] fix(kpi3): 분기 공유 자동 동기화를 화면 진입 시(탭 무관) 실행 + 실패 알림
+
+- fix(kpi3): 분기 공유 자동 동기화를 화면 진입 시(탭 무관) 실행 + 실패 알림
+- PR #194: https://github.com/cxr542/edu-team-tms/pull/194
+
 ### [수정] fix(api): 분기 공유 API를 기존 함수로 통합 (Vercel Hobby 함수 12개 한도)
 
 - fix(api): 분기 공유 API를 기존 함수로 통합 (Vercel Hobby 함수 12개 한도)
