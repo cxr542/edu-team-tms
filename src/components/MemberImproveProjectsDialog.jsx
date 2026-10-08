@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Import } from 'lucide-react';
 import { findKpiMember } from '../constants/kpiMembers';
 import { IMPROVE_PROJECT_BLOB_SHARE_ENABLED } from '../constants/improveProjectsShare';
@@ -10,9 +10,15 @@ export default function MemberImproveProjectsDialog({
   open,
   onClose,
   projects,
+  monthProjects,
+  monthLabel,
   onPullShare,
   shareBusy,
 }) {
+  const [showAll, setShowAll] = useState(false);
+  const hasMonthFilter = Array.isArray(monthProjects);
+  const monthOnly = hasMonthFilter && !showAll;
+  const shown = monthOnly ? monthProjects : projects;
   return (
     <MemberJournalDialog
       open={open}
@@ -43,14 +49,27 @@ export default function MemberImproveProjectsDialog({
           </button>
         </div>
       )}
-      {projects.length === 0 ? (
+      {hasMonthFilter && (
+        <div className="journal-member-dialog__actions">
+          <button
+            type="button"
+            className="btn btn-sm"
+            aria-pressed={showAll}
+            onClick={() => setShowAll((v) => !v)}
+          >
+            {monthOnly ? `${monthLabel} 과제만 (${monthProjects.length}건) · 전체 보기 (${projects.length}건)` : `전체 과제 (${projects.length}건) · ${monthLabel}만 보기`}
+          </button>
+        </div>
+      )}
+      {shown.length === 0 ? (
         <p className="journal-improve-projects-panel__empty">
-          본인 담당 과제가 없습니다. 생산성향상 M/D 업무 작성 후 팀장이 KPI2 운영 목록에 등록하면 여기에
-          표시됩니다.
+          {monthOnly && projects.length > 0
+            ? `${monthLabel}에 해당하는 과제가 없습니다. 전체 보기로 다른 달 과제를 확인하세요.`
+            : '본인 담당 과제가 없습니다. 생산성향상 M/D 업무 작성 후 팀장이 KPI2 운영 목록에 등록하면 여기에 표시됩니다.'}
         </p>
       ) : (
         <ul className="journal-improve-projects-panel__list journal-improve-projects-panel__list--grid">
-          {projects.map((p) => (
+          {shown.map((p) => (
             <li key={p.id}>
               <strong>{p.name}</strong>
               <span className="journal-improve-projects-panel__meta">
