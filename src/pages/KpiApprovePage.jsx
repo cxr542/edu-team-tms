@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import AutoGrowTextarea from '../components/AutoGrowTextarea';
 import { Check, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import AppModuleLink from '../components/AppModuleLink';
 import { useJournal } from '../context/JournalProvider';
@@ -307,7 +308,7 @@ export default function KpiApprovePage({ readOnly = false }) {
           <div className="team-kpi-modal">
             <h3>반려 사유</h3>
             <p className="muted">{rejecting.label}</p>
-            <textarea
+            <AutoGrowTextarea
               className="form-input"
               rows={3}
               value={rejectReason}
