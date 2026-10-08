@@ -7,6 +7,11 @@
 
 ## 2026-10-08
 
+### [신규] feat(kpi): treat KPI approvals as verbal approval from 3Q, with post-hoc rejection
+
+- feat(kpi): treat KPI approvals as verbal approval from 3Q, with post-hoc rejection
+- PR #188: https://github.com/cxr542/edu-team-tms/pull/188
+
 ### [수정] Fix empty improve-project team share publish
 
 - 빈 향상 과제 운영 목록이 팀 공유본을 덮어쓰지 못하도록 차단합니다.
