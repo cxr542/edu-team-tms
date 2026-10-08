@@ -60,7 +60,9 @@ describe('journal UX guidance', () => {
     expect(journalSource).toContain('생산성향상 M/D');
     expect(journalSource).toContain('반영 M/D');
     expect(journalSource).toContain('가용 M/D');
-    expect(journalSource).toContain('현재 가동률');
+    // 상단 집계 라벨: 정의서 지표명 + 지표 번호 (KPI1 가동률 / KPI2 생산성)
+    expect(journalSource).toContain('{KPI1_NAME} (KPI1)');
+    expect(journalSource).toContain('{KPI2_NAME} (KPI2)');
     expect(journalSource).toContain('생산성향상 비율');
     expect(journalSource).toContain('반반차');
     expect(journalSource).toContain('주차별 완료 M/D 기준');

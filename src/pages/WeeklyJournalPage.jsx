@@ -2027,8 +2027,8 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               가용 M/D
               <strong>{kpiMonth.available.toFixed(2)}</strong>
             </div>
-            <div>
-              현재 가동률 (KPI1)
+            <div title="KPI 지표 1 — (업무 + 생산향상 + 휴일 M/D) ÷ 가용 M/D × 100. 완료 체크한 업무 기준의 현재까지 값입니다.">
+              {KPI1_NAME} (KPI1)
               <strong>{formatSummaryPct(kpiMonth.utilization)}</strong>
             </div>
             <div title={kpi2TileTooltip(kpi2Tile)}>
