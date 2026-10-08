@@ -63,10 +63,11 @@ import {
 } from '../utils/kpi2LegacyMigration';
 
 const KPI_OPERATIONAL_SNAPSHOT_API = '/api/kpi-operational-snapshot';
-const KPI_QUARTER_SNAPSHOT_API = '/api/kpi-quarter-snapshot';
+// 함수 수 한도(Vercel Hobby 12) 때문에 월간 역량 API와 같은 함수를 scope 쿼리로 구분한다
+const KPI_QUARTER_SNAPSHOT_API = '/api/kpi-operational-snapshot?scope=quarters';
 
 async function fetchQuarterCloudSnapshot() {
-  const res = await fetch(`${KPI_QUARTER_SNAPSHOT_API}?t=${Date.now()}`, { cache: 'no-store' });
+  const res = await fetch(`${KPI_QUARTER_SNAPSHOT_API}&t=${Date.now()}`, { cache: 'no-store' });
   if (!res.ok) {
     throw new Error(`공유 분기 평가를 불러오지 못했습니다 (${res.status})`);
   }

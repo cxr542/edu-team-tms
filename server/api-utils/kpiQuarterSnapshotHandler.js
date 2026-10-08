@@ -5,19 +5,19 @@ import {
   isValidQuarterMemberCode,
   mergeMemberIntoQuarterCloudSnapshot,
   normalizeQuarterCloudSnapshot,
-} from '../src/utils/kpiQuarterCloudSnapshot.js';
-import { hasValidAdminSession } from '../server/api-utils/adminSession.js';
-import { isAllowedPublishOrigin } from '../server/api-utils/publishOrigin.js';
+} from '../../src/utils/kpiQuarterCloudSnapshot.js';
+import { hasValidAdminSession } from './adminSession.js';
+import { isAllowedPublishOrigin } from './publishOrigin.js';
 import {
   isAdminRouteReferer,
   isSameMemberRouteReferer,
-} from '../server/api-utils/requestScope.js';
+} from './requestScope.js';
 import {
   assertBlobConfigured,
   getBlobSdkOptions,
   putWithRetry,
   headWithRetry,
-} from '../server/api-utils/blobClient.js';
+} from './blobClient.js';
 
 const LIVE_LATEST_PATH = 'kpi-operational/quarters-latest.json';
 
@@ -121,7 +121,7 @@ function requestBody(req) {
   return typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
 }
 
-export default async function handler(req, res) {
+export default async function quarterSnapshotHandler(req, res) {
   if (!canUse(req)) {
     return json(res, 403, { error: 'forbidden' });
   }

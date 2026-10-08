@@ -23,8 +23,10 @@ function createRes() {
 }
 
 async function loadHandler() {
-  const mod = await import('../api/kpi-quarter-snapshot.js');
-  return mod.default;
+  const mod = await import('../api/kpi-operational-snapshot.js');
+  const handler = mod.default;
+  // scope=quarters 로 분기 공유 처리기에 위임된다
+  return (req, res) => handler({ ...req, url: '/api/kpi-operational-snapshot?scope=quarters' }, res);
 }
 
 const submittedLeader = {
