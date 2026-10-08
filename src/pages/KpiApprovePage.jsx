@@ -7,6 +7,7 @@ import { listPendingApprovals, summarizePendingApprovals } from '../utils/kpiRep
 import { loadAdminKpiPendingApprovals } from '../utils/kpiApprovePendingApprovals';
 import { KPI1_NAME, KPI2_NAME, KPI3_NAME, kpiTypeLabel } from '../constants/kpiDisplayNames';
 import { URL_ACCESS_ADMIN } from '../constants/teamAccess';
+import { WAIVED_APPROVAL_LABEL, splitWaivedApprovalItems } from '../constants/kpiApprovalPolicy';
 import { uiTooltip } from '../utils/uiTooltip';
 import './TeamKpiPage.css';
 import './KpiReportPage.css';
@@ -72,7 +73,11 @@ export default function KpiApprovePage({ readOnly = false }) {
     };
   }, [year, month, getMemberDays, kpiOperational, improveProjects]);
 
-  const pending = pendingState.items;
+  // 승인 생략(구두 승인 간주) 기간의 KPI1·KPI2 제출은 처리할 대기가 아니라 사후 반려 대상
+  const { actionable: pending, waived: waivedItems } = useMemo(
+    () => splitWaivedApprovalItems(pendingState.items),
+    [pendingState.items]
+  );
   const pendingSummary = useMemo(() => summarizePendingApprovals(pending), [pending]);
 
   const handleReject = () => {
@@ -122,6 +127,7 @@ export default function KpiApprovePage({ readOnly = false }) {
         </div>
         <p className="team-kpi-banner">
           구성원 일지에서 요청한 <strong>KPI1 월 확정</strong> · <strong>KPI2 효과 건</strong>을 이 화면에서 일괄 승인·반려합니다.
+          2026-07(3Q)부터는 팀원 3명 소규모 운영으로 이 승인을 <strong>구두 승인으로 간주</strong>하며, 필요할 때만 아래 목록에서 사후 반려합니다.
         </p>
         <p className="kpi-approve-summary" aria-live="polite">
           승인 대기 <strong>{pendingSummary.total}</strong>건
@@ -201,6 +207,51 @@ export default function KpiApprovePage({ readOnly = false }) {
           })}
         </ul>
       </section>
+
+      {waivedItems.length > 0 && (
+        <section className="team-kpi-section kpi-approve-waived" aria-label="구두 승인 간주 건">
+          <h2 className="kpi-approve-waived__title">
+            {WAIVED_APPROVAL_LABEL} 건 <strong>{waivedItems.length}</strong>건 · 사후 반려만 가능
+          </h2>
+          <p className="team-kpi-hint">
+            승인 생략 기간의 제출 건입니다. 별도 승인 없이 승인된 것으로 집계됩니다. 내용에 문제가 있으면 반려하세요 (반려하면 집계에서 빠집니다).
+          </p>
+          <ul className="team-kpi-approve-list">
+            {waivedItems.map((item) => (
+              <li
+                key={
+                  item.type === 'KPI2'
+                    ? `waived-kpi2-${item.member.code}-${item.dayKey}-${item.taskId}`
+                    : `waived-kpi1-${item.member.code}`
+                }
+                className="team-kpi-approve-item"
+              >
+                <div>
+                  <span className="team-kpi-approve-type">{kpiTypeLabel(item.type)}</span>
+                  <strong>{item.label.replace('승인 요청', WAIVED_APPROVAL_LABEL)}</strong>
+                </div>
+                {!readOnly && (
+                  <div className="team-kpi-approve-actions">
+                    <AppModuleLink
+                      module="journal"
+                      access={URL_ACCESS_ADMIN}
+                      member={item.member.code}
+                      year={year}
+                      month={month + 1}
+                      className="btn btn-secondary btn-sm"
+                    >
+                      업무일지 보기
+                    </AppModuleLink>
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => setRejecting(item)}>
+                      <X size={14} /> 사후 반려
+                    </button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {rejecting && (
         <div className="team-kpi-modal-backdrop" role="dialog" aria-modal="true">

@@ -4,6 +4,7 @@ import {
   readJournalPeriodFromUrl,
   summarizePendingApprovals,
 } from '../utils/kpiReportData';
+import { splitWaivedApprovalItems } from '../constants/kpiApprovalPolicy';
 
 /** 팀장 툴바·사이드바 승인 대기 뱃지 (localStorage 기준) */
 export function useLeaderKpiPendingBadge(enabled) {
@@ -37,7 +38,8 @@ export function useLeaderKpiPendingBadge(enabled) {
       return { count: 0, summary: { total: 0, kpi1: 0, kpi2: 0, kpi3: 0 }, items: [], period: readJournalPeriodFromUrl() };
     }
     const period = readJournalPeriodFromUrl();
-    const items = listPendingApprovalsFromBrowser(period);
+    // 승인 생략(구두 승인 간주) 건은 대기 배지에서 뺀다 — 처리할 일이 아니다
+    const { actionable: items } = splitWaivedApprovalItems(listPendingApprovalsFromBrowser(period));
     return {
       count: items.length,
       summary: summarizePendingApprovals(items),

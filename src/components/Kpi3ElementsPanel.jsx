@@ -40,6 +40,7 @@ import Kpi3NoticeDeadline from './Kpi3NoticeDeadline';
 import Kpi3NoticeAppealPanel from './Kpi3NoticeAppealPanel';
 import Kpi3ExecApprovalPanel from './Kpi3ExecApprovalPanel';
 import { execApprovalStatus } from '../utils/kpiExecApproval';
+import { isApprovalWaivedForYq } from '../constants/kpiApprovalPolicy';
 import './Kpi3ElementsPanel.css';
 
 function num(v) {
@@ -137,6 +138,9 @@ export default function Kpi3ElementsPanel({
   const isApprovedReview = (detail) => getSubmissionStatus(detail) === 'approved';
   const isRejectedReview = (detail) => getSubmissionStatus(detail) === 'rejected';
   const isLockedForMemberReview = (detail) => isPendingReview(detail) || isApprovedReview(detail);
+  // 승인 생략 기간(3Q~): 제출은 구두 승인으로 간주 — 저장값은 그대로 두고 화면에서만 승인으로 해석한다
+  const quarterApprovalWaived = isApprovalWaivedForYq(yq);
+  const isDeemedApprovedReview = (detail) => quarterApprovalWaived && isPendingReview(detail);
   const dmSubmitted = isMemberQuarterInput && isLockedForMemberReview(dmDetail);
   const leaderSubmitted = isMemberQuarterInput && isLockedForMemberReview(leaderDetail);
   const practiceSubmittedForReview = isMemberQuarterInput && isLockedForMemberReview(practiceDetail);
@@ -219,7 +223,9 @@ export default function Kpi3ElementsPanel({
         ) : pending ? (
           <>
             <p className="team-kpi-hint kpi3-member-submit-actions__hint">
-              팀장 검토 대기 중입니다. 검토 전까지 제출을 취소하고 다시 수정할 수 있습니다.
+              {quarterApprovalWaived
+                ? '제출했습니다. 승인은 구두로 갈음되며, 팀장이 점수에 반영하기 전까지 제출을 취소하고 다시 수정할 수 있습니다.'
+                : '팀장 검토 대기 중입니다. 검토 전까지 제출을 취소하고 다시 수정할 수 있습니다.'}
             </p>
             {!readOnly && !locked && (
               <button
@@ -255,25 +261,28 @@ export default function Kpi3ElementsPanel({
 
   const renderManagerReviewActions = (sectionKey, detail, scoreValue) => {
     if (!showManagerTabs) return null;
-    const pending = isPendingReview(detail);
-    const approved = isApprovedReview(detail);
+    const deemed = isDeemedApprovedReview(detail);
+    const pending = isPendingReview(detail) && !deemed;
+    const approved = isApprovedReview(detail) || deemed;
     const rejected = isRejectedReview(detail);
 
-    const statusLabel = approved
-      ? '승인 완료'
-      : rejected
-        ? '반려'
-        : pending
-          ? '검토 대기'
-          : '제출 전';
+    let statusLabel = '제출 전';
+    if (deemed) statusLabel = '승인(구두 간주)';
+    else if (approved) statusLabel = '승인 완료';
+    else if (rejected) statusLabel = '반려';
+    else if (pending) statusLabel = '검토 대기';
 
-    const statusHint = approved
-      ? '승인된 입력입니다. 점수 반영 전에는 승인 취소가 가능합니다.'
-      : rejected
-        ? '구성원이 보완 후 다시 제출해야 합니다.'
-        : pending
-          ? '구성원 제출 내용 검토가 필요합니다.'
-          : '아직 구성원이 제출하지 않았습니다.';
+    let statusHint = '아직 구성원이 제출하지 않았습니다.';
+    if (deemed) {
+      statusHint =
+        '승인 생략 기간입니다. 제출은 구두 승인으로 간주되므로 바로 「분기 점수에 반영」할 수 있고, 문제가 있으면 사후 반려하세요.';
+    } else if (approved) {
+      statusHint = '승인된 입력입니다. 점수 반영 전에는 승인 취소가 가능합니다.';
+    } else if (rejected) {
+      statusHint = '구성원이 보완 후 다시 제출해야 합니다.';
+    } else if (pending) {
+      statusHint = '구성원 제출 내용 검토가 필요합니다.';
+    }
 
     return (
       <div className="kpi3-manager-review-actions">
@@ -303,13 +312,23 @@ export default function Kpi3ElementsPanel({
           )}
           {approved && !readOnly && !locked && (
             <>
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={() => updateQuarterReview(sectionKey, 'submitted')}
-              >
-                승인 취소
-              </button>
+              {deemed ? (
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => updateQuarterReview(sectionKey, 'rejected')}
+                >
+                  사후 반려
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => updateQuarterReview(sectionKey, 'submitted')}
+                >
+                  승인 취소
+                </button>
+              )}
               <button
                 type="button"
                 className="btn btn-secondary btn-sm"

@@ -7,7 +7,7 @@ import { execApprovalStatus } from '../utils/kpiExecApproval';
 import Kpi3PartialNote from './Kpi3PartialNote';
 import { uiTooltip } from '../utils/uiTooltip';
 import { formatKpiMemberLabel } from '../constants/kpiMembers';
-import { formatKpiStatusLabel } from '../constants/kpiStatuses';
+import { kpiStatusLabelFor, ymKey } from '../constants/kpiApprovalPolicy';
 import { KPI1_NAME, KPI2_NAME, KPI3_NAME } from '../constants/kpiDisplayNames';
 import { KPI3_ELEMENTS } from '../constants/kpi3Elements';
 import TeamKpiIntegratedSummary from './TeamKpiIntegratedSummary';
@@ -109,7 +109,7 @@ export default function TeamKpiSummarySection({
                   <td>
                     <span className={`kpi-grade kpi-grade--${row.grade2}`}>{row.grade2}</span>
                   </td>
-                  <td>{formatKpiStatusLabel(row.status)}</td>
+                  <td>{kpiStatusLabelFor(row.status, ymKey(year, month))}</td>
                 </tr>
               ))}
               <tr className="team-kpi-summary-row team-kpi-summary-row--team">
