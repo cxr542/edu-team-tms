@@ -109,3 +109,56 @@ describe('월간 역량 평가 자동 가져오기 (화면 진입 시)', () => {
     expect(onToast).not.toHaveBeenCalled();
   });
 });
+
+import { listUnsharedManagerLocks } from '../src/utils/kpiOperationalCloudSnapshot.js';
+
+const monthRec = (over = {}) => ({
+  self: { intLevel: 3, dims: {} },
+  manager: { intLevel: 4, dims: {} },
+  selfLocked: true,
+  managerLocked: true,
+  selfUpdatedAt: '2026-08-01T00:00:00.000Z',
+  managerUpdatedAt: '2026-08-02T00:00:00.000Z',
+  ...over,
+});
+
+describe('팀장 확정 보충 저장 대상', () => {
+  it('로컬에서 확정됐지만 공유본에 확정이 없는 월만 고른다', () => {
+    const local = {
+      '2026-07': { C: monthRec(), B: monthRec() },
+      '2026-08': { C: monthRec({ managerLocked: false }) },
+    };
+    const remote = { '2026-07': { B: monthRec() } };
+    const t = listUnsharedManagerLocks(local, remote);
+    expect(t.map((x) => `${x.ym}:${x.memberCode}`)).toEqual(['2026-07:C']);
+  });
+
+  it('자체평가가 비어 저장 불가한 기록은 제외한다', () => {
+    const local = { '2026-07': { C: monthRec({ self: { intLevel: 0, dims: {} } }) } };
+    expect(listUnsharedManagerLocks(local, {})).toEqual([]);
+  });
+
+  it('팀장 자동 가져오기가 보충 저장하고 알린다', async () => {
+    resetCompetencyAutoPullSession();
+    const store = { competencyMonths: { '2026-07': { C: monthRec() } } };
+    const journal = {
+      pullCompetencyCloudSnapshot: vi.fn(async () => ({ ok: true, changed: false, store, remote: { kpiOperational: { competencyMonths: {} } } })),
+      saveCompetencyMemberCloudSnapshot: vi.fn(async () => ({ ok: true })),
+    };
+    const onToast = vi.fn();
+    expect(await runCompetencyAutoPull({ journal, role: 'manager', yq: '2026-3Q', onToast })).toBe('backfilled');
+    expect(journal.saveCompetencyMemberCloudSnapshot).toHaveBeenCalledWith('C', '2026-07', expect.objectContaining({ managerLocked: true }));
+    expect(onToast).toHaveBeenCalledWith(expect.stringContaining('1건'));
+  });
+
+  it('구성원은 보충 저장하지 않는다', async () => {
+    resetCompetencyAutoPullSession();
+    const store = { competencyMonths: { '2026-07': { C: monthRec() } } };
+    const journal = {
+      pullCompetencyCloudSnapshot: vi.fn(async () => ({ ok: true, changed: false, store, remote: {} })),
+      saveCompetencyMemberCloudSnapshot: vi.fn(async () => ({ ok: true })),
+    };
+    await runCompetencyAutoPull({ journal, role: 'member', yq: '2026-3Q', onToast: vi.fn() });
+    expect(journal.saveCompetencyMemberCloudSnapshot).not.toHaveBeenCalled();
+  });
+});

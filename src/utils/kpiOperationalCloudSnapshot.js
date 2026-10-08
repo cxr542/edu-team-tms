@@ -432,3 +432,25 @@ export function formatCompetencyCloudApiPayload(snapshot) {
     },
   };
 }
+
+/**
+ * 팀장 확정(managerLocked)이 로컬에는 있는데 공유본에는 없는 월 기록 목록
+ * — 확정 시 공유 저장이 누락됐던 과거 기록을 한 번 보충 저장하는 데 쓴다.
+ */
+export function listUnsharedManagerLocks(localMonths, remoteMonths) {
+  const local = normalizeCompetencyMonths(localMonths);
+  const remote = normalizeCompetencyMonths(remoteMonths);
+  const targets = [];
+  Object.keys(local)
+    .sort()
+    .forEach((ym) => {
+      Object.entries(local[ym]).forEach(([memberCode, rec]) => {
+        if (!isValidCompetencyMemberCode(memberCode)) return;
+        if (!rec.managerLocked) return;
+        if (!isCompetencyMonthRecordSaveable(rec, memberCode)) return;
+        if (remote[ym]?.[memberCode]?.managerLocked) return;
+        targets.push({ ym, memberCode, record: rec });
+      });
+    });
+  return targets;
+}

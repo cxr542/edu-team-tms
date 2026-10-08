@@ -949,30 +949,30 @@ export function useKpiOperational({ readOnly = false } = {}) {
     (year, monthIndex, memberCode) => {
       if (readOnly) return { ok: false, reason: 'read-only' };
       const ym = monthKey(year, monthIndex);
+      // 클라우드 저장에 넘길 갱신 기록을 바로 돌려주기 위해 최신 저장 상태(ref) 기준으로 계산한다
+      const base =
+        storeRef.current?.competencyMonths?.[ym]?.[memberCode] || defaultCompetencyMonthRecord(memberCode);
+      const roleId = base.roleId ?? mapMemberRoleToCompetency(findKpiMember(memberCode)?.role);
+      const updatedAt = new Date().toISOString();
+      const updated = {
+        ...base,
+        roleId,
+        manager: normalizeCompetencyEvalSide(base.manager, roleId),
+        managerLocked: false,
+        managerUpdatedAt: updatedAt,
+        updatedAt,
+      };
       setStore((prev) => {
-        let next = ensureCompetencyMonthMember(prev, ym, memberCode);
-        const rec = next.competencyMonths[ym][memberCode];
-        const roleId =
-          rec.roleId ?? mapMemberRoleToCompetency(findKpiMember(memberCode)?.role);
-        const updatedAt = new Date().toISOString();
-        const updated = {
-          ...rec,
-          roleId,
-          manager: normalizeCompetencyEvalSide(rec.manager, roleId),
-          managerLocked: false,
-          managerUpdatedAt: updatedAt,
-          updatedAt,
-        };
-        next = {
+        const next = ensureCompetencyMonthMember(prev, ym, memberCode);
+        return persist({
           ...next,
           competencyMonths: {
             ...next.competencyMonths,
             [ym]: { ...next.competencyMonths[ym], [memberCode]: updated },
           },
-        };
-        return persist(next);
+        });
       });
-      return { ok: true };
+      return { ok: true, record: updated };
     },
     [readOnly, persist]
   );
