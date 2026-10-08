@@ -7,6 +7,11 @@
 
 ## 2026-10-08
 
+### [수정] fix(kpi): refresh the approval list after approve/reject, mirror reliably, add bulk approve
+
+- fix(kpi): refresh the approval list after approve/reject, mirror reliably, add bulk approve
+- PR #189: https://github.com/cxr542/edu-team-tms/pull/189
+
 ### [신규] feat(kpi): treat KPI approvals as verbal approval from 3Q, with post-hoc rejection
 
 - feat(kpi): treat KPI approvals as verbal approval from 3Q, with post-hoc rejection
