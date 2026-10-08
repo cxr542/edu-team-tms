@@ -19,6 +19,7 @@ import {
   putWithRetry,
   headWithRetry,
 } from '../server/api-utils/blobClient.js';
+import quarterSnapshotHandler from '../server/api-utils/kpiQuarterSnapshotHandler.js';
 
 const LIVE_LATEST_PATH = 'kpi-operational/live-latest.json';
 
@@ -122,7 +123,23 @@ function requestBody(req) {
   return typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
 }
 
+function requestScope(req) {
+  if (req.query && typeof req.query.scope === 'string') return req.query.scope;
+  try {
+    return new URL(req.url || '', 'http://localhost').searchParams.get('scope') || '';
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Vercel Hobby 함수 수 한도(12) 때문에 분기 4요소 공유(scope=quarters)도 이 함수가 받는다.
+ * 구현은 server/api-utils/kpiQuarterSnapshotHandler.js
+ */
 export default async function handler(req, res) {
+  if (requestScope(req) === 'quarters') {
+    return quarterSnapshotHandler(req, res);
+  }
   if (!canUse(req)) {
     return json(res, 403, { error: 'forbidden' });
   }

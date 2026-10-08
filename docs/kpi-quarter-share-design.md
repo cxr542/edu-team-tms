@@ -40,7 +40,7 @@
 
 ### 안 A (권장): Blob 신규 경로, 기존 패턴 복제
 - 경로: `kpi-operational/quarters-latest.json` (월간과 분리해 영향 범위 격리)
-- `api/kpi-quarter-snapshot.js`: GET(전체) / POST(`{memberCode, yearQuarter, slice, updatedAt}`)
+- `/api/kpi-operational-snapshot?scope=quarters` (구현: `server/api-utils/kpiQuarterSnapshotHandler.js`; Vercel Hobby 함수 12개 한도로 별도 api 파일 불가): GET(전체) / POST(`{memberCode, yearQuarter, slice, updatedAt}`)
 - 권한: 기존 `canWriteMember` 재사용 (구성원 URL 본인 또는 관리자 세션)
 - 병합: 서버가 현재본을 읽고 **회원×분기×섹션 단위 `updatedAt` 비교** 후 병합(더 새로운 쪽 채택, 소유 필드 외 거부)
 - 장점: 검증된 구조, Supabase 의존 없음. 단점: 단일 JSON read-modify-write → 동시 제출 시 경합(§6).
