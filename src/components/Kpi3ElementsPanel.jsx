@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { uiTooltip } from '../utils/uiTooltip';
+import { needsQuarterBackfillPush } from '../utils/kpiQuarterCloudSnapshot';
 import { buildDocsModuleUrl } from '../constants/referenceDocs';
 import { KPI3_ELEMENTS, KPI3_FORMULA_TEXT } from '../constants/kpi3Elements';
 import { KPI3_WEIGHTS } from '../constants/kpiRules';
@@ -99,6 +101,9 @@ function Kpi3PreviewRow({ children, action }) {
   );
 }
 
+/** 화면을 열 때 한 번만 자동 동기화 — 세션 내 (역할·구성원·분기) 단위 */
+const autoSyncedQuarterKeys = new Set();
+
 export default function Kpi3ElementsPanel({
   year,
   month,
@@ -152,6 +157,73 @@ export default function Kpi3ElementsPanel({
         ? 'leaderDetail'
         : 'practiceDetail';
 
+  const quarterShareRole = showManagerTabs ? 'manager' : 'member';
+
+  /** 분기 4요소 공유 저장 — 실패를 조용히 넘기지 않고 토스트로 알린다 */
+  const pushQuarterShare = async ({ silentOk = false } = {}) => {
+    const r = await journal.saveKpi3QuarterCloudSnapshot?.(memberCode, year, month);
+    if (!r) return null;
+    if (r.ok) {
+      if (!silentOk) onToast?.('분기 평가를 팀 공유 저장소에 저장했습니다');
+    } else if (r.reason === 'dev-blocked') {
+      onToast?.('개발 환경에서는 팀 공유 저장이 차단됩니다');
+    } else if (r.reason === 'empty') {
+      onToast?.('공유 저장할 분기 평가 내용이 없습니다');
+    } else if (r.reason !== 'read-only') {
+      onToast?.(`팀 공유 저장에 실패했습니다 — 「분기 공유 저장」으로 다시 시도하세요 (${r.error?.message || '오류'})`);
+    }
+    return r;
+  };
+
+  /** 로컬 저장이 반영된 뒤(렌더 후) 공유 저장 */
+  const pushQuarterShareSoon = () => {
+    setTimeout(() => {
+      pushQuarterShare({ silentOk: true });
+    }, 300);
+  };
+
+  const pullQuarterShare = async () => {
+    const r = await journal.pullKpi3QuarterCloudSnapshot?.(quarterShareRole);
+    if (!r) return;
+    if (r.ok) {
+      onToast?.(
+        r.changedCount > 0
+          ? `분기 평가 공유본 ${r.changedCount}건을 반영했습니다`
+          : '새로 반영할 분기 평가 공유본이 없습니다'
+      );
+    } else if (r.reason !== 'read-only') {
+      onToast?.(`분기 평가 공유본을 가져오지 못했습니다 (${r.error?.message || '오류'})`);
+    }
+  };
+
+  // 자동 동기화(정책 예외, 화면을 열 때 1회): 팀장은 구성원 제출분 가져오기, 구성원은 미공유 제출분 보충 저장
+  const autoSyncEligible = !readOnly && (showManagerTabs ? !compact && !section : Boolean(section));
+  useEffect(() => {
+    if (!autoSyncEligible || !journal.pullKpi3QuarterCloudSnapshot) return undefined;
+    const key = `${quarterShareRole}:${memberCode}:${yq}`;
+    if (autoSyncedQuarterKeys.has(key)) return undefined;
+    autoSyncedQuarterKeys.add(key);
+    (async () => {
+      const pulled = await journal.pullKpi3QuarterCloudSnapshot(quarterShareRole);
+      if (!pulled?.ok) {
+        // 실패하면 다음 화면 진입 때 다시 시도
+        autoSyncedQuarterKeys.delete(key);
+        return;
+      }
+      if (quarterShareRole === 'manager') {
+        if (pulled.changedCount > 0) onToast?.(`구성원 분기 평가 공유본 ${pulled.changedCount}건을 자동으로 반영했습니다`);
+        return;
+      }
+      if (needsQuarterBackfillPush(quarterRec, pulled.remote, yq, memberCode)) {
+        const r = await journal.saveKpi3QuarterCloudSnapshot?.(memberCode, year, month);
+        if (r?.ok) onToast?.('제출한 분기 평가를 팀 공유 저장소에 자동 저장했습니다');
+        else if (r && r.reason !== 'dev-blocked' && r.reason !== 'read-only') autoSyncedQuarterKeys.delete(key);
+      }
+    })();
+    return undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoSyncEligible, quarterShareRole, memberCode, yq]);
+
   const updateQuarterSubmission = (sectionKey, submitted) => {
     const detailKey = detailKeyForQuarterSection(sectionKey);
     const patch = submitted
@@ -181,6 +253,7 @@ export default function Kpi3ElementsPanel({
         ? '분기 평가 입력을 팀장에게 제출했습니다'
         : '분기 평가 제출을 취소했습니다'
     );
+    pushQuarterShareSoon();
   };
 
   const updateQuarterReview = (sectionKey, status) => {
@@ -206,6 +279,7 @@ export default function Kpi3ElementsPanel({
           ? '반려 처리했습니다'
           : '검토 대기 상태로 되돌렸습니다'
     );
+    pushQuarterShareSoon();
   };
 
   const renderMemberSubmissionActions = (sectionKey, detail) => {
@@ -473,6 +547,39 @@ export default function Kpi3ElementsPanel({
             에서 4요소·N기준·승인 절차를 확인하세요. 아래는 정의서에 맞춘 입력·산출 UI입니다.
           </p>
         </>
+      )}
+
+      {(showPanelShell || (section && !showManagerTabs)) && !readOnly && (
+        <div className="kpi3-quarter-share-row">
+          <button
+            type="button"
+            className="btn btn-import-shared btn-sm"
+            {...uiTooltip(
+              showManagerTabs
+                ? '구성원이 제출한 분기 평가(다면·리더·실전)를 팀 공유 저장소에서 이 브라우저로 가져옵니다. 팀장 입력(점수·검토)은 유지됩니다.'
+                : '팀장의 검토 결과·확정 점수를 팀 공유 저장소에서 가져옵니다. 내가 입력한 내용은 유지됩니다.',
+              'below',
+              { wrap: true }
+            )}
+            onClick={pullQuarterShare}
+          >
+            분기 공유본 가져오기
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            {...uiTooltip(
+              showManagerTabs
+                ? '이 브라우저의 검토 상태·점수·확정·이의 기록을 구성원도 볼 수 있게 팀 공유 저장소에 저장합니다. (팀장 메모는 제외)'
+                : '이 브라우저의 분기 평가 입력·제출 상태를 팀장이 볼 수 있게 팀 공유 저장소에 저장합니다. 제출·제출 취소 시에는 자동으로 저장됩니다.',
+              'below',
+              { wrap: true }
+            )}
+            onClick={() => pushQuarterShare()}
+          >
+            분기 공유 저장
+          </button>
+        </div>
       )}
 
       {showPanelShell && (
@@ -1019,6 +1126,7 @@ export default function Kpi3ElementsPanel({
                   }
                   journal.lockKpi3Quarter(year, month, memberCode, { practiceDefault: true });
                   onToast?.('분기 확정 잠금 · 실전 적용 1점(증빙 미제출) 처리');
+                  pushQuarterShareSoon();
                   return;
                 }
                 if (practice.action === 'pending-review') {
@@ -1032,6 +1140,7 @@ export default function Kpi3ElementsPanel({
                 }
                 journal.lockKpi3Quarter(year, month, memberCode);
                 onToast?.('분기 확정 잠금');
+                pushQuarterShareSoon();
               }}
             >
               분기 확정

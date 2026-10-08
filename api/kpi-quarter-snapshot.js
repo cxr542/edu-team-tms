@@ -1,0 +1,232 @@
+import {
+  createEmptyQuarterCloudSnapshot,
+  formatQuarterCloudApiPayload,
+  isValidQuarterKey,
+  isValidQuarterMemberCode,
+  mergeMemberIntoQuarterCloudSnapshot,
+  normalizeQuarterCloudSnapshot,
+} from '../src/utils/kpiQuarterCloudSnapshot.js';
+import { hasValidAdminSession } from '../server/api-utils/adminSession.js';
+import { isAllowedPublishOrigin } from '../server/api-utils/publishOrigin.js';
+import {
+  isAdminRouteReferer,
+  isSameMemberRouteReferer,
+} from '../server/api-utils/requestScope.js';
+import {
+  assertBlobConfigured,
+  getBlobSdkOptions,
+  putWithRetry,
+  headWithRetry,
+} from '../server/api-utils/blobClient.js';
+
+const LIVE_LATEST_PATH = 'kpi-operational/quarters-latest.json';
+
+function canUse(req) {
+  const referer = req.headers.referer || req.headers.origin || '';
+  return isAllowedPublishOrigin(referer);
+}
+
+function canWriteMember(req, memberCode) {
+  if (!canUse(req)) return false;
+  if (isAdminRouteReferer(req)) return hasValidAdminSession(req);
+  return isSameMemberRouteReferer(req, memberCode);
+}
+
+function json(res, status, body) {
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.end(JSON.stringify(body));
+}
+
+async function fetchBlobJson(url) {
+  if (!url) return null;
+  const res = await fetch(`${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const err = new Error(`Blob snapshot read failed (${res.status})`);
+    err.status = res.status;
+    throw err;
+  }
+  return res.json();
+}
+
+function isNotFoundError(e) {
+  const status = Number(e?.status || e?.statusCode);
+  const code = String(e?.code || '').toLowerCase();
+  const msg = String(e?.message || e || '').toLowerCase();
+  const matched = (
+    status === 404 ||
+    code === 'blob_not_found' ||
+    code === 'not_found' ||
+    code === 'notfound' ||
+    /not[ _]?found|does not exist|404/i.test(msg)
+  );
+  if (e && typeof e === 'object') {
+    e._debugMatched = matched;
+    e._debugDetails = { status, code, msg, regexTest: /not[ _]?found|does not exist|404/i.test(msg) };
+  }
+  return matched;
+}
+
+async function readQuartersBlob() {
+  const blobOpts = getBlobSdkOptions();
+  if (!blobOpts) return { configured: false, snapshot: null, unavailable: false };
+
+  try {
+    const meta = await headWithRetry(LIVE_LATEST_PATH, blobOpts);
+    return {
+      configured: true,
+      snapshot: await fetchBlobJson(meta.downloadUrl || meta.url),
+      unavailable: false,
+    };
+  } catch (e) {
+    return {
+      configured: true,
+      snapshot: null,
+      unavailable: !isNotFoundError(e),
+      error: e,
+    };
+  }
+}
+
+async function readLatestSnapshot({ failOnBlobReadError = false } = {}) {
+  const blob = await readQuartersBlob();
+  if (blob.snapshot) return normalizeQuarterCloudSnapshot(blob.snapshot);
+  if (blob.configured && failOnBlobReadError && blob.unavailable) {
+    const err = new Error('공유 분기 평가 Blob을 읽지 못했습니다. 최신 원격본을 확인할 수 없어 저장을 중단합니다.');
+    err.code = 'BLOB_READ_UNAVAILABLE';
+    err.cause = blob.error;
+    throw err;
+  }
+  return createEmptyQuarterCloudSnapshot();
+}
+
+async function writeQuartersBlob(payload) {
+  assertBlobConfigured();
+  const blobOpts = getBlobSdkOptions();
+
+  await putWithRetry(LIVE_LATEST_PATH, JSON.stringify(formatQuarterCloudApiPayload(payload)), {
+    access: 'public',
+    ...blobOpts,
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    contentType: 'application/json',
+    cacheControlMaxAge: 60,
+  });
+  return LIVE_LATEST_PATH;
+}
+
+function requestBody(req) {
+  return typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+}
+
+export default async function handler(req, res) {
+  if (!canUse(req)) {
+    return json(res, 403, { error: 'forbidden' });
+  }
+
+  if (req.method === 'GET') {
+    try {
+      const snapshot = await readLatestSnapshot({ failOnBlobReadError: true });
+      res.setHeader('Cache-Control', 'no-store');
+      return json(res, 200, formatQuarterCloudApiPayload(snapshot));
+    } catch (e) {
+      if (e.code === 'BLOB_READ_UNAVAILABLE') {
+        return json(res, 503, {
+          error: 'blob-read-unavailable',
+          message: e.message,
+          cause: e.cause ? {
+            message: e.cause.message,
+            code: e.cause.code,
+            status: e.cause.status || e.cause.statusCode,
+            _debugMatched: e.cause._debugMatched,
+            _debugDetails: e.cause._debugDetails,
+          } : null,
+        });
+      }
+      return json(res, 500, { error: e.message || String(e) });
+    }
+  }
+
+  if (req.method === 'POST') {
+    try {
+      const body = requestBody(req);
+      const memberCode = body?.memberCode;
+      const yearQuarter = body?.yearQuarter;
+      const quarter = body?.quarter;
+
+      if (!isValidQuarterMemberCode(memberCode)) {
+        return json(res, 400, { error: 'memberCode는 A/B/C 중 하나여야 합니다.' });
+      }
+      if (!canWriteMember(req, memberCode)) {
+        return json(res, 403, {
+          error: 'kpi-quarter-member-forbidden',
+          message: '현재 구성원 URL 또는 관리자 세션이 필요합니다.',
+        });
+      }
+      if (!isValidQuarterKey(yearQuarter)) {
+        return json(res, 400, { error: 'yearQuarter는 YYYY-NQ 형식이어야 합니다.' });
+      }
+      if (!quarter || typeof quarter !== 'object') {
+        return json(res, 400, { error: 'quarter 객체가 필요합니다.' });
+      }
+
+      // 작성 권한은 요청 경로로 결정한다 — 관리자 세션이면 팀장, 아니면 구성원 본인
+      const role = isAdminRouteReferer(req) && hasValidAdminSession(req) ? 'manager' : 'member';
+      const updatedAt = new Date().toISOString();
+      const current = await readLatestSnapshot({ failOnBlobReadError: true });
+      const { snapshot: next, applied, skipped } = mergeMemberIntoQuarterCloudSnapshot(
+        current,
+        memberCode,
+        yearQuarter,
+        quarter,
+        role,
+        { updatedAt }
+      );
+      const pathname = await writeQuartersBlob(next);
+      return json(res, 200, {
+        ok: true,
+        pathname,
+        role,
+        applied,
+        skipped,
+        snapshot: formatQuarterCloudApiPayload(next),
+      });
+    } catch (e) {
+      if (e.code === 'NOT_CONFIGURED') {
+        return json(res, 501, {
+          error: 'server-publish-not-configured',
+          message: 'Vercel Blob 연결 후 재배포가 필요합니다.',
+        });
+      }
+      if (e.code === 'EMPTY_RECORD') {
+        return json(res, 400, { error: 'empty quarter record', message: e.message });
+      }
+      const msg = String(e.message || e);
+      if (/quota|exceeded/i.test(msg)) {
+        return json(res, 507, {
+          error: 'blob-quota-exceeded',
+          message: 'Vercel Blob 저장 용량이 가득 찼습니다. Storage 정리 후 다시 시도하세요.',
+        });
+      }
+      if (e.code === 'BLOB_READ_UNAVAILABLE') {
+        return json(res, 503, {
+          error: 'blob-read-unavailable',
+          message: e.message,
+          cause: e.cause ? {
+            message: e.cause.message,
+            code: e.cause.code,
+            status: e.cause.status || e.cause.statusCode,
+            _debugMatched: e.cause._debugMatched,
+            _debugDetails: e.cause._debugDetails,
+          } : null,
+        });
+      }
+      return json(res, 500, { error: msg });
+    }
+  }
+
+  res.setHeader('Allow', 'GET, POST');
+  return json(res, 405, { error: 'method not allowed' });
+}
