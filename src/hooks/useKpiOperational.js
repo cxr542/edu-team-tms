@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { KPI_STATUS } from '../constants/kpiStatuses';
 import { mergeJournalKpiApprovalImport } from '../utils/journalKpiApprovalSlice';
 import {
@@ -264,6 +264,9 @@ function loadStore() {
 
 export function useKpiOperational({ readOnly = false } = {}) {
   const [store, setStore] = useState(loadStore);
+  // 서버 반영(mirror) 값 계산용 — 상태 갱신 함수가 늦게 실행돼도 최신 저장 상태를 참조한다
+  const storeRef = useRef(store);
+  storeRef.current = store;
 
   const persist = useCallback(
     (next) => {
@@ -342,15 +345,21 @@ export function useKpiOperational({ readOnly = false } = {}) {
         persisted = persist(next);
         return persisted;
       });
-      if (shouldMirror && persisted) {
-        void mirrorKpiMonthlyApprovalToSupabase({
+      if (shouldMirror) {
+        // setStore 의 갱신 함수는 즉시 실행되지 않을 수 있어(persisted 가 비어 있음) 그 경우에도
+        // 서버 반영이 빠지지 않도록 현재 저장값 + patch 로 대신 계산한다.
+        const base = storeRef.current?.months?.[ym]?.[memberCode]?.monthly01 ?? defaultMonthly01();
+        const monthly01 = persisted?.months?.[ym]?.[memberCode]?.monthly01 ?? { ...base, ...patch };
+        // 반환값: 서버 반영이 끝나면 resolve (호출한 쪽이 기다렸다가 목록을 새로 읽을 수 있다)
+        return mirrorKpiMonthlyApprovalToSupabase({
           year,
           monthIndex,
           memberCode,
-          monthly01: persisted.months[ym][memberCode].monthly01,
-          updatedAt: persisted.meta?.updatedAt,
+          monthly01,
+          updatedAt: persisted?.meta?.updatedAt ?? new Date().toISOString(),
         });
       }
+      return undefined;
     },
     [readOnly, persist]
   );
@@ -414,15 +423,22 @@ export function useKpiOperational({ readOnly = false } = {}) {
         persisted = persist(next);
         return persisted;
       });
-      if (shouldMirror && persisted) {
-        void mirrorKpi2RowApprovalToSupabase({
+      if (shouldMirror) {
+        const base = readKpi2RowStatus(storeRef.current?.kpi2RowStatus, memberCode, dayKey, taskId).value || {
+          status: KPI_STATUS.DRAFT,
+          rejectReason: '',
+          approver: '',
+          approvedAt: null,
+        };
+        return mirrorKpi2RowApprovalToSupabase({
           memberCode,
           dayKey,
           taskId,
-          kpi2RowStatus: persisted.kpi2RowStatus[id],
-          updatedAt: persisted.meta?.updatedAt,
+          kpi2RowStatus: persisted?.kpi2RowStatus?.[id] ?? { ...base, ...patch },
+          updatedAt: persisted?.meta?.updatedAt ?? new Date().toISOString(),
         });
       }
+      return undefined;
     },
     [readOnly, persist]
   );
@@ -440,8 +456,8 @@ export function useKpiOperational({ readOnly = false } = {}) {
 
   const approveKpi1 = useCallback(
     (year, monthIndex, memberCode, approver = '팀장') => {
-      if (readOnly) return;
-      updateMonthly01(year, monthIndex, memberCode, {
+      if (readOnly) return undefined;
+      return updateMonthly01(year, monthIndex, memberCode, {
         status: KPI_STATUS.APPROVED,
         approvedAt: new Date().toISOString(),
         approver,
@@ -453,8 +469,8 @@ export function useKpiOperational({ readOnly = false } = {}) {
 
   const rejectKpi1 = useCallback(
     (year, monthIndex, memberCode, reason, approver = '팀장') => {
-      if (readOnly) return;
-      updateMonthly01(year, monthIndex, memberCode, {
+      if (readOnly) return undefined;
+      return updateMonthly01(year, monthIndex, memberCode, {
         status: KPI_STATUS.REJECTED,
         rejectReason: reason || '반려',
         approver,
@@ -466,8 +482,8 @@ export function useKpiOperational({ readOnly = false } = {}) {
 
   const approveKpi2Row = useCallback(
     (memberCode, dayKey, taskId, approver = '팀장') => {
-      if (readOnly) return;
-      setKpi2RowStatus(memberCode, dayKey, taskId, {
+      if (readOnly) return undefined;
+      return setKpi2RowStatus(memberCode, dayKey, taskId, {
         status: KPI_STATUS.APPROVED,
         approver,
         approvedAt: new Date().toISOString(),
@@ -479,8 +495,8 @@ export function useKpiOperational({ readOnly = false } = {}) {
 
   const rejectKpi2Row = useCallback(
     (memberCode, dayKey, taskId, reason, approver = '팀장') => {
-      if (readOnly) return;
-      setKpi2RowStatus(memberCode, dayKey, taskId, {
+      if (readOnly) return undefined;
+      return setKpi2RowStatus(memberCode, dayKey, taskId, {
         status: KPI_STATUS.REJECTED,
         rejectReason: reason || '반려',
         approver,

@@ -8,6 +8,7 @@ import { loadAdminKpiPendingApprovals } from '../utils/kpiApprovePendingApproval
 import { KPI1_NAME, KPI2_NAME, KPI3_NAME, kpiTypeLabel } from '../constants/kpiDisplayNames';
 import { URL_ACCESS_ADMIN } from '../constants/teamAccess';
 import { WAIVED_APPROVAL_LABEL, splitWaivedApprovalItems } from '../constants/kpiApprovalPolicy';
+import { isHandledLocally, selectBulkApprovalTargets } from '../utils/kpiApprovalHandled';
 import { uiTooltip } from '../utils/uiTooltip';
 import './TeamKpiPage.css';
 import './KpiReportPage.css';
@@ -37,6 +38,9 @@ export default function KpiApprovePage({ readOnly = false }) {
   const [rejecting, setRejecting] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   const [pendingState, setPendingState] = useState({ status: 'loading', items: [] });
+  // 승인·반려 후 서버 반영이 끝나면 목록을 다시 읽는다
+  const [refreshTick, setRefreshTick] = useState(0);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const showToast = useCallback((msg) => {
     setToast(msg);
@@ -71,26 +75,57 @@ export default function KpiApprovePage({ readOnly = false }) {
     return () => {
       cancelled = true;
     };
-  }, [year, month, getMemberDays, kpiOperational, improveProjects]);
+  }, [year, month, getMemberDays, kpiOperational, improveProjects, refreshTick]);
 
   // 승인 생략(구두 승인 간주) 기간의 KPI1·KPI2 제출은 처리할 대기가 아니라 사후 반려 대상
+  // 이 브라우저에서 이미 승인·반려한 항목은 서버 목록에 남아 있어도 바로 뺀다 (서버 반영이 늦거나 실패해도 처리한 건이 계속 보이지 않게)
   const { actionable: pending, waived: waivedItems } = useMemo(
-    () => splitWaivedApprovalItems(pendingState.items),
-    [pendingState.items]
+    () =>
+      splitWaivedApprovalItems(pendingState.items.filter((item) => !isHandledLocally(item, kpiOperational))),
+    [pendingState.items, kpiOperational]
   );
+  const bulkTargets = useMemo(() => selectBulkApprovalTargets(pending), [pending]);
+
+  /** 승인·반려는 서버 반영(Promise)이 끝나면 목록을 다시 읽는다 */
+  const refreshAfter = useCallback((mirrorPromise) => {
+    Promise.resolve(mirrorPromise)
+      .catch(() => {})
+      .finally(() => setRefreshTick((tick) => tick + 1));
+  }, []);
+
+  const handleBulkApprove = useCallback(async () => {
+    if (bulkBusy || bulkTargets.length === 0) return;
+    const ok = window.confirm(
+      `이 달의 KPI1·KPI2 승인 대기 ${bulkTargets.length}건을 모두 승인할까요?\n(월간 역량 팀장 확정(KPI3)은 직접 확정해야 하므로 제외됩니다.)`
+    );
+    if (!ok) return;
+    setBulkBusy(true);
+    try {
+      const promises = bulkTargets.map((item) =>
+        item.type === 'KPI1'
+          ? approveKpi1(year, month, item.member.code)
+          : approveKpi2Row(item.member.code, item.dayKey, item.taskId)
+      );
+      showToast(`${bulkTargets.length}건 일괄 승인`);
+      await Promise.allSettled(promises);
+    } finally {
+      setBulkBusy(false);
+      setRefreshTick((tick) => tick + 1);
+    }
+  }, [bulkBusy, bulkTargets, approveKpi1, approveKpi2Row, year, month, showToast]);
   const pendingSummary = useMemo(() => summarizePendingApprovals(pending), [pending]);
 
   const handleReject = () => {
     if (!rejecting) return;
     const reason = rejectReason.trim() || '반려';
     if (rejecting.type === 'KPI1') {
-      rejectKpi1(year, month, rejecting.member.code, reason);
+      refreshAfter(rejectKpi1(year, month, rejecting.member.code, reason));
       showToast(`${rejecting.member.displayName} ${KPI1_NAME} 반려`);
     } else if (rejecting.type === 'KPI3') {
       kpiOperational.unlockCompetencyMonthSelf(year, month, rejecting.member.code);
       showToast(`${rejecting.member.displayName} ${KPI3_NAME} 반려`);
     } else {
-      rejectKpi2Row(rejecting.member.code, rejecting.dayKey, rejecting.taskId, reason);
+      refreshAfter(rejectKpi2Row(rejecting.member.code, rejecting.dayKey, rejecting.taskId, reason));
       showToast(`${KPI2_NAME} 효과 건 반려`);
     }
     setRejecting(null);
@@ -144,6 +179,20 @@ export default function KpiApprovePage({ readOnly = false }) {
         {pendingState.status !== 'loading' && pending.length === 0 && (
           <p className="team-kpi-hint">이 달 승인 대기 건이 없습니다. 구성원이 일지 하단 「KPI 승인 요청」에서 내면 여기에 모입니다.</p>
         )}
+        {!readOnly && bulkTargets.length > 0 && (
+          <div className="kpi-approve-bulk">
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={bulkBusy}
+              onClick={handleBulkApprove}
+              {...uiTooltip('이 달의 KPI1 월 확정·KPI2 효과 건 승인 대기를 한 번에 승인합니다')}
+            >
+              <Check size={14} /> KPI1·KPI2 일괄 승인 ({bulkTargets.length}건)
+            </button>
+            <span className="team-kpi-hint">월간 역량 팀장 확정(KPI3)은 직접 확정해야 하므로 제외됩니다.</span>
+          </div>
+        )}
         <ul className="team-kpi-approve-list">
           {pending.map((item) => {
             const requested = formatRequestedAt(item.submittedAt);
@@ -180,13 +229,13 @@ export default function KpiApprovePage({ readOnly = false }) {
                       className="btn btn-primary btn-sm"
                       onClick={() => {
                         if (item.type === 'KPI1') {
-                          approveKpi1(year, month, item.member.code);
+                          refreshAfter(approveKpi1(year, month, item.member.code));
                           showToast(`${item.member.displayName} ${KPI1_NAME} 승인`);
                         } else if (item.type === 'KPI3') {
                           kpiOperational.lockCompetencyMonth(year, month, item.member.code, { side: 'manager' });
                           showToast(`${item.member.displayName} ${KPI3_NAME} 승인`);
                         } else {
-                          approveKpi2Row(item.member.code, item.dayKey, item.taskId);
+                          refreshAfter(approveKpi2Row(item.member.code, item.dayKey, item.taskId));
                           showToast(`${KPI2_NAME} 승인`);
                         }
                       }}
