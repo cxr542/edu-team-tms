@@ -7,6 +7,11 @@
 
 ## 2026-10-08
 
+### [신규] feat(kpi-report): 월간·분기·연간 리포트 + 분기 레벨(마지막 달)·연간 KPI3(4분기) 규칙
+
+- feat(kpi-report): 월간·분기·연간 리포트 + 분기 레벨(마지막 달)·연간 KPI3(4분기) 규칙
+- PR #199: https://github.com/cxr542/edu-team-tms/pull/199
+
 ### [수정] fix(competency): 월간 팀장 확정이 공유 저장소에 올라가지 않던 문제 수정 + 누락분 보충
 
 - fix(competency): 월간 팀장 확정이 공유 저장소에 올라가지 않던 문제 수정 + 누락분 보충
