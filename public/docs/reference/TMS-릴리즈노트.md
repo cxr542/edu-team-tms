@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-10-08
+
+### [수정] fix(ci): retarget daily health check cron for earlier KST landing
+
+- fix(ci): retarget daily health check cron for earlier KST landing
+- PR #141: https://github.com/cxr542/edu-team-tms/pull/141
+
 ## 2026-10-07
 
 ### [수정] fix(competency): explain why the self-evaluation submit button does nothing
