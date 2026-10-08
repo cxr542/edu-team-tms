@@ -7,6 +7,11 @@
 
 ## 2026-10-08
 
+### [신규] feat(competency): 차원별 근거 폭 확대 + 번호 항목 줄바꿈
+
+- feat(competency): 차원별 근거 폭 확대 + 번호 항목 줄바꿈
+- PR #196: https://github.com/cxr542/edu-team-tms/pull/196
+
 ### [신규] feat(kpi): 평가 입력 텍스트 박스를 내용에 맞춰 높이 자동 조절
 
 - feat(kpi): 평가 입력 텍스트 박스를 내용에 맞춰 높이 자동 조절
