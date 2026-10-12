@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Loader2, Presentation, RefreshCcw, Upload } from 'lucide-react';
+import { Loader2, Presentation, RefreshCcw, RotateCcw, Upload } from 'lucide-react';
 import {
   fetchAcademizerHealth,
   postAcademize,
@@ -191,6 +191,13 @@ export default function AcademizerPage() {
     setFile(next);
   };
 
+  // Back to step 1 with everything cleared; not offered while a request is in flight.
+  const hasProgress = Boolean(file) || step === 2 || Boolean(wizardData) || Boolean(lastResult);
+  const onReset = () => {
+    setDragActive(false);
+    onPickFile(null);
+  };
+
   const onDragOver = (e) => {
     if (busy) return;
     e.preventDefault();
@@ -290,6 +297,18 @@ export default function AcademizerPage() {
           </div>
         </div>
         <div className="academizer-header__actions">
+          {hasProgress ? (
+            <button
+              type="button"
+              className="academizer-refresh"
+              onClick={onReset}
+              disabled={busy}
+              title="업로드한 파일과 진행 상태를 지우고 처음 화면으로 돌아갑니다"
+            >
+              <RotateCcw size={16} aria-hidden />
+              처음으로
+            </button>
+          ) : null}
           <button
             type="button"
             className="academizer-refresh"
