@@ -159,6 +159,21 @@
   display: none;
 }
 
+.academizer-drop:hover {
+  border-color: var(--project-accent, #2563eb);
+}
+
+.academizer-drop.is-dragover {
+  border-style: solid;
+  border-color: var(--project-accent, #2563eb);
+  background: #eff6ff;
+  color: var(--project-accent, #2563eb);
+}
+
+.academizer-drop.has-file {
+  color: var(--project-text, #0f172a);
+}
+
 .academizer-caveat {
   margin: 0.75rem 0 0;
   font-size: 0.8rem;

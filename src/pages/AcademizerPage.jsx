@@ -78,6 +78,7 @@ export default function AcademizerPage() {
   const [limits, setLimits] = useState({ maxUploadMb: 50, standardMaxSlides: 40, version: '' });
 
   const [file, setFile] = useState(/** @type {File|null} */ (null));
+  const [dragActive, setDragActive] = useState(false);
   const [step, setStep] = useState(/** @type {1|2} */ (1));
   const [wizardData, setWizardData] = useState(null);
   const [selectedProfile, setSelectedProfile] = useState('');
@@ -188,6 +189,31 @@ export default function AcademizerPage() {
       return;
     }
     setFile(next);
+  };
+
+  const onDragOver = (e) => {
+    if (busy) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    setDragActive(true);
+  };
+
+  const onDragLeave = (e) => {
+    // dragleave also fires when moving onto a child; only clear when leaving the drop zone.
+    if (e.currentTarget.contains(e.relatedTarget)) return;
+    setDragActive(false);
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    setDragActive(false);
+    if (busy) return;
+    const dropped = Array.from(e.dataTransfer?.files || []);
+    if (dropped.length === 0) return;
+    onPickFile(dropped[0]);
+    if (dropped.length > 1) {
+      setStatus('여러 파일을 놓았습니다. 첫 번째 파일만 사용합니다.');
+    }
   };
 
   const runPreview = async () => {
@@ -310,7 +336,13 @@ export default function AcademizerPage() {
 
           {step === 1 ? (
             <section className="academizer-panel">
-              <label className="academizer-drop">
+              <label
+                className={`academizer-drop${dragActive ? ' is-dragover' : ''}${file ? ' has-file' : ''}`}
+                onDragEnter={onDragOver}
+                onDragOver={onDragOver}
+                onDragLeave={onDragLeave}
+                onDrop={onDrop}
+              >
                 <input
                   type="file"
                   accept=".pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation"
@@ -318,8 +350,15 @@ export default function AcademizerPage() {
                   onChange={(e) => onPickFile(e.target.files?.[0] || null)}
                 />
                 <Upload size={20} aria-hidden />
-                <span>{file ? file.name : '클릭하거나 파일을 선택하세요 (.pptx)'}</span>
+                <span>
+                  {dragActive
+                    ? '여기에 놓으면 업로드됩니다'
+                    : file
+                      ? file.name
+                      : '.pptx 파일을 여기로 끌어다 놓거나 클릭해서 선택하세요'}
+                </span>
               </label>
+              {!wizardData && !busy && status ? <p className="academizer-status">{status}</p> : null}
 
               <p className="academizer-caveat">
                 텍스트·구조를 아카데미 형식으로 맞춥니다. 사진·차트는 가능한 범위에서 원본을 옮기며
