@@ -7,6 +7,11 @@
 
 ## 2026-10-12
 
+### [신규] feat(academizer): 진행 중 화면에서 처음으로 돌아가는 버튼
+
+- feat(academizer): 진행 중 화면에서 처음으로 돌아가는 버튼
+- PR #202: https://github.com/cxr542/edu-team-tms/pull/202
+
 ### [신규] feat(academizer): .pptx 드래그 앤 드롭 업로드
 
 - feat(academizer): .pptx 드래그 앤 드롭 업로드
