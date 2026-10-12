@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-10-12
+
+### [신규] feat(academizer): .pptx 드래그 앤 드롭 업로드
+
+- feat(academizer): .pptx 드래그 앤 드롭 업로드
+- PR #201: https://github.com/cxr542/edu-team-tms/pull/201
+
 ## 2026-10-08
 
 ### [신규] feat(kpi3): 분기 레벨 = 마지막 달 레벨 자동 반영 (팀장 확정 전 포함) + 리포트 표시
