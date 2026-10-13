@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-10-13
+
+### [신규] feat(admin): add logout button to the admin toolbar
+
+- feat(admin): add logout button to the admin toolbar
+- PR #204: https://github.com/cxr542/edu-team-tms/pull/204
+
 ## 2026-10-12
 
 ### [신규] feat(academizer): 진행 중 화면에서 처음으로 돌아가는 버튼
