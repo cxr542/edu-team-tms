@@ -7,6 +7,11 @@
 
 ## 2026-10-13
 
+### [수정] fix(admin): close the password hint modal after a successful save
+
+- fix(admin): close the password hint modal after a successful save
+- PR #206: https://github.com/cxr542/edu-team-tms/pull/206
+
 ### [신규] feat(admin): leader-editable password hint on the admin login screen
 
 - feat(admin): leader-editable password hint on the admin login screen
