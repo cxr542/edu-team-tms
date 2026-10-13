@@ -82,6 +82,7 @@ export default function AcademizerPage() {
   const [step, setStep] = useState(/** @type {1|2} */ (1));
   const [wizardData, setWizardData] = useState(null);
   const [selectedProfile, setSelectedProfile] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [selectedQuality, setSelectedQuality] = useState('standard');
   const [busy, setBusy] = useState(false);
   const [busyKind, setBusyKind] = useState(/** @type {''|'preview'|'academize'} */ (''));
@@ -156,6 +157,24 @@ export default function AcademizerPage() {
   useEffect(() => {
     loadHealth();
   }, [loadHealth]);
+
+  const advancedSelected = (wizardData?.cards || []).some(
+    (card) => card.advanced && card.id === selectedProfile,
+  );
+
+  const renderCard = (card) => (
+    <button
+      key={card.id}
+      type="button"
+      className={`academizer-card${selectedProfile === card.id ? ' is-selected' : ''}`}
+      onClick={() => setSelectedProfile(card.id)}
+    >
+      <strong>{card.title}</strong>
+      <span className="academizer-card__sub">{card.subtitle}</span>
+      <span className="academizer-card__desc">{card.description}</span>
+      {card.recommended ? <span className="academizer-badge">추천</span> : null}
+    </button>
+  );
 
   const selectedCard = useMemo(() => {
     if (!wizardData || !selectedProfile) return null;
@@ -417,20 +436,20 @@ export default function AcademizerPage() {
                   </ul>
                   <h2>변환 방식</h2>
                   <div className="academizer-cards">
-                    {(wizardData.cards || []).map((card) => (
-                      <button
-                        key={card.id}
-                        type="button"
-                        className={`academizer-card${selectedProfile === card.id ? ' is-selected' : ''}`}
-                        onClick={() => setSelectedProfile(card.id)}
-                      >
-                        <strong>{card.title}</strong>
-                        <span className="academizer-card__sub">{card.subtitle}</span>
-                        <span className="academizer-card__desc">{card.description}</span>
-                        {card.recommended ? <span className="academizer-badge">추천</span> : null}
-                      </button>
-                    ))}
+                    {(wizardData.cards || []).filter((card) => !card.advanced).map(renderCard)}
                   </div>
+                  {(wizardData.cards || []).some((card) => card.advanced) ? (
+                    <details
+                      className="academizer-advanced"
+                      open={showAdvanced || advancedSelected}
+                      onToggle={(e) => setShowAdvanced(e.currentTarget.open)}
+                    >
+                      <summary>다른 변환 방식 (고급)</summary>
+                      <div className="academizer-cards">
+                        {(wizardData.cards || []).filter((card) => card.advanced).map(renderCard)}
+                      </div>
+                    </details>
+                  ) : null}
                   {selectedCard?.preview ? (
                     <div className="academizer-preview">
                       <h3>{selectedCard.title} — 예상 결과</h3>
