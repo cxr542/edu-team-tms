@@ -18,6 +18,7 @@ import {
   Smartphone,
   Type,
   Lightbulb,
+  LogOut,
   UtensilsCrossed,
   MessageCircle,
   Megaphone,
@@ -52,6 +53,7 @@ import {
   isProductionEnvironment,
 } from '../constants/appEnv';
 import { isEditorMode } from '../utils/appMode';
+import { lockAdminGate } from '../constants/adminGate';
 import { useFontSizePreference } from '../hooks/useFontSizePreference';
 import { useProjectSidebar } from '../hooks/useProjectSidebar';
 import { canUseCompetencyPilot } from '../hooks/useTeamAccess';
@@ -597,6 +599,20 @@ export default function AppShell({
                     <User size={14} aria-hidden />
                     구성원 A
                   </a>
+                )}
+                {isAdminShell && !isViewer && (
+                  <button
+                    type="button"
+                    className="btn btn--hub project-toolbar__scope-link"
+                    onClick={() => {
+                      lockAdminGate();
+                      window.location.reload();
+                    }}
+                    {...uiTooltip('관리자 화면에서 로그아웃 (다시 비밀번호 필요)', 'below')}
+                  >
+                    <LogOut size={14} aria-hidden />
+                    로그아웃
+                  </button>
                 )}
                 {isMemberShell && !isViewer && teamAccess?.scopedMember === 'A' && (
                   <a
