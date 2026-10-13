@@ -17,6 +17,7 @@ import {
   Settings,
   Smartphone,
   Type,
+  KeyRound,
   Lightbulb,
   LogOut,
   UtensilsCrossed,
@@ -81,6 +82,7 @@ export default function AppShell({
   isPublicViewerScope = false,
   viewerMenuVisibility = null,
   onOpenViewerMenuSettings,
+  onOpenAdminGateHint,
   sidebarFooter = null,
   teamAccess = null,
   children,
@@ -411,6 +413,18 @@ export default function AppShell({
                       >
                         <Eye size={14} aria-hidden />
                         조회 화면 메뉴
+                      </button>
+                      <button
+                        type="button"
+                        className="project-settings-popover__item"
+                        onClick={() => {
+                          setSettingsOpen(false);
+                          setTimeout(() => onOpenAdminGateHint?.(), 0);
+                          onNavSelect();
+                        }}
+                      >
+                        <KeyRound size={14} aria-hidden />
+                        로그인 비밀번호 힌트
                       </button>
                       <button
                         type="button"

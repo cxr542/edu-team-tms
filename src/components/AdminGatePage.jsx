@@ -1,17 +1,30 @@
-import React, { useState } from 'react';
-import { Lock, ArrowLeft } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Lock, ArrowLeft, HelpCircle } from 'lucide-react';
 import {
   isAdminGateConfigured,
   unlockAdminGate,
   verifyAdminGatePassword,
 } from '../constants/adminGate';
 import { withAppBase } from '../utils/appRoute';
+import { fetchAdminGateHint } from '../utils/adminGateHint';
 
 export default function AdminGatePage({ onUnlocked }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [hintOpen, setHintOpen] = useState(false);
   const configured = isAdminGateConfigured();
+  const [passwordHint, setPasswordHint] = useState('');
+
+  useEffect(() => {
+    let alive = true;
+    fetchAdminGateHint().then((hint) => {
+      if (alive) setPasswordHint(hint.trim());
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -90,6 +103,20 @@ export default function AdminGatePage({ onUnlocked }) {
             disabled={!configured && !import.meta.env.DEV}
             placeholder={configured ? '팀 관리용 비밀번호' : '환경 변수 설정 필요'}
           />
+          {passwordHint && (
+            <div className="admin-gate__hint-box">
+              <button
+                type="button"
+                className="admin-gate__hint-toggle"
+                aria-expanded={hintOpen}
+                onClick={() => setHintOpen((v) => !v)}
+              >
+                <HelpCircle size={14} aria-hidden />
+                비밀번호 힌트
+              </button>
+              {hintOpen && <p className="admin-gate__hint-text">{passwordHint}</p>}
+            </div>
+          )}
           {error && (
             <p className="admin-gate__error" role="alert">
               {error}

@@ -15,7 +15,8 @@ const TX_COLUMNS =
   'id, tx_date, category, description, amount, balance, payment_method, attendees, extra_data, sort_order, version';
 const MAX_BULK = 1000;
 const MAX_EXTRA_BYTES = 10 * 1024;
-const SETTING_KEYS = new Set(['viewer_menu_visibility']);
+const SETTING_KEYS = new Set(['viewer_menu_visibility', 'admin_gate_hint']);
+export const ADMIN_GATE_HINT_MAX_LENGTH = 80;
 
 export class LedgerApiError extends Error {
   constructor(status, code, message, extra = {}) {
@@ -262,6 +263,12 @@ export async function replaceCategories(client, rawList) {
 export async function putSetting(client, key, value, expectedVersion) {
   if (!SETTING_KEYS.has(key)) fail(400, 'invalid-input', '지원하지 않는 설정 key 입니다.');
   if (!value || typeof value !== 'object' || Array.isArray(value)) fail(400, 'invalid-input', 'value 는 객체여야 합니다.');
+  if (key === 'admin_gate_hint') {
+    if (typeof value.hint !== 'string' || value.hint.length > ADMIN_GATE_HINT_MAX_LENGTH) {
+      fail(400, 'invalid-input', `힌트는 ${ADMIN_GATE_HINT_MAX_LENGTH}자 이내 문자열이어야 합니다.`);
+    }
+    value = { hint: value.hint.trim() };
+  }
   const rows = unwrap(await client.from(SETTINGS_TABLE).select('key, version').eq('key', key), 'setting read');
   const cur = rows?.[0];
   if (!cur) {
