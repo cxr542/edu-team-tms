@@ -7,6 +7,11 @@
 
 ## 2026-10-13
 
+### [신규] feat(academizer): 도형 이식 외 변환 방식을 고급 영역으로 접기
+
+- feat(academizer): 도형 이식 외 변환 방식을 고급 영역으로 접기
+- PR #203: https://github.com/cxr542/edu-team-tms/pull/203
+
 ### [수정] fix(admin): close the password hint modal after a successful save
 
 - fix(admin): close the password hint modal after a successful save
