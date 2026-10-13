@@ -11,13 +11,11 @@ export default function AdminGateHintModal({ isOpen, onClose }) {
   const [hint, setHint] = useState('');
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (!isOpen) return undefined;
     let alive = true;
-    setMessage('');
     setError('');
     setLoading(true);
     fetchAdminGateHint().then((value) => {
@@ -35,11 +33,10 @@ export default function AdminGateHintModal({ isOpen, onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setBusy(true);
-    setMessage('');
     setError('');
     try {
       await saveAdminGateHint(hint);
-      setMessage(hint.trim() ? '힌트를 저장했습니다.' : '힌트를 지웠습니다. 로그인 화면에 표시되지 않습니다.');
+      onClose();
     } catch (err) {
       setError(describeLedgerClientError(err));
     } finally {
@@ -84,7 +81,6 @@ export default function AdminGateHintModal({ isOpen, onClose }) {
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
               {hint.length}/{ADMIN_GATE_HINT_MAX_LENGTH}
             </p>
-            {message && <p style={{ fontSize: '0.85rem', margin: 0 }}>{message}</p>}
             {error && (
               <p role="alert" style={{ fontSize: '0.85rem', color: 'var(--danger, #dc2626)', margin: 0 }}>
                 {error}
