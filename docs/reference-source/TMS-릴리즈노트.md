@@ -7,6 +7,11 @@
 
 ## 2026-10-13
 
+### [수정] fix(academizer): 변환 서버 연결 실패 시 한국어 안내 표시
+
+- fix(academizer): 변환 서버 연결 실패 시 한국어 안내 표시
+- PR #208: https://github.com/cxr542/edu-team-tms/pull/208
+
 ### [신규] feat(academizer): 분석 단계 하단에 이전 버튼 추가
 
 - feat(academizer): 분석 단계 하단에 이전 버튼 추가
