@@ -109,6 +109,7 @@ import {
   resolveViewerModule,
 } from './constants/viewerMenu';
 import ViewerMenuSettingsModal from './components/ViewerMenuSettingsModal';
+import AdminGateHintModal from './components/AdminGateHintModal';
 import UsageStandardsPanel from './components/UsageStandardsPanel';
 import { resolveCsrRequesterIdentity } from './utils/csrRequesterIdentity.js';
 import { resolveAnnouncementAuthorIdentity } from './utils/announcementAuthorIdentity.js';
@@ -257,6 +258,7 @@ export default function App() {
     applyVisibility: applyViewerMenuVisibility,
   } = useViewerMenuVisibility();
   const [viewerMenuSettingsOpen, setViewerMenuSettingsOpen] = useState(false);
+  const [adminGateHintOpen, setAdminGateHintOpen] = useState(false);
 
   const { labels: navLabels, updateLabel: onNavLabelSave, resetLabels: onNavLabelsReset, defaults: navDefaults } =
     useNavLabels();
@@ -1202,6 +1204,7 @@ export default function App() {
         isPublicViewerScope={isPublicViewer}
         viewerMenuVisibility={activeViewerMenuVisibility}
         onOpenViewerMenuSettings={() => setViewerMenuSettingsOpen(true)}
+        onOpenAdminGateHint={() => setAdminGateHintOpen(true)}
         teamAccess={isPublicViewer || (isViewer && !teamAccess.isMemberScope) ? null : teamAccess}
         sidebarFooter={
           ledgerReadOnly && displayModule === 'ledger' ? (
@@ -2386,6 +2389,9 @@ export default function App() {
           onApply={handleApplyViewerMenuVisibility}
           onReset={handleResetViewerMenuVisibility}
         />
+      )}
+      {!isViewer && teamAccess.isLeader && !teamAccess.isMemberScope && (
+        <AdminGateHintModal isOpen={adminGateHintOpen} onClose={() => setAdminGateHintOpen(false)} />
       )}
     </>
   );

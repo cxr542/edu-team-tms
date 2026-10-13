@@ -2064,6 +2064,34 @@ h1, h2, h3, h4, h5, h6 {
   width: 100%;
 }
 
+.admin-gate__hint-box {
+  margin-top: 0.5rem;
+  text-align: left;
+}
+
+.admin-gate__hint-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.admin-gate__hint-toggle:hover {
+  color: var(--color-primary, #2563eb);
+}
+
+.admin-gate__hint-text {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  word-break: keep-all;
+}
+
 .admin-gate__back {
   display: inline-flex;
   align-items: center;

@@ -164,4 +164,12 @@ describe('categories and settings', () => {
     expect(next).toMatchObject({ value: { ledger: false }, version: 2 });
     expect(await code(putSetting(db, 'unknown', {}))).toBe('400:invalid-input');
   });
+
+  it('putSetting accepts a trimmed admin_gate_hint and rejects bad shapes', async () => {
+    const db = makeFakeSupabase();
+    const saved = await putSetting(db, 'admin_gate_hint', { hint: '  팀 약어  ' });
+    expect(saved.value).toEqual({ hint: '팀 약어' });
+    expect(await code(putSetting(db, 'admin_gate_hint', { hint: 5 }, 1))).toBe('400:invalid-input');
+    expect(await code(putSetting(db, 'admin_gate_hint', { hint: 'x'.repeat(81) }, 1))).toBe('400:invalid-input');
+  });
 });
