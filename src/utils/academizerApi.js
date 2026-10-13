@@ -11,6 +11,27 @@ function decodeWarningsHeader(b64) {
   return JSON.parse(new TextDecoder('utf-8').decode(bytes));
 }
 
+export const CONNECTION_ERROR_MESSAGE =
+  '변환 서버에 연결하지 못했습니다. 서버가 깨어나는 중이거나 네트워크가 잠시 끊겼을 수 있으니, ' +
+  '잠시 후 같은 파일로 다시 시도해 주세요.';
+
+/**
+ * fetch() rejects with a bare TypeError ("Failed to fetch" / "Load failed" / "NetworkError…")
+ * when the request never gets a response; turn that into a message users can act on.
+ */
+async function postForm(url, formData) {
+  try {
+    return await fetch(url, { method: 'POST', body: formData });
+  } catch (e) {
+    if (e instanceof TypeError) {
+      const err = new Error(CONNECTION_ERROR_MESSAGE);
+      err.cause = e;
+      throw err;
+    }
+    throw e;
+  }
+}
+
 export async function fetchAcademizerHealth() {
   const res = await fetch('/api/academizer?action=health', {
     method: 'GET',
@@ -45,7 +66,7 @@ export async function fetchAcademizerHealth() {
 export async function postWizardPreview(apiBase, formData) {
   const base = String(apiBase || '').replace(/\/$/, '');
   if (!base) throw new Error('변환 API 주소가 없습니다.');
-  const res = await fetch(`${base}/wizard/preview`, { method: 'POST', body: formData });
+  const res = await postForm(`${base}/wizard/preview`, formData);
   let data = null;
   try {
     data = await res.json();
@@ -74,7 +95,7 @@ export async function postWizardPreview(apiBase, formData) {
 export async function postAcademize(apiBase, formData) {
   const base = String(apiBase || '').replace(/\/$/, '');
   if (!base) throw new Error('변환 API 주소가 없습니다.');
-  const res = await fetch(`${base}/academize`, { method: 'POST', body: formData });
+  const res = await postForm(`${base}/academize`, formData);
   if (!res.ok) {
     let data = null;
     try {

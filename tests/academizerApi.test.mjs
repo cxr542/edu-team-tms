@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import handler from '../api/academizer.js';
+import {
+  CONNECTION_ERROR_MESSAGE,
+  postAcademize,
+  postWizardPreview,
+} from '../src/utils/academizerApi.js';
 import { resolveAcademizerUpstream } from '../server/api-utils/academizerUpstream.js';
 
 function mockRes() {
@@ -102,5 +107,34 @@ describe('academizer API health', () => {
     );
     expect(res.statusCode).toBe(200);
     expect(parseBody(res).available).toBe(false);
+  });
+});
+
+describe('academizerApi network errors', () => {
+  it('turns a bare fetch TypeError into an actionable Korean message', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+    await expect(postWizardPreview('https://api.example', new FormData())).rejects.toThrow(
+      CONNECTION_ERROR_MESSAGE,
+    );
+    await expect(postAcademize('https://api.example', new FormData())).rejects.toThrow(
+      CONNECTION_ERROR_MESSAGE,
+    );
+    vi.unstubAllGlobals();
+  });
+
+  it('keeps server error messages for HTTP failures', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        json: async () => ({ detail: '지원하지 않는 파일입니다.' }),
+      }),
+    );
+    await expect(postWizardPreview('https://api.example', new FormData())).rejects.toThrow(
+      '지원하지 않는 파일입니다.',
+    );
+    vi.unstubAllGlobals();
   });
 });
