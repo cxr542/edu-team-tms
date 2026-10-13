@@ -7,6 +7,11 @@
 
 ## 2026-10-13
 
+### [신규] feat(admin): leader-editable password hint on the admin login screen
+
+- feat(admin): leader-editable password hint on the admin login screen
+- PR #205: https://github.com/cxr542/edu-team-tms/pull/205
+
 ### [신규] feat(admin): add logout button to the admin toolbar
 
 - feat(admin): add logout button to the admin toolbar
