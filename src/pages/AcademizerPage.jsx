@@ -217,6 +217,16 @@ export default function AcademizerPage() {
     onPickFile(null);
   };
 
+  // Drop the analysis but keep the chosen file, so the analyze/preview button is available again.
+  const onBackToAnalyze = () => {
+    setError('');
+    setWarnings([]);
+    setWizardData(null);
+    setSelectedProfile('');
+    setSelectedQuality('standard');
+    setStatus('');
+  };
+
   const onDragOver = (e) => {
     if (busy) return;
     e.preventDefault();
@@ -475,6 +485,14 @@ export default function AcademizerPage() {
                     </div>
                   ) : null}
                   <div className="academizer-actions">
+                    <button
+                      type="button"
+                      className="academizer-secondary"
+                      disabled={busy}
+                      onClick={onBackToAnalyze}
+                    >
+                      이전
+                    </button>
                     <button
                       type="button"
                       className="academizer-primary"
