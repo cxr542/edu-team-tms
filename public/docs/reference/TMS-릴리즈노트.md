@@ -7,6 +7,11 @@
 
 ## 2026-10-13
 
+### [신규] feat(academizer): 분석 단계 하단에 이전 버튼 추가
+
+- feat(academizer): 분석 단계 하단에 이전 버튼 추가
+- PR #207: https://github.com/cxr542/edu-team-tms/pull/207
+
 ### [신규] feat(academizer): 도형 이식 외 변환 방식을 고급 영역으로 접기
 
 - feat(academizer): 도형 이식 외 변환 방식을 고급 영역으로 접기
