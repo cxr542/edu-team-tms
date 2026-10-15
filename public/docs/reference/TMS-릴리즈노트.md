@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-10-15
+
+### [신규] feat(journal): 구성원별 월간 업무일지 엑셀 다운로드
+
+- feat(journal): 구성원별 월간 업무일지 엑셀 다운로드
+- PR #209: https://github.com/cxr542/edu-team-tms/pull/209
+
 ## 2026-10-13
 
 ### [수정] fix(academizer): 변환 서버 연결 실패 시 한국어 안내 표시
