@@ -118,3 +118,65 @@ export function downloadJournalExcel({ days, year, month, categories, memberLabe
   XLSX.writeFile(wb, fileName);
   return { fileName, taskCount: taskRows.length };
 }
+
+const TEAM_SUMMARY_HEADERS = ['구성원', '기록 일수', '업무 수', '계획(h)', '실작업(h)', '휴가 M/M', '일 M/M'];
+const TEAM_SUMMARY_COL_WIDTHS = [14, 9, 8, 9, 10, 10, 8];
+
+/** 시트명: 엑셀 제한(31자, \/?*[]: 금지) 반영 + 중복 방지 */
+function uniqueSheetName(label, used) {
+  const base = String(label || '구성원').replace(/[\\/?*[\]:]/g, '_').slice(0, 28) || '구성원';
+  let name = base;
+  for (let i = 2; used.has(name); i += 1) name = `${base}_${i}`;
+  used.add(name);
+  return name;
+}
+
+export function teamJournalExcelFileName(year, month) {
+  return `업무일지_팀전체_${year}-${pad(month + 1)}.xlsx`;
+}
+
+/**
+ * 팀 전체(구성원별 시트) 월간 업무일지 다운로드 — 관리자 전용 UI에서 호출.
+ * members: [{ label, days, categories }]. 이 브라우저 저장소에 있는 값만 담는다(읽기 전용).
+ */
+export function downloadTeamJournalExcel({ members, year, month }) {
+  const wb = XLSX.utils.book_new();
+  const used = new Set(['팀 요약']);
+  const sum = (rows, idx) => rows.reduce((s, r) => s + (Number(r[idx]) || 0), 0);
+  const built = members.map((m) => ({
+    ...m,
+    ...buildJournalExcelRows({ days: m.days, year, month, categories: m.categories }),
+  }));
+
+  const teamRows = built.map((m) => [
+    m.label,
+    m.summaryRows.length,
+    sum(m.summaryRows, 3),
+    sum(m.summaryRows, 4),
+    sum(m.summaryRows, 5),
+    sum(m.summaryRows, 6),
+    sum(m.summaryRows, 7),
+  ]);
+  XLSX.utils.book_append_sheet(
+    wb,
+    sheetOf(TEAM_SUMMARY_HEADERS, teamRows, TEAM_SUMMARY_COL_WIDTHS, [
+      '합계', '', sum(teamRows, 2), sum(teamRows, 3), sum(teamRows, 4), sum(teamRows, 5), sum(teamRows, 6),
+    ]),
+    '팀 요약'
+  );
+  built.forEach((m) => {
+    XLSX.utils.book_append_sheet(
+      wb,
+      sheetOf(TASK_HEADERS, m.taskRows, TASK_COL_WIDTHS, [
+        '합계', '', '', '', '', '', '', sum(m.taskRows, 7), sum(m.taskRows, 8), '', '', '',
+      ]),
+      uniqueSheetName(m.label, used)
+    );
+  });
+  const fileName = teamJournalExcelFileName(year, month);
+  XLSX.writeFile(wb, fileName);
+  return {
+    fileName,
+    members: built.map((m) => ({ label: m.label, taskCount: m.taskRows.length })),
+  };
+}

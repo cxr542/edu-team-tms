@@ -86,7 +86,7 @@ import {
 } from '../utils/improveProjectLink';
 import { SHOW_BC_JOURNAL_TEAM_SHARE_UI } from '../constants/improveProjectSharingConfig';
 import { IMPROVE_PROJECT_BLOB_SHARE_ENABLED } from '../constants/improveProjectsShare';
-import { downloadJournalExcel } from '../utils/journalExcelExport';
+import { downloadJournalExcel, downloadTeamJournalExcel } from '../utils/journalExcelExport';
 import { buildMemberJournalSavePayload } from '../utils/journalSnapshot';
 import { fetchJournalSnapshot } from '../utils/journalSnapshot';
 import { saveJournalSnapshotToSupabase } from '../utils/supabaseJournalSnapshot';
@@ -1482,6 +1482,37 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 <Download size={16} />
                 엑셀 다운로드
               </button>
+              {showJournalLeaderToolbar && (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    const r = downloadTeamJournalExcel({
+                      year,
+                      month,
+                      members: TEAM_KPI_MEMBERS.map((m) => ({
+                        label: m.displayName,
+                        days: journal.getMemberDays(m.code) || {},
+                        categories: resolveMemberCategories(journal.memberJournals?.[m.code]?.prefs).cats,
+                      })),
+                    });
+                    const empty = r.members.filter((m) => m.taskCount === 0).map((m) => m.label);
+                    showToast(
+                      empty.length
+                        ? `${r.fileName} 다운로드 — ${empty.join(', ')} 일지는 이 브라우저에 없어 비어 있음 (팀 공유본을 먼저 가져오세요)`
+                        : `${r.fileName} 다운로드`
+                    );
+                  }}
+                  {...uiTooltip(
+                    '팀 전체 구성원의 이 달 업무일지를 엑셀 한 파일(구성원별 시트)로 다운로드합니다. 이 브라우저에 저장된 일지 기준입니다.',
+                    undefined,
+                    { wrap: true }
+                  )}
+                >
+                  <Download size={16} />
+                  팀 전체 엑셀
+                </button>
+              )}
               <button
                 type="button"
                 className="btn btn-secondary"

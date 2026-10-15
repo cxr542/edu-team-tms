@@ -35,3 +35,10 @@ describe('journalExcelExport', () => {
     expect(journalExcelFileName('김 영호', 2026, 5)).toBe('업무일지_김_영호_2026-06.xlsx');
   });
 });
+
+describe('teamJournalExcelFileName', () => {
+  it('팀 전체 파일명', async () => {
+    const { teamJournalExcelFileName } = await import('../src/utils/journalExcelExport.js');
+    expect(teamJournalExcelFileName(2026, 5)).toBe('업무일지_팀전체_2026-06.xlsx');
+  });
+});
