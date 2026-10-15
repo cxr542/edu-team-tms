@@ -7,6 +7,11 @@
 
 ## 2026-10-15
 
+### [신규] feat(journal): 관리자용 팀 전체 업무일지 엑셀 다운로드
+
+- feat(journal): 관리자용 팀 전체 업무일지 엑셀 다운로드
+- PR #210: https://github.com/cxr542/edu-team-tms/pull/210
+
 ### [신규] feat(journal): 구성원별 월간 업무일지 엑셀 다운로드
 
 - feat(journal): 구성원별 월간 업무일지 엑셀 다운로드
