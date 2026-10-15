@@ -86,6 +86,7 @@ import {
 } from '../utils/improveProjectLink';
 import { SHOW_BC_JOURNAL_TEAM_SHARE_UI } from '../constants/improveProjectSharingConfig';
 import { IMPROVE_PROJECT_BLOB_SHARE_ENABLED } from '../constants/improveProjectsShare';
+import { downloadJournalExcel } from '../utils/journalExcelExport';
 import { buildMemberJournalSavePayload } from '../utils/journalSnapshot';
 import { fetchJournalSnapshot } from '../utils/journalSnapshot';
 import { saveJournalSnapshotToSupabase } from '../utils/supabaseJournalSnapshot';
@@ -1463,6 +1464,24 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                     : 'Supabase에서 가져오기'}
                 </button>
               )}
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => {
+                  const r = downloadJournalExcel({
+                    days: journal.getMemberDays(memberCode) || {},
+                    year,
+                    month,
+                    categories: memberCategoryView.cats,
+                    memberLabel: selectedMember.displayName,
+                  });
+                  showToast(`${r.fileName} 다운로드 (${r.taskCount}행)`);
+                }}
+                {...uiTooltip('선택한 구성원의 이 달 업무일지를 엑셀(.xlsx)로 다운로드합니다.')}
+              >
+                <Download size={16} />
+                엑셀 다운로드
+              </button>
               <button
                 type="button"
                 className="btn btn-secondary"
