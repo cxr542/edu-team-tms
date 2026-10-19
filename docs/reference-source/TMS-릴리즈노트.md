@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-10-19
+
+### [신규] feat(journal): 작성 완료된 주차 표 자동 숨기기
+
+- feat(journal): 작성 완료된 주차 표 자동 숨기기
+- PR #211: https://github.com/cxr542/edu-team-tms/pull/211
+
 ## 2026-10-15
 
 ### [신규] feat(journal): 관리자용 팀 전체 업무일지 엑셀 다운로드
