@@ -48,7 +48,11 @@ import {
   taskFieldsFromEdit,
   validateKpi2EffectEdit,
 } from '../utils/journalTaskFields';
-import { loadCollapsedWeekKeys, saveCollapsedWeekKeys } from '../utils/journalWeekVisibility';
+import {
+  hasSavedCollapsedWeekKeys,
+  loadCollapsedWeekKeys,
+  saveCollapsedWeekKeys,
+} from '../utils/journalWeekVisibility';
 import { KPI1_NAME, KPI2_NAME } from '../constants/kpiDisplayNames';
 import {
   TEAM_KPI_MEMBERS,
@@ -531,6 +535,22 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   const expandAllWeekTables = useCallback(() => {
     persistCollapsedWeeks(new Set());
   }, [persistCollapsedWeeks]);
+
+  /** 저장된 접기 설정이 없는 달은 입력이 완료된 주차 표를 처음 한 번 자동으로 숨김 */
+  const autoCollapseAppliedRef = useRef('');
+  useEffect(() => {
+    const scopeKey = `${year}-${month}-${memberCode}`;
+    if (autoCollapseAppliedRef.current === scopeKey) return;
+    autoCollapseAppliedRef.current = scopeKey;
+    if (hasSavedCollapsedWeekKeys(year, month, memberCode)) return;
+    const done = weeks
+      .filter((w) => {
+        const st = getWeekCompletionStats(w.days, month, getDay);
+        return st.available > 0 && st.shortage <= 0.001;
+      })
+      .map((w) => w.key);
+    persistCollapsedWeeks(new Set(done));
+  }, [year, month, memberCode, weeks, getDay, persistCollapsedWeeks]);
 
   const hiddenWeekCount = collapsedWeeks.size;
   const allWeekTablesHidden = weeks.length > 0 && hiddenWeekCount >= weeks.length;
