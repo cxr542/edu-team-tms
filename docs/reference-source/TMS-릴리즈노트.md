@@ -7,6 +7,11 @@
 
 ## 2026-10-23
 
+### [문서] docs(supabase): record the glossary anon write lockdown (applied to production)
+
+- docs(supabase): record the glossary anon write lockdown (applied to production)
+- PR #218: https://github.com/cxr542/edu-team-tms/pull/218
+
 ### [수정] fix(glossary): show server-save failures instead of reporting success
 
 - fix(glossary): show server-save failures instead of reporting success
