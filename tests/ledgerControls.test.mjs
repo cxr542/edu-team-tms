@@ -29,22 +29,28 @@ describe('ledger control labels and export visibility', () => {
     expect(source).toContain('onClick={handleExcelExport}');
   });
 
-  it('keeps publish/download and polling policies unchanged', () => {
-    const publishHandler = source.slice(
-      source.indexOf('const handlePublishForTeam'),
-      source.indexOf('const handleDownloadLedgerBackup')
-    );
+  it('keeps backup/export controls and polling policy; the publish and sync buttons are gone', () => {
     expect(source).toMatch(/pollMs:\s*0/);
     expect(source).toContain('autoSyncCloud={false}');
     expect(source).toContain('handleDownloadLedgerBackup');
-    expect(source).toContain('지금 조회에 반영');
     expect(source).toContain('장부 JSON 백업 다운로드');
     expect(source).toContain('장부 JSON 백업 가져오기');
     expect(source).toContain('버튼 설명 보기');
-    expect(source).toContain('장부를 추가·수정한 뒤 팀원 조회 화면에도 반영하려면');
     expect(source).toContain('LEDGER_BUTTON_GUIDE_ROWS');
-    expect(source).toContain('조회 데이터 맞추기');
     expect(source).toContain('엑셀로 내보내기');
-    expect(publishHandler).not.toContain('downloadTeamSnapshot');
+    expect(source).toContain('별도의 게시 버튼은 없습니다');
+    // 장부는 저장 즉시 반영되므로 게시/동기화 UI와 로직은 남아 있지 않다.
+    for (const gone of [
+      '지금 조회에 반영',
+      '조회 데이터 맞추기',
+      'handlePublishForTeam',
+      'handlePullFromPublished',
+      'handleImportProdLedger',
+      'autoPublish',
+      'livePublishBlocked',
+      'resetToBundledData',
+    ]) {
+      expect(source, gone).not.toContain(gone);
+    }
   });
 });

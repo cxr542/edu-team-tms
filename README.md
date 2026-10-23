@@ -82,8 +82,8 @@ GitHub Actions (`edu-team-tms` repo):
 ## Current Sharing Model
 - **Journal:** manual 「팀 공유 저장」 / 「팀 공유본 가져오기」 → `journal/live-latest.json`
 - **Improve projects (KPI2):** `IMPROVE_PROJECT_BLOB_SHARE_ENABLED = true` — leader publish, members pull → `improve-projects/live-latest.json`
-- **Ledger:** manual 「지금 조회에 반영」 → `ledger/live-latest.json`
-- No automatic sync. Pilot: leader on `edu-team-tms-ten` first, then B/C migration.
+- **Ledger:** Supabase (`ledger_*`) — saved row by row from `/admin`, visible to the team immediately; no publish step (see `docs/ledger-live-sync.md`)
+- No automatic Blob sync for journal / improve projects. Pilot: leader on `edu-team-tms-ten` first, then B/C migration.
 
 ## Source of Truth Note
 Source reference documents live under `docs/reference-source/*`. Published/static copies under `public/docs/*` are not the source of truth. Build output under `.vercel/output/static/*` is also not source documentation.

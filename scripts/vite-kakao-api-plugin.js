@@ -22,7 +22,6 @@ try {
 const PROD_TMS_ORIGIN = 'https://edu-team-tms-ten.vercel.app';
 const PROD_SNAPSHOT_API_PATHS = new Set([
   '/api/journal-snapshot',
-  '/api/ledger-snapshot',
   '/api/kpi-operational-snapshot',
   '/api/improve-projects-snapshot',
 ]);

@@ -1,7 +1,6 @@
-import { PUBLIC_SNAPSHOT_PATH } from './appMode';
 import { normalizeViewerMenuVisibility } from '../constants/viewerMenu';
-import { canAttemptCloudWrite, recordCloudFailure, recordCloudSuccess } from './cloudHealth';
-import { fetchLedgerSnapshotFromSupabase, getLedgerReadSource } from './ledgerSupabaseRead';
+import { fetchLedgerSnapshotFromSupabase } from './ledgerSupabaseRead';
+import { getSupabaseClient } from './supabaseClient';
 
 export function buildTeamSnapshot(transactions, categories, viewerMenuVisibility = null) {
   return {
@@ -47,142 +46,17 @@ export async function readLedgerSnapshotFile(file) {
   return parseLedgerSnapshotForImport(JSON.parse(text));
 }
 
-export const EMPTY_LEDGER_SNAPSHOT_TITLE = '아직 게시된 장부 조회 snapshot이 없습니다.';
+export const EMPTY_LEDGER_SNAPSHOT_TITLE = '아직 등록된 장부 데이터가 없습니다.';
 export const EMPTY_LEDGER_SNAPSHOT_DETAIL =
-  '장부 데이터를 조회 화면에 반영하려면 팀장/편집 화면에서 수동으로 게시하거나 새로고침해 주세요. 브라우저 로컬 저장 데이터는 계속 사용할 수 있습니다.';
-
-export function isLedgerSnapshotNotFound(status, body = {}) {
-  const err = String(body?.error || body?.message || '');
-  return status === 404 && err.includes('snapshot not found');
-}
-
-export function isLedgerSnapshotAccessDenied(status) {
-  return status === 401 || status === 403;
-}
-
-function snapshotFetchError(res, body = {}, { warning = false } = {}) {
-  const err = new Error(
-    body.message || body.error || `공개 장부를 불러오지 못했습니다 (${res.status})`
-  );
-  err.status = res.status;
-  err.body = body;
-  err.isWarning = warning;
-  return err;
-}
-
-async function parseSnapshotResponse(res) {
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    recordCloudFailure(res.status, data);
-    throw snapshotFetchError(res, data);
-  }
-  if (!Array.isArray(data.transactions)) {
-    throw new Error('공개 장부 형식이 올바르지 않습니다.');
-  }
-  recordCloudSuccess();
-  return data;
-}
-
-async function fetchStaticPublicSnapshot(cacheBust) {
-  try {
-    const res = await fetch(`${PUBLIC_SNAPSHOT_PATH}?${cacheBust}`);
-    if (res.ok) return { kind: 'data', value: await parseSnapshotResponse(res) };
-    const body = await res.json().catch(() => ({}));
-    if (res.status === 404 || isLedgerSnapshotNotFound(res.status, body)) {
-      return { kind: 'empty' };
-    }
-    return { kind: 'error', error: snapshotFetchError(res, body) };
-  } catch {
-    return { kind: 'unavailable' };
-  }
-}
+  '관리자 화면에서 지출을 입력하면 이곳에 바로 표시됩니다.';
 
 /**
- * 조회용 장부.
- * `preferSupabase`(조회 전용 화면)이고 읽기 소스가 supabase 이면 ledger_* 를 먼저 읽는다.
- * Supabase 실패/비어 있음이면 기존 Blob 경로로 그대로 대체한다.
+ * 조회용 장부 — Supabase(ledger_*)에서 읽는다.
+ * Supabase 가 설정되지 않았으면 오류, 거래가 하나도 없으면 null(빈 상태 안내).
  */
-export async function fetchPublicSnapshot({ preferSupabase = false } = {}) {
-  if (preferSupabase && getLedgerReadSource() === 'supabase') {
-    try {
-      const fromSupabase = await fetchLedgerSnapshotFromSupabase();
-      if (fromSupabase) {
-        recordCloudSuccess();
-        return fromSupabase;
-      }
-    } catch (e) {
-      console.warn('[ledger] Supabase 읽기 실패 — Blob 경로로 대체합니다.', e?.message || e);
-    }
+export async function fetchPublicSnapshot() {
+  if (!getSupabaseClient()) {
+    throw new Error('Supabase 가 설정되지 않아 장부를 불러올 수 없습니다. 관리자에게 문의하세요.');
   }
-  return fetchBlobPublicSnapshot();
-}
-
-/** 조회용 장부 — API(Blob) 우선, 없으면 정적 ledger-snapshot.json */
-async function fetchBlobPublicSnapshot() {
-  const cacheBust = `t=${Date.now()}`;
-  try {
-    const apiRes = await fetch(`/api/ledger-snapshot?${cacheBust}`);
-    if (apiRes.ok) return parseSnapshotResponse(apiRes);
-    const body = await apiRes.json().catch(() => ({}));
-
-    if (isLedgerSnapshotNotFound(apiRes.status, body)) {
-      const staticResult = await fetchStaticPublicSnapshot(cacheBust);
-      if (staticResult.kind === 'data') return staticResult.value;
-      return null;
-    }
-
-    if (isLedgerSnapshotAccessDenied(apiRes.status)) {
-      const staticResult = await fetchStaticPublicSnapshot(cacheBust);
-      if (staticResult.kind === 'data') return staticResult.value;
-      throw snapshotFetchError(apiRes, body, { warning: true });
-    }
-
-    recordCloudFailure(apiRes.status, body);
-    const staticResult = await fetchStaticPublicSnapshot(cacheBust);
-    if (staticResult.kind === 'data') return staticResult.value;
-    if (staticResult.kind === 'error') throw staticResult.error;
-    throw snapshotFetchError(apiRes, body);
-  } catch (e) {
-    if (e?.status) throw e;
-    const staticResult = await fetchStaticPublicSnapshot(cacheBust);
-    if (staticResult.kind === 'data') return staticResult.value;
-    if (staticResult.kind === 'empty') return null;
-    if (staticResult.kind === 'error') throw staticResult.error;
-    throw new Error('공개 장부를 불러오지 못했습니다. 네트워크를 확인한 뒤 다시 시도하세요.');
-  }
-}
-
-/** 작성(관리자) 장부 → 조회용 서버(Blob) 즉시 반영 */
-export async function publishSnapshotToServer(payload) {
-  if (!canAttemptCloudWrite()) {
-    return {
-      ok: false,
-      reason: 'cloud-limited',
-      message: '클라우드 공유가 일시 제한되었습니다. 잠시 후 다시 시도하세요.',
-    };
-  }
-
-  const res = await fetch('/api/ledger-snapshot', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  const body = await res.json().catch(() => ({}));
-  const failMsg = body.message || body.error || String(res.status);
-  if (res.status === 501) {
-    return { ok: false, reason: 'not-configured', message: body.message };
-  }
-  if (res.status === 507 || /quota|exceeded/i.test(failMsg)) {
-    recordCloudFailure(res.status, body);
-    return { ok: false, reason: 'quota-exceeded', message: body.message || failMsg };
-  }
-  if (res.status === 403) {
-    return { ok: false, reason: 'not-allowed', message: body.message };
-  }
-  if (!res.ok) {
-    recordCloudFailure(res.status, body);
-    return { ok: false, reason: body.error || String(res.status), message: body.message || failMsg };
-  }
-  recordCloudSuccess();
-  return { ok: true, publishedAt: body.publishedAt || payload.publishedAt };
+  return fetchLedgerSnapshotFromSupabase();
 }

@@ -1,8 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   buildSnapshotFromRows,
   fetchLedgerSnapshotFromSupabase,
-  resolveLedgerReadSource,
   transactionFromRow,
 } from '../src/utils/ledgerSupabaseRead.js';
 import { toCategoryRow, toTransactionRow } from '../scripts/ledger-migration-core.mjs';
@@ -20,24 +19,11 @@ const tx = {
 };
 const cat = { id: 'teatime', label: '티타임', color: '#ec4899', description: 'd', matchKeywords: ['티타임'] };
 
-describe('resolveLedgerReadSource', () => {
-  it('defaults to blob and honours the env flag', () => {
-    expect(resolveLedgerReadSource()).toBe('blob');
-    expect(resolveLedgerReadSource({ envValue: 'false' })).toBe('blob');
-    expect(resolveLedgerReadSource({ envValue: 'TRUE' })).toBe('supabase');
-  });
-  it('lets the URL override the flag in both directions', () => {
-    expect(resolveLedgerReadSource({ envValue: 'true', search: '?ledgerSource=blob' })).toBe('blob');
-    expect(resolveLedgerReadSource({ envValue: '', search: '?ledgerSource=supabase' })).toBe('supabase');
-    expect(resolveLedgerReadSource({ envValue: 'true', search: '?ledgerSource=other' })).toBe('supabase');
-  });
-});
-
 describe('snapshot mapping', () => {
   it('round-trips a transaction through the DB row shape unchanged', () => {
     expect(transactionFromRow(toTransactionRow(tx, 0))).toEqual(tx);
   });
-  it('drops empty extraData and null optional fields like the Blob API does', () => {
+  it('drops empty extraData and null optional fields like the former Blob API did', () => {
     const plain = { id: 'a', date: '2026-01-05', category: '기타', description: '점심', amount: 1, balance: 2 };
     expect(transactionFromRow(toTransactionRow({ ...plain, extraData: {} }, 0))).toEqual(plain);
   });
@@ -51,7 +37,7 @@ describe('snapshot mapping', () => {
     expect(snap.categories).toEqual([cat]);
     expect(snap.viewerMenuVisibility).toEqual({ ledger: true });
   });
-  it('returns null for an empty ledger so callers fall back to Blob', () => {
+  it('returns null for an empty ledger so the UI shows the empty state', () => {
     expect(buildSnapshotFromRows({ transactions: [] })).toBeNull();
   });
 });
@@ -82,56 +68,7 @@ describe('fetchLedgerSnapshotFromSupabase', () => {
     expect(snap.transactions).toEqual([tx]);
     expect(snap.viewerMenuVisibility).toBeUndefined();
   });
-  it('throws on a query error so the caller can fall back', async () => {
+  it('throws on a query error so the UI can show the error', async () => {
     await expect(fetchLedgerSnapshotFromSupabase(fakeClient('ledger_categories'))).rejects.toThrow('boom');
-  });
-});
-
-describe('fetchPublicSnapshot source selection', () => {
-  beforeEach(() => {
-    vi.resetModules();
-    vi.stubGlobal('fetch', vi.fn());
-  });
-  afterEach(() => {
-    vi.unstubAllGlobals();
-    vi.doUnmock('../src/utils/ledgerSupabaseRead.js');
-  });
-
-  const blobPayload = { publishedAt: 'blob', transactions: [{ id: 'b' }] };
-  const okJson = (body) => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(body) });
-
-  async function load({ source, supabase }) {
-    vi.doMock('../src/utils/ledgerSupabaseRead.js', () => ({
-      getLedgerReadSource: () => source,
-      fetchLedgerSnapshotFromSupabase: supabase,
-    }));
-    fetch.mockImplementation(() => okJson(blobPayload));
-    return (await import('../src/utils/publishSnapshot.js')).fetchPublicSnapshot;
-  }
-
-  it('never touches Supabase for the editor screen', async () => {
-    const supabase = vi.fn();
-    const fetchPublicSnapshot = await load({ source: 'supabase', supabase });
-    expect((await fetchPublicSnapshot({ preferSupabase: false })).publishedAt).toBe('blob');
-    expect(supabase).not.toHaveBeenCalled();
-  });
-  it('stays on Blob while the flag is off', async () => {
-    const supabase = vi.fn();
-    const fetchPublicSnapshot = await load({ source: 'blob', supabase });
-    expect((await fetchPublicSnapshot({ preferSupabase: true })).publishedAt).toBe('blob');
-    expect(supabase).not.toHaveBeenCalled();
-  });
-  it('uses Supabase for viewers when the flag is on', async () => {
-    const supabase = vi.fn().mockResolvedValue({ publishedAt: 'sb', transactions: [{ id: 's' }] });
-    const fetchPublicSnapshot = await load({ source: 'supabase', supabase });
-    expect((await fetchPublicSnapshot({ preferSupabase: true })).publishedAt).toBe('sb');
-    expect(fetch).not.toHaveBeenCalled();
-  });
-  it('falls back to Blob when Supabase errors or is empty', async () => {
-    for (const supabase of [vi.fn().mockRejectedValue(new Error('down')), vi.fn().mockResolvedValue(null)]) {
-      vi.resetModules();
-      const fetchPublicSnapshot = await load({ source: 'supabase', supabase });
-      expect((await fetchPublicSnapshot({ preferSupabase: true })).publishedAt).toBe('blob');
-    }
   });
 });

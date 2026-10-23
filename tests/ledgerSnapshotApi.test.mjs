@@ -1,113 +1,83 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createAdminSessionCookie } from '../server/api-utils/adminSession.js';
 
-const putMock = vi.fn();
-
-vi.mock('@vercel/blob', () => ({
-  put: (...args) => putMock(...args),
-}));
+const blobPut = vi.fn();
+vi.mock('@vercel/blob', () => ({ put: (...a) => blobPut(...a), head: vi.fn(), del: vi.fn(), list: vi.fn() }));
+vi.mock('@supabase/supabase-js', () => ({ createClient: () => ({ from: () => { throw new Error('db must not be touched'); } }) }));
 
 function createRes() {
   return {
     statusCode: 200,
     headers: {},
-    setHeader(key, value) {
-      this.headers[key.toLowerCase()] = value;
+    setHeader(k, v) {
+      this.headers[k.toLowerCase()] = v;
     },
     status(code) {
       this.statusCode = code;
       return this;
     },
     json(body) {
-      this.body = JSON.stringify(body);
+      this.body = body;
       return this;
     },
   };
 }
 
-async function loadHandler() {
-  const mod = await import('../api/ledger-snapshot.js');
-  return mod.default;
+async function call(req) {
+  const handler = (await import('../api/ledger-snapshot.js')).default;
+  const res = createRes();
+  await handler({ headers: {}, ...req }, res);
+  return res;
 }
 
-describe('ledger-snapshot API write scope', () => {
+describe('ledger-snapshot API after the Blob removal', () => {
   beforeEach(() => {
     vi.resetModules();
-    putMock.mockReset();
-    process.env.BLOB_READ_WRITE_TOKEN = 'test-token';
+    blobPut.mockReset();
     process.env.TMS_ADMIN_GATE_PASSWORD = 'secret-gate';
     process.env.TMS_ADMIN_SESSION_SECRET = 'session-secret';
-    delete process.env.BLOB_STORE_ID;
+    process.env.BLOB_READ_WRITE_TOKEN = 'test-token';
     delete process.env.LEDGER_PUBLISH_SECRET;
   });
 
-  it('rejects member-scoped POSTs before writing Blob', async () => {
-    const handler = await loadHandler();
-    const req = {
-      method: 'POST',
-      headers: { referer: 'https://edu-team-tms-ten.vercel.app/wschoi?module=ledger' },
-      body: { transactions: [{ id: 'malicious' }] },
-    };
-    const res = createRes();
-
-    await handler(req, res);
-
-    expect(res.statusCode).toBe(403);
-    expect(JSON.parse(res.body).error).toBe('forbidden');
-    expect(putMock).not.toHaveBeenCalled();
+  it('GET answers 404 "snapshot not found" (the deploy smoke check accepts exactly this)', async () => {
+    const res = await call({ method: 'GET', url: '/api/ledger-snapshot' });
+    expect(res.statusCode).toBe(404);
+    expect(res.body.error).toBe('snapshot not found');
+    expect(res.headers['cache-control']).toBe('no-store');
+    expect(blobPut).not.toHaveBeenCalled();
   });
 
-  it('rejects forged admin-scoped POSTs without a session before writing Blob', async () => {
-    const handler = await loadHandler();
-    const req = {
+  it('the old snapshot-overwrite POST is gone, even with a valid admin session or publish key', async () => {
+    process.env.LEDGER_PUBLISH_SECRET = 'publish-secret';
+    const body = { transactions: [{ id: 'malicious' }] };
+    const adminSession = await call({
       method: 'POST',
-      headers: { referer: 'https://edu-team-tms-ten.vercel.app/admin' },
-      body: { transactions: [{ id: 'forged-admin-save' }] },
-    };
-    const res = createRes();
-
-    await handler(req, res);
-
-    expect(res.statusCode).toBe(403);
-    expect(JSON.parse(res.body).error).toBe('forbidden');
-    expect(putMock).not.toHaveBeenCalled();
+      url: '/api/ledger-snapshot',
+      headers: { referer: 'https://edu-team-tms-ten.vercel.app/admin', cookie: createAdminSessionCookie().split(';')[0] },
+      body,
+    });
+    const publishKey = await call({
+      method: 'POST',
+      url: '/api/ledger-snapshot',
+      headers: { 'x-ledger-publish-key': 'publish-secret' },
+      body,
+    });
+    for (const res of [adminSession, publishKey]) {
+      expect(res.statusCode).toBe(410);
+      expect(res.body.error).toBe('blob-publish-removed');
+    }
+    expect(blobPut).not.toHaveBeenCalled();
   });
 
-  it('allows session-backed admin-scoped POSTs', async () => {
-    putMock.mockResolvedValue({ url: 'https://blob.example/ledger/live-latest.json' });
-    const cookie = createAdminSessionCookie();
-    const handler = await loadHandler();
-    const req = {
-      method: 'POST',
-      headers: {
-        referer: 'https://edu-team-tms-ten.vercel.app/admin',
-        cookie: cookie.split(';')[0],
-      },
-      body: { transactions: [{ id: 'admin-save' }], publishedAt: '2026-06-29T00:00:00.000Z' },
-    };
-    const res = createRes();
-
-    await handler(req, res);
-
-    expect(res.statusCode).toBe(200);
-    expect(JSON.parse(res.body).ok).toBe(true);
-    expect(putMock).toHaveBeenCalledTimes(1);
+  it('rejects unsupported methods with 405', async () => {
+    const res = await call({ method: 'OPTIONS', url: '/api/ledger-snapshot' });
+    expect(res.statusCode).toBe(405);
   });
 
-  it('keeps publish-secret POSTs working without a referer', async () => {
-    process.env.LEDGER_PUBLISH_SECRET = 'secret';
-    putMock.mockResolvedValue({ url: 'https://blob.example/ledger/live-latest.json' });
-    const handler = await loadHandler();
-    const req = {
-      method: 'POST',
-      headers: { 'x-ledger-publish-key': 'secret' },
-      body: { transactions: [{ id: 'script-save' }] },
-    };
-    const res = createRes();
-
-    await handler(req, res);
-
-    expect(res.statusCode).toBe(200);
-    expect(putMock).toHaveBeenCalledTimes(1);
+  it('no longer imports the Blob client at all', async () => {
+    const { readFileSync } = await import('node:fs');
+    const src = readFileSync('api/ledger-snapshot.js', 'utf8');
+    expect(src).not.toMatch(/@vercel\/blob|blobClient|putWithRetry|live-latest/);
   });
 });

@@ -1,121 +1,64 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  EMPTY_LEDGER_SNAPSHOT_TITLE,
-  fetchPublicSnapshot,
-  isLedgerSnapshotAccessDenied,
-  isLedgerSnapshotNotFound,
-} from '../src/utils/publishSnapshot.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+let client;
+let fetchFromSupabase;
+
+vi.mock('../src/utils/supabaseClient.js', () => ({
+  getSupabaseClient: () => client,
+  isSupabaseConfigured: Boolean(client),
+  supabase: client,
+}));
+vi.mock('../src/utils/ledgerSupabaseRead.js', () => ({
+  fetchLedgerSnapshotFromSupabase: (...args) => fetchFromSupabase(...args),
+}));
 
 const snapshotPayload = {
-  publishedAt: '2026-06-11T00:00:00.000Z',
+  publishedAt: '2026-10-06T00:00:00.000Z',
   categories: [{ id: 'c1', label: '식비', matchKeywords: [] }],
-  transactions: [{ id: 't1', category: '식비', amount: 1000, date: '2026-06-01' }],
+  transactions: [{ id: 't1', category: '식비', amount: 1000, date: '2026-10-01' }],
 };
 
-function jsonResponse(status, body) {
-  return {
-    ok: status >= 200 && status < 300,
-    status,
-    json: () => Promise.resolve(body),
-  };
+async function load() {
+  vi.resetModules();
+  return import('../src/utils/publishSnapshot.js');
 }
 
-describe('isLedgerSnapshotNotFound', () => {
-  it('detects API empty snapshot responses', () => {
-    expect(isLedgerSnapshotNotFound(404, { error: 'snapshot not found' })).toBe(true);
-    expect(isLedgerSnapshotNotFound(404, { error: 'other' })).toBe(false);
-    expect(isLedgerSnapshotNotFound(500, { error: 'snapshot not found' })).toBe(false);
-  });
-});
-
-describe('isLedgerSnapshotAccessDenied', () => {
-  it('detects auth failures', () => {
-    expect(isLedgerSnapshotAccessDenied(401)).toBe(true);
-    expect(isLedgerSnapshotAccessDenied(403)).toBe(true);
-    expect(isLedgerSnapshotAccessDenied(404)).toBe(false);
-  });
-});
-
-describe('fetchPublicSnapshot', () => {
+describe('fetchPublicSnapshot (Supabase only)', () => {
   beforeEach(() => {
-    vi.stubGlobal('fetch', vi.fn());
+    client = {};
+    fetchFromSupabase = vi.fn().mockResolvedValue(snapshotPayload);
   });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
+  it('returns the snapshot read from Supabase', async () => {
+    const { fetchPublicSnapshot } = await load();
+    await expect(fetchPublicSnapshot()).resolves.toEqual(snapshotPayload);
+    expect(fetchFromSupabase).toHaveBeenCalledTimes(1);
   });
 
-  it('returns null for 404 snapshot not found without static snapshot', async () => {
-    fetch.mockImplementation((url) => {
-      const target = String(url);
-      if (target.includes('/api/ledger-snapshot')) {
-        return Promise.resolve(jsonResponse(404, { error: 'snapshot not found' }));
-      }
-      return Promise.resolve(jsonResponse(404, {}));
-    });
-
+  it('returns null for an empty ledger so the screen shows the empty state', async () => {
+    fetchFromSupabase = vi.fn().mockResolvedValue(null);
+    const { fetchPublicSnapshot } = await load();
     await expect(fetchPublicSnapshot()).resolves.toBeNull();
   });
 
-  it('returns snapshot data for HTTP 200', async () => {
-    fetch.mockImplementation((url) => {
-      if (String(url).includes('/api/ledger-snapshot')) {
-        return Promise.resolve(jsonResponse(200, snapshotPayload));
-      }
-      throw new Error('static should not be requested');
-    });
-
-    await expect(fetchPublicSnapshot()).resolves.toEqual(snapshotPayload);
+  it('throws a clear error when Supabase is not configured, without touching the network', async () => {
+    client = null;
+    const { fetchPublicSnapshot } = await load();
+    await expect(fetchPublicSnapshot()).rejects.toThrow('Supabase');
+    expect(fetchFromSupabase).not.toHaveBeenCalled();
   });
 
-  it('throws for HTTP 500', async () => {
-    fetch.mockImplementation((url) => {
-      const target = String(url);
-      if (target.includes('/api/ledger-snapshot')) {
-        return Promise.resolve(jsonResponse(500, { error: 'internal error' }));
-      }
-      return Promise.resolve(jsonResponse(404, {}));
-    });
-
-    await expect(fetchPublicSnapshot()).rejects.toMatchObject({ status: 500 });
-  });
-
-  it('throws a network error when API and static are unavailable', async () => {
-    fetch.mockRejectedValue(new TypeError('network down'));
-
-    await expect(fetchPublicSnapshot()).rejects.toThrow(/네트워크/);
-  });
-
-  it('falls back to static snapshot when API returns 404 snapshot not found', async () => {
-    fetch.mockImplementation((url) => {
-      const target = String(url);
-      if (target.includes('/api/ledger-snapshot')) {
-        return Promise.resolve(jsonResponse(404, { error: 'snapshot not found' }));
-      }
-      return Promise.resolve(jsonResponse(200, snapshotPayload));
-    });
-
-    await expect(fetchPublicSnapshot()).resolves.toEqual(snapshotPayload);
-  });
-
-  it('throws warning-style errors for HTTP 403 when static is missing', async () => {
-    fetch.mockImplementation((url) => {
-      const target = String(url);
-      if (target.includes('/api/ledger-snapshot')) {
-        return Promise.resolve(jsonResponse(403, { error: 'forbidden' }));
-      }
-      return Promise.resolve(jsonResponse(404, {}));
-    });
-
-    await expect(fetchPublicSnapshot()).rejects.toMatchObject({
-      status: 403,
-      isWarning: true,
-    });
+  it('propagates query errors instead of falling back to any other source', async () => {
+    fetchFromSupabase = vi.fn().mockRejectedValue(new Error('ledger_transactions: permission denied'));
+    const { fetchPublicSnapshot } = await load();
+    await expect(fetchPublicSnapshot()).rejects.toThrow('permission denied');
   });
 });
 
 describe('empty ledger snapshot copy', () => {
-  it('exposes user-facing empty title', () => {
-    expect(EMPTY_LEDGER_SNAPSHOT_TITLE).toContain('snapshot');
+  it('no longer mentions publishing or a snapshot file', async () => {
+    const { EMPTY_LEDGER_SNAPSHOT_TITLE, EMPTY_LEDGER_SNAPSHOT_DETAIL } = await load();
+    expect(EMPTY_LEDGER_SNAPSHOT_TITLE).toContain('장부');
+    expect(`${EMPTY_LEDGER_SNAPSHOT_TITLE} ${EMPTY_LEDGER_SNAPSHOT_DETAIL}`).not.toMatch(/게시|snapshot|Blob/);
   });
 });

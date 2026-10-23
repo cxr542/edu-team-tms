@@ -16,8 +16,6 @@ export function isEditorMode() {
   return !isViewerMode();
 }
 
-export const PUBLIC_SNAPSHOT_PATH = '/ledger-snapshot.json';
-
 export function formatPublishedAt(iso) {
   if (!iso) return null;
   try {

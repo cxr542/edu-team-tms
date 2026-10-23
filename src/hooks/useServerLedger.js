@@ -11,7 +11,7 @@ import {
   clearStoredTransactions,
   loadStoredTransactions,
 } from '../utils/transactionStorage';
-import { prepareLedger } from './useTransactionLedger';
+import { prepareLedger } from '../utils/ledgerPrepare';
 
 const VIEWER_MENU_SETTING_KEY = 'viewer_menu_visibility';
 
@@ -203,9 +203,5 @@ export function useServerLedgerWrites({ enabled, data, categories, blocked, bloc
     saveCategories,
     saveMenuVisibility,
     importSnapshot,
-    resetToBundledData: () => notify?.('warning', '서버 장부 모드에서는 초기 데이터로 되돌릴 수 없습니다.'),
-    pullFromPublished: () => ({ ok: false, reason: 'server-mode' }),
-    syncStatus: 'in-sync',
-    markPublishedLocally: () => {},
   };
 }
