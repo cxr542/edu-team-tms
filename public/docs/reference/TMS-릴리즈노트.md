@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-10-23
+
+### [신규] feat(journal): 엑셀 다운로드에 AI 효과 건·기준시간 표시
+
+- feat(journal): 엑셀 다운로드에 AI 효과 건·기준시간 표시
+- PR #212: https://github.com/cxr542/edu-team-tms/pull/212
+
 ## 2026-10-19
 
 ### [신규] feat(journal): 작성 완료된 주차 표 자동 숨기기
