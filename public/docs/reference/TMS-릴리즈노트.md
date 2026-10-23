@@ -7,6 +7,11 @@
 
 ## 2026-10-23
 
+### [수정] fix(glossary): show server-save failures instead of reporting success
+
+- fix(glossary): show server-save failures instead of reporting success
+- PR #217: https://github.com/cxr542/edu-team-tms/pull/217
+
 ### [신규] feat(security): glossary writes via the admin API + origin check on kanban writes
 
 - feat(security): glossary writes via the admin API + origin check on kanban writes
