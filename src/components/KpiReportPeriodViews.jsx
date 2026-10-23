@@ -43,7 +43,7 @@ function SummaryCards({ team, kpi3, kpi3Label }) {
           팀 등급 <Grade value={team.grade2} />
         </span>
         <small>
-          계획 {Number(team.kpi2.planSum || 0).toFixed(2)}h / 실적 {Number(team.kpi2.actualSum || 0).toFixed(2)}h · 승인 효과 {team.kpi2.submittedCount ?? 0}건
+          계획 {Number((team.kpi2.display || team.kpi2).planSum || 0).toFixed(2)}h / 실적 {Number((team.kpi2.display || team.kpi2).actualSum || 0).toFixed(2)}h · 승인 효과 {team.kpi2.submittedCount ?? 0}건
         </small>
       </div>
       <div className="kpi-report-period-card">
@@ -188,7 +188,7 @@ export function MonthlyUtilizationTable({ monthly, team, ym }) {
 /** 월간 리포트 2 — 구성원별 업무 리소스 생산성 */
 export function MonthlyProductivityTable({ monthly, team, ym }) {
   const sums = (row) => (row.kpi2UsesPreview ? row.kpi2Preview : row.kpi2) || {};
-  const teamSums = team.kpi2.usesPreview ? team.kpi2.preview : team.kpi2;
+  const teamSums = team.kpi2.display || team.kpi2;
   return (
     <section className="kpi-report-block">
       <h2 className="kpi-report-member-title">
@@ -369,7 +369,7 @@ function PeriodTrendMemberTable({ kind, columns, memberRows, team, title, hint, 
     );
   };
   const sums = (row) => (row.kpi2UsesPreview ? row.kpi2Preview : row.kpi2) || {};
-  const teamSums = team.kpi2.usesPreview ? team.kpi2.preview : team.kpi2;
+  const teamSums = team.kpi2.display || team.kpi2;
   return (
     <section className="kpi-report-block">
       <h2 className="kpi-report-member-title">{title}</h2>

@@ -959,17 +959,17 @@ export default function TeamKpiPage() {
               </tbody>
               <tfoot>
                 {(() => {
-                  const totalPlan = metrics.rows02Effect.reduce((sum, row) => sum + (Number(row.계획시간) || 0), 0);
-                  const totalActual = metrics.rows02Effect.reduce((sum, row) => sum + (Number(row.실작업시간) || 0), 0);
-                  const productivityPct = totalActual > 0 ? ((totalPlan / totalActual) * 100).toFixed(1) : '0.0';
-                  
+                  // 상단 카드와 같은 기준(승인 건, 없으면 일지 미리보기)으로 합계를 낸다 — 반려·실작업 0h 건은 제외
+                  const basis = kpi2ShowsPreview ? metrics.kpi2Preview : metrics.kpi2;
                   return (
                     <tr style={{ backgroundColor: 'var(--color-bg-subtle)' }}>
-                      <td colSpan={3} style={{ textAlign: 'center', fontWeight: 'bold' }}>합계</td>
-                      <td style={{ fontWeight: 'bold' }}>{totalPlan}</td>
-                      <td style={{ fontWeight: 'bold' }}>{totalActual}</td>
+                      <td colSpan={3} style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                        합계 ({kpi2ShowsPreview ? '일지 효과 건' : '승인 건'} 기준)
+                      </td>
+                      <td style={{ fontWeight: 'bold' }}>{basis?.planSum ?? 0}</td>
+                      <td style={{ fontWeight: 'bold' }}>{basis?.actualSum ?? 0}</td>
                       <td colSpan={2} style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>
-                        생산성: {productivityPct}%
+                        생산성: {formatPct(kpi2DisplayPct)}
                       </td>
                     </tr>
                   );
