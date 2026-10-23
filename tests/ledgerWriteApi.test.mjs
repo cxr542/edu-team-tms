@@ -90,6 +90,25 @@ describe('ledger-snapshot row-level write routes', () => {
     expect(db.tables.ledger_transactions).toHaveLength(0);
   });
 
+  it('accepts the server-automation publish key without a referer, and rejects a wrong key', async () => {
+    process.env.LEDGER_PUBLISH_SECRET = 'publish-secret';
+    const ok = await call({
+      method: 'POST',
+      url: '/api/ledger-snapshot?resource=transactions',
+      headers: { 'x-ledger-publish-key': 'publish-secret' },
+      body,
+    });
+    expect(ok.statusCode).toBe(201);
+    const bad = await call({
+      method: 'POST',
+      url: '/api/ledger-snapshot?resource=transactions',
+      headers: { 'x-ledger-publish-key': 'nope' },
+      body: { transaction: { ...body.transaction, id: 'b' } },
+    });
+    expect(bad.statusCode).toBe(403);
+    expect(db.tables.ledger_transactions.map((r) => r.id)).toEqual(['a']);
+  });
+
   it('returns 400 for invalid input and 405 for unsupported combinations', async () => {
     const bad = await call({
       method: 'POST',

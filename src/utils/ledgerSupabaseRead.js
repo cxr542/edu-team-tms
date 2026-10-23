@@ -1,7 +1,6 @@
 /**
- * 조회용 장부 — Supabase(ledger_*) 읽기 전용 경로 (anon SELECT).
- * 반환 모양은 /api/ledger-snapshot 과 동일해서 조회 화면 코드는 그대로 쓴다.
- * 쓰기는 하지 않는다. 쓰기 전환은 별도 단계(서버 API + service role).
+ * 장부 읽기 — Supabase(ledger_*) anon SELECT. 조회 화면(공개 스냅샷 모양)과 편집 화면(버전 포함)이 쓴다.
+ * 쓰기는 하지 않는다. 쓰기는 서버 API(`/api/ledger-snapshot?resource=…`, service role)로만 한다.
  */
 import { getSupabaseClient } from './supabaseClient';
 import { buildEditDataFromRows, buildSnapshotFromRows } from './ledgerSnapshotMapping';
@@ -12,24 +11,6 @@ export {
   categoryFromRow,
   transactionFromRow,
 } from './ledgerSnapshotMapping';
-
-/**
- * 어느 저장소에서 읽을지 결정한다. URL `?ledgerSource=supabase|blob` 이 환경변수보다 우선하므로
- * 플래그를 끈 채로도 배포 환경에서 미리 확인할 수 있고, 문제 시 `?ledgerSource=blob` 로 즉시 되돌려 볼 수 있다.
- * @param {{ envValue?: string|null, search?: string }} [options]
- */
-export function resolveLedgerReadSource({ envValue = '', search = '' } = {}) {
-  const fromUrl = new URLSearchParams(search).get('ledgerSource');
-  if (fromUrl === 'supabase' || fromUrl === 'blob') return fromUrl;
-  return String(envValue || '').trim().toLowerCase() === 'true' ? 'supabase' : 'blob';
-}
-
-export function getLedgerReadSource() {
-  return resolveLedgerReadSource({
-    envValue: import.meta.env?.VITE_LEDGER_SUPABASE_READ,
-    search: typeof window === 'undefined' ? '' : window.location.search,
-  });
-}
 
 async function selectAll(client, table, orderColumns) {
   let query = client.from(table).select('*');

@@ -52,7 +52,7 @@ describe('wiring', () => {
     const app = readFileSync('src/App.jsx', 'utf8');
     expect(app).toContain("kind: 'all-visible'");
     expect(app).toContain('window.prompt(c.message');
-    // 기존(Blob) 모드는 예전 확인창 문구를 그대로 쓴다.
-    expect(app).toContain('legacyMessage');
+    // 옛 Blob 모드의 단순 확인창 문구는 더 이상 없다.
+    expect(app).not.toContain('legacyMessage');
   });
 });

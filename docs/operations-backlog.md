@@ -161,7 +161,7 @@ KPI1 계산 기준은 안정화 메모를 남기고, 주차 완료 M/D 정렬 �
 | 공지 | Supabase (공개 공지 anon 조회, 초안·쓰기 admin auth) | **운영 중** |
 | CSR | Supabase (anon RLS) | **운영 중** |
 | 일지 Supabase 백업 | `journal_snapshots` via `/api/journal-snapshots` | 코드 ✅, **미러 플래그 production on (2026-09-23 재적용)**. 데이터는 Blob과 동기화됨, pull 로직도 richer-wins로 수정됨 |
-| 팀 빌딩비 장부 | localStorage + Blob 수동 게시(「지금 조회에 반영」) | **미전환** — Supabase 전환 미착수 (아래 §9 다음 트랙 후보) |
+| 팀 빌딩비 장부 | Supabase (`ledger_*`) 행 단위 즉시 저장 — 게시 단계 없음 | **운영 중** — 2026-10-06 이관, 2026-10-23 Blob 장부·정적 폴백 삭제 (`docs/ledger-live-sync.md`) |
 
 ### 단계별 진행률
 
@@ -214,7 +214,9 @@ J8b Production cutover  ██████████  재적용 완료 (2026-0
 
 **하지 않을 것:** localStorage 제거, Blob `autoSyncCloud` 자동 재활성화, 자동 pull/merge(비범위 유지)
 
-### 다음 트랙 후보 — 팀 빌딩비 장부 Supabase 전환 (2026-09-23 논의, 미착수)
+### (완료) 팀 빌딩비 장부 Supabase 전환 — 2026-10-06 이관 · 2026-10-23 Blob 정리
+
+> **완료.** 아래는 2026-09-23 착수 전 논의 기록이다. 결과와 현재 구조는 [`docs/ledger-live-sync.md`](./ledger-live-sync.md) 참고.
 
 여러 명이 조회하는 데이터라 일지처럼 실시간 동기화 이점이 있지만, **일지 자동 미러가 며칠간 안정적으로 도는 걸 확인한 뒤 착수**하기로 함. 착수 시 유의할 점:
 

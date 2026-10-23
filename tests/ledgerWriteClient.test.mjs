@@ -1,5 +1,4 @@
 import { describe, expect, it, vi } from 'vitest';
-import { resolveLedgerWriteSource } from '../src/utils/ledgerWriteSource.js';
 import {
   LedgerClientError,
   createLedgerApi,
@@ -23,16 +22,6 @@ const tx = (over = {}) => ({
   extraData: {},
   _version: 1,
   ...over,
-});
-
-describe('resolveLedgerWriteSource', () => {
-  it('defaults to blob, follows the env flag, and lets the URL override both ways', () => {
-    expect(resolveLedgerWriteSource()).toBe('blob');
-    expect(resolveLedgerWriteSource({ envValue: 'true' })).toBe('supabase');
-    expect(resolveLedgerWriteSource({ envValue: 'true', search: '?ledgerWrite=blob' })).toBe('blob');
-    expect(resolveLedgerWriteSource({ search: '?ledgerWrite=supabase' })).toBe('supabase');
-    expect(resolveLedgerWriteSource({ search: '?ledgerWrite=x' })).toBe('blob');
-  });
 });
 
 describe('planLedgerChanges', () => {

@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { fetchPublicSnapshot } from '../utils/publishSnapshot';
-import { recordCloudFailure, recordCloudSuccess } from '../utils/cloudHealth';
 
 export function usePublicSnapshot(
   enabled,
-  { pollMs = 0, silentPoll = true, reloadCooldownMs = 30000, preferSupabase = false } = {}
+  { pollMs = 0, silentPoll = true, reloadCooldownMs = 30000 } = {}
 ) {
   const [loading, setLoading] = useState(enabled);
   const [refreshing, setRefreshing] = useState(false);
@@ -34,7 +33,7 @@ export function usePublicSnapshot(
         setSnapshotEmpty(false);
       }
 
-      return fetchPublicSnapshot({ preferSupabase })
+      return fetchPublicSnapshot()
         .then((next) => {
           setData(next);
           setSnapshotEmpty(next === null);
@@ -54,7 +53,6 @@ export function usePublicSnapshot(
             setData(null);
             return;
           }
-          if (status) recordCloudFailure(status, body);
           setWarning(null);
           if (!quiet) setError(err.message || '불러오기 실패');
         })
@@ -66,7 +64,7 @@ export function usePublicSnapshot(
           }
         });
     },
-    [enabled, reloadCooldownMs, cooldownUntil, preferSupabase]
+    [enabled, reloadCooldownMs, cooldownUntil]
   );
 
   const reloadBlockedByCooldown = refreshing || (reloadCooldownMs > 0 && cooldownUntil > Date.now());
