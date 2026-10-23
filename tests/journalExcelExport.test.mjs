@@ -42,3 +42,24 @@ describe('teamJournalExcelFileName', () => {
     expect(teamJournalExcelFileName(2026, 5)).toBe('업무일지_팀전체_2026-06.xlsx');
   });
 });
+
+describe('journalExcelExport KPI2 효과 건', () => {
+  it('효과 건은 향상 과제명·AI 미적용 기준시간을 포함', () => {
+    const days = {
+      '2026-06-02': {
+        tasks: [
+          { cat: 'ai', title: 'AI 초안', plan: 1, actual: 1, done: true, kpi2Effect: { enabled: true, projectId: 'p1', baselineHours: 4 } },
+          { cat: 'ai', title: 'AI 기준 미입력', plan: 2, actual: 1, done: true, kpi2Effect: { enabled: true } },
+          { cat: 'edu', title: '일반', plan: 1, actual: 1, done: true },
+        ],
+      },
+    };
+    const { taskRows } = buildJournalExcelRows({
+      days, year: 2026, month: 5, categories: {}, improveProjects: [{ id: 'p1', name: '교안 자동화' }],
+    });
+    const byTitle = Object.fromEntries(taskRows.map((r) => [r[5], r]));
+    expect(byTitle['AI 초안'].slice(11)).toEqual(['교안 자동화', 'O', 4]);
+    expect(byTitle['AI 기준 미입력'].slice(11)).toEqual(['', 'O', 2]);
+    expect(byTitle['일반'].slice(11)).toEqual(['', '', '']);
+  });
+});
