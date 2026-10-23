@@ -7,6 +7,11 @@
 
 ## 2026-10-23
 
+### [기타] chore(ledger): remove the Blob dual path now that Supabase is the only source
+
+- chore(ledger): remove the Blob dual path now that Supabase is the only source
+- PR #215: https://github.com/cxr542/edu-team-tms/pull/215
+
 ### [기타] chore(ledger): remove the static ledger snapshot fallback
 
 - chore(ledger): remove the static ledger snapshot fallback
