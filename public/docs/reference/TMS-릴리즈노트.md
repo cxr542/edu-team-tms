@@ -7,6 +7,11 @@
 
 ## 2026-10-23
 
+### [신규] feat(security): glossary writes via the admin API + origin check on kanban writes
+
+- feat(security): glossary writes via the admin API + origin check on kanban writes
+- PR #216: https://github.com/cxr542/edu-team-tms/pull/216
+
 ### [기타] chore(ledger): remove the Blob dual path now that Supabase is the only source
 
 - chore(ledger): remove the Blob dual path now that Supabase is the only source
