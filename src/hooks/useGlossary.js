@@ -129,7 +129,7 @@ export function useGlossary() {
         return next;
       });
 
-      return { ok: true, data: normalized, supabase: supabaseResult.ok };
+      return { ok: true, data: normalized, supabase: supabaseResult.ok, warning: createWarning };
     } catch (err) {
       const message = err instanceof Error ? err.message : '용어 등록 실패';
       setError(message);
@@ -168,7 +168,7 @@ export function useGlossary() {
         return next;
       });
 
-      return { ok: true, data: updated, supabase: supabaseResult.ok };
+      return { ok: true, data: updated, supabase: supabaseResult.ok, warning: updateWarning };
     } catch (err) {
       const message = err instanceof Error ? err.message : '용어 수정 실패';
       setError(message);
@@ -192,7 +192,7 @@ export function useGlossary() {
         return next;
       });
 
-      return { ok: true };
+      return { ok: true, warning: deleteWarning };
     } catch (err) {
       const message = err instanceof Error ? err.message : '용어 삭제 실패';
       setError(message);
@@ -213,8 +213,10 @@ export function useGlossary() {
       warning = warning || describeGlossarySaveFailure(res);
     }
     if (warning) setError(warning);
-    return { ok: true, count: seed.length };
+    return { ok: true, count: seed.length, warning };
   }, []);
+
+  const clearError = useCallback(() => setError(null), []);
 
   return {
     terms,
@@ -222,6 +224,7 @@ export function useGlossary() {
     saving,
     error,
     sourceStatus,
+    clearError,
     refresh,
     createTerm,
     updateTerm,

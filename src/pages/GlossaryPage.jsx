@@ -19,11 +19,15 @@ import {
 } from 'lucide-react';
 import { marked } from 'marked';
 import AppModuleLink from '../components/AppModuleLink.jsx';
+import GlossaryErrorBanner from '../components/GlossaryErrorBanner.jsx';
 import { generateSlug, useGlossary } from '../hooks/useGlossary.js';
 import { autoLinkGlossaryHtml } from '../utils/glossaryLinker.js';
 import { isEditorMode } from '../utils/appMode.js';
 import { QUIZ_SUBJECT_OPTIONS } from '../utils/glossaryQuiz.js';
 import './GlossaryPage.css';
+
+/** 서버 저장이 거부·실패했는데 이 브라우저에만 반영된 경우의 토스트 (성공으로 보이지 않게). */
+const LOCAL_ONLY_TOAST = '서버에 저장하지 못했습니다. 이 브라우저에만 반영되었습니다.';
 
 const SUBJECT_TAGS = QUIZ_SUBJECT_OPTIONS.filter((o) => o.tag).map((o) => o.tag);
 const FORM_SUBJECT_OPTIONS = [
@@ -51,6 +55,7 @@ export default function GlossaryPage({
     loading,
     saving,
     error,
+    clearError,
     sourceStatus,
     refresh,
     createTerm,
@@ -224,7 +229,7 @@ export default function GlossaryPage({
     if (editingTerm) {
       const res = await updateTerm(editingTerm.slug, payload);
       if (res.ok) {
-        showToast('용어가 수정되었습니다.');
+        showToast(res.warning ? LOCAL_ONLY_TOAST : '용어가 수정되었습니다.');
         setModalOpen(false);
       } else {
         alert(res.message);
@@ -232,7 +237,7 @@ export default function GlossaryPage({
     } else {
       const res = await createTerm(payload);
       if (res.ok) {
-        showToast('새 용어가 등록되었습니다.');
+        showToast(res.warning ? LOCAL_ONLY_TOAST : '새 용어가 등록되었습니다.');
         setSelectedSlug(res.data.slug);
         setModalOpen(false);
       } else {
@@ -247,7 +252,7 @@ export default function GlossaryPage({
     }
     const res = await deleteTerm(term.slug);
     if (res.ok) {
-      showToast('용어가 삭제되었습니다.');
+      showToast(res.warning ? LOCAL_ONLY_TOAST : '용어가 삭제되었습니다.');
     } else {
       alert(res.message);
     }
@@ -263,8 +268,9 @@ export default function GlossaryPage({
     }
     const res = await resetToSeed();
     if (res.ok) {
-      showToast('초기 용어 데이터가 복원되었습니다.');
-      refresh();
+      showToast(res.warning ? LOCAL_ONLY_TOAST : '초기 용어 데이터가 복원되었습니다.');
+      // 서버 저장이 실패했다면 새로고침이 경고 배너를 지우고 서버 목록으로 덮어쓰므로 건너뛴다.
+      if (!res.warning) refresh();
     }
   };
 
@@ -373,6 +379,8 @@ export default function GlossaryPage({
           )}
         </div>
       </header>
+
+      <GlossaryErrorBanner message={error} onDismiss={clearError} />
 
       {/* Mascot Cheer Banner (Stitch Style) */}
       <div className="glossary-mascot-banner">
