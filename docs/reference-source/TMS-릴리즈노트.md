@@ -7,6 +7,11 @@
 
 ## 2026-10-23
 
+### [기타] chore(ledger): remove the static ledger snapshot fallback
+
+- chore(ledger): remove the static ledger snapshot fallback
+- PR #214: https://github.com/cxr542/edu-team-tms/pull/214
+
 ### [신규] feat(journal): 엑셀 다운로드에 AI 효과 건·기준시간 표시
 
 - feat(journal): 엑셀 다운로드에 AI 효과 건·기준시간 표시
