@@ -1,4 +1,7 @@
 import { getSupabaseClient, isSupabaseConfigured } from './supabaseClient.js';
+import { normalizeGlossaryTerm, toRowPayload } from './glossaryTermMapping.js';
+
+export { normalizeGlossaryTerm, toRowPayload };
 
 export const GLOSSARY_TABLE = 'glossary_terms';
 
@@ -8,10 +11,6 @@ function result({ ok, status, message, data = null }) {
 
 function hasText(value) {
   return typeof value === 'string' && value.trim().length > 0;
-}
-
-function nowIso() {
-  return new Date().toISOString();
 }
 
 function supabaseDisabledResult() {
@@ -34,70 +33,6 @@ function unexpectedErrorResult(error, operation) {
 function isConfigured() {
   if (!isSupabaseConfigured) return false;
   return Boolean(getSupabaseClient());
-}
-
-export function normalizeGlossaryTerm(row) {
-  if (!row || typeof row !== 'object') return null;
-  const slug = String(row.slug || row.id || '').trim();
-  if (!slug) return null;
-
-  const rawTags = row.tags;
-  let tags = [];
-  if (Array.isArray(rawTags)) {
-    tags = rawTags.map(String).filter(Boolean);
-  } else if (typeof rawTags === 'string') {
-    try {
-      const parsed = JSON.parse(rawTags);
-      tags = Array.isArray(parsed) ? parsed.map(String).filter(Boolean) : [rawTags];
-    } catch {
-      tags = rawTags.split(',').map((t) => t.trim()).filter(Boolean);
-    }
-  }
-
-  const rawRelated = row.related_terms ?? row.related;
-  let related = [];
-  if (Array.isArray(rawRelated)) {
-    related = rawRelated.map((r) => (typeof r === 'object' && r?.slug ? r.slug : String(r))).filter(Boolean);
-  } else if (typeof rawRelated === 'string') {
-    try {
-      const parsed = JSON.parse(rawRelated);
-      related = Array.isArray(parsed) ? parsed.map(String).filter(Boolean) : [rawRelated];
-    } catch {
-      related = rawRelated.split(',').map((r) => r.trim()).filter(Boolean);
-    }
-  }
-
-  return {
-    id: String(row.id || slug).trim(),
-    slug,
-    title: String(row.title || '').trim(),
-    category: String(row.category || 'topic').trim() || 'topic',
-    tags,
-    sourceUrl: row.source || row.source_url || row.sourceUrl || null,
-    body: row.markdown || row.body || row.summary || '',
-    related,
-    visibility: String(row.visibility || 'published').trim(),
-    author: row.author ? String(row.author).trim() : null,
-    authorCode: row.author_code || row.authorCode || null,
-    createdAt: row.created_at || row.createdAt || nowIso(),
-    updatedAt: row.updated_at || row.updatedAt || nowIso(),
-  };
-}
-
-export function toRowPayload(term) {
-  const norm = normalizeGlossaryTerm(term);
-  if (!norm) return null;
-  return {
-    id: norm.id,
-    slug: norm.slug,
-    title: norm.title,
-    category: norm.category,
-    tags: norm.tags,
-    source: norm.sourceUrl || '',
-    markdown: norm.body,
-    related_terms: norm.related,
-    updated_at: nowIso(),
-  };
 }
 
 export async function listGlossaryTermsFromSupabase() {
@@ -132,62 +67,68 @@ export async function listGlossaryTermsFromSupabase() {
   }
 }
 
-export async function upsertGlossaryTermToSupabase(term) {
-  if (!isConfigured()) return supabaseDisabledResult();
+const ADMIN_API = '/api/glossary-admin';
 
-  const client = getSupabaseClient();
-  if (!client) return supabaseDisabledResult();
-
+/** 관리자 서버 API 호출. 쓰기는 서버가 관리자 세션을 확인한 뒤 service role 로 수행한다. */
+async function callAdminApi(method, { query = '', body } = {}) {
+  let res;
   try {
-    const payload = toRowPayload(term);
-    if (!payload || !hasText(payload.slug) || !hasText(payload.title)) {
-      return result({ ok: false, status: 'error', message: 'Title and slug are required.' });
-    }
-
-    const { data, error } = await client
-      .from(GLOSSARY_TABLE)
-      .upsert(payload, { onConflict: 'slug' })
-      .select();
-
-    if (error) {
-      return result({ ok: false, status: 'error', message: error.message });
-    }
-
-    const saved = data && data[0] ? normalizeGlossaryTerm(data[0]) : normalizeGlossaryTerm(payload);
-    return result({
-      ok: true,
-      status: 'ok',
-      message: 'Term saved to Supabase.',
-      data: saved,
+    res = await fetch(`${ADMIN_API}${query}`, {
+      method,
+      headers: body ? { 'Content-Type': 'application/json' } : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+      credentials: 'same-origin',
     });
   } catch (error) {
-    return unexpectedErrorResult(error, 'save');
+    return result({ ok: false, status: 'error', message: error?.message || '네트워크 오류' });
   }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data?.ok === false) {
+    const forbidden = res.status === 403;
+    return result({
+      ok: false,
+      status: forbidden ? 'forbidden' : 'error',
+      message: forbidden
+        ? '관리자 로그인이 필요합니다. /admin 에서 다시 로그인한 뒤 시도해 주세요.'
+        : data?.message || `HTTP ${res.status}`,
+    });
+  }
+  return result({ ok: true, status: 'ok', message: data?.message || 'ok', data: data?.data ?? null });
+}
+
+export async function upsertGlossaryTermToSupabase(term) {
+  if (!isConfigured()) return supabaseDisabledResult();
+  const payload = toRowPayload(term);
+  if (!payload || !hasText(payload.slug) || !hasText(payload.title)) {
+    return result({ ok: false, status: 'error', message: 'Title and slug are required.' });
+  }
+  const res = await callAdminApi('PUT', { body: { term } });
+  if (!res.ok) return res;
+  const saved = Array.isArray(res.data) ? res.data[0] : res.data;
+  return result({
+    ok: true,
+    status: 'ok',
+    message: 'Term saved to Supabase.',
+    data: saved ? normalizeGlossaryTerm(saved) : normalizeGlossaryTerm(payload),
+  });
+}
+
+/** 여러 용어를 한 번에 저장(초기 시드 반영용). 한 요청에 최대 200건. */
+export async function upsertGlossaryTermsToSupabase(terms) {
+  if (!isConfigured()) return supabaseDisabledResult();
+  const res = await callAdminApi('PUT', { body: { terms } });
+  if (!res.ok) return res;
+  return result({
+    ok: true,
+    status: 'ok',
+    message: 'Terms saved to Supabase.',
+    data: Array.isArray(res.data) ? res.data.map(normalizeGlossaryTerm).filter(Boolean) : [],
+  });
 }
 
 export async function deleteGlossaryTermFromSupabase(slug) {
   if (!isConfigured()) return supabaseDisabledResult();
-
-  const client = getSupabaseClient();
-  if (!client) return supabaseDisabledResult();
-
-  try {
-    const { error } = await client
-      .from(GLOSSARY_TABLE)
-      .delete()
-      .eq('slug', slug);
-
-    if (error) {
-      return result({ ok: false, status: 'error', message: error.message });
-    }
-
-    return result({
-      ok: true,
-      status: 'ok',
-      message: 'Term deleted from Supabase.',
-      data: { slug },
-    });
-  } catch (error) {
-    return unexpectedErrorResult(error, 'delete');
-  }
+  const res = await callAdminApi('DELETE', { query: `?slug=${encodeURIComponent(slug)}` });
+  if (!res.ok) return res;
+  return result({ ok: true, status: 'ok', message: 'Term deleted from Supabase.', data: { slug } });
 }

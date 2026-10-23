@@ -5,9 +5,16 @@ import {
   listGlossaryTermsFromSupabase,
   normalizeGlossaryTerm,
   upsertGlossaryTermToSupabase,
+  upsertGlossaryTermsToSupabase,
 } from '../utils/glossarySupabase.js';
 
 export const GLOSSARY_STORAGE_KEY = 'tms-glossary-v1';
+
+/** 서버(Supabase) 저장이 거부·실패했을 때 사용자에게 보일 문구. 미설정(disabled)·빈 결과는 실패로 보지 않는다. */
+export function describeGlossarySaveFailure(result) {
+  if (!result || result.ok || result.status === 'disabled' || result.status === 'empty') return null;
+  return `서버에 저장하지 못했습니다. 이 브라우저에만 반영되었습니다. (${result.message})`;
+}
 
 function loadLocalGlossary() {
   try {
@@ -112,6 +119,8 @@ export function useGlossary() {
 
       // Attempt Supabase save
       const supabaseResult = await upsertGlossaryTermToSupabase(normalized);
+      const createWarning = describeGlossarySaveFailure(supabaseResult);
+      if (createWarning) setError(createWarning);
 
       // Local update
       setTerms((prev) => {
@@ -149,6 +158,8 @@ export function useGlossary() {
 
       // Attempt Supabase save
       const supabaseResult = await upsertGlossaryTermToSupabase(updated);
+      const updateWarning = describeGlossarySaveFailure(supabaseResult);
+      if (updateWarning) setError(updateWarning);
 
       // Local update
       setTerms((prev) => {
@@ -171,7 +182,9 @@ export function useGlossary() {
     setSaving(true);
     setError(null);
     try {
-      await deleteGlossaryTermFromSupabase(slug);
+      const deleteResult = await deleteGlossaryTermFromSupabase(slug);
+      const deleteWarning = describeGlossarySaveFailure(deleteResult);
+      if (deleteWarning) setError(deleteWarning);
 
       setTerms((prev) => {
         const next = prev.filter((t) => t.slug !== slug);
@@ -193,10 +206,13 @@ export function useGlossary() {
     const seed = GLOSSARY_SEED_ENTRIES.map(normalizeGlossaryTerm).filter(Boolean);
     setTerms(sortTerms(seed));
     saveLocalGlossary(seed);
-    // Push seed items to Supabase if connected
-    for (const item of seed) {
-      await upsertGlossaryTermToSupabase(item).catch(() => {});
+    // Push seed items to Supabase if connected (서버 한도에 맞춰 200건씩)
+    let warning = null;
+    for (let i = 0; i < seed.length; i += 200) {
+      const res = await upsertGlossaryTermsToSupabase(seed.slice(i, i + 200));
+      warning = warning || describeGlossarySaveFailure(res);
     }
+    if (warning) setError(warning);
     return { ok: true, count: seed.length };
   }, []);
 

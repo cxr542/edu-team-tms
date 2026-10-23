@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { hasValidAdminSession } from '../server/api-utils/adminSession.js';
+import { isAllowedPublishOrigin } from '../server/api-utils/publishOrigin.js';
 
 const TABLE = 'kanban_tasks';
 
@@ -59,6 +60,16 @@ export default async function handler(req, res) {
   }
 
   const method = req.method;
+
+  // 쓰기(POST/PUT/DELETE)는 앱 화면에서 온 요청만 받는다: 허용된 Origin/Referer 가 있어야 한다.
+  // 브라우저는 같은 출처의 쓰기 요청에 Origin 을 자동으로 붙인다. (인증은 아니므로 초기화·전체 삭제는 관리자 세션을 따로 요구한다.)
+  if (method !== 'GET' && !isAllowedPublishOrigin(req.headers?.origin || req.headers?.referer || '')) {
+    return json(res, 403, {
+      ok: false,
+      status: 'forbidden',
+      message: '허용되지 않은 요청 출처입니다.',
+    });
+  }
 
   if (method === 'GET') {
     try {
