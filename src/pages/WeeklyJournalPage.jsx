@@ -1494,6 +1494,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                     month,
                     categories: memberCategoryView.cats,
                     memberLabel: selectedMember.displayName,
+                    improveProjects: journal.improveProjects || [],
                   });
                   showToast(`${r.fileName} 다운로드 (${r.taskCount}행)`);
                 }}
@@ -1510,6 +1511,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                     const r = downloadTeamJournalExcel({
                       year,
                       month,
+                      improveProjects: journal.improveProjects || [],
                       members: TEAM_KPI_MEMBERS.map((m) => ({
                         label: m.displayName,
                         days: journal.getMemberDays(m.code) || {},
