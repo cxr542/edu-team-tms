@@ -71,4 +71,24 @@ describe('buildTeamIntegratedSummary', () => {
     expect(t.kpi2.usesPreview).toBe(true);
     expect(t.kpi2.preview.submittedCount).toBe(1);
   });
+
+  it('KPI2 team value follows member rows when approval states are mixed (승인 일부만 있는 달)', () => {
+    const member = (rows) => ({
+      kpi1: { work: 0, improve: 0, leave: 0, available: 1 },
+      kpi2: {},
+      status: KPI_STATUS.DRAFT,
+      rows02: rows,
+    });
+    const monthly = [
+      member([{ 상태: KPI_STATUS.APPROVED, dayKey: '2026-06-02', 계획시간: 10, 실작업시간: 10 }]),
+      member([{ 상태: KPI_STATUS.DRAFT, dayKey: '2026-06-03', 계획시간: 30, 실작업시간: 10 }]),
+    ];
+    const t = buildTeamIntegratedSummary(monthly, [{ quarter: { composite: 0 } }]);
+    // 구성원 행: 100% (공식) · 300% (미리보기) → 팀 = (10+30)/(10+10) = 200%
+    expect(t.kpi2.displayPct).toBeCloseTo(200, 1);
+    expect(t.kpi2.usesPreview).toBe(true);
+    expect(t.kpi2.display).toEqual({ planSum: 40, actualSum: 20, submittedCount: 2 });
+    // 공식(승인) 값은 별도로 유지
+    expect(t.kpi2.productivityPct).toBeCloseTo(100, 1);
+  });
 });

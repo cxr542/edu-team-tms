@@ -51,7 +51,32 @@ export function buildTeamIntegratedSummary(monthly, quarterly) {
   const allEffectRows = monthly.flatMap((r) => r.rows02 || []);
   const kpi2Official = computeMonthKpi2Summary(allEffectRows, true);
   const kpi2PreviewRollup = computeMonthKpi2Summary(allEffectRows, false);
-  const kpi2Display = resolveKpi2Display(kpi2Official, kpi2PreviewRollup);
+  // 구성원 행과 같은 기준: 구성원별로 공식(승인)이 있으면 공식, 없으면 미리보기 합계를 쓴다.
+  // (팀 전체 공식/미리보기를 한 번에 고르면 승인 상태가 섞인 달에 구성원 행과 값이 어긋난다)
+  let dispPlan = 0;
+  let dispActual = 0;
+  let dispCount = 0;
+  let anyPreview = false;
+  monthly.forEach((row) => {
+    const memberRows = row.rows02 || [];
+    const official = computeMonthKpi2Summary(memberRows, true);
+    const preview = computeMonthKpi2Summary(memberRows, false);
+    const { usesPreview } = resolveKpi2Display(official, preview);
+    const src = usesPreview ? preview : official;
+    if (usesPreview) anyPreview = true;
+    dispPlan += Number(src?.planSum) || 0;
+    dispActual += Number(src?.actualSum) || 0;
+    dispCount += Number(src?.submittedCount) || 0;
+  });
+  const kpi2Display = {
+    displayPct: dispActual > 0 ? round4((dispPlan / dispActual) * 100) : null,
+    usesPreview: anyPreview,
+  };
+  const kpi2DisplaySums = {
+    planSum: round4(dispPlan),
+    actualSum: round4(dispActual),
+    submittedCount: dispCount,
+  };
 
   const level = averagePositive(quarterly.map((r) => Number(r.quarter?.level) || 0));
   const dm = averagePositive(quarterly.map((r) => Number(r.breakdown?.dm ?? r.quarter?.dm) || 0));
@@ -89,6 +114,7 @@ export function buildTeamIntegratedSummary(monthly, quarterly) {
       ...kpi2Official,
       preview: kpi2PreviewRollup,
       productivityPct: kpi2Official.productivityPct,
+      display: kpi2DisplaySums,
       displayPct: kpi2Display.displayPct,
       usesPreview: kpi2Display.usesPreview,
       formula: kpi2Display.usesPreview

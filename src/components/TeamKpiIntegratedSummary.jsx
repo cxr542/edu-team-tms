@@ -81,15 +81,15 @@ export default function TeamKpiIntegratedSummary({
           <p className="team-kpi-integrated-meta">
             {team.kpi2.usesPreview ? (
               <>
-                일지 효과 {team.kpi2.preview?.submittedCount ?? 0}건 · 승인{' '}
+                일지 효과 {team.kpi2.display?.submittedCount ?? 0}건 · 승인{' '}
                 {team.kpi2.submittedCount ?? 0}건
               </>
             ) : (
               <>승인 효과 {team.kpi2.submittedCount ?? 0}건</>
             )}
             {' · '}
-            계획 {formatMm(team.kpi2.usesPreview ? team.kpi2.preview?.planSum : team.kpi2.planSum)}h / 실적{' '}
-            {formatMm(team.kpi2.usesPreview ? team.kpi2.preview?.actualSum : team.kpi2.actualSum)}h
+            계획 {formatMm(team.kpi2.display?.planSum)}h / 실적{' '}
+            {formatMm(team.kpi2.display?.actualSum)}h
           </p>
           <p className="team-kpi-integrated-formula">{team.kpi2.formula}</p>
         </article>
