@@ -19,6 +19,7 @@
 - 서버 장부를 JSON 으로 내려받기(백업·롤백용): `SUPABASE_URL=… SUPABASE_ANON_KEY=… node scripts/export-ledger-from-supabase.mjs ./ledger-export.json`
 - 관리자 로그인은 IP 당 15분에 5회 실패하면 잠긴다 (`admin_login_attempts`).
 - 스키마: `supabase/ledger.sql`, `supabase/ledger-write-support.sql`.
+- **정적 폴백 제거 (2026-10-23)**: 운영 Blob의 `ledger/live-latest.json`을 삭제했고, 저장소의 `public/ledger-snapshot.json`(6월 11일 데이터)도 제거했다. 이제 Blob이 비어 있으면 `/api/ledger-snapshot`은 `404 snapshot not found`를 반환한다. 아래 Blob 경로로 되돌려야 하면 Supabase 내보내기(`scripts/export-ledger-from-supabase.mjs`)를 `npm run publish:team`으로 다시 게시해야 한다. `publish:team`은 `public/ledger-snapshot.json`을 만들지만 `.gitignore` 대상이므로 개인정보(카드 끝자리·참석자) 보호를 위해 커밋하지 않는다.
 
 ### 문서와 실제 동작의 차이 (정정)
 아래 "Blob 경로" 설명은 "약 1초 후 자동 게시"라고 적혀 있었지만, 자동 게시는 관리자 세션이 없거나(`not-allowed`) Blob 설정이 없으면(`not-configured`) **오류를 알리지 않고 멈춘다**. 그래서 실제로는 「지금 조회에 반영」을 눌러야 하는 것처럼 동작했고, 반영을 놓치면 조회 화면에서 누락됐다. 조회 화면 자동 새로고침(8초)도 현재는 꺼져 있다(`pollMs: 0`, 수동 「조회 데이터 새로고침」).
