@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-10-25
+
+### [신규] feat(ai-office): 관리자 전용 AI 사무실 메뉴 추가
+
+- 관리자 메뉴에 「AI 사무실」 추가 — 일지 현황을 캐릭터로 확인
+- PR #219: https://github.com/cxr542/edu-team-tms/pull/219
+
 ## 2026-10-23
 
 ### [문서] docs(supabase): record the glossary anon write lockdown (applied to production)
