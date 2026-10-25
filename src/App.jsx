@@ -77,6 +77,7 @@ import CompetencyPage from './pages/CompetencyPage';
 import KpiApprovePage from './pages/KpiApprovePage';
 import KpiReportPage from './pages/KpiReportPage';
 import KanbanPage from './pages/KanbanPage';
+import AiOfficePage from './pages/AiOfficePage';
 import { useTeamAccess } from './hooks/useTeamAccess';
 import ReferenceDocsPage from './pages/ReferenceDocsPage';
 import AcademizerPage from './pages/AcademizerPage';
@@ -1021,6 +1022,7 @@ export default function App() {
           {displayModule === 'journal' && <WeeklyJournalPage readOnly={false} />}
           {displayModule === 'competency' && <CompetencyPage />}
           {displayModule === 'kanban' && <KanbanPage />}
+          {displayModule === 'ai-office' && <AiOfficePage />}
           {displayModule === 'kpi' && <TeamKpiPage />}
           {displayModule === 'kpi-approve' && (
             <KpiApprovePage readOnly={isViewer && displayModule !== 'kpi-approve'} />
