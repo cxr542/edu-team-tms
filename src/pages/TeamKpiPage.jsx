@@ -75,6 +75,7 @@ import {
   IMPROVE_PROJECTS_MERGE_POLICY_HINT,
   IMPROVE_PROJECTS_SHARE_HINT,
 } from '../utils/improveProjectsCloudSnapshot';
+import { readKpiDeepLinkFromUrl } from '../utils/kpiDeepLink';
 import './TeamKpiPage.css';
 
 const TABS = [
@@ -91,6 +92,9 @@ const TABS = [
   { id: 'export', label: '보내기', hint: 'Excel·클립보드·스냅샷' },
 ];
 
+/** AI 사무실 등에서 ?kpiTab=·?kpiMember= 로 열면 그 탭·구성원으로 시작 */
+const readKpiDeepLink = () => readKpiDeepLinkFromUrl(TABS.map((t) => t.id));
+
 function formatPct(n) {
   if (n == null || Number.isNaN(n)) return '—';
   return `${n.toFixed(1)}%`;
@@ -106,7 +110,7 @@ export default function TeamKpiPage() {
   const teamAccess = useTeamAccess();
   const { year, month, changeMonth } = useJournalPeriod();
   const journal = useJournal();
-  const [memberCode, setMemberCode] = useState(TEAM_LEADER_MEMBER_CODE);
+  const [memberCode, setMemberCode] = useState(() => readKpiDeepLink().member);
   const { improveProjects, improveProjectsApi, kpiOperational, getMemberDays } = journal;
   const cloudHealthMessage = getCloudHealthUserMessage();
   const improveProjectsFileInputRef = useRef(null);
@@ -134,7 +138,7 @@ export default function TeamKpiPage() {
   );
   const monthly01Stored = journal.getMonthly01(year, month, memberCode);
   const monthly01Form = monthly01Stored ?? defaultMonthly01();
-  const [tab, setTab] = useState('overview');
+  const [tab, setTab] = useState(() => readKpiDeepLink().tab);
   const [toast, setToast] = useState('');
   const [newProjectName, setNewProjectName] = useState('');
   const quarterRec = journal.getQuarterRecord(year, month, memberCode);
