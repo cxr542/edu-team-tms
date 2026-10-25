@@ -8,7 +8,7 @@ import {
 } from '../utils/appRoute';
 import { applyTeamAccessToUrl } from './useTeamAccess';
 
-const KPI_MODULES = new Set(['journal', 'competency', 'kpi', 'kpi-approve', 'kpi-report', 'kanban']);
+const KPI_MODULES = new Set(['journal', 'competency', 'kpi', 'kpi-approve', 'kpi-report', 'kanban', 'ai-office']);
 
 export function getModuleFromUrl() {
   if (typeof window === 'undefined') return 'ledger';

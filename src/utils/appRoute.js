@@ -33,6 +33,7 @@ const APP_MODULES = new Set([
   'journal',
   'competency',
   'kanban',
+  'ai-office',
   'kpi',
   'kpi-approve',
   'kpi-report',

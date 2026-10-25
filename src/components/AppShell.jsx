@@ -27,6 +27,7 @@ import {
   Sparkles,
   User,
   Trello,
+  Crown,
 } from 'lucide-react';
 import LeaderKpiApprovalBell from './LeaderKpiApprovalBell';
 import { useLeaderKpiPendingBadge } from '../hooks/useLeaderKpiPendingBadge';
@@ -306,6 +307,7 @@ export default function AppShell({
                       {navBtn('lunch', UtensilsCrossed)}
                       {navBtn('lecture-journal', GraduationCap)}
                       {navBtn('kanban', Trello)}
+                      {navBtn('ai-office', Crown)}
                     </NavGroup>
                   )}
                   {showTeamCommonNav && (
