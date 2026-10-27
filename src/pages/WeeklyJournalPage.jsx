@@ -49,8 +49,9 @@ import {
   validateKpi2EffectEdit,
 } from '../utils/journalTaskFields';
 import {
-  hasSavedCollapsedWeekKeys,
+  isCollapseAutoManaged,
   loadCollapsedWeekKeys,
+  saveCollapseSource,
   saveCollapsedWeekKeys,
 } from '../utils/journalWeekVisibility';
 import { KPI1_NAME, KPI2_NAME } from '../constants/kpiDisplayNames';
@@ -508,9 +509,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
   }, [year, month]);
 
   const persistCollapsedWeeks = useCallback(
-    (next) => {
+    (next, source = 'user') => {
       setCollapsedWeeks(next);
       saveCollapsedWeekKeys(year, month, next, memberCode);
+      saveCollapseSource(year, month, source, memberCode);
     },
     [year, month, memberCode]
   );
@@ -522,6 +524,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         if (next.has(weekKey)) next.delete(weekKey);
         else next.add(weekKey);
         saveCollapsedWeekKeys(year, month, next, memberCode);
+        saveCollapseSource(year, month, 'user', memberCode);
         return next;
       });
     },
@@ -536,20 +539,21 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     persistCollapsedWeeks(new Set());
   }, [persistCollapsedWeeks]);
 
-  /** 저장된 접기 설정이 없는 달은 입력이 완료된 주차 표를 처음 한 번 자동으로 숨김 */
-  const autoCollapseAppliedRef = useRef('');
+  /**
+   * 직접 접기/펼치기 하지 않은 달은 입력이 완료된 주차 표를 자동으로 숨김.
+   * 클라우드 동기화 등으로 일지 데이터가 늦게 들어와도 다시 계산한다.
+   */
   useEffect(() => {
-    const scopeKey = `${year}-${month}-${memberCode}`;
-    if (autoCollapseAppliedRef.current === scopeKey) return;
-    autoCollapseAppliedRef.current = scopeKey;
-    if (hasSavedCollapsedWeekKeys(year, month, memberCode)) return;
+    if (!isCollapseAutoManaged(year, month, memberCode)) return;
     const done = weeks
       .filter((w) => {
         const st = getWeekCompletionStats(w.days, month, getDay);
         return st.available > 0 && st.shortage <= 0.001;
       })
       .map((w) => w.key);
-    persistCollapsedWeeks(new Set(done));
+    const current = loadCollapsedWeekKeys(year, month, memberCode);
+    if (done.length === current.size && done.every((k) => current.has(k))) return;
+    persistCollapsedWeeks(new Set(done), 'auto');
   }, [year, month, memberCode, weeks, getDay, persistCollapsedWeeks]);
 
   const hiddenWeekCount = collapsedWeeks.size;
