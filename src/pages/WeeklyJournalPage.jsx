@@ -544,13 +544,13 @@ export default function WeeklyJournalPage({ readOnly = false }) {
    * 클라우드 동기화 등으로 일지 데이터가 늦게 들어와도 다시 계산한다.
    */
   useEffect(() => {
-    if (!isCollapseAutoManaged(year, month, memberCode)) return;
     const done = weeks
       .filter((w) => {
         const st = getWeekCompletionStats(w.days, month, getDay);
         return st.available > 0 && st.shortage <= 0.001;
       })
       .map((w) => w.key);
+    if (!isCollapseAutoManaged(year, month, memberCode, new Set(done))) return;
     const current = loadCollapsedWeekKeys(year, month, memberCode);
     if (done.length === current.size && done.every((k) => current.has(k))) return;
     persistCollapsedWeeks(new Set(done), 'auto');
