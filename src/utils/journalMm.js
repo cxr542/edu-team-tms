@@ -141,8 +141,10 @@ export function getWeekCompletionStats(weekDays, month, getDayData) {
   inMonthDays.forEach((d) => {
     const key = dateKey(d.getFullYear(), d.getMonth(), d.getDate());
     const data = getDayData(key);
-    availableSum += getDayAvailableMm(data);
-    loggedSum += sumCompletedDayMm(data);
+    const dayAvailable = getDayAvailableMm(data);
+    availableSum += dayAvailable;
+    // 하루 초과 근무가 다른 날의 부족분을 상쇄하지 않도록 가용을 넘는 실적은 잘라서 합산
+    loggedSum += Math.min(sumCompletedDayMm(data), dayAvailable);
   });
   const available = availableSum;
   const logged = loggedSum;

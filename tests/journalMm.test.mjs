@@ -176,6 +176,39 @@ describe('journalMm logged hours', () => {
   });
 });
 
+describe('getWeekCompletionStats overtime cap', () => {
+  it('하루 초과 실적은 가용(1.0)까지만 반영해 다른 날 부족분을 상쇄하지 않는다', () => {
+    const weekDays = [1, 2, 3, 4, 5].map((d) => new Date(2026, 9, d + 11));
+    const mk = (hours) => ({
+      holiday: false,
+      mm: { work: 0, improve: 0, leave: 0 },
+      tasks: [{ id: `t${hours}`, cat: 'edu', title: '업무', actual: hours, done: true }],
+    });
+    const days = {
+      '2026-10-12': mk(10),
+      '2026-10-13': mk(6),
+      '2026-10-14': mk(8),
+      '2026-10-15': mk(8),
+      '2026-10-16': mk(8),
+    };
+    const stats = getWeekCompletionStats(weekDays, 9, (key) => days[key]);
+    expect(stats.logged).toBeCloseTo(4.75, 4);
+    expect(stats.shortage).toBeCloseTo(0.25, 4);
+  });
+
+  it('초과 근무만 있어도 주차 실적은 가용을 넘지 않는다', () => {
+    const weekDays = [1, 2, 3, 4, 5].map((d) => new Date(2026, 9, d + 11));
+    const day = {
+      holiday: false,
+      mm: { work: 0, improve: 0, leave: 0 },
+      tasks: [{ id: 'x', cat: 'edu', title: '업무', actual: 10, done: true }],
+    };
+    const stats = getWeekCompletionStats(weekDays, 9, () => day);
+    expect(stats.logged).toBeCloseTo(5, 4);
+    expect(stats.shortage).toBe(0);
+  });
+});
+
 describe('getWeeksInMonth week keys', () => {
   it('qualifies week.key with year/month so the same week-index never collides across months', () => {
     const june = getWeeksInMonth(2026, 5); // June
