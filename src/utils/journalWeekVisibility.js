@@ -56,9 +56,10 @@ export function saveCollapseSource(year, monthIndex, source, memberCode = 'A') {
  * 완료 주차 자동 숨김이 접기 상태를 소유하는지 판단.
  * - 저장값 없음 → 자동 대상
  * - 출처가 'auto' → 데이터 변화(클라우드 동기화 등)에 맞춰 재계산
- * - 출처 기록이 없는 구버전 빈 저장값([]) → 사용자가 접은 적이 없으므로 자동 대상
+ * - 출처 기록이 없는 구버전 저장값은 자동 저장분일 수 있으므로, 비어 있거나 현재 완료 주차의
+ *   부분집합이면 자동 대상 (완료되지 않은 주차를 접어 둔 경우만 사용자 설정으로 존중)
  */
-export function isCollapseAutoManaged(year, monthIndex, memberCode = 'A') {
+export function isCollapseAutoManaged(year, monthIndex, memberCode = 'A', doneKeys = new Set()) {
   try {
     const key = monthKey(year, monthIndex, memberCode);
     const raw = localStorage.getItem(JOURNAL_WEEK_COLLAPSE_KEY);
@@ -67,7 +68,7 @@ export function isCollapseAutoManaged(year, monthIndex, memberCode = 'A') {
     const source = loadSourceMap()[key];
     if (source === 'auto') return true;
     if (source === 'user') return false;
-    return saved.length === 0;
+    return saved.every((k) => doneKeys.has(k));
   } catch {
     return false;
   }
