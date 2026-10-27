@@ -7,6 +7,11 @@
 
 ## 2026-10-27
 
+### [수정] fix(journal): 주차 완료 M/D 합산 시 하루 실적을 가용으로 제한
+
+- fix(journal): 주차 완료 M/D 합산 시 하루 실적을 가용으로 제한
+- PR #223: https://github.com/cxr542/edu-team-tms/pull/223
+
 ### [수정] fix(journal): 구버전 저장값이 있어도 완료 주차 자동 숨김 복구
 
 - fix(journal): 구버전 저장값이 있어도 완료 주차 자동 숨김 복구
