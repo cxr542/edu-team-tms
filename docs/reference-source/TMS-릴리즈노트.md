@@ -7,6 +7,11 @@
 
 ## 2026-10-27
 
+### [수정] fix(journal): 구버전 저장값이 있어도 완료 주차 자동 숨김 복구
+
+- fix(journal): 구버전 저장값이 있어도 완료 주차 자동 숨김 복구
+- PR #222: https://github.com/cxr542/edu-team-tms/pull/222
+
 ### [수정] fix(journal): 완료 주차 자동 숨김을 데이터 로드 후에도 재계산
 
 - fix(journal): 완료 주차 자동 숨김을 데이터 로드 후에도 재계산
