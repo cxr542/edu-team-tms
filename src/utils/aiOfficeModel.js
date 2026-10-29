@@ -11,14 +11,10 @@ export const BLOCKED_RATE = 0.7;
 
 export const ADMIN_AGENT_ID = 'admin';
 
-/** 캐릭터 종류(화면 연출용, 사용자가 지정). 바꾸려면 여기만 고치면 된다. */
-export const CHARACTER_KIND = {
-  A: 'prince',
-  B: 'prince',
-  C: 'princess',
-  [ADMIN_AGENT_ID]: 'wizard',
-};
-export const KIND_TITLE = { prince: '왕자', princess: '공주', wizard: '대마법사' };
+/** 캐릭터는 모두 햄스터. 관리자(/admin 권한)만 이장님, 나머지는 주민으로 보인다. */
+export const CHARACTER_KIND = { [ADMIN_AGENT_ID]: 'mayor' };
+export const DEFAULT_KIND = 'villager';
+export const KIND_TITLE = { mayor: '이장님', villager: '주민' };
 
 const pad = (n) => String(n).padStart(2, '0');
 
@@ -92,7 +88,7 @@ export function buildAiOfficeAgents(memberJournals, { today = toDateKey(), admin
       id: member.code,
       name: member.displayName,
       role: member.role,
-      kind: CHARACTER_KIND[member.code] || 'princess',
+      kind: CHARACTER_KIND[member.code] || DEFAULT_KIND,
       room: '교육팀',
       status,
       task: describeMember(stats, status),

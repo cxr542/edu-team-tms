@@ -186,16 +186,16 @@ describe('timeOfDay', () => {
   });
 });
 
-describe('kingdom characters', () => {
-  it('gives every agent a kind from the configured mapping', () => {
+describe('hamster villagers', () => {
+  it('makes the admin the mayor and everyone else a villager', () => {
     const agents = buildAiOfficeAgents(journals, { today: '2026-06-11' });
     expect(Object.fromEntries(agents.map((a) => [a.id, a.kind]))).toEqual({
-      admin: 'wizard',
-      A: 'prince',
-      B: 'prince',
-      C: 'princess',
+      admin: 'mayor',
+      A: 'villager',
+      B: 'villager',
+      C: 'villager',
     });
-    expect(Object.keys(CHARACTER_KIND)).toEqual(['A', 'B', 'C', 'admin']);
+    expect(Object.keys(CHARACTER_KIND)).toEqual(['admin']);
     agents.forEach((a) => expect(KIND_TITLE[a.kind]).toBeTruthy());
   });
 });

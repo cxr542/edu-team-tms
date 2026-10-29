@@ -21,43 +21,24 @@ import {
 } from '../utils/aiOfficeModel';
 import './AiOfficePage.css';
 
-const GOWN = { 작업중: '#ef6fa4', 생각중: '#6fa8ef', 대기: '#b8a9d0', 막힘: '#d6455d' };
-const HAIR = ['#f4d06f', '#6b3f2a', '#1b1b1f', '#b5481f', '#e8e4d8'];
-const BADGE = { 작업중: '✨', 생각중: '💭', 대기: '💤', 막힘: '🚨' };
-const PUFF_COLORS = ['#f7c948', '#f6a6cf', '#c9b3ff', '#fff3a0'];
+const STATUS_COLOR = { 작업중: '#f59e42', 생각중: '#5aa9e6', 대기: '#a9bfa0', 막힘: '#d6455d' };
+const FUR = ['#e8b86d', '#f3e6cf', '#b9b4ad', '#c98f5a'];
+const BADGE = { 작업중: '🌰', 생각중: '💭', 대기: '💤', 막힘: '🚨' };
+const PUFF_COLORS = ['#6fbf73', '#ffd166', '#f59e42', '#fff3a0'];
+const PUFF_GLYPHS = ['🍃', '✦', '🌰'];
 const RESCUE_MS = 2500;
 const BURST_MS = 1400;
 
-/** 14x16 도트 스프라이트. T 왕관·티아라 J 보석 H 머리·모자 S 피부 E 눈 M 입 G 옷 B 허리띠 D 밑단 C 망토 W 수염 */
-const SPRITES = {
-  princess: {
-    eyeRow: 5,
-    rows: [
-      '......JJ......', '....TTTTTT....', '...HHHHHHHH...', '..HHHHHHHHHH..',
-      '..HHSSSSSSHH..', '..HSSESSESSH..', '..HSSESSESSH..', '..HSSSMMSSSH..',
-      '..HHSSSSSSHH..', '..HH.SSSS.HH..', '..HGGGGGGGGH..', '...GGGBBGGG...',
-      '..GGGGGGGGGG..', '.GGGGGGGGGGGG.', 'GGGGGGGGGGGGGG', 'DDDDDDDDDDDDDD',
-    ],
-  },
-  prince: {
-    eyeRow: 5,
-    rows: [
-      '....T.TT.T....', '....TTJJTT....', '...HHHHHHHH...', '..HHHHHHHHHH..',
-      '..HHSSSSSSHH..', '..HSSESSESSH..', '..HSSESSESSH..', '..HSSSMMSSSH..',
-      '...HSSSSSSH...', '..CC.SSSS.CC..', '.CCGGGGGGGGCC.', '.CCGGGBBGGGCC.',
-      '.CCGGGGGGGGCC.', '.CCGGGGGGGGCC.', '..CGGG..GGGC..', '...KKK..KKK...',
-    ],
-  },
-  wizard: {
-    eyeRow: 6,
-    rows: [
-      '......HH......', '.....HHHH.....', '....HHHHHH....', '...HHHHHHHH...',
-      '.HHHHHHHHHHHH.', '...SSSSSSSS...', '...SSESSESS...', '...SSSSSSSS...',
-      '...WWSMMSWW...', '..WWWWWWWWWW..', '..GWWWWWWWWG..', '.GGGWWWWWWGGG.',
-      '.GGGGWWWWGGGG.', '.GGGGGBBGGGGG.', 'GGGGGGGGGGGGGG', 'DDDDDDDDDDDDDD',
-    ],
-  },
-};
+/** 14x16 도트 햄스터. F 털 L 밝은 배·볼 P 분홍 귀·볼 N 코 E 눈 G 조끼 T 이장님 새싹 K 발 */
+const HAMSTER = [
+  '..FF......FF..', '.FPPF....FPPF.', '.FFFFFFFFFFFF.', 'FFFFFFFFFFFFFF',
+  'FFFEFFFFFFEFFF', 'FFFEFFFFFFEFFF', 'FFPPLLNNLLPPFF', 'FFLLLLLLLLLLFF',
+  '.FFLLLLLLLLFF.', '..FGGGGGGGGF..', '.FFGGGGGGGGFF.', '.FFGGGLLGGGFF.',
+  '..FGGLLLLGGF..', '..FGGGGGGGGF..', '..FFF....FFF..', '..KKK....KKK..',
+];
+const MAYOR = ['..FF..TT..FF..', '.FPPF.TT.FPPF.', ...HAMSTER.slice(2)];
+const SPRITES = { villager: HAMSTER, mayor: MAYOR };
+const EYE_ROW = 4;
 
 function darken(hex, f = 0.7) {
   const n = parseInt(hex.slice(1), 16);
@@ -65,22 +46,20 @@ function darken(hex, f = 0.7) {
   return `#${c.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
 }
 
-function Sprite({ status, hairIndex, kind = 'princess' }) {
-  const gown = GOWN[status] || GOWN.대기;
-  const { rows, eyeRow } = SPRITES[kind] || SPRITES.princess;
+function Sprite({ status, furIndex, kind = 'villager' }) {
+  const vest = STATUS_COLOR[status] || STATUS_COLOR.대기;
+  const rows = SPRITES[kind] || HAMSTER;
   const colors = {
-    T: '#f7c948', J: kind === 'prince' ? '#e0334b' : '#5ad1e6',
-    H: kind === 'wizard' ? '#4b3fa3' : HAIR[hairIndex % HAIR.length],
-    S: '#fbd5b5', E: '#2a1b3d', M: '#d6455d', G: gown, B: '#f7c948', D: darken(gown),
-    C: '#a02a3c', W: '#f2f2f2', K: '#2a1b3d',
+    F: FUR[furIndex % FUR.length], L: '#fff4df', P: '#f4a3b5', N: '#e0788f', E: '#2a1b3d',
+    G: vest, T: '#5bb85d', K: '#5a3b2a',
   };
   const rects = [];
   rows.forEach((row, y) => {
     [...row].forEach((c, x) => {
       if (c === '.') return;
       let fill = colors[c];
-      if (c === 'E' && y === eyeRow && status === '대기') fill = colors.S;
-      if (c === 'E' && y === eyeRow && status === '작업중') fill = '#2a8fd6';
+      if (c === 'E' && y === EYE_ROW && status === '대기') fill = colors.F;
+      if (c === 'E' && status === '작업중') fill = '#1f6fb5';
       rects.push(<rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill={fill} />);
     });
   });
@@ -111,7 +90,7 @@ function Puffs() {
   );
   return puffs.map(({ i, style }) => (
     <span key={i} className="ai-office__puff" style={style}>
-      {i % 3 ? '✦' : '✧'}
+      {PUFF_GLYPHS[i % PUFF_GLYPHS.length]}
     </span>
   ));
 }
@@ -146,7 +125,7 @@ function WeeklyChart({ rows }) {
               width={band * 0.7}
               height={H - m.b - y(r.tasks)}
               rx="6"
-              fill={r.tasks === peak ? '#ef6fa4' : '#cfc6dc'}
+              fill={r.tasks === peak ? '#6fbf73' : '#d9d3c0'}
             >
               <title>{`${Number(mo)}/${Number(da)} 주 · ${r.tasks}건`}</title>
             </rect>
@@ -164,7 +143,7 @@ const pct = (v) => `${Math.round(v * 100)}%`;
 const pctValue = (v) => (v == null ? '—' : `${Math.round(v * 10) / 10}%`);
 const mm = (v) => (Math.round(v * 100) / 100).toLocaleString();
 
-const MONTH_COLORS = { done: '#ef6fa4', open: '#d6455d', planned: '#cfc6dc' };
+const MONTH_COLORS = { done: '#6fbf73', open: '#d6455d', planned: '#d9d3c0' };
 
 function MonthlyChart({ rows, selected, onSelect }) {
   const W = 460;
@@ -211,47 +190,52 @@ function MonthlyChart({ rows, selected, onSelect }) {
   );
 }
 
-/** 왕국 전경: 성 실루엣과 깃발. 하늘 색은 시간대를 따라 바뀐다. */
-function CastleBanner({ tod, flags }) {
-  const towers = [
-    { x: 40, w: 46, h: 70 }, { x: 110, w: 60, h: 92 }, { x: 250, w: 100, h: 112 },
-    { x: 440, w: 60, h: 92 }, { x: 520, w: 46, h: 70 },
+/** 마을 전경: 언덕·나무·집. 하늘 색과 창문 불빛은 시간대를 따라 바뀐다. */
+function VillageBanner({ tod }) {
+  const trees = [{ x: 30, y: 96, r: 16 }, { x: 70, y: 100, r: 12 }, { x: 330, y: 98, r: 15 }, { x: 560, y: 96, r: 17 }];
+  const houses = [
+    { x: 130, w: 54, roof: '#e07a5f' },
+    { x: 230, w: 66, roof: '#6fbf73' },
+    { x: 400, w: 58, roof: '#5aa9e6' },
+    { x: 480, w: 44, roof: '#f2b134' },
   ];
   return (
-    <svg className="ai-office__castle" data-time={tod} viewBox="0 0 600 130" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <svg className="ai-office__village" data-time={tod} viewBox="0 0 600 130" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
       <defs>
-        <linearGradient id="ai-office-castle-sky" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id="ai-office-village-sky" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" className="ai-office__sky-top" />
           <stop offset="1" className="ai-office__sky-bottom" />
         </linearGradient>
       </defs>
-      <rect width="600" height="130" fill="url(#ai-office-castle-sky)" />
-      {towers.map((tw, i) => (
-        <g key={tw.x}>
-          <rect x={tw.x} y={130 - tw.h} width={tw.w} height={tw.h} className="ai-office__castle-wall" />
-          {Array.from({ length: Math.floor(tw.w / 14) }, (_, k) => (
-            <rect key={k} x={tw.x + k * 14 + 1} y={130 - tw.h - 8} width="9" height="8" className="ai-office__castle-wall" />
-          ))}
-          <rect x={tw.x + tw.w / 2 - 5} y={130 - tw.h * 0.55} width="10" height="16" rx="5" className="ai-office__castle-door" />
-          {i < flags && (
-            <g>
-              <rect x={tw.x + tw.w / 2 - 1} y={130 - tw.h - 34} width="2" height="26" fill="#6b4a2f" />
-              <path d={`M${tw.x + tw.w / 2 + 1} ${130 - tw.h - 34} l18 6 l-18 6 z`} fill="#d6455d" />
-            </g>
-          )}
+      <rect width="600" height="130" fill="url(#ai-office-village-sky)" />
+      <ellipse cx="110" cy="26" rx="26" ry="9" className="ai-office__v-cloud" />
+      <ellipse cx="128" cy="22" rx="16" ry="8" className="ai-office__v-cloud" />
+      <ellipse cx="430" cy="34" rx="30" ry="9" className="ai-office__v-cloud" />
+      <ellipse cx="300" cy="150" rx="420" ry="62" className="ai-office__v-hill is-back" />
+      <ellipse cx="120" cy="156" rx="300" ry="56" className="ai-office__v-hill" />
+      {houses.map((h) => (
+        <g key={h.x}>
+          <rect x={h.x} y={86} width={h.w} height={34} className="ai-office__v-wall" />
+          <path d={`M${h.x - 6} 88 L${h.x + h.w / 2} 62 L${h.x + h.w + 6} 88 Z`} fill={h.roof} />
+          <rect x={h.x + h.w / 2 - 6} y={100} width="12" height="20" rx="6" className="ai-office__v-door" />
+          <rect x={h.x + 7} y={94} width="9" height="9" rx="2" className="ai-office__v-window" />
         </g>
       ))}
-      <rect x="0" y="122" width="600" height="8" className="ai-office__castle-ground" />
+      {trees.map((tr) => (
+        <g key={tr.x}>
+          <rect x={tr.x - 2.5} y={tr.y} width="5" height={24} className="ai-office__v-trunk" />
+          <circle cx={tr.x} cy={tr.y - 2} r={tr.r} className="ai-office__v-leaf" />
+        </g>
+      ))}
+      <rect x="0" y="120" width="600" height="10" className="ai-office__v-ground" />
     </svg>
   );
 }
 
-const ROOM_TITLE = { 교육팀: '🏰 왕궁 · 교육팀', 관리실: '🔮 마법사의 탑 · 관리실' };
-const ROOM_THEME = { 교육팀: 'palace', 관리실: 'tower' };
 const TIME_LABEL = { day: '☀️ 낮', dusk: '🌇 저녁', night: '🌙 밤' };
 
-const SEAT_X = 6;
-const SEAT_Y = 5.2;
+const SEAT_X = 6.4;
+const SEAT_Y = 6;
 const PAD = 2.4;
 
 /** 윗면·앞면·옆면이 있는 상자. 크기는 --u 단위(숫자)로 받는다. */
@@ -269,11 +253,46 @@ function Box({ w, d, h, x = 0, y = 0, className = '', down = false, children }) 
   );
 }
 
-/** 방 하나를 아이소메트릭 3D 무대로 그린다. 캐릭터는 책상 뒤에 서 있고, 마우스를 움직이면 시점이 살짝 돌아간다. */
-function RoomStage({ list, startIndex, tod, theme, pick, bursting, dispatched, finished, activeHelpers, doneHelpers }) {
-  const cols = Math.min(list.length, 3);
-  const rows = Math.ceil(list.length / cols);
+const SNACKS = ['🍪', '🍫', '🍩', '🍬', '🥐'];
+
+/** 사무실 바닥 크기(--u 단위)와 구역별 자리 배치. 방 이름이 같은 구성원은 같은 구역에 줄지어 앉는다. */
+const OFFICE_W = 44;
+const OFFICE_D = 22;
+const ZONES = {
+  교육팀: { x: 4.4, y: 4.6, perRow: 3 },
+  관리실: { x: 33.6, y: 4.6, perRow: 1 },
+};
+
+function seatPositions(agents) {
+  const used = {};
+  const seats = agents.map((a) => {
+    const key = ZONES[a.room] ? a.room : '교육팀';
+    const zone = ZONES[key];
+    const n = (used[key] = (used[key] ?? -1) + 1);
+    const col = n % zone.perRow;
+    const row = Math.floor(n / zone.perRow);
+    return { a, key, col, row, x: zone.x + col * SEAT_X, y: zone.y + row * SEAT_Y };
+  });
+  const taken = new Set(seats.map((s) => `${s.key}-${s.row}-${s.col}`));
+  return seats.map((s) => ({ ...s, last: !taken.has(`${s.key}-${s.row}-${s.col + 1}`) }));
+}
+
+const u = (n) => `calc(${n} * var(--u))`;
+
+/** 바닥에 깔리는 평평한 구역(러그·타일). 좌표와 크기는 --u 단위. */
+function Zone({ x, y, w, d, className }) {
+  return <span className={`ai-office__zone ${className}`} style={{ left: u(x), top: u(y), width: u(w), height: u(d) }} />;
+}
+
+/**
+ * 사무실 하나를 아이소메트릭 3D 무대로 그린다. 교육팀·이장님 자리, 휴게 공간, 간식창고가 한 바닥에 이어지고,
+ * 마우스를 움직이면 시점이 살짝 돌아간다. 간식창고의 아이스크림 냉장고는 눌러서 열고 닫는다(꾸밈용).
+ */
+function Office({ agents, tod, pick, bursting, dispatched, finished, activeHelpers, doneHelpers }) {
   const stageRef = useRef(null);
+  const [fridgeOpen, setFridgeOpen] = useState(false);
+  const toggleFridge = () => setFridgeOpen((v) => !v);
+  const seats = useMemo(() => seatPositions(agents), [agents]);
 
   const onMove = (e) => {
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
@@ -289,91 +308,170 @@ function RoomStage({ list, startIndex, tod, theme, pick, bursting, dispatched, f
     stageRef.current?.style.setProperty('--rz', '-45deg');
   };
 
+  const groups = [...new Set(agents.map((a) => (ZONES[a.room] ? a.room : '교육팀')))];
+
   return (
     <>
       <div
         ref={stageRef}
         className="ai-office__stage"
         data-time={tod}
-        data-theme={theme}
-        style={{ '--cols': cols, '--rows': rows }}
+        style={{ '--pw': OFFICE_W, '--pd': OFFICE_D }}
         onMouseMove={onMove}
         onMouseLeave={onLeave}
       >
         <div className="ai-office__plane">
-          <Box w="calc(var(--cols) * 6 + 4.8)" d="calc(var(--rows) * 5.2 + 4.8)" h="1.2" down className="is-floor" />
-          {theme === 'palace' ? <span className="ai-office__carpet" /> : <span className="ai-office__rune" />}
+          <Box w={OFFICE_W} d={OFFICE_D} h="1.2" down className="is-floor" />
+
+          {/* 바닥 구역 */}
+          <Zone x={2} y={3} w={23} d={9.6} className="is-rug is-warm" />
+          <Zone x={30.6} y={2.8} w={11} d={9} className="is-rug is-green" />
+          <Zone x={3} y={13.4} w={17} d={7.4} className="is-rug is-blue" />
+          <Zone x={28.6} y={12} w={15.4} d={10} className="is-tiles" />
+
+          {/* 벽 */}
           <div className="ai-office__wall is-back">
-            <span className="ai-office__window" style={{ left: '12%' }} />
-            {theme === 'palace' && <span className="ai-office__banner" style={{ left: '44%' }}>♛</span>}
-            <span className="ai-office__window" style={{ left: '62%' }} />
+            {[3, 15, 27, 63, 75, 87].map((l) => (
+              <span key={l} className="ai-office__window" style={{ left: `${l}%`, width: '9%' }} />
+            ))}
+            <span className="ai-office__wallitem" style={{ left: '46%' }}>🕰️</span>
+            <span className="ai-office__wallitem" style={{ left: '52%' }}>🖼️</span>
+            <span className="ai-office__wallsign" style={{ left: '8%' }}>🏡 교육팀</span>
+            <span className="ai-office__wallsign" style={{ left: '73%' }}>🌳 이장님 자리</span>
           </div>
           <div className="ai-office__wall is-right">
-            <span className="ai-office__window" style={{ left: '30%' }} />
+            <span className="ai-office__window" style={{ left: '6%', width: '16%' }} />
+            <span className="ai-office__window" style={{ left: '28%', width: '16%' }} />
+            <span className="ai-office__wallsign" style={{ left: '60%' }}>🍪 간식창고</span>
           </div>
-          {list.map((a, i) => {
-            const col = i % cols;
-            const row = Math.floor(i / cols);
-            return (
-              <div
-                key={a.id}
-                className="ai-office__seat"
-                data-s={a.status}
-                style={{
-                  left: `calc(${PAD + (col + 0.5) * SEAT_X} * var(--u))`,
-                  top: `calc(${PAD + (row + 0.5) * SEAT_Y} * var(--u))`,
-                }}
-              >
-                <Box w="5" d="2.4" h="1.7" x={-2.5} y={0.5} className="is-desk" />
-                <div className="ai-office__monitor">
+          {/* 교육팀과 이장님 자리 사이의 유리 칸막이 */}
+          <span className="ai-office__partition is-side is-glass" style={{ left: u(28.4), top: u(0), height: u(10.6) }} />
+
+          {/* 구성원 자리 */}
+          {seats.map(({ a, x, y, col, last }, i) => (
+            <div
+              key={a.id}
+              className="ai-office__seat"
+              data-s={a.status}
+              style={{ left: u(x), top: u(y) }}
+            >
+              <span className="ai-office__pool" />
+              <span className="ai-office__partition is-back" />
+              <span className="ai-office__partition is-side is-left" />
+              {last && <span className="ai-office__partition is-side is-right" />}
+              <Box w="5" d="2.4" h="1.7" x={-2.5} y={0.5} className="is-desk" />
+              {[-1, 0, 1].map((k) => (
+                <div key={k} className="ai-office__monitor" style={{ '--mx': k }}>
                   <span className="ai-office__screen" />
                 </div>
-                <button
-                  type="button"
-                  className="ai-office__pawn"
-                  aria-label={`${a.name} 상세 보기`}
-                  onClick={() => pick(a.id)}
-                >
-                  <span className="ai-office__nameplate">
-                    <b>{a.name}</b>
-                    <span className="ai-office__title">{KIND_TITLE[a.kind]}</span>
-                    <span className="ai-office__status" style={{ '--s': GOWN[a.status] }}>{a.status}</span>
-                    {dispatched.has(a.id) && (
-                      <span className="ai-office__tag">{finished.has(a.id) ? '✨ 구조 완료' : '💖 구조 중'}</span>
-                    )}
-                    {activeHelpers.has(a.id) && (
-                      <span className="ai-office__tag">{doneHelpers.has(a.id) ? '🌟 임무 완료' : '🏃 출동 중'}</span>
-                    )}
-                  </span>
-                  <span className="ai-office__bot">
-                    <Sprite status={a.status} hairIndex={startIndex + i} kind={a.kind} />
-                    <span className="ai-office__badge">{BADGE[a.status]}</span>
-                    {a.status === '작업중' && (
-                      <>
-                        <span className="ai-office__spk ai-office__spk--a">✦</span>
-                        <span className="ai-office__spk ai-office__spk--b">✦</span>
-                      </>
-                    )}
-                    {bursting.has(a.id) && <Puffs />}
-                  </span>
-                </button>
-              </div>
-            );
-          })}
+              ))}
+              <span className="ai-office__lamp" />
+              <button
+                type="button"
+                className="ai-office__pawn"
+                aria-label={`${a.name} 상세 보기`}
+                onClick={() => pick(a.id)}
+              >
+                <span className="ai-office__nameplate">
+                  <b>{a.name}</b>
+                  <span className="ai-office__title">{KIND_TITLE[a.kind]}</span>
+                  <span className="ai-office__status" style={{ '--s': STATUS_COLOR[a.status] }}>{a.status}</span>
+                  {dispatched.has(a.id) && (
+                    <span className="ai-office__tag">{finished.has(a.id) ? '✨ 구조 완료' : '💖 구조 중'}</span>
+                  )}
+                  {activeHelpers.has(a.id) && (
+                    <span className="ai-office__tag">{doneHelpers.has(a.id) ? '🌟 임무 완료' : '🏃 출동 중'}</span>
+                  )}
+                </span>
+                <span className="ai-office__bot">
+                  <Sprite status={a.status} furIndex={i} kind={a.kind} />
+                  <span className="ai-office__badge">{BADGE[a.status]}</span>
+                  {a.status === '작업중' && (
+                    <>
+                      <span className="ai-office__spk ai-office__spk--a">✦</span>
+                      <span className="ai-office__spk ai-office__spk--b">✦</span>
+                    </>
+                  )}
+                  {bursting.has(a.id) && <Puffs />}
+                </span>
+              </button>
+            </div>
+          ))}
+
+          {/* 휴게 공간: 소파와 커피 테이블 */}
+          <Box w="7.4" d="0.9" h="2.6" x={5.4} y={18.4} className="is-sofa" />
+          <Box w="7.4" d="2.6" h="1.4" x={5.4} y={19.2} className="is-sofa" />
+          <Box w="3.6" d="2" h="1" x={7.4} y={15} className="is-table" />
+          <span className="ai-office__prop" style={{ left: u(8.4), top: u(16), '--z': 1, '--fs': 1.5 }}>☕</span>
+          <span className="ai-office__prop" style={{ left: u(10.2), top: u(16), '--z': 1, '--fs': 1.5 }}>📚</span>
+          <span className="ai-office__prop" style={{ left: u(9), top: u(21), '--z': 1.4, '--fs': 1.7 }}>🧸</span>
+          <span className="ai-office__prop" style={{ left: u(3.2), top: u(15), '--fs': 2.6 }}>🪴</span>
+          <span className="ai-office__prop" style={{ left: u(19.2), top: u(15), '--fs': 2.6 }}>🪴</span>
+          <span className="ai-office__prop" style={{ left: u(2), top: u(2.6), '--fs': 2.6 }}>🪴</span>
+          <span className="ai-office__prop" style={{ left: u(OFFICE_W - 2.2), top: u(2.6), '--fs': 2.6 }}>📮</span>
+
+          {/* 간식창고: 과자 선반, 테이블, 아이스크림 냉장고 */}
+          <span className="ai-office__pool is-room" style={{ left: u(27), top: u(9.6) }} />
+          <span
+            className={`ai-office__pool is-chill${fridgeOpen ? ' is-open' : ''}`}
+            style={{ left: u(30.4), top: u(11) }}
+          />
+          <Box w="1.8" d="9.2" h="3.2" x={41.8} y={12.2} className="is-shelf" />
+          {SNACKS.map((s, i) => (
+            <span
+              key={s}
+              className="ai-office__prop"
+              style={{ left: u(42.7), top: u(13.4 + i * 1.8), '--z': 3.2, '--fs': 1.9 }}
+            >
+              {s}
+            </span>
+          ))}
+          <Box w="3.4" d="2.4" h="1.6" x={31.2} y={18.4} className="is-table" />
+          <span className="ai-office__prop" style={{ left: u(32.9), top: u(19.6), '--z': 1.6, '--fs': 1.7 }}>🫙</span>
+          <span className="ai-office__prop" style={{ left: u(30), top: u(21), '--fs': 2.2 }}>🧺</span>
+          <span className="ai-office__prop" style={{ left: u(38.4), top: u(21.4), '--fs': 2 }}>🍎</span>
+          <Box w="5" d="3" h="2.4" x={34.6} y={13} className={`is-freezer${fridgeOpen ? ' is-open' : ''}`} />
+          <button
+            type="button"
+            className={`ai-office__prop ai-office__fz${fridgeOpen ? ' is-open' : ''}`}
+            style={{ left: u(37.1), top: u(15.4), '--z': 2.4 }}
+            aria-pressed={fridgeOpen}
+            aria-label="아이스크림 냉장고 열고 닫기"
+            onClick={toggleFridge}
+          >
+            <span className="ai-office__fz-items">{fridgeOpen ? '🍦🍨🍧' : '🍦'}</span>
+            <small>아이스크림 냉장고</small>
+            {fridgeOpen && <span className="ai-office__mist">❄️</span>}
+          </button>
         </div>
       </div>
-      <ul className="ai-office__roster">
-        {list.map((a) => (
-          <li key={a.id}>
-            <button type="button" onClick={() => pick(a.id)}>
-              <i style={{ background: GOWN[a.status] }} />
-              <b>{a.name}</b>
-              <span className="ai-office__muted">{KIND_TITLE[a.kind]} · {a.role} · {a.status}</span>
-              <span className="ai-office__task">{a.task}</span>
+
+      <div className="ai-office__rosters">
+        {groups.map((room) => (
+          <ul key={room} className="ai-office__roster">
+            {agents.filter((a) => (ZONES[a.room] ? a.room : '교육팀') === room).map((a) => (
+              <li key={a.id}>
+                <button type="button" onClick={() => pick(a.id)}>
+                  <i style={{ background: STATUS_COLOR[a.status] }} />
+                  <b>{a.name}</b>
+                  <span className="ai-office__muted">{KIND_TITLE[a.kind]} · {a.role} · {a.status}</span>
+                  <span className="ai-office__task">{a.task}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ))}
+        <ul className="ai-office__roster">
+          <li>
+            <button type="button" aria-pressed={fridgeOpen} onClick={toggleFridge}>
+              <i style={{ background: '#5aa9e6' }} />
+              <b>🍦 아이스크림 냉장고</b>
+              <span className="ai-office__muted">{fridgeOpen ? '열려 있어요' : '닫혀 있어요'}</span>
+              <span className="ai-office__task">간식창고 · 눌러서 열고 닫아 보세요. 햄스터들이 일하다 쉬어 가는 곳이에요.</span>
             </button>
           </li>
-        ))}
-      </ul>
+        </ul>
+      </div>
     </>
   );
 }
@@ -550,7 +648,7 @@ export default function AiOfficePage() {
   const kingdomRoll = useMemo(() => {
     const n = {};
     agents.forEach((a) => { n[a.kind] = (n[a.kind] || 0) + 1; });
-    return `왕국 구성원: ${Object.entries(KIND_TITLE).filter(([k]) => n[k]).map(([k, label]) => `${label} ${n[k]}`).join(' · ')}`;
+    return `마을 주민: ${Object.entries(KIND_TITLE).filter(([k]) => n[k]).map(([k, label]) => `${label} ${n[k]}`).join(' · ')}`;
   }, [agents]);
   const weekly = useMemo(() => buildWeeklyDone(memberJournals, today), [memberJournals, today]);
   const rescues = useMemo(() => pickRescues(agents), [agents]);
@@ -608,11 +706,6 @@ export default function AiOfficePage() {
     }),
     [go, monthIndex],
   );
-  const rooms = useMemo(() => {
-    const map = new Map();
-    agents.forEach((a) => map.set(a.room, [...(map.get(a.room) || []), a]));
-    return [...map.entries()];
-  }, [agents]);
 
   // 구조 연출은 화면 안에서만 — 일지 데이터나 상태는 바꾸지 않는다
   const [dispatched, setDispatched] = useState(() => new Set());
@@ -653,14 +746,13 @@ export default function AiOfficePage() {
   );
   const doneHelpers = new Set([...finished].map((id) => helperOf.get(id)).filter(Boolean));
 
-  let seat = 0;
   return (
     <div className="ai-office">
       <header className="ai-office__header">
-        <CastleBanner tod={tod} flags={summary.working + 1} />
+        <VillageBanner tod={tod} />
         <h2>
           <Crown size={26} className="ai-office__crown" aria-hidden="true" />
-          AI 사무실 · 왕국
+          AI 사무실 · 햄스터 마을
         </h2>
         <p>
           교육팀 구성원 <b>{summary.headcount}</b>명 중 <b>{summary.working}</b>명이 업무를 진행 중이고,{' '}
@@ -672,7 +764,7 @@ export default function AiOfficePage() {
       <section className={`ai-office__card ai-office__rescue${rescues.length ? '' : ' is-calm'}`} aria-live="polite">
         <h3>🚨 구조 알림</h3>
         {rescues.length === 0 ? (
-          <p className="ai-office__calm">지금은 막힌 구성원이 없어요. 평화로운 왕국이에요 🌸</p>
+          <p className="ai-office__calm">지금은 막힌 구성원이 없어요. 평화로운 마을이에요 🌻</p>
         ) : (
           <div className="ai-office__rescue-list">
             {rescues.map(({ blocked, helper }) => (
@@ -733,37 +825,28 @@ export default function AiOfficePage() {
       )}
 
       <section className="ai-office__card">
-        <h3>왕국 사무실 현황</h3>
-        <p className="ai-office__muted">오늘 일지를 쓰면 드레스가 반짝이고 별가루가 흩날려요. 캐릭터를 누르면 상세가 열려요.</p>
+        <h3>햄스터 마을 현황</h3>
+        <p className="ai-office__muted">오늘 일지를 쓰면 도토리가 반짝이고 햄스터가 신나게 뛰어요. 캐릭터를 누르면 상세가 열려요.</p>
         <div className="ai-office__legend">
-          {Object.entries(GOWN).map(([label, color]) => (
+          {Object.entries(STATUS_COLOR).map(([label, color]) => (
             <span key={label}><i style={{ background: color }} />{label}</span>
           ))}
           <span className="ai-office__clock">{TIME_LABEL[tod]} · {String(now.getHours()).padStart(2, '0')}:{String(now.getMinutes()).padStart(2, '0')} · 마우스를 올리면 시점이 돌아가요</span>
         </div>
         <div className="ai-office__floor">
-          {rooms.map(([room, list]) => {
-            const startIndex = seat;
-            seat += list.length;
-            const theme = ROOM_THEME[room] || 'palace';
-            return (
-              <div key={room} className="ai-office__room" data-theme={theme}>
-                <span className="ai-office__room-name">{ROOM_TITLE[room] || room}</span>
-                <RoomStage
-                  theme={theme}
-                  list={list}
-                  startIndex={startIndex}
-                  tod={tod}
-                  pick={(id) => toggleDetail({ kind: 'member', code: id })}
-                  bursting={bursting}
-                  dispatched={dispatched}
-                  finished={finished}
-                  activeHelpers={activeHelpers}
-                  doneHelpers={doneHelpers}
-                />
-              </div>
-            );
-          })}
+          <div className="ai-office__room">
+            <span className="ai-office__room-name">🏡 햄스터 마을 사무실</span>
+            <Office
+              agents={agents}
+              tod={tod}
+              pick={(id) => toggleDetail({ kind: 'member', code: id })}
+              bursting={bursting}
+              dispatched={dispatched}
+              finished={finished}
+              activeHelpers={activeHelpers}
+              doneHelpers={doneHelpers}
+            />
+          </div>
         </div>
       </section>
 
