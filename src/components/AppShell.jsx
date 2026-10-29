@@ -61,6 +61,7 @@ import { useProjectSidebar } from '../hooks/useProjectSidebar';
 import { canUseCompetencyPilot } from '../hooks/useTeamAccess';
 import { uiTooltip } from '../utils/uiTooltip';
 import NavLabelsModal from './NavLabelsModal';
+import { useNavOrder } from '../hooks/useNavOrder';
 import MobileHomeGuideModal from './MobileHomeGuideModal';
 import AppModuleNavItem from './AppModuleNavItem';
 import { buildAppModuleUrl } from '../hooks/useAppModule';
@@ -89,6 +90,7 @@ export default function AppShell({
   children,
 }) {
   const [navLabelsOpen, setNavLabelsOpen] = useState(false);
+  const { orderOf, moveItem: moveNavItem, resetOrder: resetNavOrder } = useNavOrder();
   const [mobileGuideOpen, setMobileGuideOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [supabaseHealth, setSupabaseHealth] = useState(null);
@@ -171,6 +173,7 @@ export default function AppShell({
     const itemViewer = viewer || isViewer;
     return (
       <AppModuleNavItem
+        key={module}
         module={module}
         label={label}
         icon={Icon}
@@ -189,6 +192,46 @@ export default function AppShell({
   const currentScreenHref = buildAppModuleUrl(activeModule, {
     mode: isViewer ? 'view' : undefined,
   });
+
+  /** 그룹의 저장된 순서대로 메뉴를 그린다. 순서 변경은 관리자 사이드바 그룹에만 적용된다. */
+  const NAV_ITEM_ICONS = {
+    ledger: FileSpreadsheet,
+    announcements: Megaphone,
+    csr: Lightbulb,
+    lunch: UtensilsCrossed,
+    'lecture-journal': GraduationCap,
+    kanban: Trello,
+    'ai-office': Crown,
+    journal: Calendar,
+    competency: Award,
+    academizer: Presentation,
+    'cloud-chatbot': MessageCircle,
+    kpi: BarChart3,
+    'kpi-report': PieChart,
+    'kpi-approve': CheckCircle,
+  };
+  const renderOrdered = (group, badges = {}) =>
+    orderOf(group).map((id) => {
+      if (id === 'competency' && !canUseCompetencyPilotNav) {
+        return (
+          <button
+            key={id}
+            type="button"
+            className="project-nav-item project-nav-item--disabled-preview"
+            aria-disabled="true"
+            title={competencyPreviewMessage}
+            onClick={() => {
+              window.alert(competencyPreviewMessage);
+              onNavSelect();
+            }}
+          >
+            <Award size={18} aria-hidden />
+            <span>{navLabels.competency || '역량 평가'}</span>
+          </button>
+        );
+      }
+      return navBtn(id, NAV_ITEM_ICONS[id], badges[id] ? { badgeCount: badges[id] } : undefined);
+    });
 
   const NavGroup = ({ title, children, className = '' }) => {
     const items = React.Children.toArray(children).filter(Boolean);
@@ -297,17 +340,10 @@ export default function AppShell({
                 <>
                   {showGeneralNav && (
                     <NavGroup title={NAV_GROUP_COMMON}>
-                      {navBtn('ledger', FileSpreadsheet)}
-                      {navBtn('announcements', Megaphone, {
-                        badgeCount: announcementsUnread.count,
+                      {renderOrdered('common', {
+                        announcements: announcementsUnread.count,
+                        csr: csrRequestsUnread.count,
                       })}
-                      {navBtn('csr', Lightbulb, {
-                        badgeCount: csrRequestsUnread.count,
-                      })}
-                      {navBtn('lunch', UtensilsCrossed)}
-                      {navBtn('lecture-journal', GraduationCap)}
-                      {navBtn('kanban', Trello)}
-                      {navBtn('ai-office', Crown)}
                     </NavGroup>
                   )}
                   {showTeamCommonNav && (
@@ -323,38 +359,16 @@ export default function AppShell({
                     </NavGroup>
                   )}
                   {showMemberWorkNav && (
-                    <NavGroup title={NAV_GROUP_MEMBER_WORK}>
-                      {navBtn('journal', Calendar)}
-                      {canUseCompetencyPilotNav ? (
-                        navBtn('competency', Award)
-                      ) : (
-                        <button
-                          type="button"
-                          className="project-nav-item project-nav-item--disabled-preview"
-                          aria-disabled="true"
-                          title={competencyPreviewMessage}
-                          onClick={() => {
-                            window.alert(competencyPreviewMessage);
-                            onNavSelect();
-                          }}
-                        >
-                          <Award size={18} aria-hidden />
-                          <span>{navLabels.competency || '역량 평가'}</span>
-                        </button>
-                      )}
-                    </NavGroup>
+                    <NavGroup title={NAV_GROUP_MEMBER_WORK}>{renderOrdered('memberWork')}</NavGroup>
                   )}
                   {showExperimentalNav && (
                     <NavGroup title={NAV_GROUP_EXPERIMENTAL} className="project-nav-group--experimental">
-                      {navBtn('academizer', Presentation)}
-                      {navBtn('cloud-chatbot', MessageCircle)}
+                      {renderOrdered('experimental')}
                     </NavGroup>
                   )}
                   {showLeaderNav && (
                     <NavGroup title={NAV_GROUP_LEADER_WORK} className="project-nav-group--leader">
-                      {navBtn('kpi', BarChart3)}
-                      {navBtn('kpi-report', PieChart)}
-                      {navBtn('kpi-approve', CheckCircle, { badgeCount: leaderPending.count })}
+                      {renderOrdered('leader', { 'kpi-approve': leaderPending.count })}
                     </NavGroup>
                   )}
                 </>
@@ -438,7 +452,7 @@ export default function AppShell({
                         }}
                       >
                         <Pencil size={14} aria-hidden />
-                        메뉴 이름 변경
+                        메뉴 이름·순서 변경
                       </button>
                     </>
                   )}
@@ -655,8 +669,11 @@ export default function AppShell({
         onSave={onNavLabelSave}
         onReset={() => {
           onNavLabelsReset();
+          resetNavOrder();
           setNavLabelsOpen(false);
         }}
+        orderOf={orderOf}
+        onMove={moveNavItem}
       />
 
       <MobileHomeGuideModal
