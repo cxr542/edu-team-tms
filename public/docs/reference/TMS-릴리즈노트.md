@@ -7,6 +7,11 @@
 
 ## 2026-10-30
 
+### [수정] fix(academizer): 메뉴 화면에서 HTML 허용 + 서버 깨우는 동안 폼 표시
+
+- fix(academizer): 메뉴 화면에서 HTML 허용 + 서버 깨우는 동안 폼 표시
+- PR #227: https://github.com/cxr542/edu-team-tms/pull/227
+
 ### [신규] feat(academizer): HTML 문서 업로드 허용
 
 - feat(academizer): HTML 문서 업로드 허용
