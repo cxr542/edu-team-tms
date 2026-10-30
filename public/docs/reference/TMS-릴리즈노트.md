@@ -7,6 +7,11 @@
 
 ## 2026-10-30
 
+### [신규] feat(academizer): HTML 문서 업로드 허용
+
+- feat(academizer): HTML 문서 업로드 허용
+- PR #226: https://github.com/cxr542/edu-team-tms/pull/226
+
 ### [신규] feat(nav): 사이드바 메뉴 순서 변경 (메뉴 이름·순서 변경)
 
 - 사이드바 메뉴를 묶음 안에서 위·아래로 옮겨 순서를 바꿀 수 있어요 (설정 → 메뉴 이름·순서 변경)
