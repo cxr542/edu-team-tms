@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Loader2, Presentation, RefreshCcw, RotateCcw, Upload } from 'lucide-react';
+import { Loader2, RefreshCcw, RotateCcw } from 'lucide-react';
 import {
   fetchAcademizerHealth,
   postAcademize,
   postWizardPreview,
 } from '../utils/academizerApi.js';
+import { FLOW_STEPS, fileKind, flowCurrent, formatBytes } from '../utils/academizerFlow.js';
 import {
   readSavedSaveMode,
   savePptxBlob,
@@ -38,6 +39,76 @@ function formatElapsed(sec) {
   const m = Math.floor(sec / 60);
   const s = sec % 60;
   return m > 0 ? `${m}분 ${String(s).padStart(2, '0')}초` : `${s}초`;
+}
+
+function FlowStepper({ current }) {
+  return (
+    <ol className="academizer-flow" aria-label="진행 단계">
+      {FLOW_STEPS.map((item, i) => {
+        const state = i < current ? 'is-done' : i === current ? 'is-active' : '';
+        return (
+          <li
+            key={item.label}
+            className={`academizer-flow__step ${state}`}
+            aria-current={i === current ? 'step' : undefined}
+          >
+            <span className="academizer-flow__emoji" aria-hidden>
+              {i < current ? '✅' : item.emoji}
+            </span>
+            {item.label}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+/** Source file -> sparkle -> slide cards; `phase` is ready | working | done. */
+function TransformStage({ file, phase, caption }) {
+  return (
+    <div className={`academizer-stage is-${phase}`}>
+      <div className="academizer-stage__src">
+        <div className="academizer-stage__file">
+          <span className="academizer-stage__kind">{fileKind(file.name)}</span>
+          <span className="academizer-stage__name" title={file.name}>
+            {file.name}
+          </span>
+          <span className="academizer-stage__size">{formatBytes(file.size)}</span>
+        </div>
+        <span className="academizer-stage__line is-head" />
+        <span className="academizer-stage__line" style={{ width: '88%' }} />
+        <span className="academizer-stage__line" style={{ width: '94%' }} />
+        <span className="academizer-stage__line" style={{ width: '72%' }} />
+        <span className="academizer-stage__line" style={{ width: '82%' }} />
+      </div>
+      <div className="academizer-stage__arrow" aria-hidden>
+        <i>›</i>
+        <i>›</i>
+        <i>›</i>
+        <span>{phase === 'done' ? '🎓' : '✨'}</span>
+      </div>
+      <div>
+        <div className="academizer-stage__slides" aria-hidden>
+          <div className="academizer-stage__slide is-cover">
+            <b />
+            <u style={{ width: '60%' }} />
+          </div>
+          <div className="academizer-stage__slide is-divider">
+            <b />
+          </div>
+          <div className="academizer-stage__slide">
+            <b />
+            <u />
+            <u style={{ width: '80%' }} />
+            <u style={{ width: '65%' }} />
+          </div>
+        </div>
+        <p className="academizer-stage__caption" role="status">
+          {caption}
+        </p>
+      </div>
+    </div>
+  );
 }
 
 function BusyProgress({ kind, elapsedSec, saveMode }) {
@@ -326,7 +397,7 @@ export default function AcademizerPage() {
       <header className="academizer-header">
         <div className="academizer-header__brand">
           <span className="academizer-header__icon" aria-hidden>
-            <Presentation size={22} />
+            🎓
           </span>
           <div>
             <h1>PPT 아카데미화</h1>
@@ -392,10 +463,7 @@ export default function AcademizerPage() {
 
       {!unavailableMessage ? (
         <>
-          <div className="academizer-steps" aria-label="단계">
-            <span className={step === 1 ? 'is-active' : ''}>1. 업로드·분석</span>
-            <span className={step === 2 ? 'is-active' : ''}>2. 실행·다운로드</span>
-          </div>
+          <FlowStepper current={flowCurrent({ file, wizardData, step, lastResult })} />
 
           {step === 1 ? (
             <section className="academizer-panel">
@@ -412,15 +480,34 @@ export default function AcademizerPage() {
                   disabled={busy}
                   onChange={(e) => onPickFile(e.target.files?.[0] || null)}
                 />
-                <Upload size={20} aria-hidden />
+                <span className="academizer-drop__emoji" aria-hidden>
+                  {dragActive ? '📥' : '📄'}
+                </span>
                 <span>
                   {dragActive
                     ? '여기에 놓으면 업로드됩니다'
                     : file
-                      ? file.name
-                      : '.pptx 또는 .html 파일을 여기로 끌어다 놓거나 클릭해서 선택하세요'}
+                      ? '다른 파일로 바꾸려면 끌어다 놓거나 클릭하세요'
+                      : '파일을 끌어다 놓거나 클릭해서 선택하세요'}
+                </span>
+                <span className="academizer-drop__chips" aria-hidden>
+                  <span>PPTX</span>
+                  <span>HTML</span>
                 </span>
               </label>
+              {file ? (
+                <TransformStage
+                  file={file}
+                  phase={busy ? 'working' : 'ready'}
+                  caption={
+                    busy
+                      ? '🔍 덱 구조를 읽는 중…'
+                      : selectedCard?.preview?.output_slide_count != null
+                        ? `예상 ${selectedCard.preview.output_slide_count}장 · 아카데미 강의안`
+                        : '분석하면 아카데미 슬라이드로 바뀔 모습을 미리 볼 수 있어요'
+                  }
+                />
+              ) : null}
               {!wizardData && !busy && status ? <p className="academizer-status">{status}</p> : null}
 
               <p className="academizer-caveat">
@@ -522,6 +609,19 @@ export default function AcademizerPage() {
             </section>
           ) : (
             <section className="academizer-panel">
+              {file ? (
+                <TransformStage
+                  file={file}
+                  phase={lastResult ? 'done' : busy ? 'working' : 'ready'}
+                  caption={
+                    lastResult
+                      ? `✅ ${lastResult.slideCount ? `${lastResult.slideCount}장 ` : ''}변환 완료`
+                      : busy
+                        ? `✨ 아카데미 템플릿에 맞추는 중… ${formatElapsed(elapsedSec)}`
+                        : '✨ 변환을 시작하면 원본이 아카데미 슬라이드로 바뀝니다'
+                  }
+                />
+              ) : null}
               <p className="academizer-status">
                 선택: <strong>{selectedCard?.title || selectedProfile}</strong>
                 {file ? ` · ${file.name}` : ''}
