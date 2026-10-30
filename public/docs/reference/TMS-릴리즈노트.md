@@ -7,6 +7,11 @@
 
 ## 2026-10-30
 
+### [신규] feat(academizer): 변환 느낌의 UI 개선 (이모지 스테퍼·변환 연출)
+
+- feat(academizer): 변환 느낌의 UI 개선 (이모지 스테퍼·변환 연출)
+- PR #228: https://github.com/cxr542/edu-team-tms/pull/228
+
 ### [수정] fix(academizer): 메뉴 화면에서 HTML 허용 + 서버 깨우는 동안 폼 표시
 
 - fix(academizer): 메뉴 화면에서 HTML 허용 + 서버 깨우는 동안 폼 표시
