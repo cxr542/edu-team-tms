@@ -73,6 +73,7 @@ function BusyProgress({ kind, elapsedSec, saveMode }) {
 
 export default function AcademizerPage() {
   const [healthLoading, setHealthLoading] = useState(true);
+  const [healthElapsedSec, setHealthElapsedSec] = useState(0);
   const [unavailableMessage, setUnavailableMessage] = useState('');
   const [apiBase, setApiBase] = useState('');
   const [limits, setLimits] = useState({ maxUploadMb: 50, standardMaxSlides: 40, version: '' });
@@ -128,6 +129,15 @@ export default function AcademizerPage() {
     }, 1000);
     return () => window.clearInterval(id);
   }, [busy]);
+
+  useEffect(() => {
+    if (!healthLoading) {
+      setHealthElapsedSec(0);
+      return undefined;
+    }
+    const id = window.setInterval(() => setHealthElapsedSec((n) => n + 1), 1000);
+    return () => window.clearInterval(id);
+  }, [healthLoading]);
 
   const loadHealth = useCallback(async () => {
     setHealthLoading(true);
@@ -196,8 +206,8 @@ export default function AcademizerPage() {
       setFile(null);
       return;
     }
-    if (!/\.pptx$/i.test(next.name)) {
-      setError('PowerPoint(.pptx) 파일만 업로드할 수 있습니다.');
+    if (!/\.(pptx|html?)$/i.test(next.name)) {
+      setError('PowerPoint(.pptx) 또는 HTML(.html) 파일만 업로드할 수 있습니다.');
       setFile(null);
       return;
     }
@@ -321,7 +331,7 @@ export default function AcademizerPage() {
           <div>
             <h1>PPT 아카데미화</h1>
             <p className="academizer-header__tagline">
-              일반·AI .pptx를 OKESTRO 아카데미 강의안 형식으로 변환합니다
+              일반·AI .pptx(또는 정적 .html 문서)를 OKESTRO 아카데미 강의안 형식으로 변환합니다
             </p>
           </div>
         </div>
@@ -373,9 +383,14 @@ export default function AcademizerPage() {
         </div>
       ) : null}
 
-      {healthLoading ? <div className="academizer-empty">상태 확인 중…</div> : null}
+      {healthLoading ? (
+        <div className="academizer-banner" role="status">
+          변환 서버를 깨우는 중입니다… {healthElapsedSec}초 · 한동안 쓰지 않았다면 처음 한 번은 1분 가까이
+          걸릴 수 있습니다. 기다리는 동안 파일을 미리 골라 둘 수 있습니다.
+        </div>
+      ) : null}
 
-      {!healthLoading && !unavailableMessage ? (
+      {!unavailableMessage ? (
         <>
           <div className="academizer-steps" aria-label="단계">
             <span className={step === 1 ? 'is-active' : ''}>1. 업로드·분석</span>
@@ -393,7 +408,7 @@ export default function AcademizerPage() {
               >
                 <input
                   type="file"
-                  accept=".pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                  accept=".pptx,.html,.htm,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/html"
                   disabled={busy}
                   onChange={(e) => onPickFile(e.target.files?.[0] || null)}
                 />
@@ -403,7 +418,7 @@ export default function AcademizerPage() {
                     ? '여기에 놓으면 업로드됩니다'
                     : file
                       ? file.name
-                      : '.pptx 파일을 여기로 끌어다 놓거나 클릭해서 선택하세요'}
+                      : '.pptx 또는 .html 파일을 여기로 끌어다 놓거나 클릭해서 선택하세요'}
                 </span>
               </label>
               {!wizardData && !busy && status ? <p className="academizer-status">{status}</p> : null}
