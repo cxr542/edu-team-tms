@@ -222,4 +222,21 @@ describe('MIG entry and auto-linker', () => {
     expect(keywords.some((k) => k.keyword === 'S&S' && k.slug === 'sns')).toBe(true);
     expect(keywords.some((k) => k.keyword === 'Subscription and Support' && k.slug === 'sns')).toBe(true);
   });
+
+  it('contains Kubernetes scaling and VPA recommendation seed entries', () => {
+    const scale = GLOSSARY_SEED_ENTRIES.find((e) => e.slug === 'scale-in-out-up-down');
+    const vpa = GLOSSARY_SEED_ENTRIES.find((e) => e.slug === 'vpa-recommendation');
+    const hpaTerm = GLOSSARY_SEED_ENTRIES.find((e) => e.slug === 'hpa');
+    const vpaTerm = GLOSSARY_SEED_ENTRIES.find((e) => e.slug === 'vpa');
+    expect(scale).toBeDefined();
+    expect(vpa).toBeDefined();
+    expect(hpaTerm.related).toContain('vpa');
+    expect(vpaTerm.related).toContain('hpa');
+    expect(scale.related).toEqual(expect.arrayContaining(['hpa', 'vpa']));
+    expect(scale.related).toContain('vpa-recommendation');
+    expect(vpa.related).toContain('scale-in-out-up-down');
+    ['target', 'uncappedTarget', 'lowerBound', 'upperBound'].forEach((field) => {
+      expect(vpa.body).toContain(field);
+    });
+  });
 });
