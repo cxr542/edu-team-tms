@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-11-02
+
+### [신규] feat(glossary): Kubernetes HPA/VPA 용어 추가
+
+- feat(glossary): Kubernetes HPA/VPA 용어 추가
+- PR #229: https://github.com/cxr542/edu-team-tms/pull/229
+
 ## 2026-10-30
 
 ### [신규] feat(academizer): 변환 느낌의 UI 개선 (이모지 스테퍼·변환 연출)
