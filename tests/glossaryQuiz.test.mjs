@@ -106,8 +106,8 @@ describe('getEligibleQuizTerms', () => {
   it('filters by subject tag (cloud-101 / ai-101), matching the seed data split', () => {
     const cloud = getEligibleQuizTerms(SEED_TERMS, { subject: 'cloud' });
     const ai = getEligibleQuizTerms(SEED_TERMS, { subject: 'ai' });
-    expect(cloud.map((t) => t.slug).sort()).toEqual(['sns', 'vmware-vcf', 'vmware-vvf']);
-    expect(ai.length).toBe(SEED_TERMS.length - 3);
+    expect(cloud.map((t) => t.slug).sort()).toEqual(['hpa', 'scale-in-out-up-down', 'sns', 'vmware-vcf', 'vmware-vvf', 'vpa', 'vpa-recommendation']);
+    expect(ai.length).toBe(SEED_TERMS.length - 7);
     expect(cloud.length + ai.length).toBe(SEED_TERMS.length);
   });
 
@@ -150,13 +150,13 @@ describe('buildQuizQuestions', () => {
 
   it('subject: "cloud" only draws questions from cloud-101-tagged entries', () => {
     const questions = buildQuizQuestions(SEED_TERMS, { count: 3, subject: 'cloud' });
-    const cloudSlugs = new Set(['vmware-vvf', 'vmware-vcf', 'sns']);
+    const cloudSlugs = new Set(['vmware-vvf', 'vmware-vcf', 'sns', 'scale-in-out-up-down', 'vpa-recommendation', 'hpa', 'vpa']);
     questions.forEach((q) => expect(cloudSlugs.has(q.termSlug)).toBe(true));
   });
 
   it('subject: "ai" never draws questions from the cloud-101 entries', () => {
     const questions = buildQuizQuestions(SEED_TERMS, { count: 10, subject: 'ai' });
-    const cloudSlugs = new Set(['vmware-vvf', 'vmware-vcf', 'sns']);
+    const cloudSlugs = new Set(['vmware-vvf', 'vmware-vcf', 'sns', 'scale-in-out-up-down', 'vpa-recommendation', 'hpa', 'vpa']);
     questions.forEach((q) => expect(cloudSlugs.has(q.termSlug)).toBe(false));
   });
 

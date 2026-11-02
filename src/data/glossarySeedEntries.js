@@ -434,5 +434,100 @@ export const GLOSSARY_SEED_ENTRIES = [
     "visibility": "published",
     "createdAt": "2026-09-09T00:00:00.000Z",
     "updatedAt": "2026-09-09T00:00:00.000Z"
+  },
+  {
+    "id": "scale-in-out-up-down",
+    "slug": "scale-in-out-up-down",
+    "title": "Scale In/Out vs Scale Up/Down",
+    "category": "topic",
+    "tags": [
+      "cloud-101",
+      "topic",
+      "kubernetes",
+      "hpa",
+      "vpa",
+      "scaling",
+      "autoscaling"
+    ],
+    "sourceUrl": "https://kubernetes.io/docs/concepts/workloads/autoscaling/",
+    "body": "# Scale In/Out vs Scale Up/Down\n\n**Scale Out/In**은 인스턴스(파드) **개수**를 늘리거나 줄이는 수평적 확장이고, **Scale Up/Down**은 인스턴스 하나의 **CPU/메모리 스펙**을 올리거나 내리는 수직적 확장입니다.\n\n## 한 줄 정의\n\n개수를 조절하면 Scale Out/In(수평), 스펙을 조절하면 Scale Up/Down(수직).\n\n## 1. 개념 구분\n\n| 구분 | 개념적 용어 | 쿠버네티스 오토스케일러 | 설명 |\n|------|-------------|--------------------------|------|\n| **수평적 확장 (Horizontal)** | **Scale Out / Scale In** | HPA (Horizontal Pod Autoscaler) | 파드의 **개수(Replicas)**를 늘리거나 줄입니다. |\n| **수직적 확장 (Vertical)** | **Scale Up / Scale Down** | VPA (Vertical Pod Autoscaler) | 파드 내부 컨테이너의 **CPU/메모리 요청량(requests)**을 올리거나 내립니다. |\n\n## 2. 표기 주의: HPA의 scaleUp / scaleDown\n\n개념적으로 파드 수를 늘리는 것은 **Scale Out**, 줄이는 것은 **Scale In**이지만, 쿠버네티스 HPA YAML 설정(`spec.behavior`)에서는 API 스펙 정의에 따라 **`scaleUp` / `scaleDown`**이라는 필드명을 사용합니다. 문서 작성 시 이 점을 주석으로 함께 적어 두면 오해를 방지할 수 있습니다.\n\n```yaml\nspec:\n  behavior:\n    scaleUp:    # 개념적으로는 Scale Out (파드 수 증가)\n      stabilizationWindowSeconds: 0\n    scaleDown:  # 개념적으로는 Scale In (파드 수 감소)\n      stabilizationWindowSeconds: 300\n```\n\n## 3. VPA의 상·하한 설정\n\nVPA는 `scaleUp/scaleDown` 필드가 없습니다. 대신 `spec.resourcePolicy.containerPolicies`의 **`minAllowed` / `maxAllowed`**로 추천 값이 움직일 수 있는 범위(하한/상한)를 제한합니다. 추천 값 자체는 `status.recommendation`에 표시됩니다.\n\n## 관련 용어\n\n- VPA Recommendation (target / uncappedTarget / lowerBound / upperBound)",
+    "related": [
+      "hpa",
+      "vpa",
+      "vpa-recommendation"
+    ],
+    "visibility": "published",
+    "createdAt": "2026-11-02T00:00:00.000Z",
+    "updatedAt": "2026-11-02T00:00:00.000Z"
+  },
+  {
+    "id": "vpa-recommendation",
+    "slug": "vpa-recommendation",
+    "title": "VPA Recommendation",
+    "category": "topic",
+    "tags": [
+      "cloud-101",
+      "topic",
+      "kubernetes",
+      "vpa",
+      "autoscaling",
+      "resource"
+    ],
+    "sourceUrl": "https://kubernetes.io/docs/concepts/workloads/autoscaling/",
+    "body": "# VPA Recommendation\n\n**VPA Recommendation**은 VPA(Vertical Pod Autoscaler)가 파드의 실제 리소스 사용량을 관찰해 \"이 정도를 할당하는 것이 최적\"이라고 계산한 추천 값으로, VPA 상세의 `status.recommendation`에 표시됩니다.\n\n## 한 줄 정의\n\nVPA가 관찰된 사용량으로 계산한 컨테이너별 CPU/메모리 권장 값(target, uncappedTarget, lowerBound, upperBound).\n\n## 1. 예시\n\n```yaml\nrecommendation:\n  containerRecommendations:\n  - containerName: burn\n    lowerBound:\n      cpu: 500m\n      memory: 262144k\n    target:\n      cpu: 500m\n      memory: 262144k\n    uncappedTarget:\n      cpu: 587m\n      memory: 262144k\n    upperBound:\n      cpu: 500m\n      memory: 262144k\n```\n\n## 2. 필드별 의미\n\n| 필드 | 의미 | 특징 |\n|------|------|------|\n| **target** (목표 권장량) | VPA가 파드에 **실제로 설정하려는 최적의 리소스 값** | `minAllowed`/`maxAllowed` 범위를 준수해 결정됩니다. `updateMode`가 `Auto`/`Recreate`이면 파드가 재시작될 때 이 값이 적용됩니다. |\n| **uncappedTarget** (제한 없는 목표 권장량) | `minAllowed`/`maxAllowed` 제약을 **고려하지 않았을 때의 순수 최적 값** | `maxAllowed`가 실제 필요량보다 너무 낮게 잡혀 있는지 확인하는 지표입니다. |\n| **lowerBound** (최저 안전선) | OOM(Out of Memory)이나 CPU Throttling 없이 동작하기 위한 **최소 리소스 하한선** | 현재 파드 설정값이 `lowerBound`보다 낮으면 리소스 부족 위험이 있습니다. |\n| **upperBound** (최대 권장선) | 현재 부하 패턴에서 할당할 수 있는 **합리적인 리소스 상한선** | 이 값 이상 할당하면 과다 할당(Over-provisioning)일 수 있습니다. |\n\n## 3. 읽는 법\n\n위 예시에서 `uncappedTarget` CPU는 587m인데 `target`은 500m입니다. `maxAllowed`(500m) 제한 때문에 추천 값이 잘린 상태이므로, 실제 필요량에 비해 상한이 낮은지 점검해야 합니다.\n\n## 관련 용어\n\n- Scale In/Out vs Scale Up/Down",
+    "related": [
+      "vpa",
+      "scale-in-out-up-down"
+    ],
+    "visibility": "published",
+    "createdAt": "2026-11-02T00:00:00.000Z",
+    "updatedAt": "2026-11-02T00:00:00.000Z"
+  },
+  {
+    "id": "hpa",
+    "slug": "hpa",
+    "title": "HPA (Horizontal Pod Autoscaler)",
+    "category": "topic",
+    "tags": [
+      "cloud-101",
+      "topic",
+      "kubernetes",
+      "hpa",
+      "autoscaling",
+      "scale-out"
+    ],
+    "sourceUrl": "https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/",
+    "body": "# HPA (Horizontal Pod Autoscaler)\n\n**HPA(Horizontal Pod Autoscaler)**는 CPU·메모리 같은 메트릭(또는 사용자 정의 메트릭)을 기준으로 Deployment 등 워크로드의 **파드 개수(Replicas)를 자동으로 늘리거나 줄이는** 쿠버네티스 오토스케일러입니다. 개념적으로는 수평적 확장인 **Scale Out/In**에 해당합니다.\n\n## 한 줄 정의\n\n부하에 따라 파드 개수를 자동 조절하는 수평 오토스케일러.\n\n## 1. 동작 방식\n\n- 목표 메트릭 값(예: CPU 사용률 50%)과 현재 값을 주기적으로 비교해 필요한 replicas 수를 계산합니다.\n- `minReplicas` / `maxReplicas`로 파드 수의 범위를 제한합니다.\n- 파드 requests 대비 사용률을 기준으로 하므로, 대상 컨테이너에 `resources.requests`가 설정되어 있어야 합니다.\n\n## 2. scaleUp / scaleDown 표기 주의\n\nHPA의 `spec.behavior`에서는 증가 정책을 `scaleUp`, 감소 정책을 `scaleDown`이라는 필드명으로 설정합니다. 개념적으로는 파드 수 증가가 **Scale Out**, 감소가 **Scale In**이지만 API 필드명은 `scaleUp`/`scaleDown`입니다.\n\n```yaml\nspec:\n  minReplicas: 2\n  maxReplicas: 10\n  behavior:\n    scaleUp:\n      stabilizationWindowSeconds: 0\n    scaleDown:\n      stabilizationWindowSeconds: 300\n```\n\n## 3. VPA와의 차이\n\n| 구분 | HPA | VPA |\n|------|-----|-----|\n| 조절 대상 | 파드 **개수** | 파드의 CPU/메모리 **requests** |\n| 개념적 용어 | Scale Out / Scale In | Scale Up / Scale Down |\n| 파드 재시작 | 불필요 (파드 추가/삭제) | 값 적용 시 재시작이 필요할 수 있음 |\n\n같은 리소스(CPU/메모리)를 기준으로 HPA와 VPA를 동시에 자동 적용하면 서로 충돌할 수 있어 주의가 필요합니다.\n\n## 출처\n\n- [Kubernetes Horizontal Pod Autoscaling](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)",
+    "related": [
+      "vpa",
+      "scale-in-out-up-down"
+    ],
+    "visibility": "published",
+    "createdAt": "2026-11-02T00:00:00.000Z",
+    "updatedAt": "2026-11-02T00:00:00.000Z"
+  },
+  {
+    "id": "vpa",
+    "slug": "vpa",
+    "title": "VPA (Vertical Pod Autoscaler)",
+    "category": "topic",
+    "tags": [
+      "cloud-101",
+      "topic",
+      "kubernetes",
+      "vpa",
+      "autoscaling",
+      "scale-up"
+    ],
+    "sourceUrl": "https://kubernetes.io/docs/concepts/workloads/autoscaling/vertical-pod-autoscale/",
+    "body": "# VPA (Vertical Pod Autoscaler)\n\n**VPA(Vertical Pod Autoscaler)**는 파드의 실제 리소스 사용량을 관찰해 컨테이너의 **CPU/메모리 requests(필요시 limits)를 자동으로 추천·조정**하는 쿠버네티스 오토스케일러입니다. 개념적으로는 수직적 확장인 **Scale Up/Down**에 해당합니다.\n\n## 한 줄 정의\n\n사용량을 관찰해 파드의 CPU/메모리 스펙을 자동으로 맞춰 주는 수직 오토스케일러.\n\n## 1. 구성 요소\n\n| 구성 요소 | 역할 |\n|-----------|------|\n| **Recommender** | 사용량 이력을 분석해 추천 값(`status.recommendation`)을 계산합니다. |\n| **Updater** | 추천 값과 크게 다른 파드를 축출(evict)해 재생성을 유도합니다. |\n| **Admission Controller** | 파드 생성 시점에 추천 값을 requests에 주입합니다. |\n\n## 2. updateMode\n\n| 모드 | 동작 |\n|------|------|\n| **Off** | 추천 값만 계산하고 파드는 변경하지 않습니다. (값 확인용) |\n| **Initial** | 파드 생성 시점에만 추천 값을 적용합니다. |\n| **Recreate** | 추천 값과 차이가 크면 파드를 재시작해 적용합니다. |\n| **Auto** | 현재는 Recreate와 동일하게 동작하며, 인플레이스 조정이 지원되면 그 방식을 사용합니다. |\n\n## 3. 상·하한 설정\n\n`spec.resourcePolicy.containerPolicies`의 **`minAllowed` / `maxAllowed`**로 추천 값이 움직일 수 있는 범위를 제한합니다. VPA에는 HPA와 달리 `scaleUp`/`scaleDown` 필드가 없습니다.\n\n## 관련 용어\n\n- HPA, VPA Recommendation, Scale In/Out vs Scale Up/Down\n\n## 출처\n\n- [Kubernetes Vertical Pod Autoscaling](https://kubernetes.io/docs/concepts/workloads/autoscaling/vertical-pod-autoscale/)",
+    "related": [
+      "hpa",
+      "vpa-recommendation",
+      "scale-in-out-up-down"
+    ],
+    "visibility": "published",
+    "createdAt": "2026-11-02T00:00:00.000Z",
+    "updatedAt": "2026-11-02T00:00:00.000Z"
   }
 ];
