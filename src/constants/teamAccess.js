@@ -24,10 +24,11 @@ export const TEAM_COMMON_MODULES = new Set([
   'glossary',
   'glossary-quiz',
   'docs',
+  'academizer',
 ]);
 
 /** 실험·베타 메뉴 */
-export const EXPERIMENTAL_MODULES = new Set(['academizer', 'cloud-chatbot']);
+export const EXPERIMENTAL_MODULES = new Set(['cloud-chatbot']);
 
 /** 관리자 전용 메뉴 */
 export const LEADER_ONLY_MODULES = new Set(['kpi', 'kpi-report', 'kpi-approve', 'ai-office']);

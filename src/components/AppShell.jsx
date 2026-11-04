@@ -356,6 +356,7 @@ export default function AppShell({
                       {navBtn('csr', Lightbulb)}
                       {navBtn('lecture-journal', GraduationCap)}
                       {navBtn('kanban', Trello)}
+                      {navBtn('academizer', Presentation)}
                     </NavGroup>
                   )}
                   {showMemberWorkNav && (

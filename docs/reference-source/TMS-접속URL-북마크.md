@@ -75,6 +75,7 @@
 | 팀 빌딩비 장부 (조회) | https://edu-team-tms-ten.vercel.app/yhkim?mode=view&module=ledger&year=2026&month=6 |
 | 점심 뭐 먹지 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=A&module=lunch |
 | 강의일지 | https://edu-team-tms-ten.vercel.app/yhkim?module=lecture-journal |
+| PPT 아카데미화 | https://edu-team-tms-ten.vercel.app/yhkim?module=academizer |
 | 이것도 (CSR) | https://edu-team-tms-ten.vercel.app/yhkim?module=csr |
 | 참고문서 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=A&module=docs |
 
@@ -95,6 +96,7 @@ B/C와 **동일한 사용자 UI**입니다. KPI 승인 요청·향상 과제는 
 | 팀 빌딩비 장부 (조회) | https://edu-team-tms-ten.vercel.app/?mode=view&member=B&module=ledger&year=2026&month=6 |
 | 점심 뭐 먹지 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=lunch |
 | 강의일지 | https://edu-team-tms-ten.vercel.app/wschoi?module=lecture-journal |
+| PPT 아카데미화 | https://edu-team-tms-ten.vercel.app/wschoi?module=academizer |
 | 이것도 (CSR) | https://edu-team-tms-ten.vercel.app/wschoi?module=csr |
 | 참고문서 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=B&module=docs |
 
@@ -117,6 +119,7 @@ B/C와 **동일한 사용자 UI**입니다. KPI 승인 요청·향상 과제는 
 | 팀 빌딩비 장부 (조회) | https://edu-team-tms-ten.vercel.app/?mode=view&member=C&module=ledger&year=2026&month=6 |
 | 점심 뭐 먹지 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=lunch |
 | 강의일지 | https://edu-team-tms-ten.vercel.app/hyshin?module=lecture-journal |
+| PPT 아카데미화 | https://edu-team-tms-ten.vercel.app/hyshin?module=academizer |
 | 이것도 (CSR) | https://edu-team-tms-ten.vercel.app/hyshin?module=csr |
 | 참고문서 | https://edu-team-tms-ten.vercel.app/?mode=edit&member=C&module=docs |
 
@@ -129,8 +132,8 @@ B/C와 **동일한 사용자 UI**입니다. KPI 승인 요청·향상 과제는 
 
 | 그룹 | 관리자 | 사용자 (A/B/C) |
 |------|:------:|:--------------:|
-| 관리·공통 (장부 편집·Academizer·점심) | ✅ | — |
-| **팀 공통** (장부 조회·점심·이것도?·강의일지) | — | ✅ |
+| 관리·공통 (장부 편집·PPT 아카데미화·점심) | ✅ | — |
+| **팀 공통** (장부 조회·점심·이것도?·강의일지·PPT 아카데미화) | — | ✅ |
 | **사용자 업무** (일지·역량) | ✅ (팀 전체) | ✅ (본인 작성 · 일지 A/B/C **조회**) |
 | **실험 버전** (클라우드 챗봇) | ✅ | ❌ |
 | **관리 업무** (KPI·승인·리포트) | ✅ | ❌ |
