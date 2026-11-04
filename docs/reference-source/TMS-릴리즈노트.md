@@ -7,6 +7,11 @@
 
 ## 2026-11-04
 
+### [신규] feat(academizer): PPT 아카데미화를 구성원 팀 공통 메뉴로 개방
+
+- feat(academizer): PPT 아카데미화를 구성원 팀 공통 메뉴로 개방
+- PR #233: https://github.com/cxr542/edu-team-tms/pull/233
+
 ### [문서] docs(academizer): 장애 알림 후속 항목·큰 덱 시험 결과 반영
 
 - docs(academizer): 장애 알림 후속 항목·큰 덱 시험 결과 반영
