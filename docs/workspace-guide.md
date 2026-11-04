@@ -22,7 +22,7 @@ npm install && npm run dev
 
 - KPI 참고문서: `docs/reference-source/` 수정 → `npm run sync:docs`
 - PPT 아카데미화 UI: `src/pages/AcademizerPage.jsx` (`module=academizer`)
-- PPT 변환 API: sibling `ppt-academizer` (Render/local FastAPI, `PPT_ACADEMIZER_API_URL`)
+- PPT 변환 API: sibling `ppt-academizer` (사내 서버/Render 롤백/local FastAPI, `PPT_ACADEMIZER_API_URL`)
 - 환경 변수: `.env.local` (Kakao · Confluence · Academizer API 등)
 
 ### cxr542-portal (별도 repo)
