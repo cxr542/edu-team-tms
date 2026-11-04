@@ -7,6 +7,11 @@
 
 ## 2026-11-04
 
+### [문서] docs(academizer): record login-free auto-recovery after reboot
+
+- docs(academizer): record login-free auto-recovery after reboot
+- PR #231: https://github.com/cxr542/edu-team-tms/pull/231
+
 ### [문서] docs(academizer): record the move from Render to the in-house server
 
 - docs(academizer): record the move from Render to the in-house server
