@@ -73,4 +73,4 @@ npm run dev   # /admin?module=academizer
 결과 샘플(로컬): `ppt-academizer/outputs/smoke/01_k8s_academized.pptx`
 
 ## Access
-Admin shell only (관리·공통) for now — same as previous embed.
+관리자(`/admin`, 관리·공통)와 구성원 URL(`/yhkim` 등, 팀 공통) 모두 사용 가능. 읽기 전용 조회 모드(`mode=view`)에서는 열리지 않는다. 접근 규칙: `src/constants/teamAccess.js`(`TEAM_COMMON_MODULES`).
