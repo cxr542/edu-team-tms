@@ -26,11 +26,12 @@
 
 1. `okestro` 계정 비밀번호 보관·관리 — 바꾸면 작업 `okestro-wsl-boot`을 다시 만들어야 함. 비밀번호는 문서에 적지 않음
 2. 접근 제어 — Funnel 주소는 인증 없이 공개. Gemini 키 사용량·예산 한도 설정, 필요 시 인증 방식 설계
-3. 큰 덱(예: CONTRABASS 34MB) 변환 시간·메모리 확인
-4. tailnet 정리 — 개인 계정 소유 tailnet에 서버가 포함되어 있음. 소유 계정·미사용 기기 정리
-5. 임시·롤백 자산 정리 — 옛 `User` 배포판·비활성 작업 `docker-host-keepalive`, `C:\wsl`의 백업·임시 파일, 1회용 작업 `okestro-import` (안정 운영 확인 후)
-6. 안정 운영 확인 후 Render 정리
-6. (선택) real_world fixture 2~5 — [`ppt-academizer/docs/evaluation/real_world_fixture_evaluation.md`](../../ppt-academizer/docs/evaluation/real_world_fixture_evaluation.md)
+3. 장애 알림 — 외부 업타임 모니터로 공개 `/health` 감시(본문 키워드 검사, 2회 연속 실패 시 메일). 설정값·대응 절차는 엔진 저장소 `deploy/self-host/README.md` 8절. 모니터 계정 생성·등록은 담당자가 직접
+4. 큰 덱 동시 요청(상한 3건)·변환 중 최대 메모리 확인 (CONTRABASS 34MB 단건은 14초·28장으로 통과, 2026-11-04)
+5. tailnet 정리 — 개인 계정 소유 tailnet에 서버가 포함되어 있음. 소유 계정·미사용 기기 정리
+6. 임시·롤백 자산 정리 — 옛 `User` 배포판·비활성 작업 `docker-host-keepalive`, `C:\wsl`의 백업·임시 파일, 1회용 작업 `okestro-import` (안정 운영 확인 후)
+7. 안정 운영 확인 후 Render 정리
+8. (선택) real_world fixture 2~5 — [`ppt-academizer/docs/evaluation/real_world_fixture_evaluation.md`](../../ppt-academizer/docs/evaluation/real_world_fixture_evaluation.md)
 
 상세 절차: 엔진 저장소 [`deploy/self-host/README.md`](https://github.com/cxr542/ppt-academizer/blob/main/deploy/self-host/README.md) (현행), sibling [`DEPLOY-TMS-RENDER.md`](../../ppt-academizer/docs/DEPLOY-TMS-RENDER.md) (롤백용)
 
