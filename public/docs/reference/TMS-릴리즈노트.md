@@ -7,6 +7,11 @@
 
 ## 2026-11-04
 
+### [문서] docs(academizer): 장애 알림 후속 항목·큰 덱 시험 결과 반영
+
+- docs(academizer): 장애 알림 후속 항목·큰 덱 시험 결과 반영
+- PR #232: https://github.com/cxr542/edu-team-tms/pull/232
+
 ### [문서] docs(academizer): record login-free auto-recovery after reboot
 
 - docs(academizer): record login-free auto-recovery after reboot
