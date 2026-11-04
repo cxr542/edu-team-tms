@@ -20,14 +20,16 @@
 | Vercel `PPT_ACADEMIZER_API_URL` | ✅ 사내 서버 Funnel 주소 (실제 값은 Vercel 환경변수 기준, 이 문서에 적지 않음) · Actions `Set Academizer API URL` + `Deploy Production`으로 전환 (2026-11-04) |
 | Render API | 롤백용으로 유지 · `https://ppt-academizer-api.onrender.com` |
 | 전환 후 시험 | ✅ 엔진 직접 호출: HTML 가이드 → 19장 (4초), PPTX → 7장 (3초) · TMS 화면에서 변환 시험 완료 |
+| 재부팅 자동 복구 | ✅ 전용 계정 `okestro`의 작업 스케줄러가 부팅 시 WSL 시작 + Tailscale unattended · 로그인 없이 부팅 8초 뒤 엔진 시작, `/health` 200 (2026-11-04). 절차·제약: 엔진 저장소 `deploy/self-host/README.md` |
 
 ## Next
 
-1. 서버 재부팅 복구 — Windows 자동 로그인, Tailscale "Run unattended" 설정 후 실제 재부팅 확인 (현재는 로그인 유지 상태로 운영, WSL 유지 작업 `docker-host-keepalive`)
+1. `okestro` 계정 비밀번호 보관·관리 — 바꾸면 작업 `okestro-wsl-boot`을 다시 만들어야 함. 비밀번호는 문서에 적지 않음
 2. 접근 제어 — Funnel 주소는 인증 없이 공개. Gemini 키 사용량·예산 한도 설정, 필요 시 인증 방식 설계
 3. 큰 덱(예: CONTRABASS 34MB) 변환 시간·메모리 확인
 4. tailnet 정리 — 개인 계정 소유 tailnet에 서버가 포함되어 있음. 소유 계정·미사용 기기 정리
-5. 안정 운영 확인 후 Render 정리
+5. 임시·롤백 자산 정리 — 옛 `User` 배포판·비활성 작업 `docker-host-keepalive`, `C:\wsl`의 백업·임시 파일, 1회용 작업 `okestro-import` (안정 운영 확인 후)
+6. 안정 운영 확인 후 Render 정리
 6. (선택) real_world fixture 2~5 — [`ppt-academizer/docs/evaluation/real_world_fixture_evaluation.md`](../../ppt-academizer/docs/evaluation/real_world_fixture_evaluation.md)
 
 상세 절차: 엔진 저장소 [`deploy/self-host/README.md`](https://github.com/cxr542/ppt-academizer/blob/main/deploy/self-host/README.md) (현행), sibling [`DEPLOY-TMS-RENDER.md`](../../ppt-academizer/docs/DEPLOY-TMS-RENDER.md) (롤백용)
