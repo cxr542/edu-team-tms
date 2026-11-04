@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-11-04
+
+### [문서] docs(academizer): record the move from Render to the in-house server
+
+- docs(academizer): record the move from Render to the in-house server
+- PR #230: https://github.com/cxr542/edu-team-tms/pull/230
+
 ## 2026-11-02
 
 ### [신규] feat(glossary): Kubernetes HPA/VPA 용어 추가
