@@ -250,7 +250,7 @@
 
 .csr-board-badge--bug {
   background: rgba(220, 38, 38, 0.08);
-  color: #b91c1c;
+  color: #b42318;
   border-color: rgba(220, 38, 38, 0.18);
 }
 
@@ -302,7 +302,7 @@
 
 .csr-board-status.is-rejected {
   background: rgba(220, 38, 38, 0.08);
-  color: #b91c1c;
+  color: #b42318;
   border-color: rgba(220, 38, 38, 0.18);
 }
 

@@ -72,7 +72,7 @@
 .member-kpi-approval__status.is-rejected {
   background: rgba(239, 68, 68, 0.1);
   border-color: rgba(239, 68, 68, 0.35);
-  color: #b91c1c;
+  color: #b42318;
 }
 
 .member-kpi-approval__meta {
@@ -96,7 +96,7 @@
 .member-kpi-approval__reject {
   margin: 0 0 0.5rem;
   font-size: 0.8125rem;
-  color: #b91c1c;
+  color: #b42318;
 }
 
 .member-kpi-approval__actions {

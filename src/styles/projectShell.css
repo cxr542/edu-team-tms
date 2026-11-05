@@ -138,7 +138,7 @@ html.project-sidebar-collapsed-boot .project-app.theme-tms {
 
 .project-toolbar__scope--leader {
   background: rgba(241, 89, 40, 0.12);
-  color: #c2410c;
+  color: #e05500;
 }
 
 .project-toolbar__env {
@@ -1083,7 +1083,7 @@ html.project-sidebar-collapsed-boot .project-sidebar-rail__icon {
   height: 1.1rem;
   padding: 0 0.25rem;
   border-radius: 999px;
-  background: #ef4444;
+  background: #f04438;
   color: #fff;
   font-size: 0.65rem;
   font-weight: 700;
@@ -1098,7 +1098,7 @@ html.project-sidebar-collapsed-boot .project-sidebar-rail__icon {
   height: 1.1rem;
   padding: 0 0.3rem;
   border-radius: 999px;
-  background: #ef4444;
+  background: #f04438;
   color: #fff;
   font-size: 0.65rem;
   font-weight: 700;
@@ -1441,7 +1441,7 @@ html.project-sidebar-collapsed-boot .project-supabase-auth {
 }
 
 .project-toolbar__supabase-health-message--error {
-  color: var(--danger-color, #dc2626);
+  color: var(--danger-color, #d92d20);
 }
 
 .project-toolbar__supabase-health-message--disabled {

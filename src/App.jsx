@@ -1078,10 +1078,10 @@ export default function App() {
               marginBottom: '1rem',
               backgroundColor: 'rgba(239, 68, 68, 0.1)',
               border: '1px solid rgba(239, 68, 68, 0.4)',
-              borderLeft: '4px solid #ef4444',
+              borderLeft: '4px solid #f04438',
             }}
           >
-            <AlertCircle size={18} style={{ color: '#ef4444' }} />
+            <AlertCircle size={18} style={{ color: '#f04438' }} />
             <div className="custom-alert-content">
               <h4 style={{ color: '#fca5a5' }}>장부 snapshot을 불러오지 못했습니다</h4>
               <p style={{ fontSize: '0.85rem' }}>{error}</p>
@@ -1106,10 +1106,10 @@ export default function App() {
               marginBottom: '1rem',
               backgroundColor: 'rgba(239, 68, 68, 0.1)',
               border: '1px solid rgba(239, 68, 68, 0.4)',
-              borderLeft: '4px solid #ef4444',
+              borderLeft: '4px solid #f04438',
             }}
           >
-            <AlertCircle size={18} style={{ color: '#ef4444' }} />
+            <AlertCircle size={18} style={{ color: '#f04438' }} />
             <div className="custom-alert-content">
               <h4 style={{ color: '#fca5a5' }}>서버 장부를 불러오지 못했습니다</h4>
               <p style={{ fontSize: '0.85rem' }}>
@@ -1358,13 +1358,13 @@ export default function App() {
           <div className="stat-card" style={{ borderColor: 'rgba(239, 68, 68, 0.15)' }}>
             <div className="stat-card-header">
               <span>이번 달 누적 지출액</span>
-              <div className="stat-icon-box" style={{ color: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.08)' }}>
+              <div className="stat-icon-box" style={{ color: '#f04438', backgroundColor: 'rgba(239, 68, 68, 0.08)' }}>
                 <TrendingUp size={16} />
               </div>
             </div>
-            <div className="stat-card-value" style={{ color: '#ef4444' }}>{totalSpent.toLocaleString()}원</div>
+            <div className="stat-card-value" style={{ color: '#f04438' }}>{totalSpent.toLocaleString()}원</div>
             <div className="stat-card-footer">
-              예산 소진 비율: <span className="trend-down" style={{ color: '#ef4444' }}>{usagePercent}%</span>
+              예산 소진 비율: <span className="trend-down" style={{ color: '#f04438' }}>{usagePercent}%</span>
             </div>
           </div>
 
@@ -1386,7 +1386,7 @@ export default function App() {
                     : '사용 가능 한도 여유 있음'}
                 </span>
               ) : (
-                <span style={{ color: '#ef4444', fontWeight: 600 }}>⚠️ 예산 초과 상태!</span>
+                <span style={{ color: '#f04438', fontWeight: 600 }}>⚠️ 예산 초과 상태!</span>
               )}
             </div>
             {ledgerDetailsCollapsible && (
@@ -1424,7 +1424,7 @@ export default function App() {
                     width: `${spentPercent}%`,
                     background:
                       usagePercent > 100
-                        ? '#ef4444'
+                        ? '#f04438'
                         : 'linear-gradient(to right, var(--primary), var(--primary))',
                   }}
                 />
@@ -1737,7 +1737,7 @@ export default function App() {
                       </td>
 
                       {/* 지출 금액 */}
-                      <td style={{ textAlign: 'right', fontWeight: 700, color: '#ef4444' }}>
+                      <td style={{ textAlign: 'right', fontWeight: 700, color: '#f04438' }}>
                         -{tx.amount.toLocaleString()}원
                       </td>
 
