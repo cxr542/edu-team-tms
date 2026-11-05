@@ -2,10 +2,10 @@
 
 .project-app {
   --shell-bg: var(--bg-primary);
-  --shell-sidebar: #0c0c12;
-  --shell-border: rgba(255, 255, 255, 0.1);
-  --shell-text: #f0f0f5;
-  --shell-muted: #9a9aa8;
+  --shell-sidebar: #ffffff;
+  --shell-border: rgba(15, 23, 42, 0.1);
+  --shell-text: #111827;
+  --shell-muted: #4b5160;
   --shell-green: #10b981;
   --shell-sidebar-w: 13.75rem;
   --shell-sidebar-w-mini: 3.5rem;
@@ -17,8 +17,8 @@
 }
 
 .project-app.theme-tms {
-  --app-accent: #2997ff;
-  --app-accent-rgb: 41, 151, 255;
+  --app-accent: #1f3dff;
+  --app-accent-rgb: 31, 61, 255;
   --shell-sidebar-current: var(--shell-sidebar-w);
 }
 
@@ -362,7 +362,7 @@ html.project-sidebar-collapsed-boot .project-app.theme-tms {
   width: var(--shell-sidebar-current);
   height: calc(100vh - var(--shell-banner-h));
   background: var(--shell-sidebar);
-  border-right: 1px solid rgba(var(--app-accent-rgb), 0.15);
+  border-right: 1px solid rgba(15, 23, 42, 0.08);
   pointer-events: none;
   z-index: 0;
 }
@@ -403,6 +403,33 @@ html.project-sidebar-collapsed-boot .project-shell {
 .project-logo {
   flex: 1;
   min-width: 0;
+  position: relative;
+  overflow: hidden;
+  padding: 0.85rem 0.9rem;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(135deg, #050b2e 0%, #0a1a9a 55%, #2b4bff 120%);
+}
+
+.project-logo::before {
+  content: '';
+  position: absolute;
+  top: -1.6rem;
+  right: -1.2rem;
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+}
+
+.project-logo > * {
+  position: relative;
+}
+
+.project-shell.is-sidebar-collapsed .project-logo,
+html.project-sidebar-collapsed-boot .project-logo {
+  padding: 0.4rem;
 }
 
 .project-logo h1 {
@@ -411,9 +438,10 @@ html.project-sidebar-collapsed-boot .project-shell {
   gap: 0.45rem;
   margin: 0;
   font-family: var(--font-display);
-  font-size: 1.05rem;
+  font-size: 1.15rem;
+  font-weight: 800;
   white-space: nowrap;
-  color: var(--shell-text);
+  color: #fff;
 }
 
 .project-logo__mark {
@@ -424,7 +452,7 @@ html.project-sidebar-collapsed-boot .project-shell {
   width: 1.75rem;
   height: 1.75rem;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.14);
   overflow: hidden;
 }
 
@@ -438,7 +466,7 @@ html.project-sidebar-collapsed-boot .project-shell {
 .project-logo__sub {
   margin: 0.3rem 0 0;
   font-size: 0.75rem;
-  color: var(--shell-muted);
+  color: rgba(255, 255, 255, 0.8);
   line-height: 1.4;
 }
 
@@ -457,7 +485,7 @@ html.project-sidebar-collapsed-boot .project-shell {
 .project-nav-group + .project-nav-group {
   margin-top: 0.15rem;
   padding-top: 0.55rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
 }
 
 .project-nav-group__title {
@@ -466,7 +494,7 @@ html.project-sidebar-collapsed-boot .project-shell {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.42);
+  color: #9aa0ab;
   line-height: 1.3;
 }
 
@@ -503,7 +531,7 @@ html.project-sidebar-collapsed-boot .project-nav-group + .project-nav-group {
 .project-sidebar-nav-footer {
   margin-top: 0.35rem;
   padding-top: 0.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
 }
 
 .project-nav-item {
@@ -542,7 +570,7 @@ html.project-sidebar-collapsed-boot .project-nav-group + .project-nav-group {
 
 .project-nav-item:hover {
   color: var(--shell-text);
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(15, 23, 42, 0.04);
 }
 
 .project-nav-item--disabled-preview {
@@ -563,13 +591,26 @@ html.project-sidebar-collapsed-boot .project-nav-group + .project-nav-group {
 }
 
 .project-nav-item.is-active {
+  position: relative;
   color: var(--shell-text);
-  background: rgba(var(--app-accent-rgb), 0.12);
-  border-color: rgba(var(--app-accent-rgb), 0.35);
+  font-weight: 700;
+  background: #f0f1f4;
+  border-color: transparent;
+}
+
+.project-nav-item.is-active::before {
+  content: '';
+  position: absolute;
+  left: -0.5rem;
+  top: 0.45rem;
+  bottom: 0.45rem;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--shell-text);
 }
 
 .project-nav-item.is-active .project-nav-item__icon {
-  color: var(--app-accent);
+  color: var(--shell-text);
 }
 
 .project-nav-item-wrap {
@@ -608,7 +649,7 @@ html.project-sidebar-collapsed-boot .project-nav-group + .project-nav-group {
 
 .project-nav-item__new-tab:hover {
   color: var(--shell-text);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.08);
 }
 
 .project-shell.is-sidebar-collapsed .project-nav-item__new-tab,
@@ -658,7 +699,7 @@ a.project-nav-item.project-nav-item--hub:hover {
 
 .project-settings-trigger.is-open {
   color: var(--shell-text);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(15, 23, 42, 0.06);
   border-color: rgba(var(--app-accent-rgb), 0.35);
 }
 
@@ -680,7 +721,7 @@ a.project-nav-item.project-nav-item--hub:hover {
   padding: 0.35rem;
   border-radius: 9px;
   border: 1px solid rgba(var(--app-accent-rgb), 0.3);
-  background: rgba(10, 12, 20, 0.95);
+  background: #ffffff;
 }
 
 .project-settings-popover__item {
@@ -701,13 +742,13 @@ a.project-nav-item.project-nav-item--hub:hover {
 
 .project-settings-popover__item:hover {
   color: var(--shell-text);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(15, 23, 42, 0.06);
 }
 
 .project-settings-popover__section {
   margin-top: 0.25rem;
   padding-top: 0.35rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(15, 23, 42, 0.1);
 }
 
 .project-settings-popover__section-title {
@@ -728,9 +769,9 @@ a.project-nav-item.project-nav-item--hub:hover {
 }
 
 .project-font-size-option {
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(15, 23, 42, 0.12);
   border-radius: 7px;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(15, 23, 42, 0.04);
   color: var(--shell-muted);
   font: inherit;
   font-size: 0.76rem;
@@ -741,13 +782,13 @@ a.project-nav-item.project-nav-item--hub:hover {
 
 .project-font-size-option:hover {
   color: var(--shell-text);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.08);
 }
 
 .project-font-size-option.is-active {
   color: #fff;
-  border-color: rgba(var(--app-accent-rgb), 0.65);
-  background: rgba(var(--app-accent-rgb), 0.28);
+  border-color: var(--app-accent);
+  background: var(--app-accent);
   font-weight: 600;
 }
 
@@ -759,8 +800,8 @@ a.project-nav-item.project-nav-item--hub:hover {
 .usage-standards-panel--sidebar {
   padding: 0.85rem 0.75rem;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  background: rgba(15, 23, 42, 0.07);
 }
 
 .usage-standards-panel__title {
@@ -768,7 +809,7 @@ a.project-nav-item.project-nav-item--hub:hover {
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: #7ec8ff;
+  color: #1f3dff;
 }
 
 .usage-standards-panel__table {
@@ -782,11 +823,11 @@ a.project-nav-item.project-nav-item--hub:hover {
   text-align: left;
   font-size: 0.68rem;
   font-weight: 600;
-  color: #b8bcc8;
+  color: #6b7280;
 }
 
 .usage-standards-panel__table tbody tr {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(15, 23, 42, 0.1);
 }
 
 .usage-standards-panel__type {
@@ -876,7 +917,7 @@ a.project-nav-item.project-nav-item--hub:hover {
   font-size: 0.6875rem;
   line-height: 1.1;
   color: var(--shell-text);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(15, 23, 42, 0.06);
   border: 1px solid rgba(var(--app-accent-rgb), 0.45);
   border-radius: 6px;
   box-shadow: none;
@@ -1159,9 +1200,9 @@ html.project-sidebar-collapsed-boot .project-logo h1 {
     font-weight: 600;
     line-height: 1.25;
     white-space: nowrap;
-    color: #f4f4f8;
-    background: #1a1a24;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #111827;
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.12);
     border-radius: 6px;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
     opacity: 0;
@@ -1209,7 +1250,7 @@ html.project-sidebar-collapsed-boot .project-logo h1 {
     bottom: 0;
     width: min(88vw, 17.5rem);
     background: var(--shell-sidebar);
-    border-right: 1px solid rgba(var(--app-accent-rgb), 0.15);
+    border-right: 1px solid rgba(15, 23, 42, 0.08);
     transform: translateX(-105%);
     transition: transform 0.22s ease;
     pointer-events: none;
