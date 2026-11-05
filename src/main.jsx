@@ -21,6 +21,7 @@ if (typeof window !== 'undefined') {
   }
 }
 import './styles/projectShell.css'
+import './styles/pageHeader.css'
 import './styles/uiTooltip.css'
 import './pages/PublicViewerGuidePage.css'
 
