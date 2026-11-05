@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VIOLA 3.0.5 HPA 시연 가이드</title>
+<style>
+:root{
+  --bg:#ffffff; --panel:#f6f7f8; --text:#1f2328; --muted:#5b636b; --line:#d9dde1;
+  --accent:#2e7d32; --accent-soft:#e8f5e9; --code-bg:#f3f4f6; --note-bg:#fff8e1; --note-line:#e0a800;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#16181a; --panel:#1f2326; --text:#e6e8ea; --muted:#9aa3ab; --line:#32383d;
+    --accent:#6fcf74; --accent-soft:#1d2d1f; --code-bg:#22272b; --note-bg:#2b2615; --note-line:#c99a1c;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  font-size:16px;line-height:1.75}
+.layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:40px;max-width:1120px;margin:0 auto;padding:32px 20px 80px}
+nav.toc{position:sticky;top:24px;align-self:start;font-size:14px;line-height:1.5}
+nav.toc strong{display:block;margin-bottom:10px;color:var(--muted);font-weight:600}
+nav.toc a{display:block;padding:5px 10px;border-left:2px solid var(--line);color:var(--muted);text-decoration:none}
+nav.toc a:hover{color:var(--accent);border-left-color:var(--accent)}
+main{min-width:0}
+.eyebrow{color:var(--accent);font-weight:600;font-size:15px;margin:0}
+h1.title{font-size:34px;line-height:1.3;margin:6px 0 6px}
+.subtitle{color:var(--muted);font-size:18px;margin:0 0 24px}
+h2{font-size:24px;margin:48px 0 14px;padding-top:6px;color:var(--accent);scroll-margin-top:16px}
+h3{font-size:18px;margin:28px 0 8px;scroll-margin-top:16px}
+p{margin:0 0 12px}
+ul{margin:0 0 14px;padding-left:22px}
+li{margin:4px 0}
+code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.9em;background:var(--code-bg);padding:1px 6px;border-radius:4px}
+.codeblock{position:relative;margin:10px 0 16px}
+.codeblock pre{margin:0;padding:14px 16px;background:var(--code-bg);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:6px;overflow-x:auto;font-size:13.5px;line-height:1.6}
+.codeblock pre code{background:none;padding:0;font-size:inherit}
+.copy{position:absolute;top:8px;right:8px;font:inherit;font-size:12px;padding:3px 10px;border:1px solid var(--line);background:var(--bg);color:var(--muted);border-radius:6px;cursor:pointer}
+.copy:hover{color:var(--accent);border-color:var(--accent)}
+table{width:100%;border-collapse:collapse;margin:10px 0 18px;font-size:14.5px;line-height:1.6}
+th,td{border:1px solid var(--line);padding:8px 12px;text-align:left;vertical-align:top}
+th{background:var(--accent-soft);font-weight:600}
+td.num{width:48px;text-align:center}
+.table-wrap{overflow-x:auto}
+.note{background:var(--note-bg);border-left:3px solid var(--note-line);border-radius:0 6px 6px 0;padding:10px 14px;margin:12px 0 16px}
+.note b:first-child{display:block;margin-bottom:2px}
+.diagram{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;margin:12px 0 8px}
+.diagram svg{display:block;width:100%;height:auto;max-width:680px;margin:0 auto}
+.diagram text{font-family:"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif}
+.diagram .th{font-size:14px;font-weight:600}.diagram .ts{font-size:12px}
+.meta td:first-child{width:130px;font-weight:600;background:var(--panel)}
+.steps td:first-child{width:56px;text-align:center;font-weight:600}
+footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+@media (max-width:860px){
+  .layout{grid-template-columns:1fr;gap:0;padding:20px 16px 60px}
+  nav.toc{display:none}
+  h1.title{font-size:27px}
+}
+@media print{nav.toc,.copy{display:none}.layout{display:block;max-width:none}h2{break-after:avoid}.codeblock,table,.diagram{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc" aria-label="목차">
+  <strong>목차</strong>
+  <a href="#overview">1. 시연 개요</a>
+  <a href="#arch">2. 구성도</a>
+  <a href="#prep">3. 사전 준비</a>
+  <a href="#demo">4. 시연 순서</a>
+  <a href="#observe">5. 관찰 예시</a>
+  <a href="#cleanup">6. 시연 후 정리</a>
+  <a href="#tune">7. 더 빠르게 늘리기</a>
+  <a href="#trouble">8. 트러블슈팅</a>
+  <a href="#appx-a">부록 A. HPA 매니페스트</a>
+  <a href="#appx-b">부록 B. 확인 명령</a>
+</nav>
+
+<main>
+<p class="eyebrow">VIOLA 3.0.5</p>
+<h1 class="title">HPA 오토스케일링 시연 가이드</h1>
+<p class="subtitle">msa-load 부하 조절로 msa-a 파드 자동 증설 보여주기</p>
+
+<div class="table-wrap"><table class="meta">
+<tr><td>대상 환경</td><td>VIOLA 3.0.5, biz 클러스터, 네임스페이스 <code>academy</code></td></tr>
+<tr><td>시연 대상</td><td>Deployment <code>msa-a</code> (HPA: <code>msa-a-hpa</code>), 부하 발생: Deployment <code>msa-load</code></td></tr>
+<tr><td>선행 구성</td><td>Kiali MSA 트래픽 모니터링 시연 앱(msa-a/b/c, msa-load, Gateway)이 배포되어 있어야 함</td></tr>
+<tr><td>부하 조절</td><td>VIOLA 포털에서 <code>msa-load</code>의 replicas 변경</td></tr>
+</table></div>
+
+<h2 id="overview">1. 시연 개요</h2>
+<p>부하가 늘면 쿠버네티스가 파드를 자동으로 늘리고, 부하가 줄면 다시 줄이는 HPA(Horizontal Pod Autoscaler) 동작을 눈으로 보여주는 시연입니다.</p>
+<ul>
+  <li><b>부하 발생:</b> <code>msa-load</code> 파드가 istio-gateway를 통해 <code>msa-a</code>를 반복 호출합니다. 파드 하나당 약 2 req/s이고, 포털에서 replicas를 올리면 부하가 그만큼 늘어납니다.</li>
+  <li><b>측정:</b> metrics-server가 <code>msa-a</code>의 nginx 컨테이너 CPU 사용량을 수집하고, HPA가 requests(10m) 대비 사용률을 계산합니다.</li>
+  <li><b>조정:</b> 사용률이 목표(30%)를 넘으면 <code>msa-a</code> 파드를 최대 4개까지 늘리고, 내려가면 줄입니다.</li>
+</ul>
+
+<h2 id="arch">2. 구성도</h2>
+<div class="diagram">
+<svg viewBox="0 0 680 440" role="img" aria-label="msa-load 부하가 istio-gateway를 거쳐 msa-a로 전달되고 metrics-server와 HPA가 msa-a 파드 수를 조정하는 구성도">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="30" y="30" width="170" height="48" rx="8" fill="#F1EFE8" stroke="#5F5E5A"/>
+<text class="th" x="115" y="47" text-anchor="middle" dominant-baseline="central" fill="#444441">VIOLA 포털</text>
+<text class="ts" x="115" y="65" text-anchor="middle" dominant-baseline="central" fill="#5F5E5A">msa-load replicas 변경</text>
+<rect x="400" y="30" width="250" height="48" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-dasharray="4 3"/>
+<text class="th" x="525" y="47" text-anchor="middle" dominant-baseline="central" fill="#444441">관찰 화면</text>
+<text class="ts" x="525" y="65" text-anchor="middle" dominant-baseline="central" fill="#5F5E5A">포털 파드 목록, 터미널 -w</text>
+<rect x="30" y="152" width="110" height="56" rx="8" fill="#F1EFE8" stroke="#5F5E5A"/>
+<text class="th" x="85" y="171" text-anchor="middle" dominant-baseline="central" fill="#444441">msa-load</text>
+<text class="ts" x="85" y="190" text-anchor="middle" dominant-baseline="central" fill="#5F5E5A">부하 파드 N개</text>
+<rect x="170" y="152" width="110" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7"/>
+<text class="th" x="225" y="171" text-anchor="middle" dominant-baseline="central" fill="#3C3489">istio-gateway</text>
+<text class="ts" x="225" y="190" text-anchor="middle" dominant-baseline="central" fill="#534AB7">진입점</text>
+<rect x="310" y="105" width="200" height="150" rx="12" fill="#F4FBF8" stroke="#0F6E56"/>
+<text class="th" x="410" y="124" text-anchor="middle" dominant-baseline="central" fill="#085041">msa-a (Deployment)</text>
+<rect x="326" y="142" width="80" height="34" rx="6" fill="#E1F5EE" stroke="#0F6E56"/>
+<text class="ts" x="366" y="159" text-anchor="middle" dominant-baseline="central" fill="#085041">pod 1</text>
+<rect x="414" y="142" width="80" height="34" rx="6" fill="#fff" stroke="#0F6E56" stroke-dasharray="4 3"/>
+<text class="ts" x="454" y="159" text-anchor="middle" dominant-baseline="central" fill="#0F6E56">pod 2</text>
+<rect x="326" y="186" width="80" height="34" rx="6" fill="#fff" stroke="#0F6E56" stroke-dasharray="4 3"/>
+<text class="ts" x="366" y="203" text-anchor="middle" dominant-baseline="central" fill="#0F6E56">pod 3</text>
+<rect x="414" y="186" width="80" height="34" rx="6" fill="#fff" stroke="#0F6E56" stroke-dasharray="4 3"/>
+<text class="ts" x="454" y="203" text-anchor="middle" dominant-baseline="central" fill="#0F6E56">pod 4</text>
+<text class="ts" x="410" y="241" text-anchor="middle" dominant-baseline="central" fill="#0F6E56">점선 파드는 HPA가 추가</text>
+<rect x="540" y="152" width="110" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56"/>
+<text class="th" x="595" y="171" text-anchor="middle" dominant-baseline="central" fill="#085041">msa-b → c</text>
+<text class="ts" x="595" y="190" text-anchor="middle" dominant-baseline="central" fill="#0F6E56">호출 체인</text>
+<rect x="290" y="320" width="120" height="48" rx="8" fill="#FAEEDA" stroke="#854F0B"/>
+<text class="th" x="350" y="337" text-anchor="middle" dominant-baseline="central" fill="#633806">metrics-server</text>
+<text class="ts" x="350" y="355" text-anchor="middle" dominant-baseline="central" fill="#854F0B">CPU 사용량 수집</text>
+<rect x="440" y="320" width="140" height="48" rx="8" fill="#FAEEDA" stroke="#854F0B"/>
+<text class="th" x="510" y="337" text-anchor="middle" dominant-baseline="central" fill="#633806">msa-a-hpa</text>
+<text class="ts" x="510" y="355" text-anchor="middle" dominant-baseline="central" fill="#854F0B">목표 30%, 최대 4개</text>
+<g fill="none" stroke="#444441" stroke-width="1.5">
+<path d="M115 78 V150" marker-end="url(#arrow)"/>
+<path d="M140 180 H168" marker-end="url(#arrow)"/>
+<path d="M280 180 H308" marker-end="url(#arrow)"/>
+<path d="M510 180 H538" marker-end="url(#arrow)"/>
+<path d="M480 78 V103" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+<path d="M350 255 V318" marker-end="url(#arrow)"/>
+<path d="M410 344 H438" marker-end="url(#arrow)"/>
+<path d="M480 318 V257" marker-end="url(#arrow)"/>
+</g>
+<text class="ts" x="127" y="118" fill="#444441">replicas 1 → 8</text>
+<text class="ts" x="342" y="292" text-anchor="end" fill="#444441">CPU 사용량</text>
+<text class="ts" x="490" y="292" fill="#444441">레플리카 조정</text>
+<text class="ts" x="340" y="408" text-anchor="middle" fill="#5F5E5A">부하가 늘면 사용률이 목표(30%)를 넘고, HPA가 msa-a 파드를 최대 4개까지 늘립니다</text>
+</svg>
+</div>
+<p>포털에서 <code>msa-load</code>의 replicas를 바꾸면 <code>msa-a</code>로 가는 요청이 달라지고, metrics-server가 측정한 CPU 사용률을 HPA가 목표와 비교해 <code>msa-a</code>의 파드 수를 조정합니다. 파드가 늘고 줄어드는 모습은 포털의 파드 목록과 터미널의 <code>-w</code> 출력으로 보여줍니다.</p>
+<div class="note"><b>참고</b>Kiali 그래프는 파드가 아니라 워크로드(Deployment) 단위로 노드를 그립니다. 파드가 늘어도 <code>msa-a</code> 노드는 하나로 보이고 요청 수(RPS)만 올라가므로, 파드 증감은 Kiali가 아닌 포털과 터미널로 보여줍니다.</div>
+
+<h2 id="prep">3. 사전 준비</h2>
+<h3>3.1 HPA 구성 (msa-a-hpa)</h3>
+<div class="table-wrap"><table>
+<tr><th style="width:140px">항목</th><th>값</th></tr>
+<tr><td>대상</td><td>Deployment <code>msa-a</code> (academy)</td></tr>
+<tr><td>레플리카</td><td>최소 1, 최대 4</td></tr>
+<tr><td>메트릭</td><td>ContainerResource, 컨테이너 <code>nginx</code>, CPU 사용률(Utilization) 30%</td></tr>
+<tr><td>스케일 업</td><td>대기 0초, 15초마다 최대 2개 증설</td></tr>
+<tr><td>스케일 다운</td><td>대기 60초 (기본 300초를 시연용으로 단축)</td></tr>
+</table></div>
+<div class="note"><b>왜 ContainerResource인가</b><code>msa-a</code> 파드에는 nginx 외에 istio-proxy 사이드카가 있습니다. 기본 Resource 메트릭은 파드 안 모든 컨테이너를 합산해 사용률이 희석될 수 있어, nginx 컨테이너만 기준으로 삼았습니다. 포털의 기본 모드에는 이 유형이 없어(Resource, Pods, Object, External만 제공) 고급 모드(YAML)로 만들었습니다.</div>
+
+<h3>3.2 포털에서 HPA 만들기 (이미 만들어진 경우 생략)</h3>
+<ul>
+  <li>워크플로우 &gt; 워크로드 &gt; 오토스케일러 &gt; HPA 탭 &gt; 생성</li>
+  <li>모드를 "고급 모드"로 선택하고 클러스터 biz를 확인한 뒤 <a href="#appx-a">부록 A</a>의 YAML을 입력합니다.</li>
+  <li>"YAML 유효성 검사"에서 생성 가능 메시지를 확인하고 생성합니다.</li>
+</ul>
+
+<h3>3.3 시연 직전 점검</h3>
+<div class="table-wrap"><table class="steps">
+<tr><th>순서</th><th>점검 내용</th></tr>
+<tr><td>1</td><td><code>msa-a</code> 파드가 1개이고 HPA가 안정(TARGETS가 낮은 값, REPLICAS 1)인지 확인합니다. 이전 시연 직후라면 파드가 줄기까지 1~2분 기다립니다.</td></tr>
+<tr><td>2</td><td><code>msa-load</code> replicas를 1로 되돌려 둡니다.</td></tr>
+<tr><td>3</td><td>(선택) 확실한 증설을 위해 HPA 목표 사용률을 15% 정도로 낮춥니다. <a href="#tune">7장</a> 참고.</td></tr>
+<tr><td>4</td><td>화면을 배치합니다. 3.4 참고.</td></tr>
+</table></div>
+
+<h3>3.4 화면 구성</h3>
+<ul>
+  <li><b>포털:</b> 워크플로우 &gt; 워크로드 &gt; 컨테이너 관리에서 <code>msa-a</code>의 파드 목록(또는 <code>msa-a</code> 상세 화면)을 띄웁니다.</li>
+  <li><b>터미널 1:</b> HPA 상태 (사용률과 레플리카 수)</li>
+</ul>
+<div class="codeblock"><pre><code>kubectl -n academy get hpa msa-a-hpa -w</code></pre></div>
+<ul><li><b>터미널 2:</b> 파드 생성 과정</li></ul>
+<div class="codeblock"><pre><code>kubectl -n academy get pods -l app=msa-a -w</code></pre></div>
+<p>터미널은 biz 클러스터에 접속한 노드(예: biz-2)에서 실행합니다. Kiali는 필요할 때만 열어 요청 수 증가를 한 번 짚는 용도로 씁니다.</p>
+
+<h2 id="demo">4. 시연 순서</h2>
+<div class="table-wrap"><table class="steps">
+<tr><th>단계</th><th>조작</th><th>확인 포인트</th><th>설명 포인트</th></tr>
+<tr><td>1</td><td>현재 상태 보여주기<br>(터미널 1, 2와 포털 파드 목록)</td><td><code>msa-a</code> 파드 1개, REPLICAS 1, 낮은 사용률</td><td>평소에는 파드 하나로 충분한 상태</td></tr>
+<tr><td>2</td><td><b>부하 올리기 (포털)</b><br><code>msa-load</code> 상세 화면의 레플리카 영역에서 + 버튼으로 1 → 8</td><td><code>msa-load</code> 파드 수가 8개로 증가</td><td>요청이 약 8배(약 16 req/s)로 늘어남</td></tr>
+<tr><td>3</td><td>증설 관찰<br>(터미널 1, 2와 포털)</td><td>15~30초 뒤 TARGETS가 목표(30%) 초과 → REPLICAS 증가 → 새 파드 ContainerCreating → Running</td><td>HPA가 사용률을 보고 자동으로 파드 추가</td></tr>
+<tr><td>4</td><td>안정화 관찰</td><td>파드가 늘면 TARGETS가 다시 내려가 목표 근처에서 안정</td><td>목표 사용률을 유지하도록 조정하는 것이 HPA의 동작</td></tr>
+<tr><td>5</td><td><b>부하 내리기 (포털)</b><br><code>msa-load</code> 레플리카 영역에서 − 버튼으로 8 → 1</td><td><code>msa-load</code> 파드 수 감소</td><td>요청이 다시 줄어듦</td></tr>
+<tr><td>6</td><td>축소 관찰</td><td>약 1분 뒤 REPLICAS 감소, 파드 Terminating 후 1개로 복귀</td><td>부하가 줄면 자원을 반환 (축소 대기 60초)</td></tr>
+</table></div>
+
+<h3>4.1 포털에서 msa-load replicas 바꾸기</h3>
+<ul>
+  <li>워크플로우 &gt; 워크로드 &gt; 컨테이너 관리에서 디플로이먼트 목록을 열고 <code>msa-load</code>를 선택합니다.</li>
+  <li>상세 화면의 "레플리카" 영역에서 + 버튼으로 늘리고 − 버튼으로 줄입니다. 0 아래로는 내릴 수 없다는 안내가 표시됩니다.</li>
+  <li>같은 화면 아래 "파드" 목록에서 <code>msa-load</code> 파드가 늘고 줄어드는 것을 바로 확인할 수 있습니다.</li>
+</ul>
+<div class="note"><b>참고</b>부하를 아예 멈추려면 replicas를 0으로 두는 대신 1로 두는 편이 안전합니다. 포털에서 0으로 내릴 수 없는 경우에는 터미널에서 <code>kubectl -n academy scale deploy msa-load --replicas=0</code> 을 사용합니다.</div>
+
+<h2 id="observe">5. 시연 중 관찰 예시</h2>
+<p>리허설에서 관찰한 값입니다. 환경에 따라 달라질 수 있습니다.</p>
+<div class="table-wrap"><table>
+<tr><th style="width:220px">시점</th><th>관찰 결과</th></tr>
+<tr><td><code>msa-load</code> 1개, <code>msa-a</code> 파드 1개</td><td>nginx CPU 사용률이 오르며 0% → 10% → 30% → 40%/30%</td></tr>
+<tr><td>목표 초과 후 약 15초</td><td>REPLICAS 1 → 2, 이벤트 SuccessfulRescale (cpu container resource utilization above target)</td></tr>
+<tr><td>파드 2개 안정 후</td><td>사용률 40% → 30% → 20%로 내려가 목표 아래에서 유지, 추가 증설 없음</td></tr>
+</table></div>
+
+<h2 id="cleanup">6. 시연 후 정리</h2>
+<ul>
+  <li><code>msa-load</code> replicas를 1로 되돌립니다(포털 − 버튼).</li>
+  <li><code>msa-a</code> 파드가 1개로 줄어드는 것을 확인합니다(약 1분).</li>
+  <li>HPA를 삭제하려면 포털 오토스케일러 목록에서 <code>msa-a-hpa</code>를 삭제하거나 아래 명령을 사용합니다.</li>
+</ul>
+<div class="codeblock"><pre><code>kubectl -n academy delete hpa msa-a-hpa</code></pre></div>
+
+<h2 id="tune">7. 증설을 더 빠르게, 더 크게 만들려면</h2>
+<p>HPA는 "필요한 파드 수 = 현재 파드 수 × 현재 사용률 ÷ 목표 사용률"(올림)로 계산합니다.</p>
+<div class="table-wrap"><table>
+<tr><th>방법</th><th>효과</th><th>비고</th></tr>
+<tr><td><code>msa-load</code> replicas 늘리기</td><td>파드당 사용량 증가 → 사용률 상승</td><td>포털 + 버튼. 가장 간단하고 원복도 쉬움</td></tr>
+<tr><td>HPA 목표 사용률 낮추기 (30% → 15%)</td><td>같은 부하에서 더 많은 파드로 증설</td><td>파드를 건드리지 않아 안전</td></tr>
+<tr><td>스케일 업 정책 조정</td><td>증설 속도(15초당 파드 수) 상향</td><td>필요한 만큼만 증설되므로 보조적 효과</td></tr>
+<tr><td>nginx <code>requests.cpu</code> 낮추기</td><td>같은 사용량이 더 높은 사용률로 계산됨</td><td>비권장: Deployment 롤아웃으로 파드가 재시작됨</td></tr>
+</table></div>
+<p>목표 사용률은 포털 오토스케일러 목록에서 <code>msa-a-hpa</code>를 수정하거나, 터미널에서 아래 명령으로 15%로 바꿀 수 있습니다.</p>
+<div class="codeblock"><pre><code>kubectl -n academy patch hpa msa-a-hpa --type=json -p='[{"op":"replace","path":"/spec/metrics/0/containerResource/target/averageUtilization","value":15}]'</code></pre></div>
+<p>반응 속도는 HPA의 지표 확인 주기(기본 15초)와 새 파드가 뜨는 시간(이미지 풀, 사이드카 준비에 수십 초)에 영향을 받습니다. 최대 레플리카(4)를 넘어서는 증설은 일어나지 않습니다.</p>
+
+<h2 id="trouble">8. 트러블슈팅</h2>
+<div class="table-wrap"><table>
+<tr><th style="width:230px">증상</th><th>원인과 조치</th></tr>
+<tr><td>TARGETS가 &lt;unknown&gt;</td><td>metrics-server 확인(<code>kubectl top pods -n academy</code>가 값을 반환하는지). 대상 컨테이너(nginx)에 <code>requests.cpu</code>가 있는지 확인. 지표 수집까지 1~2분 걸릴 수 있음</td></tr>
+<tr><td>사용률이 올라도 파드가 안 늘어남</td><td>목표 대비 10% 이내 차이는 HPA 허용 오차 안이라 증설하지 않음. 목표를 낮추거나 부하를 더 올림. 이벤트와 Conditions 확인: <code>kubectl -n academy describe hpa msa-a-hpa</code></td></tr>
+<tr><td>새 파드가 Pending</td><td>노드 리소스 부족. <code>kubectl -n academy get events</code>에서 Insufficient cpu/memory 확인. 3.0.5 academy에는 다른 파드도 있으므로 부하를 과도하게 올리지 않음</td></tr>
+<tr><td>파드가 늘었는데 Kiali 그래프에 안 보임</td><td>정상. Kiali 그래프는 워크로드 단위라 파드 수가 표시되지 않음. 포털 파드 목록과 터미널로 확인</td></tr>
+<tr><td>부하를 내려도 파드가 바로 안 줄어듦</td><td>축소 대기 60초 + 파드 종료 시간이 필요. 1~2분 기다림</td></tr>
+<tr><td>새 파드 시작 시 Startup probe failed 경고</td><td>istio-proxy가 준비되는 순간의 일시적 경고로 정상</td></tr>
+</table></div>
+
+<h2 id="appx-a">부록 A. HPA 매니페스트 (msa-a-hpa)</h2>
+<div class="codeblock"><pre><code>apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: {name: msa-a-hpa, namespace: academy, labels: {demo: kiali-msa}}
+spec:
+  scaleTargetRef: {apiVersion: apps/v1, kind: Deployment, name: msa-a}
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+  - type: ContainerResource
+    containerResource:
+      name: cpu
+      container: nginx
+      target: {type: Utilization, averageUtilization: 30}
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies: [{type: Pods, value: 2, periodSeconds: 15}]
+    scaleDown:
+      stabilizationWindowSeconds: 60</code></pre></div>
+<div class="note"><b>입력 팁</b>포털 고급 모드의 YAML 편집기는 자동 들여쓰기가 적용되어 여러 줄을 그대로 입력하면 들여쓰기가 어긋날 수 있습니다. 붙여 넣기가 가능하면 그대로 붙여 넣고, 직접 입력할 때는 한 줄 JSON 형태로 입력해도 YAML로 처리됩니다.</div>
+
+<h2 id="appx-b">부록 B. 확인 명령 모음</h2>
+<div class="codeblock"><pre><code># HPA 상태 (사용률/레플리카)
+kubectl -n academy get hpa msa-a-hpa -w
+
+# msa-a 파드 생성/삭제 과정
+kubectl -n academy get pods -l app=msa-a -w
+
+# nginx 컨테이너 사용량
+kubectl -n academy top pod -l app=msa-a --containers
+
+# HPA 상세 (이벤트, 조건)
+kubectl -n academy describe hpa msa-a-hpa
+
+# 부하 파드 수 (포털 대신 터미널로 조절할 때)
+kubectl -n academy scale deploy msa-load --replicas=8
+kubectl -n academy scale deploy msa-load --replicas=1</code></pre></div>
+
+<footer>VIOLA 3.0.5 HPA 오토스케일링 시연 가이드 · biz 클러스터 / academy 네임스페이스</footer>
+</main>
+</div>
+<script>
+document.querySelectorAll('.codeblock').forEach(function(box){
+  var btn=document.createElement('button');
+  btn.className='copy';btn.type='button';btn.textContent='복사';
+  btn.addEventListener('click',function(){
+    var text=box.querySelector('code').innerText;
+    var done=function(){btn.textContent='복사됨';setTimeout(function(){btn.textContent='복사';},1500);};
+    try{
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done,function(){btn.textContent='실패';});}
+      else{btn.textContent='실패';}
+    }catch(e){btn.textContent='실패';}
+  });
+  box.appendChild(btn);
+});
+</script>
+</body>
+</html>

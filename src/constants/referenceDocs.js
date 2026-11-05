@@ -1,13 +1,20 @@
-/** @typedef {'definition' | 'ops' | 'release' | 'source'} RefDocCategory */
+/** @typedef {'definition' | 'ops' | 'release' | 'source' | 'lecture'} RefDocCategory */
 
-/** @typedef {{ id: string, category: RefDocCategory, title: string, file: string, summary?: string, pinned?: boolean }} ReferenceDocMeta */
+/** @typedef {{ id: string, category: RefDocCategory, title: string, file: string, summary?: string, pinned?: boolean, format?: 'md' | 'html' | 'index', group?: string }} ReferenceDocMeta */
 
 export const REF_DOC_CATEGORIES = {
   definition: 'KPI 정의',
   ops: 'TMS 운영',
   release: '릴리즈 노트',
   source: 'v5 원문 발췌',
+  lecture: '강의 가이드',
 };
+
+/** '강의 가이드 모음' 인덱스 화면(파일 없음) */
+export const LECTURE_HOME_ID = 'lecture-guides';
+
+/** 그룹별 제품 색 (Okestro Design System · Solution 색) */
+export const LECTURE_GROUP_COLORS = { 'VIOLA 3.0.6': '#2FA52D', 'VIOLA 3.0.5': '#2FA52D' };
 
 /** public/docs/reference/ 기준 파일명 */
 export const REFERENCE_DOCS = /** @type {ReferenceDocMeta[]} */ ([
@@ -102,6 +109,104 @@ export const REFERENCE_DOCS = /** @type {ReferenceDocMeta[]} */ ([
     summary: 'KPI3 레벨·5차원 평가·0.2 누적·40:60',
   },
   {
+    id: LECTURE_HOME_ID,
+    category: 'lecture',
+    format: 'index',
+    title: '강의 가이드 모음',
+    file: '',
+    summary: '강의 준비 중 만든 시연·구성 가이드를 제품과 버전별로 모았습니다.',
+  },
+  {
+    id: 'lecture-deploy-capacity',
+    category: 'lecture',
+    format: 'html',
+    group: 'VIOLA 3.0.6',
+    title: 'Deployment 기본 용량 설정 가이드',
+    file: 'lecture-guides/viola-3.0.6/Deployment-기본-용량-설정-가이드.html',
+    summary: 'requests·limits 기본 용량 설정',
+  },
+  {
+    id: 'lecture-hpa-306',
+    category: 'lecture',
+    format: 'html',
+    group: 'VIOLA 3.0.6',
+    title: 'HPA 시연 가이드 (v2)',
+    file: 'lecture-guides/viola-3.0.6/VIOLA-3.0.6-HPA-시연-가이드-v2.html',
+    summary: 'Horizontal Pod Autoscaler 시연',
+  },
+  {
+    id: 'lecture-vpa-306',
+    category: 'lecture',
+    format: 'html',
+    group: 'VIOLA 3.0.6',
+    title: 'VPA 시연 가이드 (v3)',
+    file: 'lecture-guides/viola-3.0.6/VIOLA-3.0.6-VPA-시연-가이드-v3.html',
+    summary: 'Vertical Pod Autoscaler 시연',
+  },
+  {
+    id: 'lecture-ingress-306',
+    category: 'lecture',
+    format: 'html',
+    group: 'VIOLA 3.0.6',
+    title: 'Ingress 80/443 접속 구성 가이드',
+    file: 'lecture-guides/viola-3.0.6/VIOLA-3.0.6-Ingress-80-443-접속-구성-가이드.html',
+    summary: '80/443 포트 접속 구성',
+  },
+  {
+    id: 'lecture-cicd-306',
+    category: 'lecture',
+    format: 'html',
+    group: 'VIOLA 3.0.6',
+    title: 'CI/CD 시연 구성 및 절차 가이드 (v2)',
+    file: 'lecture-guides/viola-3.0.6/VIOLA-CICD-시연-구성-및-절차-가이드-v2.html',
+    summary: 'CI/CD 시연 환경 구성과 절차',
+  },
+  {
+    id: 'lecture-harbor-ingress-306',
+    category: 'lecture',
+    format: 'html',
+    group: 'VIOLA 3.0.6',
+    title: '이미지 업로드 · Ingress 배포 가이드',
+    file: 'lecture-guides/viola-3.0.6/httpd-Harbor-업로드-Ingress-배포-가이드.html',
+    summary: 'httpd 이미지를 Harbor에 올리고 Ingress로 배포',
+  },
+  {
+    id: 'lecture-kiali-306',
+    category: 'lecture',
+    format: 'html',
+    group: 'VIOLA 3.0.6',
+    title: 'Kiali MSA 트래픽 모니터링 가이드',
+    file: 'lecture-guides/viola-3.0.6/VIOLA-3.0.6-Kiali-MSA-트래픽-모니터링-구성-가이드.html',
+    summary: 'MSA 네트워크 트래픽 모니터링 구성',
+  },
+  {
+    id: 'lecture-hpa-305',
+    category: 'lecture',
+    format: 'html',
+    group: 'VIOLA 3.0.5',
+    title: 'HPA 시연 가이드',
+    file: 'lecture-guides/viola-3.0.5/VIOLA-3.0.5-HPA-시연-가이드.html',
+    summary: 'Horizontal Pod Autoscaler 시연',
+  },
+  {
+    id: 'lecture-vpa-305',
+    category: 'lecture',
+    format: 'html',
+    group: 'VIOLA 3.0.5',
+    title: 'VPA 시연 가이드',
+    file: 'lecture-guides/viola-3.0.5/VIOLA-3.0.5-VPA-시연-가이드.html',
+    summary: 'Vertical Pod Autoscaler 시연',
+  },
+  {
+    id: 'lecture-kiali-305',
+    category: 'lecture',
+    format: 'html',
+    group: 'VIOLA 3.0.5',
+    title: 'Kiali MSA 트래픽 모니터링 가이드',
+    file: 'lecture-guides/viola-3.0.5/VIOLA-3.0.5-Kiali-MSA-트래픽-모니터링-구성-가이드.html',
+    summary: 'MSA 트래픽 모니터링 구성',
+  },
+  {
     id: 'tms-release',
     category: 'release',
     title: 'TMS · KPI 릴리즈 노트',
@@ -124,6 +229,20 @@ export const REFERENCE_DOCS_NAV_IDS = [
 export const REFERENCE_DOCS_NAV = REFERENCE_DOCS_NAV_IDS.map(
   (id) => REFERENCE_DOCS.find((d) => d.id === id)
 ).filter(Boolean);
+
+/** 왼쪽 메뉴의 '강의 가이드' 그룹 (group 값별로 묶음, 정의 순서 유지) */
+export const LECTURE_GUIDE_GROUPS = REFERENCE_DOCS.filter((d) => d.category === 'lecture' && d.format === 'html').reduce(
+  (acc, d) => {
+    let g = acc.find((x) => x.name === d.group);
+    if (!g) {
+      g = { name: d.group, docs: [] };
+      acc.push(g);
+    }
+    g.docs.push(d);
+    return acc;
+  },
+  /** @type {{ name: string, docs: ReferenceDocMeta[] }[]} */ ([])
+);
 
 export function isReferenceDocInNav(id) {
   return REFERENCE_DOCS_NAV_IDS.includes(id);

@@ -5,6 +5,18 @@
 
 ---
 
+## 2026-11-05
+
+### [신규] feat(docs): 강의 가이드 상세에 오른쪽 목차(On this page) 추가
+
+- feat(docs): 강의 가이드 상세에 오른쪽 목차(On this page) 추가
+- PR #235: https://github.com/cxr542/edu-team-tms/pull/235
+
+### [신규] feat(docs): 참고문서에 강의 가이드 모음 추가 + 오케스트로 디자인 적용
+
+- feat(docs): 참고문서에 강의 가이드 모음 추가 + 오케스트로 디자인 적용
+- PR #234: https://github.com/cxr542/edu-team-tms/pull/234
+
 ## 2026-11-04
 
 ### [신규] feat(academizer): PPT 아카데미화를 구성원 팀 공통 메뉴로 개방
