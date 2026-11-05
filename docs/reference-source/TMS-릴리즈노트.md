@@ -7,6 +7,11 @@
 
 ## 2026-11-05
 
+### [수정] fix(docs): CONTRABASS 로드밸런서 가이드 내부 IP 표기 마스킹 보완
+
+- fix(docs): CONTRABASS 로드밸런서 가이드 내부 IP 표기 마스킹 보완
+- PR #242: https://github.com/cxr542/edu-team-tms/pull/242
+
 ### [업데이트] feat(ui): 메뉴별 화면 상단 헤더(아이콘·제목·설명)를 공통 스타일로 통일
 
 - 메뉴별 화면 상단(아이콘·제목·설명) 모양이 통일되었습니다.
