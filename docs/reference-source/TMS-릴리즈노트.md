@@ -7,6 +7,11 @@
 
 ## 2026-11-05
 
+### [신규] feat(docs): 강의 가이드에 CONTRABASS 플레이북 2건 추가
+
+- feat(docs): 강의 가이드에 CONTRABASS 플레이북 2건 추가
+- PR #240: https://github.com/cxr542/edu-team-tms/pull/240
+
 ### [업데이트] feat(ui): 남은 파란색을 okestro 블루로 정리
 
 - 상세 화면의 파란색이 okestro 블루로 통일되었습니다.
