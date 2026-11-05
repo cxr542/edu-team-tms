@@ -33,7 +33,7 @@
 
 .journal-title-combo__toggle:hover {
   color: var(--text-primary, #0f172a);
-  background: color-mix(in srgb, var(--primary, #2563eb) 10%, transparent);
+  background: color-mix(in srgb, var(--primary, #1f3dff) 10%, transparent);
 }
 
 .journal-title-combo__hint {
@@ -68,7 +68,7 @@
 
 .journal-title-combo__option.is-active,
 .journal-title-combo__option:hover {
-  background: color-mix(in srgb, var(--primary, #2563eb) 12%, transparent);
+  background: color-mix(in srgb, var(--primary, #1f3dff) 12%, transparent);
 }
 
 .journal-title-combo__empty {
