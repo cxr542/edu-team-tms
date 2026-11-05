@@ -7,6 +7,11 @@
 
 ## 2026-11-05
 
+### [업데이트] feat(ui): 사이드바·색상 토큰을 okestro 스타일로 개선
+
+- 사이드바와 전체 포인트 컬러가 okestro 스타일로 개선되었습니다.
+- PR #236: https://github.com/cxr542/edu-team-tms/pull/236
+
 ### [신규] feat(docs): 강의 가이드 상세에 오른쪽 목차(On this page) 추가
 
 - feat(docs): 강의 가이드 상세에 오른쪽 목차(On this page) 추가
