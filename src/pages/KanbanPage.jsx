@@ -26,7 +26,7 @@ const MEMBERS = {
 
 const COLUMNS = [
   { id: 'todo', title: '해야 할 일', color: '#7a7a7a' },
-  { id: 'in_progress', title: '진행 중', color: '#0066cc' },
+  { id: 'in_progress', title: '진행 중', color: '#1f3dff' },
   { id: 'done', title: '완료', color: '#248a3d' },
 ];
 
@@ -293,7 +293,7 @@ export default function KanbanPage() {
     <main className="kanban-page">
       <header className="kanban-header">
         <div className="kanban-header__title">
-          <Trello size={24} style={{ color: '#0066cc' }} />
+          <Trello size={24} style={{ color: '#1f3dff' }} />
           <div>
             <h2>업무 칸반 보드</h2>
             <p>팀 업무 현황을 시각화하고 일일 업무일지의 수행 시간과 연동하여 관리합니다.</p>

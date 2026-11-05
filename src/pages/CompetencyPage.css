@@ -125,12 +125,12 @@
 
 .competency-member-hub__card:hover {
   border-color: var(--primary, #006dff);
-  box-shadow: 0 2px 8px rgba(0, 102, 204, 0.12);
+  box-shadow: 0 2px 8px rgba(31, 61, 255, 0.12);
   transform: translateY(-1px);
 }
 
 .competency-member-hub__card.is-editable {
-  border-color: rgba(0, 102, 204, 0.35);
+  border-color: rgba(31, 61, 255, 0.35);
 }
 
 .competency-member-hub__card-head {
@@ -233,8 +233,8 @@
 }
 
 .competency-member-block--editable {
-  border-color: rgba(0, 102, 204, 0.45);
-  box-shadow: 0 1px 3px rgba(0, 102, 204, 0.08);
+  border-color: rgba(31, 61, 255, 0.45);
+  box-shadow: 0 1px 3px rgba(31, 61, 255, 0.08);
 }
 
 .competency-member-block--readonly {
@@ -382,8 +382,8 @@
   margin: 0 0 0.75rem;
   padding: 0.55rem 0.75rem;
   border-radius: var(--radius-md);
-  background: rgba(0, 102, 204, 0.06);
-  border: 1px solid rgba(0, 102, 204, 0.12);
+  background: rgba(31, 61, 255, 0.06);
+  border: 1px solid rgba(31, 61, 255, 0.12);
   font-size: 0.8125rem;
   color: var(--text-secondary);
   line-height: 1.45;
@@ -393,8 +393,8 @@
   margin: 0 0 1rem;
   padding: 0.65rem 0.85rem;
   border-radius: var(--radius-md);
-  background: rgba(0, 102, 204, 0.06);
-  border: 1px solid rgba(0, 102, 204, 0.15);
+  background: rgba(31, 61, 255, 0.06);
+  border: 1px solid rgba(31, 61, 255, 0.15);
   font-size: 0.8125rem;
   color: var(--text-secondary);
   line-height: 1.45;

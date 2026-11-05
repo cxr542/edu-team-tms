@@ -284,13 +284,13 @@
 }
 
 .journal-actions .btn-import-shared {
-  background: rgba(0, 102, 204, 0.06);
+  background: rgba(31, 61, 255, 0.06);
   color: var(--primary);
-  border: 1px solid rgba(0, 102, 204, 0.42);
+  border: 1px solid rgba(31, 61, 255, 0.42);
 }
 
 .journal-actions .btn-import-shared:hover:not(:disabled) {
-  background: rgba(0, 102, 204, 0.12);
+  background: rgba(31, 61, 255, 0.12);
   border-color: var(--primary);
 }
 
@@ -349,8 +349,8 @@
 
 .journal-kpi-linkage {
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(0, 102, 204, 0.25);
-  background: linear-gradient(180deg, rgba(0, 102, 204, 0.06) 0%, var(--bg-secondary) 100%);
+  border: 1px solid rgba(31, 61, 255, 0.25);
+  background: linear-gradient(180deg, rgba(31, 61, 255, 0.06) 0%, var(--bg-secondary) 100%);
   overflow: hidden;
 }
 
@@ -437,7 +437,7 @@
   font-weight: 600;
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
-  background: rgba(0, 102, 204, 0.12);
+  background: rgba(31, 61, 255, 0.12);
   color: var(--primary);
 }
 
@@ -477,7 +477,7 @@
   padding: 0.1rem 0.35rem;
   margin-right: 0.25rem;
   border-radius: 4px;
-  background: rgba(0, 102, 204, 0.15);
+  background: rgba(31, 61, 255, 0.15);
   color: var(--primary);
 }
 
@@ -543,7 +543,7 @@
 }
 
 .journal-task-kpi-badge__axis {
-  background: rgba(0, 102, 204, 0.15);
+  background: rgba(31, 61, 255, 0.15);
   color: var(--primary);
 }
 
@@ -569,8 +569,8 @@
   margin: 1rem 0;
   padding: 0.75rem;
   border-radius: var(--radius-sm);
-  background: rgba(0, 102, 204, 0.06);
-  border: 1px solid rgba(0, 102, 204, 0.2);
+  background: rgba(31, 61, 255, 0.06);
+  border: 1px solid rgba(31, 61, 255, 0.2);
 }
 
 .journal-edit-kpi-preview h4 {
@@ -606,7 +606,7 @@
 }
 
 .journal-edit-kpi-preview__tag.kpi1 {
-  background: rgba(0, 102, 204, 0.15);
+  background: rgba(31, 61, 255, 0.15);
   color: var(--primary);
 }
 
@@ -895,18 +895,18 @@
 .journal-summary-draft-btn:hover {
   border-color: var(--primary);
   color: var(--primary);
-  background: rgba(0, 102, 204, 0.06);
+  background: rgba(31, 61, 255, 0.06);
 }
 
 .journal-summary-draft-btn--primary {
-  border-color: rgba(0, 102, 204, 0.4);
+  border-color: rgba(31, 61, 255, 0.4);
   color: var(--primary);
-  background: rgba(0, 102, 204, 0.04);
+  background: rgba(31, 61, 255, 0.04);
 }
 
 .journal-summary-draft-btn--primary:hover {
   border-color: var(--primary);
-  background: rgba(0, 102, 204, 0.1);
+  background: rgba(31, 61, 255, 0.1);
 }
 
 .journal-week-table-wrap {
@@ -1271,7 +1271,7 @@
 }
 
 .task-mm-pill.improve {
-  background: rgba(0, 102, 204, 0.08);
+  background: rgba(31, 61, 255, 0.08);
   color: var(--primary-focus);
 }
 
@@ -1311,7 +1311,7 @@
 }
 
 .journal-task-slot.slot-am {
-  background: rgba(0, 102, 204, 0.1);
+  background: rgba(31, 61, 255, 0.1);
   color: var(--primary);
 }
 
