@@ -8,9 +8,9 @@
 
   --apple-ink: #1d1d1f;
   --apple-canvas: #ffffff;
-  --apple-parchment: #f5f5f7;
+  --apple-parchment: #f4f6fb;
   --apple-pearl: #fafafc;
-  --apple-hairline: #e0e0e0;
+  --apple-hairline: #e3e7f1;
   --apple-muted: #7a7a7a;
   --apple-nav: #000000;
 
@@ -19,7 +19,7 @@
   --bg-tertiary: var(--apple-pearl);
   --bg-glass: rgba(245, 245, 247, 0.82);
   --border-color: var(--apple-hairline);
-  --border-hover: rgba(0, 102, 204, 0.45);
+  --border-hover: rgba(31, 61, 255, 0.45);
   --border-soft: #f0f0f0;
 
   --text-primary: var(--apple-ink);
@@ -28,10 +28,10 @@
   --text-on-dark: #f5f5f7;
   --text-muted-on-dark: #a1a1a6;
 
-  --primary: #0066cc;
-  --primary-focus: #0071e3;
-  --primary-on-dark: #2997ff;
-  --primary-glow: rgba(0, 102, 204, 0.12);
+  --primary: #1f3dff;
+  --primary-focus: #1530d6;
+  --primary-on-dark: #6f86ff;
+  --primary-glow: rgba(31, 61, 255, 0.12);
   --secondary: var(--primary);
   --secondary-glow: rgba(0, 102, 204, 0.08);
   --accent: #bf4800;

@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EDU-TMS 메뉴·디자인 시안 v7</title>
+<style>
+:root{
+  --blue:#1F3DFF; --blue-700:#1530D6; --blue-50:#EAEEFF; --deep:#050B2E; --deep2:#0B1A8A;
+  --lav:#E9ECFA; --mint:#DDF7E6; --violet:#F0E6FA;
+  --bg:#F4F6FB; --card:#fff; --line:#E3E7F1; --ink:#111111; --ink2:#3A4056; --muted:#7A8199;
+  --ok:#14A56B; --warn:#FF6900;
+  font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--ink);font-size:14px;height:100vh;overflow:hidden}
+.app{display:grid;grid-template-columns:256px 1fr;height:100vh}
+/* 사이드바: 무채색, 솔루션 콘솔 스타일 */
+aside{background:#fff;color:#2B2F38;padding:20px 12px 12px;display:flex;flex-direction:column;overflow:auto;border-right:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:8px;padding:0 10px 4px;font-weight:800;letter-spacing:.14em;font-size:15px;color:#111}
+.logo i{width:20px;height:20px;border-radius:50%;border:2px solid #111;border-right-color:transparent;display:inline-block;transform:rotate(-30deg)}
+.product{margin:14px 4px 12px;height:104px;padding:16px 18px;border-radius:12px;color:#fff;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#050B2E 0%,#0A1A9A 55%,#2B4BFF 120%);font-size:26px;font-weight:800;line-height:1.05;letter-spacing:.01em}
+.product::before,.product::after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.10)}
+.product::before{width:110px;height:110px;right:-22px;top:-30px}.product::after{width:70px;height:70px;right:52px;bottom:-36px;background:rgba(12,224,206,.22)}
+.product small{display:block;font-size:11px;font-weight:400;opacity:.8;margin-top:10px;letter-spacing:0;position:relative}
+nav{margin-top:6px;display:flex;flex-direction:column;gap:2px}
+.row{display:flex;align-items:center;gap:10px;height:38px;padding:0 12px;border-radius:8px;color:#3F444F;cursor:pointer;position:relative}
+.row:hover{background:#F3F4F6}
+.row svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.row .chev{margin-left:auto;width:14px;height:14px;color:#9AA0AB}
+.row.open{color:#111;font-weight:700}
+.row .badge{margin-left:auto;background:#111;color:#fff;border-radius:999px;font-size:11px;font-weight:700;padding:1px 8px}
+.sub{display:flex;flex-direction:column;gap:2px;margin:2px 0 8px}
+.sub .row{height:34px;padding-left:42px;font-size:13px;color:#555B67}
+.sub .row.on{background:#F0F1F4;color:#111;font-weight:700}
+.sub .row.on::before{content:"";position:absolute;left:0;top:7px;bottom:7px;width:3px;border-radius:3px;background:#111}
+.foot{margin-top:auto;padding-top:10px;display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--line)}
+.dot{position:absolute;left:24px;top:9px;width:7px;height:7px;border-radius:50%;background:#E5484D}
+/* 본문 */
+.right{display:flex;flex-direction:column;min-width:0;overflow:auto}
+.top{display:flex;align-items:center;gap:10px;padding:14px 28px;position:sticky;top:0;background:rgba(244,246,251,.9);backdrop-filter:blur(8px);z-index:2}
+.crumb{color:var(--muted)}.crumb b{color:var(--ink)}
+.top .sp{flex:1}
+.chip{border-radius:999px;padding:7px 14px;font-size:12px;font-weight:700}
+.c-lav{background:var(--lav);color:#2A3BB0}.c-mint{background:var(--mint);color:#0B7A4E}.c-vio{background:var(--violet);color:#7A2FB5}
+.content{padding:4px 28px 28px;display:flex;flex-direction:column;gap:16px}
+.hero{border-radius:20px;padding:28px 32px;color:#fff;display:flex;justify-content:space-between;align-items:flex-end;position:relative;overflow:hidden;
+  background:linear-gradient(110deg,var(--deep) 0%,#0A1A9A 50%,#2B4BFF 100%)}
+.hero::before{content:"";position:absolute;inset:0;opacity:.18;background-image:linear-gradient(rgba(255,255,255,.8) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.8) 1px,transparent 1px);background-size:26px 26px;-webkit-mask-image:linear-gradient(90deg,transparent 30%,#000)}
+.hero>*{position:relative}
+.hero h1{font-size:30px;font-weight:700;line-height:1.25}.hero p{margin-top:10px;font-size:13px;opacity:.85}
+.pillbtn{border:1px solid rgba(255,255,255,.7);color:#fff;border-radius:999px;padding:10px 20px;font-size:13px;font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.stat{background:var(--card);border-radius:16px;padding:18px 20px;border:1px solid var(--line)}
+.stat small{color:var(--muted);font-size:12px}.stat strong{display:block;font-size:28px;margin-top:6px;color:var(--ink);font-weight:700}
+.stat em{font-style:normal;font-size:12px;font-weight:700;color:var(--ok)}.stat em.o{color:var(--warn)}
+.panel{background:var(--card);border-radius:16px;border:1px solid var(--line);overflow:hidden}
+.ph{padding:18px 22px 4px;display:flex;justify-content:space-between;align-items:center}
+.ph h2{font-size:17px;font-weight:700}
+.ph .acts{display:flex;gap:8px}
+.btn{background:var(--blue);color:#fff;border-radius:999px;padding:8px 18px;font-weight:600;font-size:13px}
+.btn.ghost{background:#fff;color:var(--ink2);border:1px solid var(--line)}
+.search{margin:10px 22px 8px;background:#F4F6FB;border-radius:999px;padding:9px 16px;color:var(--muted);font-size:13px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:10px 22px;border-bottom:1px solid var(--line)}
+td{padding:14px 22px;border-bottom:1px solid #F0F2F8;font-size:13px}
+td a{color:var(--ink);font-weight:700}
+.tag{font-size:11px;font-weight:700;padding:4px 11px;border-radius:999px}
+.t-ok{background:var(--mint);color:#0B7A4E}.t-wip{background:var(--lav);color:#2A3BB0}.t-warn{background:#FFEBDD;color:#C24E00}
+.bar{height:6px;border-radius:99px;background:#E9ECF6;width:120px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,#0A1A9A,#2B4BFF)}
+.pager{display:flex;justify-content:space-between;padding:12px 22px;font-size:12px;color:var(--muted)}
+.pal{display:flex;gap:8px;padding:6px 22px 20px}.pal span{flex:1;border-radius:12px;height:56px;font-size:10px;color:#fff;padding:8px 10px;font-weight:700;line-height:1.4}
+.who{position:fixed;bottom:16px;right:16px;z-index:10;background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px;display:flex;gap:4px;box-shadow:0 6px 20px rgba(0,0,40,.15)}
+.who button{border:0;background:none;padding:8px 16px;border-radius:999px;font-weight:700;color:#7A8199;cursor:pointer;font-family:inherit}
+.who button.on{background:#1F3DFF;color:#fff}
+.sub .row{padding-left:14px}.sub{margin-left:0}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="i-home" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.5 3.2-5.5 6.5-5.5s5.9 2 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 010 6.8M18 14.8c1.9.7 3.2 2.5 3.5 5.2"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2z"/><path d="M4 21V5M9 7h6"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16"/><path d="M8 16v-4M12 16V8M16 16v-6"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 17V11a6 6 0 1112 0v6l1.5 2h-15z"/><path d="M10 21h4"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 18.5c1.2-2.2 3-3.2 5.5-3.2s4.3 1 5.5 3.2"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+<symbol id="i-up" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></symbol>
+<symbol id="i-left" viewBox="0 0 24 24"><path d="M11 6l-6 6 6 6M19 6l-6 6 6 6"/></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></symbol>
+<symbol id="i-set" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></symbol>
+<symbol id="i-mega" viewBox="0 0 24 24"><path d="M4 10v4l10 4V6z"/><path d="M14 9a3 3 0 010 6M6 14l1 5h3l-1-4"/></symbol>
+<symbol id="i-food" viewBox="0 0 24 24"><path d="M6 3v8a2 2 0 002 2v8M10 3v6M4 3v6M17 3c-2 2-2.5 5-2.5 8h2.5v10"/></symbol>
+<symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.600 1-2.100A6 6 0 0012 3z"/></symbol>
+<symbol id="i-cap" viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.500 3 3 6 3s6-1.500 6-3v-5"/></symbol>
+<symbol id="i-board" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v10"/></symbol>
+<symbol id="i-ppt" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1"/><path d="M12 16v4M8 20h8"/></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+<symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="M8.500 13.500L7 21l5-3 5 3-1.500-7.500"/></symbol>
+<symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L4 19a1.500 1.500 0 001.300 2h13.400A1.500 1.500 0 0020 19l-6-10V3"/></symbol>
+<symbol id="i-pie" viewBox="0 0 24 24"><path d="M12 3v9h9"/><path d="M20.500 15A9 9 0 1112 3"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></symbol>
+</defs></svg>
+
+<div class="who"><button data-r="member" class="on">구성원 화면</button><button data-r="admin">관리자 화면</button></div>
+<div class="app">
+  <aside>
+    <div class="logo"><img src="https://www.okestro.com/wp-content/themes/okestro/assets/images/common/img_logo_blue.svg" alt="OKESTRO" height="22"></div>
+    <div class="product"><span style="position:relative">EDU<br>TMS</span><small>교육팀 운영 관리 시스템</small></div>
+    <nav id="nav"></nav>
+    <div class="foot">
+      <div class="row"><svg><use href="#i-bell"/></svg>알림<span class="dot"></span></div>
+      <div class="row"><svg><use href="#i-user"/></svg>프로필</div>
+      <div class="row" style="color:#9AA0AB"><svg><use href="#i-left"/></svg></div>
+    </div>
+  </aside>
+  <div class="right">
+    <div class="top">
+      <div class="crumb">팀장 업무 &nbsp;/&nbsp; <b>KPI 승인</b></div><div class="sp"></div>
+      <span class="chip c-vio">PRODUCTION</span><span class="chip c-lav">교육팀 · 2026년 11월</span><span class="chip c-mint">구성원 보기 ⇄</span>
+    </div>
+    <div class="content">
+      <section class="hero"><div><h1>KPI 승인<br>3건이 확인을 기다리고 있습니다</h1><p>구성원이 제출한 월 KPI를 확인하고 승인하거나 반려할 수 있습니다.</p></div><div class="pillbtn">일괄 승인 보기 ↗</div></section>
+      <section class="stats">
+        <div class="stat"><small>승인 대기</small><strong>3건</strong><em class="o">● 확인 필요</em></div>
+        <div class="stat"><small>이번 달 승인 완료</small><strong>9건</strong><em>▲ 2건</em></div>
+        <div class="stat"><small>일지 제출률</small><strong>80%</strong><em>▲ 10%p</em></div>
+        <div class="stat"><small>KPI2 진행 과제</small><strong>7건</strong><em>● 정상</em></div>
+      </section>
+      <section class="panel">
+        <div class="ph"><h2>제출 내역</h2><div class="acts"><div class="btn ghost">내보내기</div><div class="btn">+ 일괄 승인</div></div></div>
+        <div class="search">🔍 &nbsp;항목 이름 또는 값을 입력해 주세요.</div>
+        <table>
+          <tr><th>구성원</th><th>제출 항목</th><th>기간</th><th>달성률</th><th>상태</th><th style="text-align:right">작업</th></tr>
+          <tr><td><a>김○○</a></td><td>월 KPI 제출</td><td>2026-10</td><td><div class="bar"><i style="width:92%"></i></div></td><td><span class="tag t-warn">승인 대기</span></td><td style="text-align:right">⋯</td></tr>
+          <tr><td><a>이○○</a></td><td>월 KPI 제출</td><td>2026-10</td><td><div class="bar"><i style="width:74%"></i></div></td><td><span class="tag t-warn">승인 대기</span></td><td style="text-align:right">⋯</td></tr>
+          <tr><td><a>박○○</a></td><td>KPI2 효과 제출</td><td>2026-10</td><td><div class="bar"><i style="width:58%"></i></div></td><td><span class="tag t-wip">검토 중</span></td><td style="text-align:right">⋯</td></tr>
+          <tr><td><a>최○○</a></td><td>월 KPI 제출</td><td>2026-09</td><td><div class="bar"><i style="width:100%"></i></div></td><td><span class="tag t-ok">승인 완료</span></td><td style="text-align:right">⋯</td></tr>
+        </table>
+        <div class="pager"><span>전체 수 4</span><span>1 / 1 &nbsp; 리스트 수 20 ▾</span></div>
+      </section>
+      <section class="panel">
+        <div class="ph"><h2>컬러 가이드 — 사이드바는 무채색, 본문만 okestro.com 컬러</h2></div>
+        <div class="pal">
+          <span style="background:#050B2E">Deep Navy<br>#050B2E · 히어로 시작</span>
+          <span style="background:#0A1A9A">Indigo<br>#0A1A9A · 히어로 중간</span>
+          <span style="background:#1F3DFF">Royal Blue<br>#1F3DFF · 버튼·활성</span>
+          <span style="background:#E9ECFA;color:#2A3BB0">Lavender<br>#E9ECFA · 칩</span>
+          <span style="background:#DDF7E6;color:#0B7A4E">Mint<br>#DDF7E6 · 성공 칩</span>
+          <span style="background:#FF6900">Orange<br>#FF6900 · 알림 배지</span>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+<script>
+const I=(n)=>`<svg><use href="#i-${n}"/></svg>`;
+const row=(ic,t,o={})=>`<div class="row${o.on?' on':''}">${ic?I(ic):''}${t}${o.badge?`<span class="badge">${o.badge}</span>`:''}</div>`;
+const grp=(t)=>`<div style="font-size:11px;color:#9AA0AB;font-weight:700;letter-spacing:.06em;padding:14px 12px 4px">${t}</div>`;
+const NAV={
+ member:grp('팀 공통')+row('file','팀 빌딩 관리')+row('mega','공지사항',{badge:2})+row('food','오늘 뭐 먹지')+row('bulb','이것도')+row('cap','강의일지')+row('board','칸반 보드')+row('ppt','PPT 아카데미화')
+  +grp('사용자 업무')+row('cal','일일 업무일지',{on:1})+row('award','역량 평가')
+  +grp('참고')+row('book','용어사전')+row('file','참고문서'),
+ admin:grp('관리·공통')+row('file','팀 빌딩 관리')+row('mega','공지사항',{badge:2})+row('bulb','이것도',{badge:1})+row('food','오늘 뭐 먹지')+row('cap','강의일지')+row('board','칸반 보드')+row('ppt','PPT 아카데미화')
+  +grp('사용자 업무')+row('cal','일일 업무일지')+row('award','역량 평가')
+  +grp('실험 버전')+row('flask','클라우드 챗봇')
+  +grp('관리 업무')+row('chart','팀 KPI 관리')+row('pie','KPI 리포트')+row('check','KPI 승인',{badge:3,on:1})
+  +grp('참고')+row('book','용어사전')+row('file','참고문서')
+};
+const BODY={
+ member:{crumb:'사용자 업무 &nbsp;/&nbsp; <b>일일 업무일지</b>',h:'일일 업무일지<br>이번 주 4/5일 작성했어요',p:'오늘 한 일을 기록하면 KPI와 개선 과제에 자동으로 연결됩니다.',btn:'오늘 일지 작성 ↗',
+  stats:[['이번 주 작성','4/5일','● 정상'],['KPI2 개선 과제','2건','● 진행 중'],['월 KPI 제출','대기','● 말일까지'],['새 공지','2건','● 미확인']],
+  title:'이번 주 일지',cols:['날짜','업무 분류','제목','상태'],rows:[['11/03 (월)','강의','클라우드 입문 과정 진행','t-ok|작성 완료'],['11/04 (화)','교안','실습 교안 개정','t-ok|작성 완료'],['11/05 (수)','운영','수강생 문의 대응','t-wip|작성 중'],['11/06 (목)','-','-','t-warn|미작성']]},
+ admin:{crumb:'관리 업무 &nbsp;/&nbsp; <b>KPI 승인</b>',h:'KPI 승인<br>3건이 확인을 기다리고 있습니다',p:'구성원이 제출한 월 KPI를 확인하고 승인하거나 반려할 수 있습니다.',btn:'일괄 승인 보기 ↗',
+  stats:[['승인 대기','3건','● 확인 필요'],['이번 달 승인 완료','9건','▲ 2건'],['일지 제출률','80%','▲ 10%p'],['KPI2 진행 과제','7건','● 정상']],
+  title:'제출 내역',cols:['구성원','제출 항목','기간','상태'],rows:[['김○○','월 KPI 제출','2026-10','t-warn|승인 대기'],['이○○','월 KPI 제출','2026-10','t-warn|승인 대기'],['박○○','KPI2 효과 제출','2026-10','t-wip|검토 중'],['최○○','월 KPI 제출','2026-09','t-ok|승인 완료']]}
+};
+function render(r){
+ document.getElementById('nav').innerHTML=NAV[r];
+ const d=BODY[r];
+ document.querySelector('.crumb').innerHTML=d.crumb;
+ document.querySelector('.hero h1').innerHTML=d.h;document.querySelector('.hero p').textContent=d.p;document.querySelector('.pillbtn').textContent=d.btn;
+ document.querySelector('.stats').innerHTML=d.stats.map((x,i)=>`<div class="stat"><small>${x[0]}</small><strong>${x[1]}</strong><em${i==0&&r=='admin'?' class="o"':''}>${x[2]}</em></div>`).join('');
+ const p=document.querySelectorAll('.panel')[0];
+ p.querySelector('h2').textContent=d.title;
+ p.querySelector('table').innerHTML='<tr>'+d.cols.map(c=>`<th>${c}</th>`).join('')+'</tr>'+d.rows.map(r=>'<tr>'+r.map((c,i)=>{if(c.startsWith('t-')){const[k,t]=c.split('|');return `<td><span class="tag ${k}">${t}</span></td>`}return i==0?`<td><a>${c}</a></td>`:`<td>${c}</td>`}).join('')+'</tr>').join('');
+ document.querySelectorAll('.who button').forEach(b=>b.classList.toggle('on',b.dataset.r===r));
+}
+document.querySelectorAll('.who button').forEach(b=>b.onclick=()=>render(b.dataset.r));
+render('member');
+</script>
+</body>
+</html>
