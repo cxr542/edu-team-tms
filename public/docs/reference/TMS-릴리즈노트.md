@@ -7,6 +7,11 @@
 
 ## 2026-11-05
 
+### [업데이트] feat(ui): 메뉴별 화면 상단 헤더(아이콘·제목·설명)를 공통 스타일로 통일
+
+- 메뉴별 화면 상단(아이콘·제목·설명) 모양이 통일되었습니다.
+- PR #241: https://github.com/cxr542/edu-team-tms/pull/241
+
 ### [신규] feat(docs): 강의 가이드에 CONTRABASS 플레이북 2건 추가
 
 - feat(docs): 강의 가이드에 CONTRABASS 플레이북 2건 추가
