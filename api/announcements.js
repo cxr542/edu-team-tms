@@ -11,6 +11,7 @@ import {
   resolveEngagementMember,
 } from '../server/api-utils/announcementEngagement.js';
 import { handleGlossaryAdmin } from '../server/api-utils/glossaryAdmin.js';
+import { handleReferenceDocsAdmin } from '../server/api-utils/referenceDocsAdmin.js';
 
 const ANNOUNCEMENTS_TABLE = 'announcements';
 const COMMENTS_TABLE = 'announcement_comments';
@@ -549,6 +550,8 @@ export default async function handler(req, res) {
 
   if (pathname.includes('/api/glossary-admin')) {
     return handleGlossaryAdmin(req, res, client);
+  } else if (pathname.includes('/api/reference-docs-admin')) {
+    return handleReferenceDocsAdmin(req, res, client);
   } else if (pathname.includes('/api/announcement-comments')) {
     return handleComments(req, res, client);
   } else if (pathname.includes('/api/announcement-reactions')) {

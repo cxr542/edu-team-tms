@@ -981,7 +981,7 @@ export default function App() {
       {isPublicViewer ? (
         <PublicViewerGuidePage />
       ) : displayModule === 'docs' ? (
-        <ReferenceDocsPage />
+        <ReferenceDocsPage isAdminShell={isAdminEditAccess || appRoute.scope === 'admin'} />
       ) : displayModule === 'academizer' && !isViewer ? (
         <AcademizerPage />
       ) : displayModule === 'cloud-chatbot' && !isViewer ? (
