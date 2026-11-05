@@ -70,7 +70,8 @@ function copyInternalSource() {
         walk(abs, relPath);
         continue;
       }
-      if (!name.endsWith('.md')) continue;
+      const isLectureGuideHtml = relPath.startsWith('lecture-guides/') && name.endsWith('.html');
+      if (!name.endsWith('.md') && !isLectureGuideHtml) continue;
       if (name === 'README.md') continue;
       copyFile(abs, path.join(OUT, relPath));
       console.log('copied (internal):', relPath);

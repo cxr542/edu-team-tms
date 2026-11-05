@@ -1,29 +1,61 @@
-/* K8s / OpenStack style docs shell inside TMS */
+/*
+ * 참고문서 — OKESTRO 디자인 시스템 적용
+ * 토큰 출처: Okestro Design System (tokens/colors·shape·spacing·motion·typography)
+ * 원칙: 평면 색면 + 1px 헤어라인, 그림자 없음, 라운드는 20px 또는 0(화면용 보조 4/8px),
+ *       Primary 네이비 #000080 · 링크/활성 #1038ED · 문서당 Point 1색(#F15928).
+ * 전역 앱 토큰(Apple 계열)과 섞이지 않도록 .ref-docs-shell 안에서만 정의한다.
+ */
 
 .ref-docs-shell {
+  --okd-navy: #000080;
+  --okd-blue: #1038ed;
+  --okd-blue-light: #1d80f8;
+  --okd-point: #f15928;
+  --okd-ink: #1a2430;
+  --okd-muted: #5b5b6f;
+  --okd-grey-100: #f5f5f5;
+  --okd-grey-200: #e9e9e9;
+  --okd-grey-300: #d9d9d9;
+  --okd-radius-card: 20px;
+  --okd-radius-sm: 4px;
+  --okd-radius-md: 8px;
+  --okd-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --okd-fast: 120ms;
+  --okd-font: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+    'Malgun Gothic', system-ui, sans-serif;
+
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #1a1d24;
+  background: var(--okd-grey-100);
+  color: var(--okd-ink);
+  font-family: var(--okd-font);
 }
 
+.ref-docs-shell button:focus-visible,
+.ref-docs-shell a:focus-visible {
+  outline: 2px solid var(--okd-blue);
+  outline-offset: 2px;
+}
+
+/* —— Toolbar / breadcrumb —— */
 .ref-docs-toolbar {
   flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: #15181e;
+  padding: 0.6rem 1.25rem;
+  border-bottom: 1px solid var(--okd-grey-200);
+  background: #fff;
 }
 
 .ref-docs-toolbar__menu {
   display: none;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   padding: 0.35rem 0.6rem;
 }
 
@@ -31,22 +63,22 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   min-width: 0;
 }
 
 .ref-docs-breadcrumb__root {
-  color: var(--text-muted);
+  color: var(--okd-muted);
 }
 
 .ref-docs-breadcrumb__sep {
-  color: var(--text-muted);
+  color: var(--okd-grey-300);
   flex-shrink: 0;
 }
 
 .ref-docs-breadcrumb__current {
-  color: var(--text-primary);
-  font-weight: 600;
+  color: var(--okd-navy);
+  font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -56,29 +88,34 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr) 200px;
+  grid-template-columns: 260px minmax(0, 1fr) 220px;
 }
 
-/* —— Left nav (doc picker) —— */
+/* —— Left nav —— */
 .ref-docs-nav {
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  background: #15181e;
+  border-right: 1px solid var(--okd-grey-200);
+  background: #fff;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 
 .ref-docs-nav__inner {
-  padding: 0.75rem 0.5rem 1.5rem;
+  padding: 1.25rem 0.75rem 2rem;
 }
 
+/* 'label' 패턴: 네이비 Bold 라벨 */
 .ref-docs-nav__title {
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-  margin: 0 0.5rem 0.75rem;
-  padding: 0 0.5rem;
+  color: var(--okd-navy);
+  margin: 0 0 0.5rem;
+  padding: 0 0.6rem;
+}
+
+.ref-docs-nav__title--section {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--okd-grey-200);
 }
 
 .ref-docs-nav__section {
@@ -86,13 +123,19 @@
 }
 
 .ref-docs-nav__section-label {
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #6b9fff;
+  color: var(--okd-muted);
   margin: 0 0 0.35rem;
-  padding: 0 0.5rem;
+  padding: 0 0.6rem;
+}
+
+.ref-docs-nav__group-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--okd-muted);
+  margin: 0.85rem 0 0.25rem;
+  padding: 0 0.6rem;
 }
 
 .ref-docs-nav__list {
@@ -102,44 +145,54 @@
 }
 
 .ref-docs-nav__link {
-  display: block;
+  display: flex;
+  align-items: center;
   width: 100%;
   text-align: left;
-  padding: 0.4rem 0.55rem;
-  margin: 0 0.1rem;
+  padding: 0.5rem 0.6rem;
   border: none;
-  border-radius: 4px;
   border-left: 3px solid transparent;
+  border-radius: 0;
   background: transparent;
-  color: #c8d0dc;
+  color: var(--okd-ink);
   font: inherit;
-  font-size: 0.8125rem;
-  line-height: 1.35;
+  font-size: 0.875rem;
+  line-height: 1.4;
   cursor: pointer;
+  transition: background var(--okd-fast) var(--okd-ease), color var(--okd-fast) var(--okd-ease);
 }
 
 .ref-docs-nav__link:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
+  background: var(--okd-grey-100);
 }
 
 .ref-docs-nav__link.is-active {
-  background: rgba(0, 109, 255, 0.12);
-  border-left-color: #006dff;
-  color: #fff;
+  background: var(--okd-grey-100);
+  border-left-color: var(--okd-blue);
+  color: var(--okd-navy);
+  font-weight: 700;
+}
+
+.ref-docs-nav__badge {
+  margin-left: auto;
+  padding: 0 0.4rem;
+  font-size: 0.6875rem;
   font-weight: 600;
+  color: #fff;
+  background: var(--okd-point);
+  line-height: 1.5;
 }
 
 .ref-docs-nav__candidates {
   margin-top: 1rem;
   padding: 0.5rem;
-  font-size: 0.72rem;
-  color: var(--text-muted);
+  font-size: 0.75rem;
+  color: var(--okd-muted);
 }
 
 .ref-docs-nav__candidates summary {
   cursor: pointer;
-  color: var(--text-secondary);
+  color: var(--okd-ink);
 }
 
 .ref-docs-nav__candidates ul {
@@ -151,76 +204,224 @@
   display: none;
 }
 
-/* —— Center article (readable light panel) —— */
+/* —— Center article: 회색 캔버스 위 20px 라운드 흰 카드 —— */
 .ref-docs-article-scroll {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  background: #f6f8fa;
+  background: var(--okd-grey-100);
+  padding: 1.5rem;
 }
 
 .ref-docs-article-panel {
-  max-width: 52rem;
+  max-width: 54rem;
   margin: 0 auto;
-  padding: 2rem 2.5rem 4rem;
+  padding: 2.5rem 3rem 4rem;
+  background: #fff;
+  border-radius: var(--okd-radius-card);
+}
+
+.ref-docs-article-panel--wide {
+  max-width: 76rem;
+  padding-bottom: 2rem;
 }
 
 .ref-docs-article-header {
-  margin-bottom: 1.75rem;
-  padding-bottom: 1.25rem;
-  border-bottom: 1px solid #d8dee4;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--okd-grey-200);
 }
 
 .ref-docs-article-eyebrow {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #006dff;
-  margin: 0 0 0.35rem;
+  display: inline-block;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--okd-navy);
+  margin: 0 0 0.6rem;
 }
 
 .ref-docs-article-title {
-  font-size: 2rem;
-  font-weight: 700;
-  line-height: 1.2;
-  color: #1a1a2e;
-  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--okd-ink);
+  margin: 0 0 0.6rem;
   letter-spacing: -0.02em;
 }
 
 .ref-docs-article-summary {
   font-size: 1rem;
-  color: #57606a;
+  color: var(--okd-muted);
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.6;
+}
+
+/* 관리자 도구 */
+.ref-docs-admin-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.ref-docs-admin-bar__note {
+  font-size: 0.8125rem;
+  color: var(--okd-muted);
+}
+
+.ref-docs-admin-bar__error {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--okd-point);
+}
+
+.ref-docs-hidden-notice {
+  padding: 1rem 0;
+  color: var(--okd-muted);
+}
+
+/* —— 강의 가이드: HTML 본문 —— */
+.ref-docs-html-actions {
+  margin: 0 0 0.6rem;
+  text-align: right;
+  font-size: 0.8125rem;
+}
+
+.ref-docs-html-actions a {
+  color: var(--okd-blue);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ref-docs-html-actions a:hover {
+  text-decoration: underline;
+}
+
+.ref-docs-html-frame {
+  display: block;
+  width: 100%;
+  height: calc(100vh - 16rem);
+  min-height: 28rem;
+  border: 1px solid var(--okd-grey-200);
+  border-radius: 0;
+  background: #fff;
+}
+
+/* —— 강의 가이드 모음(인덱스) —— */
+.ref-docs-index__group + .ref-docs-index__group {
+  margin-top: 2.25rem;
+}
+
+.ref-docs-index__group-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 1rem;
+}
+
+.ref-docs-index__group-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--okd-ink);
+  margin: 0;
+}
+
+/* ProductBadge — solid, 제품색 */
+.ref-docs-index__badge {
+  display: inline-block;
+  padding: 0.1rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--okd-product, var(--okd-navy));
+  border-radius: var(--okd-radius-sm);
+}
+
+.ref-docs-index__count {
+  font-size: 0.8125rem;
+  color: var(--okd-muted);
+}
+
+.ref-docs-index__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+
+/* 정사각 헤어라인 카드 */
+.ref-docs-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  text-align: left;
+  padding: 1.25rem;
+  border: 1px solid var(--okd-grey-200);
+  border-radius: 0;
+  background: #fff;
+  color: var(--okd-ink);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color var(--okd-fast) var(--okd-ease), background var(--okd-fast) var(--okd-ease);
+}
+
+.ref-docs-card:hover {
+  border-color: var(--okd-navy);
+  background: var(--okd-grey-100);
+}
+
+.ref-docs-card.is-hidden {
+  opacity: 0.62;
+}
+
+.ref-docs-card__title {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--okd-navy);
+}
+
+.ref-docs-card__summary {
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--okd-muted);
+}
+
+.ref-docs-card__meta {
+  margin-top: auto;
+  padding-top: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--okd-blue);
+}
+
+.ref-docs-card__meta--hidden {
+  color: var(--okd-point);
 }
 
 /* —— Right TOC rail —— */
 .ref-docs-toc-rail {
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
-  background: #15181e;
+  border-left: 1px solid var(--okd-grey-200);
+  background: #fff;
   overflow-y: auto;
 }
 
 .ref-docs-toc-rail__inner {
   position: sticky;
   top: 0;
-  padding: 1rem 0.75rem 2rem;
+  padding: 1.25rem 1rem 2rem;
 }
 
 .ref-docs-toc-rail__title {
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  margin: 0 0 0.65rem;
+  color: var(--okd-navy);
+  margin: 0 0 0.75rem;
 }
 
 .doc-toc__empty {
-  font-size: 0.72rem;
-  color: var(--text-muted);
+  font-size: 0.75rem;
+  color: var(--okd-muted);
   margin: 0;
 }
 
@@ -228,7 +429,7 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 1px solid var(--okd-grey-200);
 }
 
 .doc-toc__item {
@@ -236,51 +437,53 @@
 }
 
 .doc-toc__item--h3 .doc-toc__link {
-  padding-left: 0.85rem;
-  font-size: 0.72rem;
+  padding-left: 1.25rem;
+  font-size: 0.75rem;
 }
 
 .doc-toc__item--h4 .doc-toc__link {
-  padding-left: 1.25rem;
-  font-size: 0.68rem;
+  padding-left: 1.75rem;
+  font-size: 0.6875rem;
 }
 
 .doc-toc__link {
   display: block;
-  padding: 0.2rem 0 0.2rem 0.65rem;
+  padding: 0.25rem 0 0.25rem 0.85rem;
   margin-left: -1px;
   border-left: 2px solid transparent;
-  font-size: 0.75rem;
-  line-height: 1.4;
-  color: #9aa3b2;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--okd-muted);
   text-decoration: none;
+  transition: color var(--okd-fast) var(--okd-ease);
 }
 
 .doc-toc__link:hover {
-  color: #e8ecf1;
+  color: var(--okd-navy);
 }
 
 .doc-toc__item.is-active .doc-toc__link {
-  border-left-color: #006dff;
-  color: #fff;
-  font-weight: 600;
+  border-left-color: var(--okd-blue);
+  color: var(--okd-blue);
+  font-weight: 700;
 }
 
-/* —— Markdown body (GitHub / K8s docs tone) —— */
+/* —— Markdown 본문 —— */
 .tech-doc-status {
   font-size: 0.9rem;
-  color: #57606a;
+  color: var(--okd-muted);
   padding: 1rem 0;
 }
 
 .tech-doc-status--error {
-  color: #cf222e;
+  color: var(--okd-point);
+  font-weight: 600;
 }
 
 .tech-doc-content {
   font-size: 1rem;
-  line-height: 1.7;
-  color: #24292f;
+  line-height: 1.75;
+  color: var(--okd-ink);
   word-wrap: break-word;
 }
 
@@ -289,30 +492,28 @@
 }
 
 .tech-doc-content > h1 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin: 2rem 0 1rem;
-  padding-bottom: 0.35rem;
-  border-bottom: 1px solid #d8dee4;
-  color: #1a1a2e;
+  font-size: 1.625rem;
+  font-weight: 800;
+  margin: 2.25rem 0 1rem;
+  color: var(--okd-ink);
   scroll-margin-top: 1rem;
 }
 
 .tech-doc-content > h2 {
-  font-size: 1.375rem;
-  font-weight: 600;
-  margin: 2.25rem 0 0.75rem;
-  padding-bottom: 0.25rem;
-  border-bottom: 1px solid #eaeef2;
-  color: #1a1a2e;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 2.5rem 0 0.85rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--okd-grey-200);
+  color: var(--okd-navy);
   scroll-margin-top: 1rem;
 }
 
 .tech-doc-content > h3 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin: 1.5rem 0 0.5rem;
-  color: #1a1a2e;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  margin: 1.75rem 0 0.5rem;
+  color: var(--okd-ink);
   scroll-margin-top: 1rem;
 }
 
@@ -320,7 +521,7 @@
   font-size: 1rem;
   font-weight: 600;
   margin: 1.25rem 0 0.4rem;
-  color: #424a53;
+  color: var(--okd-muted);
   scroll-margin-top: 1rem;
 }
 
@@ -329,8 +530,8 @@
 }
 
 .tech-doc-content strong {
-  font-weight: 600;
-  color: #1a1a2e;
+  font-weight: 700;
+  color: var(--okd-ink);
 }
 
 .tech-doc-content ul,
@@ -347,13 +548,14 @@
   margin: 0.35rem 0;
 }
 
+/* NoteBox(grey): 회색 면 + 네이비 바 */
 .tech-doc-content blockquote {
-  margin: 1rem 0;
-  padding: 0.65rem 1rem;
-  border-left: 4px solid #006dff;
-  background: #eef6ff;
-  color: #424a53;
-  border-radius: 0 6px 6px 0;
+  margin: 1.25rem 0;
+  padding: 0.85rem 1.1rem;
+  border-left: 4px solid var(--okd-navy);
+  background: var(--okd-grey-100);
+  color: var(--okd-ink);
+  border-radius: 0;
 }
 
 .tech-doc-content blockquote p:last-child {
@@ -362,12 +564,12 @@
 
 .tech-doc-content hr {
   border: none;
-  border-top: 1px solid #d8dee4;
+  border-top: 1px solid var(--okd-grey-200);
   margin: 2rem 0;
 }
 
 .tech-doc-content a {
-  color: #006dff;
+  color: var(--okd-blue);
   text-decoration: none;
 }
 
@@ -378,21 +580,21 @@
 .tech-doc-content code {
   font-family: ui-monospace, 'SF Mono', Menlo, monospace;
   font-size: 0.875em;
-  background: #f0f3f6;
+  background: var(--okd-grey-100);
   padding: 0.15em 0.4em;
-  border-radius: 4px;
-  color: #24292f;
+  border-radius: var(--okd-radius-sm);
+  color: var(--okd-ink);
 }
 
 .tech-doc-content pre {
-  margin: 1rem 0;
-  padding: 1rem;
-  background: #161b22;
-  color: #e6edf3;
-  border-radius: 8px;
+  margin: 1.25rem 0;
+  padding: 1rem 1.15rem;
+  background: var(--okd-ink);
+  color: #fff;
+  border-radius: var(--okd-radius-md);
   overflow-x: auto;
   font-size: 0.875rem;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 .tech-doc-content pre code {
@@ -401,11 +603,10 @@
   color: inherit;
 }
 
+/* 표: 네이비 헤더 + 수평 헤어라인만 */
 .tech-doc-content .table-wrap {
-  margin: 1rem 0 1.25rem;
+  margin: 1.25rem 0 1.5rem;
   overflow-x: auto;
-  border: 1px solid #d8dee4;
-  border-radius: 8px;
 }
 
 .tech-doc-content table {
@@ -417,26 +618,23 @@
 
 .tech-doc-content th,
 .tech-doc-content td {
-  border: 1px solid #d8dee4;
-  padding: 0.55rem 0.75rem;
+  border: none;
+  border-bottom: 1px solid var(--okd-grey-200);
+  padding: 0.65rem 0.85rem;
   text-align: left;
   vertical-align: top;
 }
 
 .tech-doc-content th {
-  background: #f0f3f6;
-  font-weight: 600;
-  color: #1a1a2e;
+  background: var(--okd-navy);
+  font-weight: 700;
+  color: #fff;
 }
 
-.tech-doc-content tr:nth-child(even) td {
-  background: #fafbfc;
-}
-
-/* Mobile */
+/* —— 반응형 —— */
 @media (max-width: 1100px) {
   .ref-docs-body {
-    grid-template-columns: 220px minmax(0, 1fr);
+    grid-template-columns: 240px minmax(0, 1fr);
   }
 
   .ref-docs-toc-rail {
@@ -444,12 +642,17 @@
   }
 }
 
+.ref-docs-body.is-html {
+  grid-template-columns: 260px minmax(0, 1fr);
+}
+
 @media (max-width: 768px) {
   .ref-docs-toolbar__menu {
     display: inline-flex;
   }
 
-  .ref-docs-body {
+  .ref-docs-body,
+  .ref-docs-body.is-html {
     grid-template-columns: 1fr;
   }
 
@@ -459,10 +662,10 @@
     top: var(--shell-banner-h, 0);
     left: 0;
     bottom: 0;
-    width: min(280px, 88vw);
+    width: min(290px, 88vw);
     transform: translateX(-100%);
-    transition: transform 0.2s ease;
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
+    transition: transform 0.2s var(--okd-ease);
+    border-right: 1px solid var(--okd-grey-200);
   }
 
   .ref-docs-body.is-nav-open .ref-docs-nav {
@@ -475,15 +678,118 @@
     inset: 0;
     z-index: 125;
     border: none;
-    background: rgba(0, 0, 0, 0.45);
+    background: rgba(26, 36, 48, 0.45);
     cursor: pointer;
   }
 
+  .ref-docs-article-scroll {
+    padding: 0.75rem;
+  }
+
   .ref-docs-article-panel {
-    padding: 1.25rem 1rem 3rem;
+    padding: 1.5rem 1.1rem 2.5rem;
   }
 
   .ref-docs-article-title {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
+  }
+}
+
+/* —— 강의 가이드 모음 홈: okestro.com 히어로 느낌 —— */
+.ref-docs-article-panel--home {
+  padding: 0;
+  overflow: hidden;
+}
+
+.ref-docs-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 2.25rem 3rem 3rem;
+  min-height: 19rem;
+  color: #fff;
+  background-color: #1638dc;
+  background-size: cover;
+  background-position: center;
+}
+
+.ref-docs-hero__logo {
+  height: 1.1rem;
+  width: auto;
+  margin-bottom: auto;
+  /* 워드마크 SVG는 검정 기본 — 흰색 세트로 반전 */
+  filter: brightness(0) invert(1);
+}
+
+.ref-docs-hero__title {
+  margin: 2.5rem 0 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.ref-docs-hero__desc {
+  margin: 0;
+  max-width: 36rem;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.ref-docs-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  padding: 0.6rem 1.35rem;
+  border: 1px solid #fff;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  background: transparent;
+  cursor: pointer;
+  transition: background var(--okd-fast) var(--okd-ease), color var(--okd-fast) var(--okd-ease);
+}
+
+.ref-docs-hero__cta:hover {
+  background: #fff;
+  color: var(--okd-navy);
+}
+
+.ref-docs-article-panel--home .ref-docs-index {
+  padding: 2.5rem 3rem 3rem;
+}
+
+/* 가이드 카드: 20px 라운드 + 제품색 상단 포인트 */
+.ref-docs-article-panel--home .ref-docs-card {
+  border: none;
+  border-radius: var(--okd-radius-card);
+  background: var(--okd-grey-100);
+  padding: 1.4rem 1.4rem 1.2rem;
+}
+
+.ref-docs-article-panel--home .ref-docs-card:hover {
+  background: #fff;
+  outline: 1px solid var(--okd-navy);
+  outline-offset: -1px;
+}
+
+@media (max-width: 768px) {
+  .ref-docs-hero {
+    padding: 1.5rem 1.25rem 2rem;
+    min-height: 15rem;
+  }
+
+  .ref-docs-hero__title {
+    font-size: 1.75rem;
+  }
+
+  .ref-docs-article-panel--home .ref-docs-index {
+    padding: 1.5rem 1.1rem 2rem;
   }
 }
