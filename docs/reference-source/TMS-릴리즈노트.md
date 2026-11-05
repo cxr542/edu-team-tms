@@ -7,6 +7,11 @@
 
 ## 2026-11-05
 
+### [업데이트] feat(ui): 남은 파란색을 okestro 블루로 정리
+
+- 상세 화면의 파란색이 okestro 블루로 통일되었습니다.
+- PR #239: https://github.com/cxr542/edu-team-tms/pull/239
+
 ### [업데이트] feat(ui): 주황·빨강 색을 okestro 팔레트에 맞춤
 
 - 경고·강조 주황색과 오류 빨간색이 okestro 스타일에 맞게 정리되었습니다.
