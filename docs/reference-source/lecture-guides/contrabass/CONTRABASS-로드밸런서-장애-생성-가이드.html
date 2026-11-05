@@ -200,7 +200,7 @@
   </tbody>
 </table></div>
 
-<p><strong>빠른 점검법:</strong> 로드밸런서가 5분 넘게 PENDING_CREATE이면, 컨트롤러 3대에서 아래 명령으로 o-hm0에 172.16.0.x 주소가 있는지 먼저 확인하세요.</p>
+<p><strong>빠른 점검법:</strong> 로드밸런서가 5분 넘게 PENDING_CREATE이면, 컨트롤러 3대에서 아래 명령으로 o-hm0에 198.18.0.x 주소가 있는지 먼저 확인하세요.</p>
 <div class="code"><pre>ip -br addr show o-hm0; systemctl is-active octavia-interface</pre></div>
 
 <!-- 1 -->
@@ -231,8 +231,8 @@
 <p>Octavia worker와 health manager는 컨트롤러 서버에서 일반 프로세스로 실행되고, amphora VM은 OpenStack 가상 네트워크인 lb-mgmt-net(198.18.0.0/22) 안에 있습니다. 컨트롤러가 이 가상 네트워크와 통신하려면 OVS br-int에 연결된 o-hm0 인터페이스가 관리망 IP를 가지고 있어야 합니다.</p>
 <div class="code diagram"><pre>[컨트롤러]                                  [컴퓨트 노드]
 octavia-worker ──┐                          amphora VM
-health-manager ──┤                          (172.16.x.x)
-                 o-hm0 (172.16.0.x) ── OVS br-int ── lb-mgmt-net ──┘</pre></div>
+health-manager ──┤                          (198.18.x.x)
+                 o-hm0 (198.18.0.x) ── OVS br-int ── lb-mgmt-net ──┘</pre></div>
 <p>o-hm0은 octavia-interface 서비스(<code>/usr/local/bin/octavia-interface.sh</code>)가 부팅 시 한 번 만들어 고정 IP를 넣습니다. 장애 시점 컨트롤러별 상태는 다음과 같았습니다.</p>
 <div class="tbl"><table>
   <thead><tr><th>컨트롤러</th><th>o-hm0 IPv4</th><th>octavia-interface</th><th>영향</th></tr></thead>
@@ -276,7 +276,7 @@ health-manager ──┤                          (172.16.x.x)
 <p>각 컨트롤러(rack6-1-con1 192.0.2.1, rack6-2-con2 192.0.2.2, rack6-3-con3 192.0.2.3)에서 실행합니다. 모두 조회만 합니다.</p>
 <p class="sub">① o-hm0 IP와 서비스 상태</p>
 <div class="code"><pre>hostname; ip -br addr show o-hm0; ip route | grep 172.16; systemctl is-active octavia-interface</pre></div>
-<p>172.16.0.x/22 주소가 없거나 서비스가 inactive이면 조치 대상입니다.</p>
+<p>198.18.0.x/22 주소가 없거나 서비스가 inactive이면 조치 대상입니다.</p>
 <p class="sub">② OVS 연결 상태</p>
 <div class="code"><pre>ovs-vsctl get Port o-hm0 tag; ovs-vsctl get Interface o-hm0 external_ids ofport</pre></div>
 <p>tag가 숫자(4095 아님)이고 ofport가 양수이면 OVS 연결은 정상입니다.</p>
