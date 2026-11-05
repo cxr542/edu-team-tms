@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowDown, ChevronRight, Menu } from 'lucide-react';
 import MarkdownDocViewer from '../components/MarkdownDocViewer';
 import DocTableOfContents from '../components/DocTableOfContents';
+import LectureGuideFrame from '../components/LectureGuideFrame';
 import {
   DEFAULT_REFERENCE_DOC_ID,
   REF_DOC_CATEGORIES,
@@ -29,6 +30,9 @@ function readDocIdFromUrl() {
 export default function ReferenceDocsPage({ isAdminShell = false }) {
   const [docId, setDocId] = useState(readDocIdFromUrl);
   const [headings, setHeadings] = useState([]);
+  const [guideHeadings, setGuideHeadings] = useState([]);
+  const [guideActiveId, setGuideActiveId] = useState('');
+  const guideJumpRef = useRef(null);
   const [navOpen, setNavOpen] = useState(false);
   const [hiddenIds, setHiddenIds] = useState([]);
   const [busy, setBusy] = useState(false);
@@ -90,6 +94,11 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
   const wide = isHtml || isIndex;
 
   useEffect(() => {
+    setGuideHeadings([]);
+    setGuideActiveId('');
+  }, [docId]);
+
+  useEffect(() => {
     const urlId = new URLSearchParams(window.location.search).get('doc');
     if (urlId && !findReferenceDoc(urlId)) {
       selectDoc(DEFAULT_REFERENCE_DOC_ID);
@@ -116,7 +125,7 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
         </nav>
       </div>
 
-      <div className={`ref-docs-body${navOpen ? ' is-nav-open' : ''}${wide ? ' is-html' : ''}`}>
+      <div className={`ref-docs-body${navOpen ? ' is-nav-open' : ''}${isIndex ? ' is-html' : ''}`}>
         <aside id="ref-docs-nav" className="ref-docs-nav" aria-label="문서 목록">
           <div className="ref-docs-nav__inner">
             <p className="ref-docs-nav__title">문서</p>
@@ -279,12 +288,13 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
                     새 탭에서 열기
                   </a>
                 </p>
-                <iframe
-                  key={src}
-                  className="ref-docs-html-frame"
+                <LectureGuideFrame
                   src={src}
                   title={active.title}
-                  sandbox="allow-scripts allow-same-origin allow-popups"
+                  scrollEl={articleScrollEl}
+                  onHeadings={setGuideHeadings}
+                  onActiveChange={setGuideActiveId}
+                  jumpRef={guideJumpRef}
                 />
               </>
             ) : (
@@ -293,11 +303,39 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
           </div>
         </div>
 
-        {!wide && (
+        {!isIndex && (
           <aside className="ref-docs-toc-rail" aria-label="이 페이지 목차">
             <div className="ref-docs-toc-rail__inner">
               <p className="ref-docs-toc-rail__title">On this page</p>
-              <DocTableOfContents headings={headings} scrollRoot={articleScrollEl} />
+              {isHtml ? (
+                guideHeadings.length ? (
+                  <nav className="doc-toc" aria-label="목차">
+                    <ul className="doc-toc__list">
+                      {guideHeadings.map((h) => (
+                        <li
+                          key={h.id}
+                          className={`doc-toc__item doc-toc__item--h${h.level}${guideActiveId === h.id ? ' is-active' : ''}`}
+                        >
+                          <a
+                            href={`#${h.id}`}
+                            className="doc-toc__link"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              guideJumpRef.current?.(h.id);
+                            }}
+                          >
+                            {h.text}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </nav>
+                ) : (
+                  <p className="doc-toc__empty">목차를 불러오는 중입니다.</p>
+                )
+              ) : (
+                <DocTableOfContents headings={headings} scrollRoot={articleScrollEl} />
+              )}
             </div>
           </aside>
         )}

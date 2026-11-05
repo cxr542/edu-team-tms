@@ -29,6 +29,8 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* clip: 스크롤 컨테이너를 만들지 않아 내부 sticky 패널이 페이지 스크롤을 따라간다 */
+  overflow: clip;
   background: var(--okd-grey-100);
   color: var(--okd-ink);
   font-family: var(--okd-font);
@@ -301,9 +303,8 @@
 .ref-docs-html-frame {
   display: block;
   width: 100%;
-  height: calc(100vh - 16rem);
   min-height: 28rem;
-  border: 1px solid var(--okd-grey-200);
+  border: none;
   border-radius: 0;
   background: #fff;
 }
@@ -791,5 +792,16 @@
 
   .ref-docs-article-panel--home .ref-docs-index {
     padding: 1.5rem 1.1rem 2rem;
+  }
+}
+
+/* 페이지(window)가 스크롤되는 배치에서도 왼쪽 메뉴·오른쪽 목차가 화면에 머무르도록 고정 */
+@media (min-width: 769px) {
+  .ref-docs-nav,
+  .ref-docs-toc-rail {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    max-height: 100vh;
   }
 }
