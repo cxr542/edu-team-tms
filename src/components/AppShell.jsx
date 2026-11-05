@@ -72,6 +72,7 @@ import {
   withAppBase,
 } from '../utils/appRoute';
 import { checkSupabaseHealth, SUPABASE_HEALTH_STATUS } from '../utils/supabaseHealth';
+import okestroWordmark from '../assets/okestro/logo-wordmark.svg';
 
 export default function AppShell({
   activeModule,
@@ -292,33 +293,41 @@ export default function AppShell({
       >
         <aside className="project-sidebar" id="sidebar" aria-label="서비스 메뉴">
           <div className="project-sidebar__head">
+            <div className="project-sidebar__top">
+              <span
+                className="project-sidebar__wordmark"
+                role="img"
+                aria-label="OKESTRO"
+                style={{ '--wordmark-url': `url(${okestroWordmark})` }}
+              />
+              <button
+                type="button"
+                className="project-sidebar-rail"
+                id="sidebar-toggle"
+                aria-expanded={!collapsed}
+                aria-controls="sidebar"
+                aria-label={railTitle}
+                data-ui-tooltip={railTitle}
+                title={railTitle}
+                onClick={toggleSidebar}
+              >
+                <span className="project-sidebar-rail__icon" aria-hidden="true">
+                  ‹
+                </span>
+                <span className="project-sidebar-rail__label">{railLabel}</span>
+              </button>
+            </div>
             <div className="logo-block project-logo">
               <h1>
                 <span className="logo-block__icon project-logo__mark" aria-hidden="true">
                   <img src="/okestro-logo-white.png" alt="" />
                 </span>
-                <span className="logo-block__text project-logo__text">EDU-TMS</span>
+                <span className="logo-block__text project-logo__text">EDU TMS</span>
               </h1>
               <p className="logo-block__sub project-logo__sub">
                 교육팀 관리 · {versionLabel}
               </p>
             </div>
-            <button
-              type="button"
-              className="project-sidebar-rail"
-              id="sidebar-toggle"
-              aria-expanded={!collapsed}
-              aria-controls="sidebar"
-              aria-label={railTitle}
-              data-ui-tooltip={railTitle}
-              title={railTitle}
-              onClick={toggleSidebar}
-            >
-              <span className="project-sidebar-rail__icon" aria-hidden="true">
-                ‹
-              </span>
-              <span className="project-sidebar-rail__label">{railLabel}</span>
-            </button>
           </div>
 
           {!viewerLedgerOnly && !isPublicViewerScope && (
