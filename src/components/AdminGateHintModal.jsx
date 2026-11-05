@@ -82,7 +82,7 @@ export default function AdminGateHintModal({ isOpen, onClose }) {
               {hint.length}/{ADMIN_GATE_HINT_MAX_LENGTH}
             </p>
             {error && (
-              <p role="alert" style={{ fontSize: '0.85rem', color: 'var(--danger, #dc2626)', margin: 0 }}>
+              <p role="alert" style={{ fontSize: '0.85rem', color: 'var(--danger, #d92d20)', margin: 0 }}>
                 {error}
               </p>
             )}

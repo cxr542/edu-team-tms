@@ -34,14 +34,14 @@
   --primary-glow: rgba(31, 61, 255, 0.12);
   --secondary: var(--primary);
   --secondary-glow: rgba(31, 61, 255, 0.08);
-  --accent: #bf4800;
+  --accent: #e05500;
 
   --color-success: #248a3d;
   --color-success-bg: rgba(36, 138, 61, 0.1);
-  --color-warning: #bf4800;
-  --color-warning-bg: rgba(191, 72, 0, 0.1);
-  --color-danger: #d70015;
-  --color-danger-bg: rgba(215, 0, 21, 0.08);
+  --color-warning: #e05500;
+  --color-warning-bg: rgba(247, 98, 5, 0.1);
+  --color-danger: #d92d20;
+  --color-danger-bg: rgba(217, 45, 32, 0.08);
   --color-info: var(--primary);
   --color-info-bg: var(--primary-glow);
 
@@ -659,7 +659,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .budget-progress-pct.is-over {
-  color: #ef4444;
+  color: #f04438;
 }
 
 .viewer-menu-settings-list {
@@ -968,7 +968,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .ledger-bulk-btn-danger {
-  border-color: rgba(215, 0, 21, 0.35) !important;
+  border-color: rgba(217, 45, 32, 0.35) !important;
   color: var(--color-danger) !important;
 }
 
@@ -982,7 +982,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .ledger-bulk-btn-danger-outline {
-  border-color: rgba(215, 0, 21, 0.35) !important;
+  border-color: rgba(217, 45, 32, 0.35) !important;
   color: var(--color-danger) !important;
 }
 
@@ -1016,7 +1016,7 @@ h1, h2, h3, h4, h5, h6 {
   min-width: 4.5rem;
   padding: 0.35rem 0.65rem !important;
   font-size: 0.75rem !important;
-  border-color: rgba(215, 0, 21, 0.35) !important;
+  border-color: rgba(217, 45, 32, 0.35) !important;
   color: var(--color-danger) !important;
   white-space: nowrap;
 }
@@ -2057,7 +2057,7 @@ h1, h2, h3, h4, h5, h6 {
 .admin-gate__error {
   margin: 0 0 0.75rem;
   font-size: 0.875rem;
-  color: var(--color-danger, #dc2626);
+  color: var(--color-danger, #d92d20);
 }
 
 .admin-gate__submit {

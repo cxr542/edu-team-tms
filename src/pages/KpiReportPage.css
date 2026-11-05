@@ -117,12 +117,12 @@
 
 .kpi-grade--C {
   background: #f9731622;
-  color: #c2410c;
+  color: #e05500;
 }
 
 .kpi-grade--D {
   background: #ef444422;
-  color: #b91c1c;
+  color: #b42318;
 }
 
 @media print {

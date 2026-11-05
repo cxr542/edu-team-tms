@@ -273,17 +273,17 @@
 }
 
 .competency-int-level-hint {
-  color: var(--color-warning, #bf4800);
+  color: var(--color-warning, #e05500);
   font-weight: 600;
 }
 
 .competency-int-level-alert {
-  color: var(--color-warning, #bf4800);
+  color: var(--color-warning, #e05500);
   font-weight: 600;
 }
 
 .competency-int-level-select--attention {
-  border-color: var(--color-warning, #bf4800);
-  outline: 2px solid var(--color-warning, #bf4800);
+  border-color: var(--color-warning, #e05500);
+  outline: 2px solid var(--color-warning, #e05500);
   outline-offset: 1px;
 }

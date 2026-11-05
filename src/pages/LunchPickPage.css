@@ -249,7 +249,7 @@
 }
 
 .lunch-pick-status--error {
-  color: #dc2626;
+  color: #d92d20;
 }
 
 /* —— Filters —— */
@@ -396,7 +396,7 @@
 }
 
 .lunch-card__remove {
-  color: #dc2626 !important;
+  color: #d92d20 !important;
 }
 
 /* —— Results —— */

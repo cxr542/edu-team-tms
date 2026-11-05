@@ -589,7 +589,7 @@
 
 .competency-month-selector__badge--pending {
   background: #fff7ed;
-  color: #c2410c;
+  color: #e05500;
   border: 1px solid #fed7aa;
 }
 
@@ -761,7 +761,7 @@
 
 .kpi3-review-status--submitted {
   background: #fff7ed;
-  color: #c2410c;
+  color: #e05500;
 }
 
 .kpi3-review-status--approved {
@@ -771,7 +771,7 @@
 
 .kpi3-review-status--rejected {
   background: #fef2f2;
-  color: #b91c1c;
+  color: #b42318;
 }
 
 .kpi3-manager-review-actions {
@@ -823,7 +823,7 @@
 }
 
 .kpi3-review-state--submitted strong {
-  color: #c2410c;
+  color: #e05500;
 }
 
 .kpi3-review-state--approved {
@@ -841,7 +841,7 @@
 }
 
 .kpi3-review-state--rejected strong {
-  color: #b91c1c;
+  color: #b42318;
 }
 
 @media (max-width: 720px) {
