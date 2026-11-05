@@ -1,0 +1,85 @@
+/*
+ * 공통 페이지 헤더 — 메뉴별 상세 화면 상단(아이콘 + 제목 + 설명)을 한 모양으로 통일한다.
+ * 각 페이지의 헤더 마크업/클래스는 그대로 두고, 스타일만 여기서 덮어쓴다.
+ * 선택자에 .project-main 을 붙여 페이지별 CSS보다 우선하게 한다.
+ */
+
+.project-main {
+  --page-header-icon-size: 2.5rem;
+  --page-header-title-size: 1.375rem;
+}
+
+/* 헤더 박스 간격 */
+.project-main .academizer-header,
+.project-main .lecture-journal-header,
+.project-main .kanban-header,
+.project-main .announcements-header,
+.project-main .csr-board-header {
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+}
+
+/* 아이콘 박스: 연한 블루 배경 + 블루 아이콘 */
+.project-main .academizer-header__icon,
+.project-main .lecture-journal-header__icon {
+  width: var(--page-header-icon-size);
+  height: var(--page-header-icon-size);
+  border-radius: 12px;
+  background: var(--primary-glow);
+  color: var(--primary);
+}
+
+/* 아이콘이 박스 없이 그려지던 헤더들도 같은 박스로 맞춘다 */
+.project-main .kanban-header__title > svg,
+.project-main .announcements-header__title > svg,
+.project-main .csr-board-header__title > svg,
+.project-main .glossary-header__icon {
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: var(--page-header-icon-size);
+  height: var(--page-header-icon-size);
+  padding: 0.6rem;
+  border-radius: 12px;
+  background: var(--primary-glow);
+  color: var(--primary) !important;
+  filter: none;
+}
+
+/* 제목 */
+.project-main .academizer-header h1,
+.project-main .lecture-journal-header h1,
+.project-main .kanban-header__title h2,
+.project-main .announcements-header__title h2,
+.project-main .csr-board-header__title h2,
+.project-main .glossary-header__title {
+  margin: 0;
+  font-size: var(--page-header-title-size);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+/* 설명 */
+.project-main .academizer-header__tagline,
+.project-main .lecture-journal-header__tagline,
+.project-main .kanban-header__title p,
+.project-main .announcements-header__title p,
+.project-main .csr-board-header__title p {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* 용어사전: 부제 칩을 인디고에서 okestro 블루 틴트로 */
+.project-main .glossary-header {
+  padding-bottom: 1rem;
+  border-bottom-color: var(--border-color);
+}
+
+.project-main .glossary-header__subtitle {
+  background: var(--primary-glow);
+  color: var(--primary);
+  font-weight: 600;
+}
