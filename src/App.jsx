@@ -1040,9 +1040,9 @@ export default function App() {
             className="custom-alert"
             style={{
               marginBottom: '1rem',
-              backgroundColor: 'rgba(59, 130, 246, 0.1)',
-              border: '1px solid rgba(59, 130, 246, 0.35)',
-              borderLeft: '4px solid #3b82f6',
+              backgroundColor: 'rgba(31, 61, 255, 0.1)',
+              border: '1px solid rgba(31, 61, 255, 0.35)',
+              borderLeft: '4px solid #4a63ff',
             }}
           >
             <AlertCircle size={18} style={{ color: '#60a5fa' }} />

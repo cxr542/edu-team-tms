@@ -466,13 +466,13 @@
 }
 
 .competency-member-mode-tab.is-active {
-  border-color: rgba(37, 99, 235, 0.35);
-  background: rgba(37, 99, 235, 0.08);
-  color: var(--accent, #2563eb);
+  border-color: rgba(31, 61, 255, 0.35);
+  background: rgba(31, 61, 255, 0.08);
+  color: var(--accent, #1f3dff);
 }
 
 .competency-member-mode-tab.is-active small {
-  color: var(--accent, #2563eb);
+  color: var(--accent, #1f3dff);
 }
 
 .competency-member-input-panel {
@@ -485,7 +485,7 @@
 
 .competency-member-input-panel__type {
   margin: 0 0 4px;
-  color: var(--accent, #2563eb);
+  color: var(--accent, #1f3dff);
   font-size: 0.78rem;
   font-weight: 800;
 }
@@ -568,9 +568,9 @@
 }
 
 .competency-month-selector__btn.is-active {
-  border-color: rgba(37, 99, 235, 0.45);
-  background: rgba(37, 99, 235, 0.1);
-  color: var(--accent, #2563eb);
+  border-color: rgba(31, 61, 255, 0.45);
+  background: rgba(31, 61, 255, 0.1);
+  color: var(--accent, #1f3dff);
 }
 
 .competency-month-selector__badge {
@@ -896,7 +896,7 @@
   border: 1px solid #bfdbfe;
   border-radius: 12px;
   background: #eff6ff;
-  color: #1d4ed8;
+  color: #1530d6;
 }
 
 .competency-member-save-guide strong {

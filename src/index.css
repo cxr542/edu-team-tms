@@ -1469,7 +1469,7 @@ h1, h2, h3, h4, h5, h6 {
   --portal-text: #0f172a;
   --portal-soft: #475569;
   --portal-muted: #64748b;
-  --portal-blue: #2563eb;
+  --portal-blue: #1f3dff;
   --portal-violet: #7c3aed;
   --portal-green: #16a34a;
   --portal-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
@@ -1652,7 +1652,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 999px;
   border: none;
   background: #dbeafe;
-  color: #1d4ed8;
+  color: #1530d6;
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -1680,7 +1680,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .public-viewer-portal__section--users .portal-card--tone-a {
-  --project-accent: #2563eb;
+  --project-accent: #1f3dff;
   --project-soft: #eff6ff;
 }
 
@@ -2015,8 +2015,8 @@ h1, h2, h3, h4, h5, h6 {
   height: 3rem;
   margin-bottom: 1rem;
   border-radius: 999px;
-  background: var(--color-primary-soft, rgba(59, 130, 246, 0.12));
-  color: var(--color-primary, #2563eb);
+  background: var(--color-primary-soft, rgba(31, 61, 255, 0.12));
+  color: var(--color-primary, #1f3dff);
 }
 
 .admin-gate__title {
@@ -2082,7 +2082,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .admin-gate__hint-toggle:hover {
-  color: var(--color-primary, #2563eb);
+  color: var(--color-primary, #1f3dff);
 }
 
 .admin-gate__hint-text {
@@ -2103,5 +2103,5 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .admin-gate__back:hover {
-  color: var(--color-primary, #2563eb);
+  color: var(--color-primary, #1f3dff);
 }

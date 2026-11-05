@@ -25,8 +25,8 @@
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 0.5rem;
-  background: color-mix(in srgb, var(--project-accent, #2563eb) 12%, transparent);
-  color: var(--project-accent, #2563eb);
+  background: color-mix(in srgb, var(--project-accent, #1f3dff) 12%, transparent);
+  color: var(--project-accent, #1f3dff);
   flex-shrink: 0;
 }
 
@@ -56,7 +56,7 @@
 }
 
 .lecture-journal-refresh:hover:not(:disabled) {
-  border-color: var(--project-accent, #2563eb);
+  border-color: var(--project-accent, #1f3dff);
 }
 
 .lecture-journal-refresh:disabled {
@@ -81,13 +81,13 @@
   border: none;
   border-radius: 0.3rem;
   background: transparent;
-  color: var(--project-accent, #2563eb);
+  color: var(--project-accent, #1f3dff);
   cursor: pointer;
   font: inherit;
 }
 
 .lecture-journal-crumb:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--project-accent, #2563eb) 10%, transparent);
+  background: color-mix(in srgb, var(--project-accent, #1f3dff) 10%, transparent);
 }
 
 .lecture-journal-crumb.is-current,
@@ -195,7 +195,7 @@
 }
 
 .lecture-journal-item__title-btn:hover {
-  color: var(--project-accent, #2563eb);
+  color: var(--project-accent, #1f3dff);
   text-decoration: underline;
 }
 
@@ -231,12 +231,12 @@
 }
 
 .lecture-journal-link-btn:hover {
-  border-color: var(--project-accent, #2563eb);
-  color: var(--project-accent, #2563eb);
+  border-color: var(--project-accent, #1f3dff);
+  color: var(--project-accent, #1f3dff);
 }
 
 .lecture-journal-link-btn--ext {
-  color: var(--project-accent, #2563eb);
+  color: var(--project-accent, #1f3dff);
 }
 
 .lecture-journal-footnote {
