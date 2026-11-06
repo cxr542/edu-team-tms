@@ -28,6 +28,7 @@ import {
   updateUploadedGuide,
   uploadLectureGuide,
 } from '../utils/referenceDocsHidden';
+import { LECTURE_PRODUCT_ICONS } from '../constants/lectureProductIcons';
 import { buildProductTree, productColor } from '../utils/lectureGuideTree';
 import { downloadHtmlFile, guideFileName } from '../utils/downloadHtml';
 import heroBg from '../assets/okestro/Cover_bg.jpg';
@@ -473,42 +474,66 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
                   onUploaded={onUploaded}
                 />
                 {isAdminShell && <LectureGuideSubmissions onApproved={onUploaded} />}
-                {visibleTree
-                  .flatMap((p) =>
-                    p.versions.map((v) => ({
-                      ...v,
-                      color: productColor(p.product, LECTURE_PRODUCT_COLORS, DEFAULT_GROUP_COLOR),
-                    }))
-                  )
-                  .map((g) => (
-                    <section key={g.name} className="ref-docs-index__group">
-                      <div className="ref-docs-index__group-head">
-                        <span className="ref-docs-index__badge" style={{ '--okd-product': g.color }}>
-                          {g.name}
-                        </span>
-                        <h2 className="ref-docs-index__group-name">시연·구성 가이드</h2>
-                        <span className="ref-docs-index__count">{g.docs.length}개</span>
-                      </div>
-                      <div className="ref-docs-index__grid">
-                        {g.docs.map((d) => (
-                          <button
-                            key={d.id}
-                            type="button"
-                            className={`ref-docs-card${isHidden(d.id) ? ' is-hidden' : ''}`}
-                            onClick={() => selectDoc(d.id)}
-                          >
-                            <span className="ref-docs-card__title">{d.title}</span>
-                            {d.summary && <span className="ref-docs-card__summary">{d.summary}</span>}
-                            <span
-                              className={`ref-docs-card__meta${isHidden(d.id) ? ' ref-docs-card__meta--hidden' : ''}`}
-                            >
-                              {isHidden(d.id) ? '숨김 · 관리자에게만 보임' : '가이드 열기'}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
+                {visibleTree.map((p) => {
+                  const icon = productColor(p.product, LECTURE_PRODUCT_ICONS, '');
+                  return (
+                    <section
+                      key={p.product}
+                      className="ref-docs-product"
+                      style={{ '--okd-product': productColor(p.product, LECTURE_PRODUCT_COLORS, DEFAULT_GROUP_COLOR) }}
+                    >
+                      <header className="ref-docs-product__head">
+                        {icon ? (
+                          <img className="ref-docs-product__icon" src={icon} alt="" width="72" height="72" />
+                        ) : (
+                          <span className="ref-docs-product__icon ref-docs-product__icon--fallback" aria-hidden>
+                            {p.product.slice(0, 1)}
+                          </span>
+                        )}
+                        <div className="ref-docs-product__title">
+                          <h2 className="ref-docs-product__name">{p.product}</h2>
+                          <p className="ref-docs-product__meta">
+                            가이드 {p.docCount}개
+                            {p.versions.some((v) => v.version) &&
+                              ` · 버전 ${p.versions
+                                .map((v) => v.version)
+                                .filter(Boolean)
+                                .join(', ')}`}
+                          </p>
+                        </div>
+                      </header>
+                      {p.versions.map((v) => (
+                        <div key={v.name} className="ref-docs-index__group">
+                          {v.version && (
+                            <div className="ref-docs-index__group-head">
+                              <span className="ref-docs-index__badge">{v.version}</span>
+                              <h3 className="ref-docs-index__group-name">시연·구성 가이드</h3>
+                              <span className="ref-docs-index__count">{v.docs.length}개</span>
+                            </div>
+                          )}
+                          <div className="ref-docs-index__grid">
+                            {v.docs.map((d) => (
+                              <button
+                                key={d.id}
+                                type="button"
+                                className={`ref-docs-card${isHidden(d.id) ? ' is-hidden' : ''}`}
+                                onClick={() => selectDoc(d.id)}
+                              >
+                                <span className="ref-docs-card__title">{d.title}</span>
+                                {d.summary && <span className="ref-docs-card__summary">{d.summary}</span>}
+                                <span
+                                  className={`ref-docs-card__meta${isHidden(d.id) ? ' ref-docs-card__meta--hidden' : ''}`}
+                                >
+                                  {isHidden(d.id) ? '숨김 · 관리자에게만 보임' : '가이드 열기'}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
                     </section>
-                  ))}
+                  );
+                })}
                 </div>
               </>
             ) : !active ? (

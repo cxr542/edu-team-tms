@@ -420,7 +420,52 @@
 
 /* —— 강의 가이드 모음(인덱스) —— */
 .ref-docs-index__group + .ref-docs-index__group {
-  margin-top: 2.25rem;
+  margin-top: 1.75rem;
+}
+
+/* 제품(대분류) 섹션: 패키지 아이콘 + 제품명 + 제품색 구분선 */
+.ref-docs-product + .ref-docs-product {
+  margin-top: 3.25rem;
+}
+
+.ref-docs-product__head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 3px solid var(--okd-product, var(--okd-navy));
+}
+
+.ref-docs-product__icon {
+  flex: none;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 1rem;
+  object-fit: cover;
+}
+
+.ref-docs-product__icon--fallback {
+  display: grid;
+  place-items: center;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #fff;
+  background: var(--okd-product, var(--okd-navy));
+}
+
+.ref-docs-product__name {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--okd-navy);
+}
+
+.ref-docs-product__meta {
+  margin: 0.2rem 0 0;
+  font-size: 0.875rem;
+  color: var(--okd-muted);
 }
 
 .ref-docs-index__group-head {
@@ -431,7 +476,7 @@
 }
 
 .ref-docs-index__group-name {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--okd-ink);
   margin: 0;
