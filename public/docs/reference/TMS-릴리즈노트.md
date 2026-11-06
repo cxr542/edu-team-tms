@@ -7,6 +7,11 @@
 
 ## 2026-11-06
 
+### [신규] feat(docs): 구성원도 강의 가이드 HTML 다운로드
+
+- feat(docs): 구성원도 강의 가이드 HTML 다운로드
+- PR #248: https://github.com/cxr542/edu-team-tms/pull/248
+
 ### [신규] feat(docs): 강의 가이드 HTML 다운로드 버튼 (관리자)
 
 - feat(docs): 강의 가이드 HTML 다운로드 버튼 (관리자)
