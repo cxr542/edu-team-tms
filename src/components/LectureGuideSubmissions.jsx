@@ -62,6 +62,7 @@ export default function LectureGuideSubmissions({ onApproved }) {
     }
     setPreview({ id: '', html: '' });
     await load();
+    window.dispatchEvent(new Event('guide-submissions-changed'));
     onApproved(res.data.id);
   };
 
@@ -76,11 +77,21 @@ export default function LectureGuideSubmissions({ onApproved }) {
     }
     if (preview.id === item.id) setPreview({ id: '', html: '' });
     await load();
+    window.dispatchEvent(new Event('guide-submissions-changed'));
   };
 
   // 목록을 아직 못 받았거나 승인 대기가 없으면 아무것도 그리지 않는다 (오류는 보여 준다).
   if (items === null) return null;
-  if (items.length === 0 && !error) return null;
+  if (items.length === 0 && !error) {
+    return (
+      <section className="ref-docs-submissions" aria-label="승인 대기 가이드">
+        <h2 className="ref-docs-submissions__title">
+          승인 대기 <span className="ref-docs-submissions__count">0</span>
+        </h2>
+        <p className="ref-docs-submissions__meta">구성원이 제출한 가이드가 없습니다.</p>
+      </section>
+    );
+  }
 
   return (
     <section className="ref-docs-submissions" aria-label="승인 대기 가이드">
