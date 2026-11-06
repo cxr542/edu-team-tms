@@ -7,6 +7,11 @@
 
 ## 2026-11-06
 
+### [신규] feat(docs): 강의 가이드 HTML 다운로드 버튼 (관리자)
+
+- feat(docs): 강의 가이드 HTML 다운로드 버튼 (관리자)
+- PR #247: https://github.com/cxr542/edu-team-tms/pull/247
+
 ### [신규] feat(docs): 강의 가이드 목차를 제품·버전별로 정렬
 
 - feat(docs): 강의 가이드 목차를 제품·버전별로 정렬
