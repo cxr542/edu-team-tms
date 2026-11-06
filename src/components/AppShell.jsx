@@ -30,6 +30,7 @@ import {
   Crown,
 } from 'lucide-react';
 import LeaderKpiApprovalBell from './LeaderKpiApprovalBell';
+import { useGuideSubmissionsBadge } from '../hooks/useGuideSubmissionsBadge';
 import { useLeaderKpiPendingBadge } from '../hooks/useLeaderKpiPendingBadge';
 import { useAnnouncementsUnreadBadge } from '../hooks/useAnnouncementsUnreadBadge';
 import { useCsrRequestsUnreadBadge } from '../hooks/useCsrRequestsUnreadBadge';
@@ -147,6 +148,7 @@ export default function AppShell({
   const announcementsUnread = useAnnouncementsUnreadBadge(showAnnouncementsBadge);
   const showCsrRequestsBadge = showGeneralNav;
   const csrRequestsUnread = useCsrRequestsUnreadBadge(showCsrRequestsBadge);
+  const guideSubmissions = useGuideSubmissionsBadge(showLeaderApprovalBadge);
   const canUseCompetencyPilotNav = canUseCompetencyPilot(teamAccess);
   const competencyPreviewMessage =
     '역량 평가는 기능 개선 중이라 아직 공개 전입니다. 먼저 A 구성원과 팀장/관리자 화면에서 테스트 후 순차 공개할 예정입니다.';
@@ -610,8 +612,8 @@ export default function AppShell({
               <div className="project-toolbar__actions">
                 {showLeaderApprovalBadge && (
                   <LeaderKpiApprovalBell
-                    count={(leaderPending?.count || 0) + (csrRequestsUnread?.count || 0)}
-                    summary={{ ...(leaderPending?.summary || {}), csr: csrRequestsUnread?.count || 0 }}
+                    count={(leaderPending?.count || 0) + (csrRequestsUnread?.count || 0) + guideSubmissions.count}
+                    summary={{ ...(leaderPending?.summary || {}), csr: csrRequestsUnread?.count || 0, guide: guideSubmissions.count }}
                     period={leaderPending?.period}
                     items={[
                       ...(leaderPending?.items || []),
@@ -623,6 +625,14 @@ export default function AppShell({
                         href: buildAppModuleUrl('csr', { access: URL_ACCESS_ADMIN }),
                         id: req.id,
                       })) || []),
+                      ...guideSubmissions.items.map((g) => ({
+                        type: '가이드',
+                        label: `구성원 가이드 제출: ${g.title}${g.submitter ? ` (${g.submitter})` : ''}`,
+                        submittedAt: g.createdAt,
+                        member: { code: 'N/A', displayName: g.submitter || '' },
+                        href: buildAppModuleUrl('docs', { access: URL_ACCESS_ADMIN }),
+                        id: g.id,
+                      })),
                     ].sort((a, b) => {
                       const timeA = a.submittedAt ? new Date(a.submittedAt).getTime() : 0;
                       const timeB = b.submittedAt ? new Date(b.submittedAt).getTime() : 0;
