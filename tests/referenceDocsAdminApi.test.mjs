@@ -108,4 +108,69 @@ describe('reference docs admin API', () => {
     expect(db.tables.reference_doc_uploads).toHaveLength(0);
     expect(db.tables.reference_doc_hidden).toHaveLength(0);
   });
+
+  describe('editing an uploaded guide', () => {
+    const seed = () =>
+      db.tables.reference_doc_uploads.push({
+        id: 'lecture-u-abc',
+        title: '원래 제목',
+        grp: 'CONTRABASS 3.0.6',
+        summary: '',
+        html: '<h1>v1</h1><p>10.0.0.5</p>',
+        size_bytes: 25,
+      });
+    const post = (body) => call(db, { method: 'POST', headers: adminHeaders(), body });
+
+    it('rejects edits without an admin session', async () => {
+      seed();
+      const res = await call(db, { method: 'POST', headers: {}, body: { docId: 'lecture-u-abc', title: 'x' } });
+      expect(res.statusCode).toBe(403);
+      expect(db.tables.reference_doc_uploads[0].title).toBe('원래 제목');
+    });
+
+    it('rejects static or unknown ids', async () => {
+      seed();
+      expect((await post({ docId: 'lecture-hpa-306', title: 'x' })).statusCode).toBe(400);
+      expect((await post({ docId: 'lecture-u-nope', title: 'x' })).statusCode).toBe(400);
+    });
+
+    it('updates metadata only without touching the saved body', async () => {
+      seed();
+      const res = await post({ docId: 'lecture-u-abc', title: '새 제목', group: 'VIOLA 3.0.6', summary: '요약' });
+      expect(res.statusCode).toBe(200);
+      const [row] = db.tables.reference_doc_uploads;
+      expect(row).toMatchObject({ title: '새 제목', grp: 'VIOLA 3.0.6', summary: '요약', html: '<h1>v1</h1><p>10.0.0.5</p>' });
+      expect(row.prev_html).toBeUndefined();
+    });
+
+    it('re-sanitizes and masks an edited body and keeps the previous one', async () => {
+      seed();
+      const res = await post({ docId: 'lecture-u-abc', html: '<h1>v2</h1><script>x()</script><p>192.168.1.7</p>' });
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data.hasPrevious).toBe(true);
+      const [row] = db.tables.reference_doc_uploads;
+      expect(row.html).not.toMatch(/script|192\.168/);
+      expect(row.html).toContain('198.18.0.7');
+      expect(row.prev_html).toBe('<h1>v1</h1><p>10.0.0.5</p>');
+    });
+
+    it('rejects empty, non-html and oversized bodies', async () => {
+      seed();
+      expect((await post({ docId: 'lecture-u-abc', html: '   ' })).statusCode).toBe(400);
+      expect((await post({ docId: 'lecture-u-abc', html: 'plain text' })).statusCode).toBe(400);
+      expect((await post({ docId: 'lecture-u-abc', html: `<p>${'a'.repeat(4 * 1024 * 1024)}</p>` })).statusCode).toBe(400);
+      expect(db.tables.reference_doc_uploads[0].html).toBe('<h1>v1</h1><p>10.0.0.5</p>');
+    });
+
+    it('reverts by swapping with the previous body, and reverting again restores it', async () => {
+      seed();
+      expect((await post({ docId: 'lecture-u-abc', action: 'revert' })).statusCode).toBe(400);
+      await post({ docId: 'lecture-u-abc', html: '<h1>v2</h1><p>new</p>' });
+      const back = await post({ docId: 'lecture-u-abc', action: 'revert' });
+      expect(back.statusCode).toBe(200);
+      expect(db.tables.reference_doc_uploads[0].html).toBe('<h1>v1</h1><p>10.0.0.5</p>');
+      await post({ docId: 'lecture-u-abc', action: 'revert' });
+      expect(db.tables.reference_doc_uploads[0].html).toBe('<h1>v2</h1><p>new</p>');
+    });
+  });
 });
