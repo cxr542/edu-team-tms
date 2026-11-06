@@ -8,10 +8,16 @@ export default function LeaderKpiApprovalBell({ count = 0, summary, period, item
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
 
+  // 현재 월에 대기 건이 없으면 승인 화면이 비어 보인다 → KPI 대기 건이 있는 가장 가까운 월로 연결
+  const kpiItems = items.filter((it) => it.year != null && it.monthIndex != null);
+  const hasInPeriod = kpiItems.some((it) => it.year === period?.year && it.monthIndex === period?.monthIndex);
+  const target = hasInPeriod || kpiItems.length === 0
+    ? { year: period?.year, monthIndex: period?.monthIndex }
+    : [...kpiItems].sort((a, b) => b.year * 12 + b.monthIndex - (a.year * 12 + a.monthIndex))[0];
   const href = buildAppModuleUrl('kpi-approve', {
     access: URL_ACCESS_ADMIN,
-    year: period?.year,
-    month: (period?.monthIndex ?? 0) + 1,
+    year: target.year,
+    month: (target.monthIndex ?? 0) + 1,
   });
 
   const label =
@@ -32,6 +38,15 @@ export default function LeaderKpiApprovalBell({ count = 0, summary, period, item
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen]);
+
+  /** 새로고침 없이 앱 내부 이동 (popstate로 모듈·기간 훅 동기화) */
+  const handleNavigate = (e, targetHref) => {
+    setIsOpen(false);
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    window.history.pushState({}, '', targetHref);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  };
 
   const handleToggle = (e) => {
     e.preventDefault();
@@ -68,7 +83,7 @@ export default function LeaderKpiApprovalBell({ count = 0, summary, period, item
                   });
                   return (
                   <li key={`${item.type}-${item.member?.code || item.id || idx}-${item.dayKey || idx}`}>
-                    <a href={itemHref} className="leader-kpi-approval-popover__item">
+                    <a href={itemHref} className="leader-kpi-approval-popover__item" onClick={(e) => handleNavigate(e, itemHref)}>
                       <div className="leader-kpi-approval-popover__item-title">
                         <span className="leader-kpi-approval-popover__item-badge">{item.type}</span>
                         {item.label}
@@ -88,7 +103,7 @@ export default function LeaderKpiApprovalBell({ count = 0, summary, period, item
             )}
           </div>
           <div className="leader-kpi-approval-popover__footer">
-            <a href={href} className="leader-kpi-approval-popover__view-all" onClick={() => setIsOpen(false)}>
+            <a href={href} className="leader-kpi-approval-popover__view-all" onClick={(e) => handleNavigate(e, href)}>
               전체 승인 관리 이동 <ArrowRight size={14} />
             </a>
           </div>
