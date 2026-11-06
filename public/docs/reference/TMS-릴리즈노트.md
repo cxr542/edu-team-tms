@@ -7,6 +7,11 @@
 
 ## 2026-11-06
 
+### [신규] feat(docs): 가이드 모음을 제품별 섹션 + 패키지 아이콘으로 개편
+
+- feat(docs): 가이드 모음을 제품별 섹션 + 패키지 아이콘으로 개편
+- PR #252: https://github.com/cxr542/edu-team-tms/pull/252
+
 ### [신규] feat(docs): 강의 가이드 HTML 편집기 (관리자 전용)
 
 - feat(docs): 강의 가이드 HTML 편집기 (관리자 전용)
