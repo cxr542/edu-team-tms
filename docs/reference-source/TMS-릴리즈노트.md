@@ -7,6 +7,11 @@
 
 ## 2026-11-06
 
+### [수정] fix(ui): 좁은 화면에서 칸반·PPT 아카데미화 헤더 버튼이 눌리는 문제 수정
+
+- 모바일에서 칸반과 PPT 아카데미화 화면 상단 버튼이 눌려 보이던 문제가 수정되었습니다.
+- PR #245: https://github.com/cxr542/edu-team-tms/pull/245
+
 ### [신규] feat(announcements): 새 업데이트 작성 폼에 취소 버튼 추가
 
 - feat(announcements): 새 업데이트 작성 폼에 취소 버튼 추가
