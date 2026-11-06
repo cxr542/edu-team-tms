@@ -446,6 +446,15 @@ export default function AnnouncementsPage({
     setCommentsById((prev) => ({ ...prev, [announcementId]: result.data }));
   };
 
+  const resetCompose = () => {
+    setTitle('');
+    setBody('');
+    setCategory(DEFAULT_ANNOUNCEMENT_CATEGORY);
+    setIsPinned(false);
+    setIsPublished(true);
+    setComposeOpen(false);
+  };
+
   const handleSubmitComment = async (announcementId) => {
     if (!canEngage) return;
     const text = String(commentDraftById[announcementId] || '').trim();
@@ -509,12 +518,7 @@ export default function AnnouncementsPage({
       return;
     }
 
-    setTitle('');
-    setBody('');
-    setCategory(DEFAULT_ANNOUNCEMENT_CATEGORY);
-    setIsPinned(false);
-    setIsPublished(true);
-    setComposeOpen(false);
+    resetCompose();
     setMessage('업데이트가 등록되었습니다.');
   };
 
@@ -686,6 +690,14 @@ export default function AnnouncementsPage({
                 <button type="submit" className="btn btn-primary" disabled={savingId !== null}>
                   <Plus size={14} />
                   등록
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={resetCompose}
+                  disabled={savingId !== null}
+                >
+                  취소
                 </button>
               </div>
             </form>
