@@ -4,6 +4,7 @@ import MarkdownDocViewer from '../components/MarkdownDocViewer';
 import DocTableOfContents from '../components/DocTableOfContents';
 import LectureGuideFrame from '../components/LectureGuideFrame';
 import LectureGuideEditor from '../components/LectureGuideEditor';
+import LectureGuideSubmissions from '../components/LectureGuideSubmissions';
 import LectureGuideUploadPanel from '../components/LectureGuideUploadPanel';
 import {
   DEFAULT_REFERENCE_DOC_ID,
@@ -467,9 +468,12 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
                   </button>
                 </section>
                 <div className="ref-docs-index" id="lecture-guide-list">
-                {isAdminShell && (
-                  <LectureGuideUploadPanel groups={guideGroups.map((g) => g.name)} onUploaded={onUploaded} />
-                )}
+                <LectureGuideUploadPanel
+                  mode={isAdminShell ? 'admin' : 'member'}
+                  groups={guideGroups.map((g) => g.name)}
+                  onUploaded={onUploaded}
+                />
+                {isAdminShell && <LectureGuideSubmissions onApproved={onUploaded} />}
                 {visibleTree.map((p) => {
                   const icon = productColor(p.product, LECTURE_PRODUCT_ICONS, '');
                   return (

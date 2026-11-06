@@ -6,7 +6,7 @@ import {
   normalizeExtraDomains,
   processGuideHtml,
 } from '../utils/lectureGuideSanitize.js';
-import { uploadLectureGuide } from '../utils/referenceDocsHidden.js';
+import { submitLectureGuide, uploadLectureGuide } from '../utils/referenceDocsHidden.js';
 
 const formatKb = (bytes) => (bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)}MB` : `${Math.ceil(bytes / 1024)}KB`);
 
@@ -14,9 +14,12 @@ const formatKb = (bytes) => (bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toF
  * 관리자 전용 가이드 HTML 업로드. 파일을 고르면 정화·마스킹 결과를 미리 보여 주고,
  * 확인 후 올리면 서버가 같은 규칙을 한 번 더 적용해 저장한다.
  *
- * @param {{ groups: string[], onUploaded: (id: string) => void }} props
+ * 구성원(mode='member')은 바로 올리지 않고 '제출'만 한다. 관리자가 승인해야 목록에 공개된다.
+ *
+ * @param {{ groups: string[], onUploaded?: (id: string) => void, mode?: 'admin' | 'member' }} props
  */
-export default function LectureGuideUploadPanel({ groups, onUploaded }) {
+export default function LectureGuideUploadPanel({ groups, onUploaded, mode = 'admin' }) {
+  const member = mode === 'member';
   const fileRef = useRef(null);
   const [open, setOpen] = useState(false);
   const [fileName, setFileName] = useState('');
@@ -25,6 +28,8 @@ export default function LectureGuideUploadPanel({ groups, onUploaded }) {
   const [group, setGroup] = useState('');
   const [summary, setSummary] = useState('');
   const [extraDomains, setExtraDomains] = useState('');
+  const [submitter, setSubmitter] = useState('');
+  const [done, setDone] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -41,6 +46,7 @@ export default function LectureGuideUploadPanel({ groups, onUploaded }) {
     setSummary('');
     setExtraDomains('');
     setError('');
+    setDone('');
     if (fileRef.current) fileRef.current.value = '';
   };
 
@@ -70,21 +76,28 @@ export default function LectureGuideUploadPanel({ groups, onUploaded }) {
     if (!canSubmit) return;
     setBusy(true);
     setError('');
-    const res = await uploadLectureGuide({
+    const fields = {
       title: title.trim(),
       group: group.trim(),
       summary: summary.trim(),
       html: processed.html,
       extraDomains: normalizeExtraDomains(extraDomains),
-    });
+    };
+    const res = member
+      ? await submitLectureGuide({ ...fields, submitter: submitter.trim() })
+      : await uploadLectureGuide(fields);
     setBusy(false);
     if (!res.ok) {
       setError(res.message);
       return;
     }
     reset();
+    if (member) {
+      setDone('제출했습니다. 관리자가 확인하고 승인하면 목록에 공개됩니다.');
+      return;
+    }
     setOpen(false);
-    onUploaded(res.data.id);
+    onUploaded?.(res.data.id);
   };
 
   const removedTotal = processed
@@ -100,13 +113,17 @@ export default function LectureGuideUploadPanel({ groups, onUploaded }) {
         onClick={() => setOpen((v) => !v)}
       >
         <Upload size={16} aria-hidden />
-        가이드 업로드
+        {member ? '가이드 제출' : '가이드 업로드'}
       </button>
+      {done && !open && <p className="ref-docs-editor__notice" role="status">{done}</p>}
 
       {open && (
         <form className="ref-docs-upload__form" onSubmit={submit}>
           <p className="ref-docs-upload__hint">
-            강사가 만든 HTML 파일을 올립니다. 올리면 스크립트가 제거되고 사설 IP·내부 도메인이 문서용 값으로 바뀝니다.
+            {member
+              ? '강사가 만든 HTML 파일을 제출합니다. 관리자가 확인하고 승인하면 목록에 공개됩니다. '
+              : '강사가 만든 HTML 파일을 올립니다. '}
+            올리면 스크립트가 제거되고 사설 IP·내부 도메인이 문서용 값으로 바뀝니다.
             이미지에 찍힌 IP·도메인은 자동으로 가릴 수 없으니 올리기 전에 확인해 주세요. (최대 {formatKb(MAX_GUIDE_HTML_BYTES)})
           </p>
 
@@ -156,6 +173,18 @@ export default function LectureGuideUploadPanel({ groups, onUploaded }) {
                   onChange={(e) => setSummary(e.target.value)}
                 />
               </div>
+              {member && (
+                <div className="form-group">
+                  <label htmlFor="ref-upload-submitter">제출자 이름 (선택)</label>
+                  <input
+                    id="ref-upload-submitter"
+                    className="form-input"
+                    value={submitter}
+                    maxLength={40}
+                    onChange={(e) => setSubmitter(e.target.value)}
+                  />
+                </div>
+              )}
               <div className="form-group">
                 <label htmlFor="ref-upload-domains">추가로 가릴 도메인 (선택, 쉼표로 구분)</label>
                 <input
@@ -209,7 +238,7 @@ export default function LectureGuideUploadPanel({ groups, onUploaded }) {
 
           <div className="ref-docs-upload__actions">
             <button type="submit" className="btn btn-primary" disabled={!canSubmit}>
-              {busy ? '올리는 중…' : '업로드'}
+              {busy ? (member ? '제출 중…' : '올리는 중…') : member ? '제출' : '업로드'}
             </button>
             <button
               type="button"
