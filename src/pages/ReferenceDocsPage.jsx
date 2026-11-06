@@ -23,6 +23,7 @@ import {
   restoreReferenceDoc,
 } from '../utils/referenceDocsHidden';
 import { buildProductTree, productColor } from '../utils/lectureGuideTree';
+import { downloadHtmlFile, guideFileName } from '../utils/downloadHtml';
 import heroBg from '../assets/okestro/Cover_bg.jpg';
 import wordmark from '../assets/okestro/logo-wordmark.svg';
 import './ReferenceDocsPage.css';
@@ -174,6 +175,32 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
     };
   }, [isUploadedActive, activeHiddenForViewer, active?.id]);
 
+  const downloadActive = useCallback(async () => {
+    if (!active) return;
+    setBusy(true);
+    setActionError('');
+    let html = '';
+    if (active.uploaded) {
+      if (uploadedHtml.id === active.id && uploadedHtml.html) {
+        html = uploadedHtml.html;
+      } else {
+        const res = await fetchUploadedGuideHtml(active.id);
+        if (res.ok) html = res.html;
+        else setActionError(res.message);
+      }
+    } else {
+      try {
+        const res = await fetch(referenceDocPublicUrl(active.file));
+        if (!res.ok) throw new Error(String(res.status));
+        html = await res.text();
+      } catch {
+        setActionError('파일을 불러오지 못했습니다.');
+      }
+    }
+    setBusy(false);
+    if (html) downloadHtmlFile(guideFileName(active.title), html);
+  }, [active, uploadedHtml]);
+
   const purgeActive = useCallback(async () => {
     if (!active?.uploaded) return;
     if (!window.confirm(`'${active.title}' 가이드를 완전히 삭제할까요? 되돌릴 수 없습니다.`)) return;
@@ -319,6 +346,9 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
                       onClick={() => toggleHidden(active.id, !isHidden(active.id))}
                     >
                       {isHidden(active.id) ? '숨김 해제(복구)' : '목록에서 숨기기'}
+                    </button>
+                    <button type="button" className="btn btn-secondary" disabled={busy} onClick={downloadActive}>
+                      HTML 다운로드
                     </button>
                     {isUploadedActive && (
                       <button type="button" className="btn btn-secondary" disabled={busy} onClick={purgeActive}>
