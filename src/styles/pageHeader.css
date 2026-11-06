@@ -83,3 +83,30 @@
   color: var(--primary);
   font-weight: 600;
 }
+
+/* 좁은 화면: 오른쪽 버튼이 제목 영역을 눌러 글자가 한 글자씩 꺾이지 않도록 줄바꿈한다 */
+@media (max-width: 768px) {
+  .project-main .kanban-header,
+  .project-main .academizer-header,
+  .project-main .lecture-journal-header {
+    flex-wrap: wrap;
+  }
+
+  .project-main .kanban-header__title,
+  .project-main .academizer-header__brand,
+  .project-main .lecture-journal-header__brand {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .project-main .kanban-header__actions,
+  .project-main .academizer-header__actions {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .project-main .kanban-header__actions .btn,
+  .project-main .academizer-header__actions button {
+    white-space: nowrap;
+  }
+}
