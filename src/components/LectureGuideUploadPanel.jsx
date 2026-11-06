@@ -129,14 +129,14 @@ export default function LectureGuideUploadPanel({ groups, onUploaded }) {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="ref-upload-group">그룹 (제품·버전)</label>
+                  <label htmlFor="ref-upload-group">그룹 (제품 버전)</label>
                   <input
                     id="ref-upload-group"
                     className="form-input"
                     list="ref-upload-groups"
                     value={group}
                     maxLength={40}
-                    placeholder="예: CONTRABASS"
+                    placeholder="예: CONTRABASS 3.0.6"
                     onChange={(e) => setGroup(e.target.value)}
                   />
                   <datalist id="ref-upload-groups">

@@ -132,12 +132,101 @@
   padding: 0 0.6rem;
 }
 
+/* 대분류(솔루션): 제품색 막대 + 굵은 네이비 + 옅은 배경 띠 */
+.ref-docs-nav__group {
+  margin-top: 1rem;
+}
+
 .ref-docs-nav__group-name {
-  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.2rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--okd-grey-100);
+  border-left: 4px solid var(--okd-product, var(--okd-blue));
+}
+
+.ref-docs-nav__group-label {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: var(--okd-navy);
+  letter-spacing: -0.01em;
+}
+
+.ref-docs-nav__group-count {
+  margin-left: auto;
+  min-width: 1.25rem;
+  padding: 0 0.35rem;
+  text-align: center;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.5;
+  color: #fff;
+  background: var(--okd-product, var(--okd-blue));
+}
+
+/* 중분류(버전): 제품색 점 + 작은 굵은 글씨 */
+.ref-docs-nav__version {
+  margin-top: 0.4rem;
+}
+
+.ref-docs-nav__version-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.1rem;
+  padding: 0.3rem 0.6rem 0.3rem 1.1rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--okd-ink);
+}
+
+.ref-docs-nav__version-name::before {
+  content: '';
+  width: 0.4rem;
+  height: 0.4rem;
+  background: var(--okd-product, var(--okd-blue));
+}
+
+.ref-docs-nav__version-count {
+  margin-left: auto;
+  font-size: 0.6875rem;
   font-weight: 600;
   color: var(--okd-muted);
-  margin: 0.85rem 0 0.25rem;
-  padding: 0 0.6rem;
+}
+
+/* 소분류(가이드 항목): 버전보다 한 단계 더 들여쓰기 + 세로 안내선 + 불렛 */
+.ref-docs-nav__list.ref-docs-nav__list--guides {
+  margin-left: 1.4rem;
+  border-left: 1px solid var(--okd-grey-200);
+}
+
+.ref-docs-nav__list--guides .ref-docs-nav__link {
+  gap: 0.5rem;
+  padding-left: 0.7rem;
+  font-size: 0.8125rem;
+}
+
+.ref-docs-nav__list--guides .ref-docs-nav__link::before {
+  content: '';
+  flex: none;
+  width: 0.3rem;
+  height: 0.3rem;
+  border-radius: 50%;
+  background: var(--okd-grey-400, #b0b0b0);
+}
+
+/* 선택된 가이드: 파란 막대 대신 제품색 불렛 + 굵은 글씨 + 옅은 배경으로 통일 */
+.ref-docs-nav__list--guides .ref-docs-nav__link.is-active {
+  border-left-color: transparent;
+  background: var(--okd-grey-100);
+}
+
+.ref-docs-nav__list--guides .ref-docs-nav__link.is-active::before {
+  width: 0.45rem;
+  height: 0.45rem;
+  background: var(--okd-product, var(--okd-blue));
 }
 
 .ref-docs-nav__list {
