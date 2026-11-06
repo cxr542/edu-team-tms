@@ -16,8 +16,13 @@ export const LECTURE_HOME_ID = 'lecture-guides';
 /** 강의 가이드 제품(대분류) 표시 순서. 목록에 없는 제품은 그 뒤에 이름순으로 붙는다. */
 export const LECTURE_PRODUCT_ORDER = ['CONTRABASS', 'VIOLA', 'OKESTRO CMP', 'TROMBONE'];
 
-/** 제품별 색 (Okestro Design System · Solution 색) */
-export const LECTURE_PRODUCT_COLORS = { CONTRABASS: '#1038ed', VIOLA: '#2FA52D' };
+/** 제품별 색 (제품 패키지 아이콘의 대표색을 글자 대비를 위해 조금 어둡게 맞춘 값) */
+export const LECTURE_PRODUCT_COLORS = {
+  CONTRABASS: '#E25A00',
+  VIOLA: '#2FA52D',
+  'OKESTRO CMP': '#1046C0',
+  TROMBONE: '#00988A',
+};
 
 /** public/docs/reference/ 기준 파일명 */
 export const REFERENCE_DOCS = /** @type {ReferenceDocMeta[]} */ ([
