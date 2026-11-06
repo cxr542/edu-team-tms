@@ -7,6 +7,11 @@
 
 ## 2026-11-06
 
+### [신규] feat(docs): 강의 가이드 목차를 제품·버전별로 정렬
+
+- feat(docs): 강의 가이드 목차를 제품·버전별로 정렬
+- PR #246: https://github.com/cxr542/edu-team-tms/pull/246
+
 ### [신규] feat(docs): 강의 가이드 HTML 관리자 업로드 기능
 
 - feat(docs): 강의 가이드 HTML 관리자 업로드 기능
