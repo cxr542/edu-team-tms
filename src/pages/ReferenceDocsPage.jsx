@@ -3,6 +3,7 @@ import { ArrowDown, ChevronRight, Menu } from 'lucide-react';
 import MarkdownDocViewer from '../components/MarkdownDocViewer';
 import DocTableOfContents from '../components/DocTableOfContents';
 import LectureGuideFrame from '../components/LectureGuideFrame';
+import LectureGuideEditor from '../components/LectureGuideEditor';
 import LectureGuideUploadPanel from '../components/LectureGuideUploadPanel';
 import {
   DEFAULT_REFERENCE_DOC_ID,
@@ -15,12 +16,16 @@ import {
   referenceDocPublicUrl,
 } from '../constants/referenceDocs';
 import {
+  fetchUploadedGuideForEdit,
   fetchUploadedGuideHtml,
   hideReferenceDoc,
   listHiddenReferenceDocIds,
   listUploadedGuides,
   purgeUploadedGuide,
   restoreReferenceDoc,
+  revertUploadedGuide,
+  updateUploadedGuide,
+  uploadLectureGuide,
 } from '../utils/referenceDocsHidden';
 import { buildProductTree, productColor } from '../utils/lectureGuideTree';
 import { downloadHtmlFile, guideFileName } from '../utils/downloadHtml';
@@ -48,6 +53,9 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
   const [uploadedDocs, setUploadedDocs] = useState([]);
   const [uploadsLoaded, setUploadsLoaded] = useState(false);
   const [uploadedHtml, setUploadedHtml] = useState({ id: '', html: '', error: '' });
+  /** 편집기 상태: 열려 있을 때만 값이 있다. rev 는 저장 뒤 편집기를 새 본문으로 다시 여는 용도. */
+  const [editing, setEditing] = useState(null);
+  const [uploadedHtmlRev, setUploadedHtmlRev] = useState(0);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
   const articleScrollRef = useRef(null);
@@ -173,7 +181,12 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
     return () => {
       cancelled = true;
     };
-  }, [isUploadedActive, activeHiddenForViewer, active?.id]);
+  }, [isUploadedActive, activeHiddenForViewer, active?.id, uploadedHtmlRev]);
+
+  // 다른 문서로 이동하면 편집기를 닫는다.
+  useEffect(() => {
+    setEditing(null);
+  }, [docId]);
 
   const downloadActive = useCallback(async () => {
     if (!active) return;
@@ -200,6 +213,72 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
     setBusy(false);
     if (html) downloadHtmlFile(guideFileName(active.title), html);
   }, [active, uploadedHtml]);
+
+  const openEditor = useCallback(async () => {
+    if (!active?.uploaded) return;
+    setBusy(true);
+    setActionError('');
+    const res = await fetchUploadedGuideForEdit(active.id);
+    setBusy(false);
+    if (!res.ok) {
+      setActionError(res.message);
+      return;
+    }
+    setEditing({ id: active.id, html: res.html, hasPrevious: res.hasPrevious, rev: 0 });
+  }, [active]);
+
+  /** 저장·되돌리기 뒤 서버에 실제로 저장된 본문으로 편집기를 다시 연다. */
+  const reloadEditor = useCallback(
+    async (id) => {
+      const fresh = await fetchUploadedGuideForEdit(id);
+      if (fresh.ok) {
+        setEditing((cur) => (cur ? { id, html: fresh.html, hasPrevious: fresh.hasPrevious, rev: cur.rev + 1 } : cur));
+      }
+      await reloadUploads();
+      setUploadedHtmlRev((n) => n + 1);
+    },
+    [reloadUploads]
+  );
+
+  const saveEdit = useCallback(
+    async (fields) => {
+      const res = await updateUploadedGuide(active.id, fields);
+      if (res.ok) await reloadEditor(active.id);
+      return res;
+    },
+    [active, reloadEditor]
+  );
+
+  const revertEdit = useCallback(async () => {
+    const res = await revertUploadedGuide(active.id);
+    if (res.ok) await reloadEditor(active.id);
+    return res;
+  }, [active, reloadEditor]);
+
+  /** 저장소 가이드는 파일이라 앱에서 못 고친다 → 업로드본 사본을 만들어 그쪽을 편집한다. */
+  const copyForEdit = useCallback(async () => {
+    if (!active || active.uploaded) return;
+    if (!window.confirm(`'${active.title}' 가이드의 편집용 사본을 만들까요? 원본은 그대로 두고, 사본이 같은 그룹에 추가됩니다.`)) return;
+    setBusy(true);
+    setActionError('');
+    try {
+      const fileRes = await fetch(referenceDocPublicUrl(active.file));
+      if (!fileRes.ok) throw new Error('파일을 불러오지 못했습니다.');
+      const html = await fileRes.text();
+      const res = await uploadLectureGuide({
+        title: `${active.title} (사본)`.slice(0, 120),
+        group: active.group,
+        summary: active.summary || '',
+        html,
+      });
+      if (!res.ok) throw new Error(res.message);
+      await reloadUploads();
+      selectDoc(res.data.id);
+    } catch (error) {
+      setActionError(error?.message || '사본을 만들지 못했습니다.');
+    }
+    setBusy(false);
+  }, [active, reloadUploads, selectDoc]);
 
   const purgeActive = useCallback(async () => {
     if (!active?.uploaded) return;
@@ -347,6 +426,15 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
                     >
                       {isHidden(active.id) ? '숨김 해제(복구)' : '목록에서 숨기기'}
                     </button>
+                    {isUploadedActive ? (
+                      <button type="button" className="btn btn-secondary" disabled={busy || Boolean(editing)} onClick={openEditor}>
+                        편집
+                      </button>
+                    ) : (
+                      <button type="button" className="btn btn-secondary" disabled={busy} onClick={copyForEdit}>
+                        편집용 사본 만들기
+                      </button>
+                    )}
                     {isUploadedActive && (
                       <button type="button" className="btn btn-secondary" disabled={busy} onClick={purgeActive}>
                         완전 삭제
@@ -437,7 +525,21 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
                 {isUploadedActive && uploadedHtml.error && (
                   <p className="ref-docs-admin-bar__error">{uploadedHtml.error}</p>
                 )}
-                {isUploadedActive && uploadedHtml.id !== active.id ? (
+                {isAdminShell && isUploadedActive && editing?.id === active.id ? (
+                  <LectureGuideEditor
+                    key={`${editing.id}-${editing.rev}`}
+                    doc={active}
+                    initialHtml={editing.html}
+                    hasPrevious={editing.hasPrevious}
+                    groups={guideGroups.map((g) => g.name)}
+                    onSave={saveEdit}
+                    onRevert={revertEdit}
+                    onClose={() => {
+                      setEditing(null);
+                      setUploadedHtmlRev((n) => n + 1);
+                    }}
+                  />
+                ) : isUploadedActive && uploadedHtml.id !== active.id ? (
                   !uploadedHtml.error && <p className="ref-docs-hidden-notice">가이드를 불러오는 중입니다.</p>
                 ) : (
                 <LectureGuideFrame

@@ -974,3 +974,125 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* —— 관리자 가이드 편집기 —— */
+.ref-docs-editor {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.ref-docs-editor__meta {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 0.75rem;
+}
+
+.ref-docs-editor__summary {
+  grid-column: 1 / -1;
+}
+
+.ref-docs-editor__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background: var(--okd-grey-100);
+  border: 1px solid var(--okd-grey-200);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.ref-docs-editor__modes {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.ref-docs-editor__mode {
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--okd-grey-200);
+  background: #fff;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--okd-ink);
+  cursor: pointer;
+}
+
+.ref-docs-editor__mode.is-active {
+  background: var(--okd-navy);
+  border-color: var(--okd-navy);
+  color: #fff;
+}
+
+.ref-docs-editor__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.ref-docs-editor__tool {
+  min-width: 2rem;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--okd-grey-200);
+  background: #fff;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--okd-ink);
+  cursor: pointer;
+}
+
+.ref-docs-editor__tool:hover {
+  background: var(--okd-grey-100);
+  border-color: var(--okd-blue);
+}
+
+.ref-docs-editor__frame {
+  display: block;
+  width: 100%;
+  height: 70vh;
+  min-height: 24rem;
+  border: 1px solid var(--okd-grey-200);
+  background: #fff;
+}
+
+.ref-docs-editor__split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.ref-docs-editor__source {
+  width: 100%;
+  height: 70vh;
+  min-height: 24rem;
+  padding: 0.75rem;
+  border: 1px solid var(--okd-grey-200);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  resize: vertical;
+  white-space: pre;
+  overflow: auto;
+}
+
+.ref-docs-editor__hint,
+.ref-docs-editor__notice {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--okd-muted);
+}
+
+.ref-docs-editor__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@media (max-width: 900px) {
+  .ref-docs-editor__meta,
+  .ref-docs-editor__split {
+    grid-template-columns: 1fr;
+  }
+}

@@ -119,3 +119,37 @@ export async function purgeUploadedGuide(docId) {
     return { ok: false, message: error?.message || '네트워크 오류' };
   }
 }
+
+async function postAdmin(payload) {
+  try {
+    const res = await fetch(ADMIN_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify(payload),
+    });
+    return await readAdminResponse(res);
+  } catch (error) {
+    return { ok: false, message: error?.message || '네트워크 오류' };
+  }
+}
+
+/** 업로드본 수정 (제목·그룹·요약·본문 중 보낸 것만 바뀐다. 본문을 바꾸면 서버가 이전 본문 1개를 보관). */
+export const updateUploadedGuide = (docId, fields) => postAdmin({ docId, ...fields });
+
+/** 보관해 둔 이전 본문과 현재 본문을 맞바꾼다. */
+export const revertUploadedGuide = (docId) => postAdmin({ docId, action: 'revert' });
+
+/** 편집기용: 본문 + 이전 버전 유무. (이전 버전 컬럼 SQL 을 아직 안 돌렸으면 본문만 읽는다.) */
+export async function fetchUploadedGuideForEdit(id) {
+  const client = isSupabaseConfigured ? getSupabaseClient() : null;
+  if (!client) return { ok: false, message: 'Supabase 연결이 설정되지 않았습니다.' };
+  try {
+    const full = await client.from(UPLOAD_TABLE).select('html, prev_size_bytes').eq('id', id).maybeSingle();
+    if (!full.error && full.data) return { ok: true, html: full.data.html, hasPrevious: Boolean(full.data.prev_size_bytes) };
+    const plain = await fetchUploadedGuideHtml(id);
+    return plain.ok ? { ok: true, html: plain.html, hasPrevious: false } : plain;
+  } catch (error) {
+    return { ok: false, message: error?.message || '네트워크 오류' };
+  }
+}
