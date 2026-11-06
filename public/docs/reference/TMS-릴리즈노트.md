@@ -7,6 +7,11 @@
 
 ## 2026-11-06
 
+### [신규] feat(docs): 강의 가이드 버전을 최신순으로 정렬
+
+- feat(docs): 강의 가이드 버전을 최신순으로 정렬
+- PR #251: https://github.com/cxr542/edu-team-tms/pull/251
+
 ### [신규] feat(docs): 구성원도 강의 가이드 HTML 다운로드
 
 - feat(docs): 구성원도 강의 가이드 HTML 다운로드
