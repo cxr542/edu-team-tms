@@ -11,7 +11,7 @@ export function makeFakeSupabase(seed = {}) {
     admin_login_attempts: [],
     ...seed,
   };
-  const pk = { ledger_transactions: 'id', ledger_categories: 'id', ledger_settings: 'key', reference_doc_uploads: 'id' };
+  const pk = { ledger_transactions: 'id', ledger_categories: 'id', ledger_settings: 'key', reference_doc_uploads: 'id', reference_doc_submissions: 'id' };
   const log = [];
 
   function builder(name) {

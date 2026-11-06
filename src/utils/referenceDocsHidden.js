@@ -153,3 +153,45 @@ export async function fetchUploadedGuideForEdit(id) {
     return { ok: false, message: error?.message || '네트워크 오류' };
   }
 }
+
+/** 구성원 제출: 관리자 승인 전까지는 목록에 보이지 않는다. (서버가 정화·마스킹 후 '승인 대기'에 저장) */
+export const submitLectureGuide = (fields) => postAdmin({ ...fields, submit: true });
+
+/** 관리자: 승인 대기 목록 (본문 제외). */
+export async function listGuideSubmissions() {
+  try {
+    const res = await fetch(ADMIN_API, { credentials: 'same-origin' });
+    const out = await readAdminResponse(res);
+    return out.ok ? { ok: true, items: Array.isArray(out.data) ? out.data : [] } : out;
+  } catch (error) {
+    return { ok: false, message: error?.message || '네트워크 오류' };
+  }
+}
+
+/** 관리자: 승인 대기 본문 1건 (미리보기용). */
+export async function fetchGuideSubmissionHtml(id) {
+  try {
+    const res = await fetch(`${ADMIN_API}?submissionId=${encodeURIComponent(id)}`, { credentials: 'same-origin' });
+    const out = await readAdminResponse(res);
+    return out.ok ? { ok: true, html: out.data?.html || '' } : out;
+  } catch (error) {
+    return { ok: false, message: error?.message || '네트워크 오류' };
+  }
+}
+
+/** 관리자: 승인 → 업로드본으로 공개. */
+export const approveGuideSubmission = (submissionId, fields = {}) =>
+  postAdmin({ action: 'approve', submissionId, ...fields });
+
+/** 관리자: 거절(삭제). */
+export async function rejectGuideSubmission(submissionId) {
+  try {
+    const res = await fetch(`${ADMIN_API}?submissionId=${encodeURIComponent(submissionId)}`, {
+      method: 'DELETE',
+      credentials: 'same-origin',
+    });
+    return await readAdminResponse(res);
+  } catch (error) {
+    return { ok: false, message: error?.message || '네트워크 오류' };
+  }
+}

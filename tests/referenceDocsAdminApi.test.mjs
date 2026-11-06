@@ -173,4 +173,86 @@ describe('reference docs admin API', () => {
       expect(db.tables.reference_doc_uploads[0].html).toBe('<h1>v2</h1><p>new</p>');
     });
   });
+
+  describe('member submissions', () => {
+    const memberHeaders = { referer: `${ORIGIN}/yhkim` };
+    const submit = (body, headers = memberHeaders) =>
+      call(db, { method: 'POST', headers, body: { submit: true, ...body } });
+    const good = { title: '제출 가이드', group: 'VIOLA 3.0.6', html: '<h1>t</h1><p>10.1.2.3</p><script>x()</script>', submitter: '김구성' };
+
+    beforeEach(() => {
+      db.tables.reference_doc_submissions = [];
+    });
+
+    it('accepts a member submission without an admin session, into the pending table only', async () => {
+      const res = await submit(good);
+      expect(res.statusCode).toBe(200);
+      expect(db.tables.reference_doc_uploads).toHaveLength(0);
+      const [row] = db.tables.reference_doc_submissions;
+      expect(row).toMatchObject({ title: '제출 가이드', grp: 'VIOLA 3.0.6', submitter: '김구성' });
+      expect(row.html).not.toMatch(/script|10\.1\.2\.3/);
+      expect(row.id.startsWith('sub-')).toBe(true);
+    });
+
+    it('rejects submissions from other origins and invalid payloads', async () => {
+      expect((await submit(good, { referer: 'https://evil.example.com/x' })).statusCode).toBe(403);
+      expect((await submit(good, {})).statusCode).toBe(403);
+      expect((await submit({ ...good, title: '' })).statusCode).toBe(400);
+      expect((await submit({ ...good, html: 'plain' })).statusCode).toBe(400);
+      expect((await submit({ ...good, html: `<p>${'a'.repeat(4 * 1024 * 1024)}</p>` })).statusCode).toBe(400);
+      expect(db.tables.reference_doc_submissions).toHaveLength(0);
+    });
+
+    it('stops accepting once too many are pending', async () => {
+      for (let i = 0; i < 50; i += 1) {
+        db.tables.reference_doc_submissions.push({ id: `sub-${i}`, title: 't', grp: 'g', html: '<p>x</p>' });
+      }
+      expect((await submit(good)).statusCode).toBe(400);
+    });
+
+    it('keeps admin-only actions closed to members', async () => {
+      db.tables.reference_doc_submissions.push({ id: 'sub-1', title: 't', grp: 'g', html: '<p>x</p>' });
+      expect((await call(db, { method: 'GET', headers: memberHeaders, url: '/api/reference-docs-admin' })).statusCode).toBe(403);
+      expect((await call(db, { method: 'POST', headers: memberHeaders, body: { action: 'approve', submissionId: 'sub-1' } })).statusCode).toBe(403);
+      expect((await call(db, { method: 'DELETE', headers: memberHeaders, url: '/api/reference-docs-admin?submissionId=sub-1' })).statusCode).toBe(403);
+      expect(db.tables.reference_doc_submissions).toHaveLength(1);
+      expect(db.tables.reference_doc_uploads).toHaveLength(0);
+    });
+
+    it('lets an admin list, preview, approve and reject', async () => {
+      await submit(good);
+      await submit({ ...good, title: '두 번째' });
+      const list = await call(db, { method: 'GET', headers: adminHeaders(), url: '/api/reference-docs-admin' });
+      expect(list.statusCode).toBe(200);
+      expect(list.body.data.map((r) => r.title)).toEqual(['제출 가이드', '두 번째']);
+      expect(list.body.data[0]).not.toHaveProperty('html');
+      const [first, second] = list.body.data;
+
+      const preview = await call(db, {
+        method: 'GET',
+        headers: adminHeaders(),
+        url: `/api/reference-docs-admin?submissionId=${first.id}`,
+      });
+      expect(preview.body.data.html).toContain('<h1>t</h1>');
+
+      const approve = await call(db, {
+        method: 'POST',
+        headers: adminHeaders(),
+        body: { action: 'approve', submissionId: first.id, title: '승인된 제목' },
+      });
+      expect(approve.statusCode).toBe(200);
+      expect(db.tables.reference_doc_uploads).toHaveLength(1);
+      expect(db.tables.reference_doc_uploads[0]).toMatchObject({ title: '승인된 제목', grp: 'VIOLA 3.0.6' });
+      expect(db.tables.reference_doc_submissions.map((r) => r.id)).toEqual([second.id]);
+
+      const reject = await call(db, {
+        method: 'DELETE',
+        headers: adminHeaders(),
+        url: `/api/reference-docs-admin?submissionId=${second.id}`,
+      });
+      expect(reject.statusCode).toBe(200);
+      expect(db.tables.reference_doc_submissions).toHaveLength(0);
+      expect(db.tables.reference_doc_uploads).toHaveLength(1);
+    });
+  });
 });

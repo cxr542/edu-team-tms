@@ -5,15 +5,23 @@
  *  - POST {docId, ...}   : 업로드본 수정 (제목·그룹·요약·본문). 본문을 바꾸면 이전 본문 1개를 보관한다
  *  - POST {docId, action:'revert'} : 보관해 둔 이전 본문과 현재 본문을 맞바꾼다 (되돌리기도 되돌릴 수 있다)
  *  - DELETE ?docId=&purge=1 : 업로드본 완전 삭제 (저장소에 포함된 가이드는 삭제 불가)
- * 읽기는 브라우저가 anon 으로 직접 한다.
+ *  - POST {submit:true}  : 구성원 제출 (관리자 세션 불필요). '승인 대기' 테이블에만 저장되고 목록에는 안 보인다
+ *  - GET                 : 승인 대기 목록 / ?submissionId= 본문 (관리자)
+ *  - POST {action:'approve', submissionId} : 승인 → 업로드본으로 공개 (관리자)
+ *  - DELETE ?submissionId= : 거절·삭제 (관리자)
+ * 읽기는 브라우저가 anon 으로 직접 한다 (승인 대기 테이블은 anon 읽기 불가).
  */
 import { canUseAdminWrite } from './adminWriteGuard.js';
+import { isAllowedPublishOrigin } from './publishOrigin.js';
 import { parseQuery, readJsonBody } from './announcementEngagement.js';
 import { REFERENCE_DOCS } from '../../src/constants/referenceDocs.js';
 import { MAX_GUIDE_HTML_BYTES, processGuideHtml } from '../../src/utils/lectureGuideSanitize.js';
 
 const HIDDEN_TABLE = 'reference_doc_hidden';
 const UPLOAD_TABLE = 'reference_doc_uploads';
+const SUBMISSION_TABLE = 'reference_doc_submissions';
+/** 승인 대기가 이만큼 쌓이면 더 받지 않는다 (본인 확인이 없는 제출 경로의 남용 방지). */
+export const MAX_PENDING_SUBMISSIONS = 50;
 const STATIC_IDS = new Set(REFERENCE_DOCS.filter((d) => d.category === 'lecture' && d.format === 'html').map((d) => d.id));
 export const UPLOAD_ID_PREFIX = 'lecture-u-';
 
@@ -134,16 +142,108 @@ async function handleUpdate(req, res, client, body) {
   });
 }
 
-export async function handleReferenceDocsAdmin(req, res, client) {
-  if (!canUseAdminWrite(req)) {
-    return json(res, 403, { ok: false, status: 'forbidden', message: '관리자 화면에서만 가이드를 관리할 수 있습니다.' });
+function newSubmissionId() {
+  return `sub-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+}
+
+/** 구성원 제출: 정화·마스킹 후 '승인 대기' 테이블에만 저장한다. */
+async function handleSubmit(req, res, client, body) {
+  const origin = req.headers?.referer || req.headers?.origin || '';
+  if (!isAllowedPublishOrigin(origin)) return fail(res, 403, '허용되지 않은 접근입니다.');
+  const title = String(body?.title || '').trim().slice(0, 120);
+  const group = String(body?.group || '').trim().slice(0, 40);
+  const summary = String(body?.summary || '').trim().slice(0, 200);
+  const submitter = String(body?.submitter || '').trim().slice(0, 40);
+  const rawHtml = typeof body?.html === 'string' ? body.html : '';
+  if (!title || !group) return fail(res, 400, '제목과 그룹을 입력해 주세요.');
+  const invalid = validateHtml(rawHtml);
+  if (invalid) return fail(res, 400, invalid);
+
+  const processed = processGuideHtml(rawHtml, { extraDomains: body?.extraDomains });
+  if (processed.sizeBytes > MAX_GUIDE_HTML_BYTES) return fail(res, 400, sizeError());
+
+  const pending = await client.from(SUBMISSION_TABLE).select('id');
+  if (pending.error) return fail(res, 500, pending.error.message);
+  if ((pending.data?.length || 0) >= MAX_PENDING_SUBMISSIONS) {
+    return fail(res, 400, '승인 대기 중인 가이드가 너무 많습니다. 관리자에게 문의해 주세요.');
   }
+
+  const id = newSubmissionId();
+  const { error } = await client
+    .from(SUBMISSION_TABLE)
+    .insert([{ id, title, grp: group, summary, submitter, html: processed.html, size_bytes: processed.sizeBytes }]);
+  if (error) return fail(res, 500, error.message);
+  return json(res, 200, { ok: true, status: 'ok', data: { id } });
+}
+
+async function handleListSubmissions(req, res, client) {
+  const query = parseQuery(req);
+  const submissionId = String(query.submissionId || '').trim();
+  if (submissionId) {
+    const { data, error } = await client.from(SUBMISSION_TABLE).select('id, html').eq('id', submissionId);
+    if (error || !data?.[0]) return fail(res, 404, error?.message || '제출을 찾을 수 없습니다.');
+    return json(res, 200, { ok: true, status: 'ok', data: { id: data[0].id, html: data[0].html } });
+  }
+  const { data, error } = await client
+    .from(SUBMISSION_TABLE)
+    .select('id, title, grp, summary, submitter, size_bytes, created_at')
+    .order('created_at', { ascending: true });
+  if (error) return fail(res, 500, error.message);
+  return json(res, 200, {
+    ok: true,
+    status: 'ok',
+    data: (data || []).map((r) => ({
+      id: r.id,
+      title: r.title,
+      group: r.grp,
+      summary: r.summary || '',
+      submitter: r.submitter || '',
+      sizeBytes: r.size_bytes,
+      createdAt: r.created_at,
+    })),
+  });
+}
+
+/** 승인: 제출본을 업로드본으로 옮기고(서버가 한 번 더 정화·마스킹) 대기 항목을 지운다. */
+async function handleApprove(req, res, client, body) {
+  const submissionId = String(body.submissionId || '').trim();
+  const { data, error: readError } = await client.from(SUBMISSION_TABLE).select('*').eq('id', submissionId);
+  if (readError || !data?.[0]) return fail(res, 404, readError?.message || '제출을 찾을 수 없습니다.');
+  const sub = data[0];
+  const title = String(body.title ?? sub.title).trim().slice(0, 120);
+  const group = String(body.group ?? sub.grp).trim().slice(0, 40);
+  const summary = String(body.summary ?? sub.summary ?? '').trim().slice(0, 200);
+  if (!title || !group) return fail(res, 400, '제목과 그룹을 입력해 주세요.');
+
+  const processed = processGuideHtml(sub.html);
+  if (processed.sizeBytes > MAX_GUIDE_HTML_BYTES) return fail(res, 400, sizeError());
+  const id = newUploadId();
+  const insert = await client
+    .from(UPLOAD_TABLE)
+    .insert([{ id, title, grp: group, summary, html: processed.html, size_bytes: processed.sizeBytes }]);
+  if (insert.error) return fail(res, 500, insert.error.message);
+  const del = await client.from(SUBMISSION_TABLE).delete().eq('id', submissionId);
+  if (del.error) return fail(res, 500, del.error.message);
+  return json(res, 200, { ok: true, status: 'ok', data: { id } });
+}
+
+export async function handleReferenceDocsAdmin(req, res, client) {
+  const forbidden = () =>
+    json(res, 403, { ok: false, status: 'forbidden', message: '관리자 화면에서만 가이드를 관리할 수 있습니다.' });
 
   if (req.method === 'POST') {
     const body = await readJsonBody(req);
+    // 구성원 제출은 관리자 세션 없이 받되, 승인 대기 테이블에만 쓴다.
+    if (body?.submit === true) return handleSubmit(req, res, client, body);
+    if (!canUseAdminWrite(req)) return forbidden();
+    if (body?.action === 'approve') return handleApprove(req, res, client, body);
     if (body?.docId) return handleUpdate(req, res, client, body);
     return handleUpload(req, res, client, body);
   }
+
+  if (!canUseAdminWrite(req)) return forbidden();
+
+  if (req.method === 'GET') return handleListSubmissions(req, res, client);
 
   if (req.method === 'PUT') {
     const body = await readJsonBody(req);
@@ -156,6 +256,12 @@ export async function handleReferenceDocsAdmin(req, res, client) {
 
   if (req.method === 'DELETE') {
     const query = parseQuery(req);
+    const submissionId = String(query.submissionId || '').trim();
+    if (submissionId) {
+      const del = await client.from(SUBMISSION_TABLE).delete().eq('id', submissionId);
+      if (del.error) return fail(res, 500, del.error.message);
+      return json(res, 200, { ok: true, status: 'ok', data: { id: submissionId } });
+    }
     const docId = String(query.docId || '').trim();
     if (String(query.purge || '') === '1') {
       if (!(await isUploadedId(client, docId))) return fail(res, 400, '업로드한 가이드만 삭제할 수 있습니다.');
@@ -170,6 +276,6 @@ export async function handleReferenceDocsAdmin(req, res, client) {
     return json(res, 200, { ok: true, status: 'ok', data: { docId } });
   }
 
-  res.setHeader('Allow', 'POST, PUT, DELETE');
+  res.setHeader('Allow', 'GET, POST, PUT, DELETE');
   return fail(res, 405, 'method not allowed');
 }
