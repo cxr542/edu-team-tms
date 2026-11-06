@@ -15,7 +15,8 @@ const ACTIVE_OFFSET = 120;
  * iframe 은 내용 높이만큼 늘려서 바깥 문서 영역 하나만 스크롤되게 한다.
  *
  * @param {{
- *   src: string,
+ *   src?: string,
+ *   srcDoc?: string,
  *   title: string,
  *   scrollEl: HTMLElement | null,
  *   onHeadings: (list: { id: string, text: string, level: number }[]) => void,
@@ -23,7 +24,7 @@ const ACTIVE_OFFSET = 120;
  *   jumpRef: { current: ((id: string) => void) | null },
  * }} props
  */
-export default function LectureGuideFrame({ src, title, scrollEl, onHeadings, onActiveChange, jumpRef }) {
+export default function LectureGuideFrame({ src, srcDoc, title, scrollEl, onHeadings, onActiveChange, jumpRef }) {
   const frameRef = useRef(null);
   const cleanupRef = useRef(null);
   const [height, setHeight] = useState(640);
@@ -34,7 +35,7 @@ export default function LectureGuideFrame({ src, title, scrollEl, onHeadings, on
       cleanupRef.current = null;
       if (jumpRef) jumpRef.current = null;
     },
-    [src, jumpRef]
+    [src, srcDoc, jumpRef]
   );
 
   const handleLoad = useCallback(() => {
@@ -118,11 +119,12 @@ export default function LectureGuideFrame({ src, title, scrollEl, onHeadings, on
   return (
     <iframe
       ref={frameRef}
-      key={src}
+      key={srcDoc !== undefined ? `doc:${title}:${srcDoc.length}` : src}
       className="ref-docs-html-frame"
-      src={src}
+      {...(srcDoc !== undefined ? { srcDoc } : { src })}
       title={title}
-      sandbox="allow-scripts allow-same-origin allow-popups"
+      /* 업로드본(srcDoc)은 스크립트 실행을 막는다. 저장소 가이드는 기존대로 스크립트 허용. */
+      sandbox={srcDoc !== undefined ? 'allow-same-origin allow-popups' : 'allow-scripts allow-same-origin allow-popups'}
       style={{ height }}
       onLoad={handleLoad}
     />

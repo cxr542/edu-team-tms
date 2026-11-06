@@ -40,3 +40,82 @@ async function callAdmin(method, docId) {
 
 export const hideReferenceDoc = (docId) => callAdmin('PUT', docId);
 export const restoreReferenceDoc = (docId) => callAdmin('DELETE', docId);
+
+const UPLOAD_TABLE = 'reference_doc_uploads';
+
+/** 관리자가 올린 가이드 목록 (본문 제외, anon 읽기). 실패하면 빈 배열. */
+export async function listUploadedGuides() {
+  if (!isSupabaseConfigured) return [];
+  const client = getSupabaseClient();
+  if (!client) return [];
+  try {
+    const { data, error } = await client
+      .from(UPLOAD_TABLE)
+      .select('id, title, grp, summary, size_bytes, created_at')
+      .order('created_at', { ascending: true });
+    if (error || !Array.isArray(data)) return [];
+    return data.map((r) => ({
+      id: r.id,
+      category: 'lecture',
+      format: 'html',
+      group: r.grp,
+      title: r.title,
+      summary: r.summary || '',
+      file: '',
+      uploaded: true,
+      sizeBytes: r.size_bytes,
+      createdAt: r.created_at,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/** 업로드된 가이드 HTML 본문 1건. */
+export async function fetchUploadedGuideHtml(id) {
+  const client = isSupabaseConfigured ? getSupabaseClient() : null;
+  if (!client) return { ok: false, message: 'Supabase 연결이 설정되지 않았습니다.' };
+  try {
+    const { data, error } = await client.from(UPLOAD_TABLE).select('html').eq('id', id).maybeSingle();
+    if (error || !data) return { ok: false, message: error?.message || '가이드를 찾을 수 없습니다.' };
+    return { ok: true, html: data.html };
+  } catch (error) {
+    return { ok: false, message: error?.message || '네트워크 오류' };
+  }
+}
+
+async function readAdminResponse(res) {
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data?.ok === false) {
+    return { ok: false, message: data?.message || `${res.status} ${res.statusText}` };
+  }
+  return { ok: true, data: data?.data };
+}
+
+/** 관리자 업로드 (서버가 정화·마스킹을 다시 적용한다). */
+export async function uploadLectureGuide({ title, group, summary, html, extraDomains }) {
+  try {
+    const res = await fetch(ADMIN_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ title, group, summary, html, extraDomains }),
+    });
+    return await readAdminResponse(res);
+  } catch (error) {
+    return { ok: false, message: error?.message || '네트워크 오류' };
+  }
+}
+
+/** 업로드한 가이드 완전 삭제. */
+export async function purgeUploadedGuide(docId) {
+  try {
+    const res = await fetch(`${ADMIN_API}?docId=${encodeURIComponent(docId)}&purge=1`, {
+      method: 'DELETE',
+      credentials: 'same-origin',
+    });
+    return await readAdminResponse(res);
+  } catch (error) {
+    return { ok: false, message: error?.message || '네트워크 오류' };
+  }
+}

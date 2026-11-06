@@ -805,3 +805,63 @@
     max-height: 100vh;
   }
 }
+
+/* 관리자 가이드 업로드 */
+.ref-docs-upload {
+  margin-bottom: 24px;
+}
+.ref-docs-upload__form {
+  margin-top: 12px;
+  padding: 20px;
+  border: 1px solid var(--okd-grey-200);
+  border-radius: var(--okd-radius-card);
+  background: #fff;
+  display: grid;
+  gap: 14px;
+}
+.ref-docs-upload__hint {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #5b5b5b;
+}
+.ref-docs-upload__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.ref-docs-upload__report {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--okd-grey-100);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.ref-docs-upload__report p {
+  margin: 0 0 6px;
+}
+.ref-docs-upload__bad {
+  color: var(--okd-point, #f15928);
+  font-weight: 600;
+}
+.ref-docs-upload__changes {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+.ref-docs-upload__changes th,
+.ref-docs-upload__changes td {
+  padding: 4px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--okd-grey-200);
+  word-break: break-all;
+}
+.ref-docs-upload__actions {
+  display: flex;
+  gap: 8px;
+}
+@media (max-width: 768px) {
+  .ref-docs-upload__row {
+    grid-template-columns: 1fr;
+  }
+}
