@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowDown, ChevronRight, Menu } from 'lucide-react';
 import MarkdownDocViewer from '../components/MarkdownDocViewer';
 import DocTableOfContents from '../components/DocTableOfContents';
 import LectureGuideFrame from '../components/LectureGuideFrame';
+import LectureGuideUploadPanel from '../components/LectureGuideUploadPanel';
 import {
   DEFAULT_REFERENCE_DOC_ID,
   REF_DOC_CATEGORIES,
@@ -14,17 +15,24 @@ import {
   referenceDocPublicUrl,
 } from '../constants/referenceDocs';
 import {
+  fetchUploadedGuideHtml,
   hideReferenceDoc,
   listHiddenReferenceDocIds,
+  listUploadedGuides,
+  purgeUploadedGuide,
   restoreReferenceDoc,
 } from '../utils/referenceDocsHidden';
 import heroBg from '../assets/okestro/Cover_bg.jpg';
 import wordmark from '../assets/okestro/logo-wordmark.svg';
 import './ReferenceDocsPage.css';
 
+const UPLOAD_ID_PREFIX = 'lecture-u-';
+const DEFAULT_GROUP_COLOR = '#1038ed';
+
 function readDocIdFromUrl() {
   const id = new URLSearchParams(window.location.search).get('doc') || DEFAULT_REFERENCE_DOC_ID;
-  return findReferenceDoc(id) ? id : DEFAULT_REFERENCE_DOC_ID;
+  // 업로드본은 목록을 불러온 뒤에야 존재 여부를 알 수 있으므로 접두사만 보고 통과시킨다.
+  return findReferenceDoc(id) || id.startsWith(UPLOAD_ID_PREFIX) ? id : DEFAULT_REFERENCE_DOC_ID;
 }
 
 export default function ReferenceDocsPage({ isAdminShell = false }) {
@@ -35,6 +43,9 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
   const guideJumpRef = useRef(null);
   const [navOpen, setNavOpen] = useState(false);
   const [hiddenIds, setHiddenIds] = useState([]);
+  const [uploadedDocs, setUploadedDocs] = useState([]);
+  const [uploadsLoaded, setUploadsLoaded] = useState(false);
+  const [uploadedHtml, setUploadedHtml] = useState({ id: '', html: '', error: '' });
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
   const articleScrollRef = useRef(null);
@@ -69,6 +80,35 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
     };
   }, []);
 
+  const reloadUploads = useCallback(async () => {
+    const list = await listUploadedGuides();
+    setUploadedDocs(list);
+    setUploadsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    reloadUploads();
+  }, [reloadUploads]);
+
+  const findDoc = useCallback(
+    (id) => findReferenceDoc(id) || uploadedDocs.find((d) => d.id === id) || null,
+    [uploadedDocs]
+  );
+
+  /** 저장소 가이드 + 업로드본을 그룹별로 묶는다 (저장소 그룹이 먼저). */
+  const guideGroups = useMemo(() => {
+    const groups = LECTURE_GUIDE_GROUPS.map((g) => ({ name: g.name, docs: [...g.docs] }));
+    for (const d of uploadedDocs) {
+      let g = groups.find((x) => x.name === d.group);
+      if (!g) {
+        g = { name: d.group, docs: [] };
+        groups.push(g);
+      }
+      g.docs.push(d);
+    }
+    return groups;
+  }, [uploadedDocs]);
+
   const isHidden = useCallback((id) => hiddenIds.includes(id), [hiddenIds]);
 
   const toggleHidden = useCallback(
@@ -86,9 +126,10 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
     [],
   );
 
-  const active = findReferenceDoc(docId) || findReferenceDoc(DEFAULT_REFERENCE_DOC_ID);
+  const active = findDoc(docId) || (uploadsLoaded ? findReferenceDoc(DEFAULT_REFERENCE_DOC_ID) : null);
   const activeHiddenForViewer = Boolean(active && !isAdminShell && isHidden(active.id));
   const src = active && !activeHiddenForViewer && active.file ? referenceDocPublicUrl(active.file) : '';
+  const isUploadedActive = Boolean(active?.uploaded);
   const isHtml = active?.format === 'html' && !activeHiddenForViewer;
   const isIndex = active?.format === 'index';
   const wide = isHtml || isIndex;
@@ -100,10 +141,49 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
 
   useEffect(() => {
     const urlId = new URLSearchParams(window.location.search).get('doc');
-    if (urlId && !findReferenceDoc(urlId)) {
+    if (uploadsLoaded && urlId && !findDoc(urlId)) {
       selectDoc(DEFAULT_REFERENCE_DOC_ID);
     }
-  }, [selectDoc]);
+  }, [selectDoc, uploadsLoaded, findDoc]);
+
+  // 업로드본은 본문을 따로 불러와 srcDoc 으로 보여 준다.
+  useEffect(() => {
+    if (!isUploadedActive || activeHiddenForViewer) return undefined;
+    let cancelled = false;
+    setUploadedHtml({ id: '', html: '', error: '' });
+    fetchUploadedGuideHtml(active.id).then((res) => {
+      if (cancelled) return;
+      setUploadedHtml(
+        res.ok ? { id: active.id, html: res.html, error: '' } : { id: active.id, html: '', error: res.message }
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isUploadedActive, activeHiddenForViewer, active?.id]);
+
+  const purgeActive = useCallback(async () => {
+    if (!active?.uploaded) return;
+    if (!window.confirm(`'${active.title}' 가이드를 완전히 삭제할까요? 되돌릴 수 없습니다.`)) return;
+    setBusy(true);
+    setActionError('');
+    const res = await purgeUploadedGuide(active.id);
+    setBusy(false);
+    if (!res.ok) {
+      setActionError(res.message);
+      return;
+    }
+    await reloadUploads();
+    selectDoc(LECTURE_HOME_ID);
+  }, [active, reloadUploads, selectDoc]);
+
+  const onUploaded = useCallback(
+    async (id) => {
+      await reloadUploads();
+      selectDoc(id);
+    },
+    [reloadUploads, selectDoc]
+  );
 
   return (
     <main className="ref-docs-shell">
@@ -154,7 +234,7 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
                 </button>
               </li>
             </ul>
-            {LECTURE_GUIDE_GROUPS.map((g) => ({
+            {guideGroups.map((g) => ({
               ...g,
               docs: g.docs.filter((d) => isAdminShell || !isHidden(d.id)),
             }))
@@ -216,6 +296,11 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
                     >
                       {isHidden(active.id) ? '숨김 해제(복구)' : '목록에서 숨기기'}
                     </button>
+                    {isUploadedActive && (
+                      <button type="button" className="btn btn-secondary" disabled={busy} onClick={purgeActive}>
+                        완전 삭제
+                      </button>
+                    )}
                     {isHidden(active.id) && (
                       <span className="ref-docs-admin-bar__note">구성원에게는 보이지 않습니다.</span>
                     )}
@@ -242,7 +327,10 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
                   </button>
                 </section>
                 <div className="ref-docs-index" id="lecture-guide-list">
-                {LECTURE_GUIDE_GROUPS.map((g) => ({
+                {isAdminShell && (
+                  <LectureGuideUploadPanel groups={guideGroups.map((g) => g.name)} onUploaded={onUploaded} />
+                )}
+                {guideGroups.map((g) => ({
                   ...g,
                   docs: g.docs.filter((d) => isAdminShell || !isHidden(d.id)),
                 }))
@@ -252,7 +340,7 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
                       <div className="ref-docs-index__group-head">
                         <span
                           className="ref-docs-index__badge"
-                          style={{ '--okd-product': LECTURE_GROUP_COLORS[g.name] }}
+                          style={{ '--okd-product': LECTURE_GROUP_COLORS[g.name] || DEFAULT_GROUP_COLOR }}
                         >
                           {g.name}
                         </span>
@@ -281,21 +369,32 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
                   ))}
                 </div>
               </>
+            ) : !active ? (
+              <p className="ref-docs-hidden-notice">문서를 불러오는 중입니다.</p>
             ) : activeHiddenForViewer ? null : isHtml ? (
               <>
-                <p className="ref-docs-html-actions">
-                  <a href={src} target="_blank" rel="noopener noreferrer">
-                    새 탭에서 열기
-                  </a>
-                </p>
+                {!isUploadedActive && (
+                  <p className="ref-docs-html-actions">
+                    <a href={src} target="_blank" rel="noopener noreferrer">
+                      새 탭에서 열기
+                    </a>
+                  </p>
+                )}
+                {isUploadedActive && uploadedHtml.error && (
+                  <p className="ref-docs-admin-bar__error">{uploadedHtml.error}</p>
+                )}
+                {isUploadedActive && uploadedHtml.id !== active.id ? (
+                  !uploadedHtml.error && <p className="ref-docs-hidden-notice">가이드를 불러오는 중입니다.</p>
+                ) : (
                 <LectureGuideFrame
-                  src={src}
+                  {...(isUploadedActive ? { srcDoc: uploadedHtml.html } : { src })}
                   title={active.title}
                   scrollEl={articleScrollEl}
                   onHeadings={setGuideHeadings}
                   onActiveChange={setGuideActiveId}
                   jumpRef={guideJumpRef}
                 />
+                )}
               </>
             ) : (
               <MarkdownDocViewer key={src} src={src} onHeadingsChange={onHeadingsChange} onDocSelect={selectDoc} />
