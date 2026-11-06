@@ -7,6 +7,11 @@
 
 ## 2026-11-06
 
+### [수정] fix(approval-bell): 전체 승인 관리 이동이 대기 건이 있는 월로 연결되도록 수정
+
+- fix(approval-bell): 전체 승인 관리 이동이 대기 건이 있는 월로 연결되도록 수정
+- PR #254: https://github.com/cxr542/edu-team-tms/pull/254
+
 ### [신규] feat(docs): 구성원 가이드 제출을 관리자 종 알림에 표시
 
 - feat(docs): 구성원 가이드 제출을 관리자 종 알림에 표시
