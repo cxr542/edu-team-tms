@@ -15,13 +15,15 @@ export function splitGroupName(name, order = LECTURE_PRODUCT_ORDER) {
   return { product: first || text, version: rest.join(' ') };
 }
 
+/** 최신 버전이 먼저 오도록 내림차순. 버전이 없는('') 묶음은 항상 맨 앞. */
 function compareVersion(a, b) {
-  return a.localeCompare(b, 'en', { numeric: true });
+  if (!a || !b) return a === b ? 0 : a ? 1 : -1;
+  return b.localeCompare(a, 'en', { numeric: true });
 }
 
 /**
  * 그룹 목록 → 제품 트리. 제품은 order 순(없는 제품은 뒤에 이름순),
- * 제품 안에서는 버전 없는 묶음이 먼저, 그다음 버전 오름차순.
+ * 제품 안에서는 버전 없는 묶음이 먼저, 그다음 최신 버전이 위로 오는 내림차순.
  *
  * @param {{ name: string, docs: object[] }[]} groups
  * @returns {{ product: string, docCount: number, versions: { name: string, version: string, docs: object[] }[] }[]}

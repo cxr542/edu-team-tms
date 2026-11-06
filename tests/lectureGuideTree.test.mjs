@@ -11,7 +11,7 @@ describe('lectureGuideTree', () => {
     expect(splitGroupName('NEWPROD 1.0')).toEqual({ product: 'NEWPROD', version: '1.0' });
   });
 
-  it('제품은 지정 순서로, 버전은 오름차순으로 정렬한다', () => {
+  it('제품은 지정 순서로, 버전은 최신이 위로 오게 정렬한다', () => {
     const tree = buildProductTree([
       g('VIOLA 3.0.6', 7),
       g('TROMBONE 1.0'),
@@ -22,9 +22,14 @@ describe('lectureGuideTree', () => {
       g('CONTRABASS 3.0.5'),
     ]);
     expect(tree.map((t) => t.product)).toEqual(['CONTRABASS', 'VIOLA', 'OKESTRO CMP', 'TROMBONE', 'ZETA']);
-    expect(tree[0].versions.map((v) => v.version)).toEqual(['3.0.5', '3.0.6']);
-    expect(tree[1].versions.map((v) => v.version)).toEqual(['3.0.5', '3.0.6']);
+    expect(tree[0].versions.map((v) => v.version)).toEqual(['3.0.6', '3.0.5']);
+    expect(tree[1].versions.map((v) => v.version)).toEqual(['3.0.6', '3.0.5']);
     expect(tree[1].docCount).toBe(10);
+  });
+
+  it('버전 숫자는 자릿수로 비교한다 (3.0.10 이 3.0.9 보다 최신)', () => {
+    const tree = buildProductTree([g('VIOLA 3.0.9'), g('VIOLA 3.0.10'), g('VIOLA 3.1.0')]);
+    expect(tree[0].versions.map((v) => v.version)).toEqual(['3.1.0', '3.0.10', '3.0.9']);
   });
 
   it('버전이 없는 묶음은 제품 안에서 맨 앞에 온다', () => {
