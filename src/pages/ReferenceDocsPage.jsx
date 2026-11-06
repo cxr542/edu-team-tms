@@ -347,9 +347,6 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
                     >
                       {isHidden(active.id) ? '숨김 해제(복구)' : '목록에서 숨기기'}
                     </button>
-                    <button type="button" className="btn btn-secondary" disabled={busy} onClick={downloadActive}>
-                      HTML 다운로드
-                    </button>
                     {isUploadedActive && (
                       <button type="button" className="btn btn-secondary" disabled={busy} onClick={purgeActive}>
                         완전 삭제
@@ -426,13 +423,17 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
               <p className="ref-docs-hidden-notice">문서를 불러오는 중입니다.</p>
             ) : activeHiddenForViewer ? null : isHtml ? (
               <>
-                {!isUploadedActive && (
-                  <p className="ref-docs-html-actions">
+                <p className="ref-docs-html-actions">
+                  {!isUploadedActive && (
                     <a href={src} target="_blank" rel="noopener noreferrer">
                       새 탭에서 열기
                     </a>
-                  </p>
-                )}
+                  )}
+                  <button type="button" className="ref-docs-html-actions__btn" disabled={busy} onClick={downloadActive}>
+                    HTML 다운로드
+                  </button>
+                  {!isAdminShell && actionError && <span className="ref-docs-admin-bar__error">{actionError}</span>}
+                </p>
                 {isUploadedActive && uploadedHtml.error && (
                   <p className="ref-docs-admin-bar__error">{uploadedHtml.error}</p>
                 )}
