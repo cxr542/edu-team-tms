@@ -7,7 +7,7 @@ import LectureGuideUploadPanel from '../components/LectureGuideUploadPanel';
 import {
   DEFAULT_REFERENCE_DOC_ID,
   REF_DOC_CATEGORIES,
-  LECTURE_GROUP_COLORS,
+  LECTURE_PRODUCT_COLORS,
   LECTURE_GUIDE_GROUPS,
   LECTURE_HOME_ID,
   REFERENCE_DOCS_NAV,
@@ -22,6 +22,7 @@ import {
   purgeUploadedGuide,
   restoreReferenceDoc,
 } from '../utils/referenceDocsHidden';
+import { buildProductTree, productColor } from '../utils/lectureGuideTree';
 import heroBg from '../assets/okestro/Cover_bg.jpg';
 import wordmark from '../assets/okestro/logo-wordmark.svg';
 import './ReferenceDocsPage.css';
@@ -110,6 +111,17 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
   }, [uploadedDocs]);
 
   const isHidden = useCallback((id) => hiddenIds.includes(id), [hiddenIds]);
+
+  /** 제품(대분류) → 버전(중분류) 트리. 일반 사용자에게는 숨김 문서를 뺀다. */
+  const visibleTree = useMemo(
+    () =>
+      buildProductTree(
+        guideGroups
+          .map((g) => ({ ...g, docs: g.docs.filter((d) => isAdminShell || !hiddenIds.includes(d.id)) }))
+          .filter((g) => g.docs.length > 0)
+      ),
+    [guideGroups, hiddenIds, isAdminShell]
+  );
 
   const toggleHidden = useCallback(
     async (id, hide) => {
@@ -234,28 +246,40 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
                 </button>
               </li>
             </ul>
-            {guideGroups.map((g) => ({
-              ...g,
-              docs: g.docs.filter((d) => isAdminShell || !isHidden(d.id)),
-            }))
-              .filter((g) => g.docs.length > 0)
-              .map((g) => (
-              <div key={g.name} className="ref-docs-nav__group">
-                <p className="ref-docs-nav__group-name">{g.name}</p>
-                <ul className="ref-docs-nav__list">
-                  {g.docs.map((d) => (
-                    <li key={d.id}>
-                      <button
-                        type="button"
-                        className={`ref-docs-nav__link${active?.id === d.id ? ' is-active' : ''}`}
-                        onClick={() => selectDoc(d.id)}
-                      >
-                        {d.title}
-                        {isHidden(d.id) && <span className="ref-docs-nav__badge">숨김</span>}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+            {visibleTree.map((p) => (
+              <div
+                key={p.product}
+                className="ref-docs-nav__group"
+                style={{ '--okd-product': productColor(p.product, LECTURE_PRODUCT_COLORS, DEFAULT_GROUP_COLOR) }}
+              >
+                <p className="ref-docs-nav__group-name">
+                  <span className="ref-docs-nav__group-label">{p.product}</span>
+                  <span className="ref-docs-nav__group-count">{p.docCount}</span>
+                </p>
+                {p.versions.map((v) => (
+                  <div key={v.name} className="ref-docs-nav__version">
+                    {v.version && (
+                      <p className="ref-docs-nav__version-name">
+                        {v.version}
+                        <span className="ref-docs-nav__version-count">{v.docs.length}</span>
+                      </p>
+                    )}
+                    <ul className="ref-docs-nav__list ref-docs-nav__list--guides">
+                      {v.docs.map((d) => (
+                        <li key={d.id}>
+                          <button
+                            type="button"
+                            className={`ref-docs-nav__link${active?.id === d.id ? ' is-active' : ''}`}
+                            onClick={() => selectDoc(d.id)}
+                          >
+                            {d.title}
+                            {isHidden(d.id) && <span className="ref-docs-nav__badge">숨김</span>}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
               </div>
             ))}
           </div>
@@ -330,18 +354,17 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
                 {isAdminShell && (
                   <LectureGuideUploadPanel groups={guideGroups.map((g) => g.name)} onUploaded={onUploaded} />
                 )}
-                {guideGroups.map((g) => ({
-                  ...g,
-                  docs: g.docs.filter((d) => isAdminShell || !isHidden(d.id)),
-                }))
-                  .filter((g) => g.docs.length > 0)
+                {visibleTree
+                  .flatMap((p) =>
+                    p.versions.map((v) => ({
+                      ...v,
+                      color: productColor(p.product, LECTURE_PRODUCT_COLORS, DEFAULT_GROUP_COLOR),
+                    }))
+                  )
                   .map((g) => (
                     <section key={g.name} className="ref-docs-index__group">
                       <div className="ref-docs-index__group-head">
-                        <span
-                          className="ref-docs-index__badge"
-                          style={{ '--okd-product': LECTURE_GROUP_COLORS[g.name] || DEFAULT_GROUP_COLOR }}
-                        >
+                        <span className="ref-docs-index__badge" style={{ '--okd-product': g.color }}>
                           {g.name}
                         </span>
                         <h2 className="ref-docs-index__group-name">시연·구성 가이드</h2>

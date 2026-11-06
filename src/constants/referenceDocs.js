@@ -13,8 +13,11 @@ export const REF_DOC_CATEGORIES = {
 /** '강의 가이드 모음' 인덱스 화면(파일 없음) */
 export const LECTURE_HOME_ID = 'lecture-guides';
 
-/** 그룹별 제품 색 (Okestro Design System · Solution 색) */
-export const LECTURE_GROUP_COLORS = { 'VIOLA 3.0.6': '#2FA52D', 'VIOLA 3.0.5': '#2FA52D', CONTRABASS: '#1038ed' };
+/** 강의 가이드 제품(대분류) 표시 순서. 목록에 없는 제품은 그 뒤에 이름순으로 붙는다. */
+export const LECTURE_PRODUCT_ORDER = ['CONTRABASS', 'VIOLA', 'OKESTRO CMP', 'TROMBONE'];
+
+/** 제품별 색 (Okestro Design System · Solution 색) */
+export const LECTURE_PRODUCT_COLORS = { CONTRABASS: '#1038ed', VIOLA: '#2FA52D' };
 
 /** public/docs/reference/ 기준 파일명 */
 export const REFERENCE_DOCS = /** @type {ReferenceDocMeta[]} */ ([
@@ -210,7 +213,7 @@ export const REFERENCE_DOCS = /** @type {ReferenceDocMeta[]} */ ([
     id: 'lecture-cb-loadbalancer',
     category: 'lecture',
     format: 'html',
-    group: 'CONTRABASS',
+    group: 'CONTRABASS 3.0.6',
     title: '로드밸런서 장애·생성 가이드',
     file: 'lecture-guides/contrabass/CONTRABASS-로드밸런서-장애-생성-가이드.html',
     summary: 'Octavia 로드밸런서 장애 재현·생성 절차',
@@ -219,7 +222,7 @@ export const REFERENCE_DOCS = /** @type {ReferenceDocMeta[]} */ ([
     id: 'lecture-cb-nova-down',
     category: 'lecture',
     format: 'html',
-    group: 'CONTRABASS',
+    group: 'CONTRABASS 3.0.6',
     title: 'nova-compute DOWN 조치 매뉴얼',
     file: 'lecture-guides/contrabass/CONTRABASS-nova-compute-DOWN-조치-매뉴얼.html',
     summary: 'nova-compute 서비스 DOWN 시 점검·조치',
