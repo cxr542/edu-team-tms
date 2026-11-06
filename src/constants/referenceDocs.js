@@ -14,7 +14,7 @@ export const REF_DOC_CATEGORIES = {
 export const LECTURE_HOME_ID = 'lecture-guides';
 
 /** 그룹별 제품 색 (Okestro Design System · Solution 색) */
-export const LECTURE_GROUP_COLORS = { 'VIOLA 3.0.6': '#2FA52D', 'VIOLA 3.0.5': '#2FA52D' };
+export const LECTURE_GROUP_COLORS = { 'VIOLA 3.0.6': '#2FA52D', 'VIOLA 3.0.5': '#2FA52D', CONTRABASS: '#1038ed' };
 
 /** public/docs/reference/ 기준 파일명 */
 export const REFERENCE_DOCS = /** @type {ReferenceDocMeta[]} */ ([
@@ -205,6 +205,24 @@ export const REFERENCE_DOCS = /** @type {ReferenceDocMeta[]} */ ([
     title: 'Kiali MSA 트래픽 모니터링 가이드',
     file: 'lecture-guides/viola-3.0.5/VIOLA-3.0.5-Kiali-MSA-트래픽-모니터링-구성-가이드.html',
     summary: 'MSA 트래픽 모니터링 구성',
+  },
+  {
+    id: 'lecture-cb-loadbalancer',
+    category: 'lecture',
+    format: 'html',
+    group: 'CONTRABASS',
+    title: '로드밸런서 장애·생성 가이드',
+    file: 'lecture-guides/contrabass/CONTRABASS-로드밸런서-장애-생성-가이드.html',
+    summary: 'Octavia 로드밸런서 장애 재현·생성 절차',
+  },
+  {
+    id: 'lecture-cb-nova-down',
+    category: 'lecture',
+    format: 'html',
+    group: 'CONTRABASS',
+    title: 'nova-compute DOWN 조치 매뉴얼',
+    file: 'lecture-guides/contrabass/CONTRABASS-nova-compute-DOWN-조치-매뉴얼.html',
+    summary: 'nova-compute 서비스 DOWN 시 점검·조치',
   },
   {
     id: 'tms-release',

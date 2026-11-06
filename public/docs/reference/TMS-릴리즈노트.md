@@ -5,7 +5,29 @@
 
 ---
 
+## 2026-11-06
+
+### [신규] feat(announcements): 새 업데이트 작성 폼에 취소 버튼 추가
+
+- feat(announcements): 새 업데이트 작성 폼에 취소 버튼 추가
+- PR #243: https://github.com/cxr542/edu-team-tms/pull/243
+
 ## 2026-11-05
+
+### [수정] fix(docs): CONTRABASS 로드밸런서 가이드 내부 IP 표기 마스킹 보완
+
+- fix(docs): CONTRABASS 로드밸런서 가이드 내부 IP 표기 마스킹 보완
+- PR #242: https://github.com/cxr542/edu-team-tms/pull/242
+
+### [업데이트] feat(ui): 메뉴별 화면 상단 헤더(아이콘·제목·설명)를 공통 스타일로 통일
+
+- 메뉴별 화면 상단(아이콘·제목·설명) 모양이 통일되었습니다.
+- PR #241: https://github.com/cxr542/edu-team-tms/pull/241
+
+### [신규] feat(docs): 강의 가이드에 CONTRABASS 플레이북 2건 추가
+
+- feat(docs): 강의 가이드에 CONTRABASS 플레이북 2건 추가
+- PR #240: https://github.com/cxr542/edu-team-tms/pull/240
 
 ### [업데이트] feat(ui): 남은 파란색을 okestro 블루로 정리
 
