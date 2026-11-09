@@ -34,6 +34,8 @@ export default function KpiApprovePage({ readOnly = false }) {
     rejectKpi1,
     approveKpi2Row,
     rejectKpi2Row,
+    lockCompetencyMonth,
+    unlockCompetencyMonthSelf,
   } = journal;
   const [toast, setToast] = useState('');
   const [rejecting, setRejecting] = useState(null);
@@ -123,7 +125,7 @@ export default function KpiApprovePage({ readOnly = false }) {
       refreshAfter(rejectKpi1(year, month, rejecting.member.code, reason));
       showToast(`${rejecting.member.displayName} ${KPI1_NAME} 반려`);
     } else if (rejecting.type === 'KPI3') {
-      kpiOperational.unlockCompetencyMonthSelf(year, month, rejecting.member.code);
+      unlockCompetencyMonthSelf(year, month, rejecting.member.code);
       showToast(`${rejecting.member.displayName} ${KPI3_NAME} 반려`);
     } else {
       refreshAfter(rejectKpi2Row(rejecting.member.code, rejecting.dayKey, rejecting.taskId, reason));
@@ -233,8 +235,12 @@ export default function KpiApprovePage({ readOnly = false }) {
                           refreshAfter(approveKpi1(year, month, item.member.code));
                           showToast(`${item.member.displayName} ${KPI1_NAME} 승인`);
                         } else if (item.type === 'KPI3') {
-                          kpiOperational.lockCompetencyMonth(year, month, item.member.code, { side: 'manager' });
-                          showToast(`${item.member.displayName} ${KPI3_NAME} 승인`);
+                          const locked = lockCompetencyMonth(year, month, item.member.code, { side: 'manager' });
+                          showToast(
+                            locked?.ok === false
+                              ? `${item.member.displayName} ${KPI3_NAME} 승인 실패`
+                              : `${item.member.displayName} ${KPI3_NAME} 승인`
+                          );
                         } else {
                           refreshAfter(approveKpi2Row(item.member.code, item.dayKey, item.taskId));
                           showToast(`${KPI2_NAME} 승인`);
