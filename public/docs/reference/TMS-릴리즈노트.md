@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-11-12
+
+### [수정] fix(health-check): 엔드포인트별 기대 상태 코드로 판정
+
+- fix(health-check): 엔드포인트별 기대 상태 코드로 판정
+- PR #256: https://github.com/cxr542/edu-team-tms/pull/256
+
 ## 2026-11-09
 
 ### [수정] fix(kpi-approve): KPI3 승인·반려 버튼이 동작하지 않던 문제
