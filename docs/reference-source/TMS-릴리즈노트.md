@@ -7,6 +7,11 @@
 
 ## 2026-11-12
 
+### [신규] feat(docs): 문서 업로드 드래그앤드롭
+
+- feat(docs): 문서 업로드 드래그앤드롭
+- PR #260: https://github.com/cxr542/edu-team-tms/pull/260
+
 ### [수정] fix(docs): 편집기 태그 라벨 축약
 
 - fix(docs): 편집기 태그 라벨 축약
