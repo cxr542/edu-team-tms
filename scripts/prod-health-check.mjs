@@ -11,9 +11,12 @@
 const BASE = 'https://edu-team-tms-ten.vercel.app';
 
 const TARGETS = [
-  { name: '홈페이지', url: `${BASE}/` },
-  { name: '장부 스냅샷 API', url: `${BASE}/api/ledger-snapshot` },
-  { name: '일지 스냅샷 API', url: `${BASE}/api/journal-snapshot` },
+  // expected: 정상으로 간주할 HTTP 상태 코드. 이 목록에 없으면(다른 4xx 포함) 장애로 판정한다.
+  { name: '홈페이지', url: `${BASE}/`, expected: [200] },
+  // 장부는 Supabase 이관 후 GET 이 의도적으로 404 `snapshot not found` 를 반환(라우트 존재 확인용).
+  { name: '장부 스냅샷 API', url: `${BASE}/api/ledger-snapshot`, expected: [404] },
+  // 일지 API 는 인증 없이 호출하면 403 `forbidden` 이 정상.
+  { name: '일지 스냅샷 API', url: `${BASE}/api/journal-snapshot`, expected: [403] },
 ];
 
 const TIMEOUT_MS = 10_000;
@@ -33,9 +36,10 @@ async function attemptOnce(target) {
     const res = await fetch(target.url, { signal: controller.signal, cache: 'no-store' });
     const elapsed = Date.now() - start;
     clearTimeout(timer);
-    // 4xx는 "서버는 응답함"으로 간주(예: 인증 필요 페이지), 5xx/네트워크 실패만 장애로 취급
-    const healthy = res.status < 500;
-    return { ...target, status: res.status, elapsed, healthy, slow: elapsed > SLOW_MS, error: null };
+    // 대상별 기대 상태 코드와 일치할 때만 정상. 5xx·네트워크 실패·예상 밖 4xx(404/403 등)는 장애.
+    const healthy = target.expected.includes(res.status);
+    const error = healthy ? null : `예상 밖 응답 HTTP ${res.status} (기대: ${target.expected.join('/')}) · ${elapsed}ms`;
+    return { ...target, status: res.status, elapsed, healthy, slow: elapsed > SLOW_MS, error };
   } catch (err) {
     clearTimeout(timer);
     const timedOut = err.name === 'AbortError';
@@ -80,7 +84,7 @@ async function main() {
 
   console.log('');
   if (hasFailure) {
-    console.log('결과: 장애 감지됨 (5xx 응답 또는 연결 실패)');
+    console.log('결과: 장애 감지됨 (기대와 다른 응답 또는 연결 실패)');
     process.exitCode = 1;
     return;
   }
