@@ -7,6 +7,11 @@
 
 ## 2026-11-12
 
+### [신규] feat(docs): 리서치 자료 카테고리·태그·검색 추가
+
+- feat(docs): 리서치 자료 카테고리·태그·검색 추가
+- PR #257: https://github.com/cxr542/edu-team-tms/pull/257
+
 ### [수정] fix(health-check): 엔드포인트별 기대 상태 코드로 판정
 
 - fix(health-check): 엔드포인트별 기대 상태 코드로 판정
