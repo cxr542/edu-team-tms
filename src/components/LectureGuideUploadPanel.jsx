@@ -7,6 +7,12 @@ import {
   processGuideHtml,
 } from '../utils/lectureGuideSanitize.js';
 import { submitLectureGuide, uploadLectureGuide } from '../utils/referenceDocsHidden.js';
+import { MAX_TAGS, normalizeTags } from '../utils/referenceDocSearch.js';
+
+const CATEGORY_OPTIONS = [
+  { value: 'lecture', label: '강의 가이드' },
+  { value: 'research', label: '리서치 자료' },
+];
 
 const formatKb = (bytes) => (bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)}MB` : `${Math.ceil(bytes / 1024)}KB`);
 
@@ -25,7 +31,9 @@ export default function LectureGuideUploadPanel({ groups, onUploaded, mode = 'ad
   const [fileName, setFileName] = useState('');
   const [rawHtml, setRawHtml] = useState('');
   const [title, setTitle] = useState('');
+  const [category, setCategory] = useState('lecture');
   const [group, setGroup] = useState('');
+  const [tags, setTags] = useState('');
   const [summary, setSummary] = useState('');
   const [extraDomains, setExtraDomains] = useState('');
   const [submitter, setSubmitter] = useState('');
@@ -42,7 +50,9 @@ export default function LectureGuideUploadPanel({ groups, onUploaded, mode = 'ad
     setFileName('');
     setRawHtml('');
     setTitle('');
+    setCategory('lecture');
     setGroup('');
+    setTags('');
     setSummary('');
     setExtraDomains('');
     setError('');
@@ -69,7 +79,8 @@ export default function LectureGuideUploadPanel({ groups, onUploaded, mode = 'ad
   };
 
   const tooLarge = processed && processed.sizeBytes > MAX_GUIDE_HTML_BYTES;
-  const canSubmit = Boolean(processed && !tooLarge && title.trim() && group.trim() && !busy);
+  const research = category === 'research';
+  const canSubmit = Boolean(processed && !tooLarge && title.trim() && (research || group.trim()) && !busy);
 
   const submit = async (event) => {
     event.preventDefault();
@@ -78,7 +89,9 @@ export default function LectureGuideUploadPanel({ groups, onUploaded, mode = 'ad
     setError('');
     const fields = {
       title: title.trim(),
-      group: group.trim(),
+      category,
+      group: research ? '' : group.trim(),
+      tags: normalizeTags(tags),
       summary: summary.trim(),
       html: processed.html,
       extraDomains: normalizeExtraDomains(extraDomains),
@@ -105,7 +118,7 @@ export default function LectureGuideUploadPanel({ groups, onUploaded, mode = 'ad
     : 0;
 
   return (
-    <section className="ref-docs-upload" aria-label="가이드 업로드">
+    <section className="ref-docs-upload" aria-label="문서 업로드">
       <button
         type="button"
         className="btn btn-secondary ref-docs-upload__toggle"
@@ -113,7 +126,7 @@ export default function LectureGuideUploadPanel({ groups, onUploaded, mode = 'ad
         onClick={() => setOpen((v) => !v)}
       >
         <Upload size={16} aria-hidden />
-        {member ? '가이드 제출' : '가이드 업로드'}
+        {member ? '문서 제출' : '문서 업로드'}
       </button>
       {done && !open && <p className="ref-docs-editor__notice" role="status">{done}</p>}
 
@@ -121,8 +134,8 @@ export default function LectureGuideUploadPanel({ groups, onUploaded, mode = 'ad
         <form className="ref-docs-upload__form" onSubmit={submit}>
           <p className="ref-docs-upload__hint">
             {member
-              ? '강사가 만든 HTML 파일을 제출합니다. 관리자가 확인하고 승인하면 목록에 공개됩니다. '
-              : '강사가 만든 HTML 파일을 올립니다. '}
+              ? '강의 가이드나 리서치 자료 HTML 파일을 제출합니다. 관리자가 확인하고 승인하면 팀 전체에 공개됩니다. '
+              : '강의 가이드나 리서치 자료 HTML 파일을 올립니다. 올린 문서는 팀 전체에 공개됩니다. '}
             올리면 스크립트가 제거되고 사설 IP·내부 도메인이 문서용 값으로 바뀝니다.
             이미지에 찍힌 IP·도메인은 자동으로 가릴 수 없으니 올리기 전에 확인해 주세요. (최대 {formatKb(MAX_GUIDE_HTML_BYTES)})
           </p>
@@ -146,6 +159,23 @@ export default function LectureGuideUploadPanel({ groups, onUploaded, mode = 'ad
                   />
                 </div>
                 <div className="form-group">
+                  <label htmlFor="ref-upload-category">문서 종류</label>
+                  <select
+                    id="ref-upload-category"
+                    className="form-input"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                  >
+                    {CATEGORY_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              {!research && (
+                <div className="form-group">
                   <label htmlFor="ref-upload-group">그룹 (제품 버전)</label>
                   <input
                     id="ref-upload-group"
@@ -162,6 +192,16 @@ export default function LectureGuideUploadPanel({ groups, onUploaded, mode = 'ad
                     ))}
                   </datalist>
                 </div>
+              )}
+              <div className="form-group">
+                <label htmlFor="ref-upload-tags">태그 (선택, 쉼표로 구분, 최대 {MAX_TAGS}개)</label>
+                <input
+                  id="ref-upload-tags"
+                  className="form-input"
+                  value={tags}
+                  placeholder="예: 기술 조사, 경쟁사 비교"
+                  onChange={(e) => setTags(e.target.value)}
+                />
               </div>
               <div className="form-group">
                 <label htmlFor="ref-upload-summary">한 줄 요약 (선택)</label>

@@ -1,4 +1,4 @@
-/** @typedef {'definition' | 'ops' | 'release' | 'source' | 'lecture'} RefDocCategory */
+/** @typedef {'definition' | 'ops' | 'release' | 'source' | 'lecture' | 'research'} RefDocCategory */
 
 /** @typedef {{ id: string, category: RefDocCategory, title: string, file: string, summary?: string, pinned?: boolean, format?: 'md' | 'html' | 'index', group?: string }} ReferenceDocMeta */
 
@@ -8,6 +8,7 @@ export const REF_DOC_CATEGORIES = {
   release: '릴리즈 노트',
   source: 'v5 원문 발췌',
   lecture: '강의 가이드',
+  research: '리서치 자료',
 };
 
 /** '강의 가이드 모음' 인덱스 화면(파일 없음) */
@@ -120,9 +121,9 @@ export const REFERENCE_DOCS = /** @type {ReferenceDocMeta[]} */ ([
     id: LECTURE_HOME_ID,
     category: 'lecture',
     format: 'index',
-    title: '강의 가이드 모음',
+    title: '강의 가이드 · 리서치 자료 모음',
     file: '',
-    summary: '강의 준비 중 만든 시연·구성 가이드를 제품과 버전별로 모았습니다.',
+    summary: '강의 준비 중 만든 시연·구성 가이드를 제품과 버전별로 모으고, 팀에서 조사한 리서치 자료를 함께 둡니다.',
   },
   {
     id: 'lecture-deploy-capacity',

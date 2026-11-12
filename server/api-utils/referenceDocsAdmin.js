@@ -2,7 +2,7 @@
  * 참고문서 '강의 가이드' 관리자 쓰기 (service role).
  *  - PUT/DELETE ?docId=  : 숨김/복구 (파일은 그대로, 숨김 목록만 기록)
  *  - POST                : HTML 업로드 (서버에서 정화·마스킹을 다시 적용한 뒤 저장)
- *  - POST {docId, ...}   : 업로드본 수정 (제목·그룹·요약·본문). 본문을 바꾸면 이전 본문 1개를 보관한다
+ *  - POST {docId, ...}   : 업로드본 수정 (제목·그룹·요약·태그·본문). 본문을 바꾸면 이전 본문 1개를 보관한다
  *  - POST {docId, action:'revert'} : 보관해 둔 이전 본문과 현재 본문을 맞바꾼다 (되돌리기도 되돌릴 수 있다)
  *  - DELETE ?docId=&purge=1 : 업로드본 완전 삭제 (저장소에 포함된 가이드는 삭제 불가)
  *  - POST {submit:true}  : 구성원 제출 (관리자 세션 불필요). '승인 대기' 테이블에만 저장되고 목록에는 안 보인다
@@ -16,6 +16,7 @@ import { isAllowedPublishOrigin } from './publishOrigin.js';
 import { parseQuery, readJsonBody } from './announcementEngagement.js';
 import { REFERENCE_DOCS } from '../../src/constants/referenceDocs.js';
 import { MAX_GUIDE_HTML_BYTES, processGuideHtml } from '../../src/utils/lectureGuideSanitize.js';
+import { RESEARCH_GROUP, normalizeCategory, normalizeTags } from '../../src/utils/referenceDocSearch.js';
 
 const HIDDEN_TABLE = 'reference_doc_hidden';
 const UPLOAD_TABLE = 'reference_doc_uploads';
@@ -43,13 +44,29 @@ async function isHideable(client, docId) {
   return STATIC_IDS.has(docId) || (await isUploadedId(client, docId));
 }
 
+/**
+ * 문서 종류·태그 필드. 강의 가이드이고 태그가 없으면 아무 컬럼도 보내지 않아,
+ * 종류 컬럼 SQL 을 아직 안 돌렸어도 기존 업로드·제출이 그대로 동작한다.
+ */
+function kindColumns(category, tags) {
+  return category === 'lecture' && tags.length === 0 ? {} : { category, tags };
+}
+
+/** 제목·그룹·종류·태그 공통 파싱. 리서치 자료는 그룹을 받지 않는다. */
+function readMeta(body, fallback = {}) {
+  const category = normalizeCategory(body?.category ?? fallback.category);
+  const group = category === 'research' ? RESEARCH_GROUP : String(body?.group ?? fallback.grp ?? '').trim().slice(0, 40);
+  const tags = normalizeTags(body?.tags ?? fallback.tags ?? []);
+  return { category, group, tags };
+}
+
 function newUploadId() {
   return `${UPLOAD_ID_PREFIX}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 }
 
 async function handleUpload(req, res, client, body) {
   const title = String(body?.title || '').trim().slice(0, 120);
-  const group = String(body?.group || '').trim().slice(0, 40);
+  const { category, group, tags } = readMeta(body);
   const summary = String(body?.summary || '').trim().slice(0, 200);
   const rawHtml = typeof body?.html === 'string' ? body.html : '';
   if (!title || !group) return fail(res, 400, '제목과 그룹을 입력해 주세요.');
@@ -61,7 +78,7 @@ async function handleUpload(req, res, client, body) {
 
   const id = newUploadId();
   const { error } = await client.from(UPLOAD_TABLE).insert([
-    { id, title, grp: group, summary, html: processed.html, size_bytes: processed.sizeBytes },
+    { id, title, grp: group, summary, html: processed.html, size_bytes: processed.sizeBytes, ...kindColumns(category, tags) },
   ]);
   if (error) return fail(res, 500, error.message);
   return json(res, 200, {
@@ -115,6 +132,7 @@ async function handleUpdate(req, res, client, body) {
       if (!group) return fail(res, 400, '그룹을 입력해 주세요.');
       patch.grp = group;
     }
+    if (body.tags !== undefined) patch.tags = normalizeTags(body.tags);
     if (body.summary !== undefined) patch.summary = String(body.summary || '').trim().slice(0, 200);
     if (body.html !== undefined) {
       const rawHtml = typeof body.html === 'string' ? body.html : '';
@@ -151,7 +169,7 @@ async function handleSubmit(req, res, client, body) {
   const origin = req.headers?.referer || req.headers?.origin || '';
   if (!isAllowedPublishOrigin(origin)) return fail(res, 403, '허용되지 않은 접근입니다.');
   const title = String(body?.title || '').trim().slice(0, 120);
-  const group = String(body?.group || '').trim().slice(0, 40);
+  const { category, group, tags } = readMeta(body);
   const summary = String(body?.summary || '').trim().slice(0, 200);
   const submitter = String(body?.submitter || '').trim().slice(0, 40);
   const rawHtml = typeof body?.html === 'string' ? body.html : '';
@@ -171,7 +189,18 @@ async function handleSubmit(req, res, client, body) {
   const id = newSubmissionId();
   const { error } = await client
     .from(SUBMISSION_TABLE)
-    .insert([{ id, title, grp: group, summary, submitter, html: processed.html, size_bytes: processed.sizeBytes }]);
+    .insert([
+      {
+        id,
+        title,
+        grp: group,
+        summary,
+        submitter,
+        html: processed.html,
+        size_bytes: processed.sizeBytes,
+        ...kindColumns(category, tags),
+      },
+    ]);
   if (error) return fail(res, 500, error.message);
   return json(res, 200, { ok: true, status: 'ok', data: { id } });
 }
@@ -186,7 +215,7 @@ async function handleListSubmissions(req, res, client) {
   }
   const { data, error } = await client
     .from(SUBMISSION_TABLE)
-    .select('id, title, grp, summary, submitter, size_bytes, created_at')
+    .select('*')
     .order('created_at', { ascending: true });
   if (error) return fail(res, 500, error.message);
   return json(res, 200, {
@@ -196,6 +225,8 @@ async function handleListSubmissions(req, res, client) {
       id: r.id,
       title: r.title,
       group: r.grp,
+      category: normalizeCategory(r.category),
+      tags: normalizeTags(r.tags),
       summary: r.summary || '',
       submitter: r.submitter || '',
       sizeBytes: r.size_bytes,
@@ -211,7 +242,7 @@ async function handleApprove(req, res, client, body) {
   if (readError || !data?.[0]) return fail(res, 404, readError?.message || '제출을 찾을 수 없습니다.');
   const sub = data[0];
   const title = String(body.title ?? sub.title).trim().slice(0, 120);
-  const group = String(body.group ?? sub.grp).trim().slice(0, 40);
+  const { category, group, tags } = readMeta(body, sub);
   const summary = String(body.summary ?? sub.summary ?? '').trim().slice(0, 200);
   if (!title || !group) return fail(res, 400, '제목과 그룹을 입력해 주세요.');
 
@@ -220,7 +251,9 @@ async function handleApprove(req, res, client, body) {
   const id = newUploadId();
   const insert = await client
     .from(UPLOAD_TABLE)
-    .insert([{ id, title, grp: group, summary, html: processed.html, size_bytes: processed.sizeBytes }]);
+    .insert([
+      { id, title, grp: group, summary, html: processed.html, size_bytes: processed.sizeBytes, ...kindColumns(category, tags) },
+    ]);
   if (insert.error) return fail(res, 500, insert.error.message);
   const del = await client.from(SUBMISSION_TABLE).delete().eq('id', submissionId);
   if (del.error) return fail(res, 500, del.error.message);
