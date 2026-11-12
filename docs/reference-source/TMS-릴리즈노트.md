@@ -7,6 +7,11 @@
 
 ## 2026-11-12
 
+### [수정] feat(docs): 편집기에서 태그 수정
+
+- feat(docs): 편집기에서 태그 수정
+- PR #258: https://github.com/cxr542/edu-team-tms/pull/258
+
 ### [신규] feat(docs): 리서치 자료 카테고리·태그·검색 추가
 
 - feat(docs): 리서치 자료 카테고리·태그·검색 추가
