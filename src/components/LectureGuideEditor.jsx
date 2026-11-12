@@ -181,12 +181,12 @@ export default function LectureGuideEditor({ doc, initialHtml, hasPrevious, grou
           </div>
         )}
         <div className="form-group">
-          <label htmlFor="ref-edit-tags">태그 (쉼표로 구분, 최대 {MAX_TAGS}개)</label>
+          <label htmlFor="ref-edit-tags">태그</label>
           <input
             id="ref-edit-tags"
             className="form-input"
             value={tags}
-            placeholder="예: 기술 조사, 경쟁사 비교"
+            placeholder={`쉼표로 구분, 최대 ${MAX_TAGS}개`}
             onChange={(e) => (setTags(e.target.value), markDirty())}
           />
         </div>
