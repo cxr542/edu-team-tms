@@ -7,6 +7,11 @@
 
 ## 2026-11-12
 
+### [수정] fix(docs): 편집기 태그 라벨 축약
+
+- fix(docs): 편집기 태그 라벨 축약
+- PR #259: https://github.com/cxr542/edu-team-tms/pull/259
+
 ### [수정] feat(docs): 편집기에서 태그 수정
 
 - feat(docs): 편집기에서 태그 수정
