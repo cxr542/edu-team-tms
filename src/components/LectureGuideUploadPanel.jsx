@@ -39,6 +39,7 @@ export default function LectureGuideUploadPanel({ groups, onUploaded, mode = 'ad
   const [submitter, setSubmitter] = useState('');
   const [done, setDone] = useState('');
   const [busy, setBusy] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const [error, setError] = useState('');
 
   const processed = useMemo(
@@ -60,8 +61,8 @@ export default function LectureGuideUploadPanel({ groups, onUploaded, mode = 'ad
     if (fileRef.current) fileRef.current.value = '';
   };
 
-  const onPickFile = async (event) => {
-    const file = event.target.files?.[0];
+  /** 파일 선택과 드래그앤드롭이 같이 쓰는 읽기 경로. */
+  const loadFile = async (file) => {
     setError('');
     if (!file) return;
     if (!/\.html?$/i.test(file.name)) {
@@ -76,6 +77,39 @@ export default function LectureGuideUploadPanel({ groups, onUploaded, mode = 'ad
     setFileName(file.name);
     setRawHtml(text);
     setTitle((cur) => cur || guessGuideTitle(text) || file.name.replace(/\.html?$/i, ''));
+  };
+
+  const onPickFile = (event) => loadFile(event.target.files?.[0]);
+
+  const hasFiles = (event) => Array.from(event.dataTransfer?.types || []).includes('Files');
+
+  const onDragOver = (event) => {
+    if (!hasFiles(event) || busy) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'copy';
+    setDragging(true);
+  };
+
+  const onDragLeave = (event) => {
+    // 영역 안의 자식 요소로 옮겨 갈 때는 유지한다.
+    if (!event.currentTarget.contains(event.relatedTarget)) setDragging(false);
+  };
+
+  /** 패널이 닫혀 있어도 버튼 위에 놓으면 폼을 열고 파일을 읽는다. */
+  const onDrop = (event) => {
+    if (!hasFiles(event)) return;
+    event.preventDefault();
+    setDragging(false);
+    if (busy) return;
+    const files = Array.from(event.dataTransfer.files || []);
+    setOpen(true);
+    setDone('');
+    if (fileRef.current) fileRef.current.value = '';
+    if (files.length > 1) {
+      setError('파일은 한 번에 하나만 올릴 수 있습니다.');
+      return;
+    }
+    loadFile(files[0]);
   };
 
   const tooLarge = processed && processed.sizeBytes > MAX_GUIDE_HTML_BYTES;
@@ -118,7 +152,13 @@ export default function LectureGuideUploadPanel({ groups, onUploaded, mode = 'ad
     : 0;
 
   return (
-    <section className="ref-docs-upload" aria-label="문서 업로드">
+    <section
+      className={`ref-docs-upload${dragging ? ' is-dragging' : ''}`}
+      aria-label="문서 업로드"
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+    >
       <button
         type="button"
         className="btn btn-secondary ref-docs-upload__toggle"
@@ -142,7 +182,17 @@ export default function LectureGuideUploadPanel({ groups, onUploaded, mode = 'ad
 
           <div className="form-group">
             <label htmlFor="ref-upload-file">HTML 파일</label>
-            <input id="ref-upload-file" ref={fileRef} type="file" accept=".html,.htm,text/html" onChange={onPickFile} />
+            <div className="ref-docs-upload__drop">
+              <Upload size={20} aria-hidden />
+              <p className="ref-docs-upload__drop-text">
+                {dragging
+                  ? '여기에 놓으세요'
+                  : fileName
+                    ? `선택한 파일: ${fileName} (다른 파일을 끌어다 놓으면 바뀝니다)`
+                    : 'HTML 파일을 여기에 끌어다 놓거나 아래에서 선택하세요'}
+              </p>
+              <input id="ref-upload-file" ref={fileRef} type="file" accept=".html,.htm,text/html" onChange={onPickFile} />
+            </div>
           </div>
 
           {processed && (
