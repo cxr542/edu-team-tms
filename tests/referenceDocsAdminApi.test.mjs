@@ -134,6 +134,15 @@ describe('reference docs admin API', () => {
       expect((await post({ docId: 'lecture-u-nope', title: 'x' })).statusCode).toBe(400);
     });
 
+    it('updates tags (normalized) without touching the saved body', async () => {
+      seed();
+      const res = await post({ docId: 'lecture-u-abc', tags: 'AWS, #aws, 경쟁사 ' });
+      expect(res.statusCode).toBe(200);
+      expect(db.tables.reference_doc_uploads[0]).toMatchObject({ tags: ['AWS', '경쟁사'], html: '<h1>v1</h1><p>10.0.0.5</p>' });
+      await post({ docId: 'lecture-u-abc', tags: '' });
+      expect(db.tables.reference_doc_uploads[0].tags).toEqual([]);
+    });
+
     it('updates metadata only without touching the saved body', async () => {
       seed();
       const res = await post({ docId: 'lecture-u-abc', title: '새 제목', group: 'VIOLA 3.0.6', summary: '요약' });

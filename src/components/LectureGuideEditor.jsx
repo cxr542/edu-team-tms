@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { MAX_TAGS, normalizeTags } from '../utils/referenceDocSearch.js';
 import { MAX_GUIDE_HTML_BYTES, processGuideHtml } from '../utils/lectureGuideSanitize.js';
 
 const formatKb = (bytes) => (bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)}MB` : `${Math.ceil(bytes / 1024)}KB`);
@@ -31,7 +32,7 @@ const TOOLS = [
  * 저장하면 서버가 정화·마스킹을 다시 적용하고 이전 본문 1개를 보관한다.
  *
  * @param {{
- *   doc: { id: string, title: string, group: string, summary?: string },
+ *   doc: { id: string, title: string, group: string, summary?: string, category?: string, tags?: string[] },
  *   initialHtml: string,
  *   hasPrevious: boolean,
  *   groups: string[],
@@ -47,6 +48,9 @@ export default function LectureGuideEditor({ doc, initialHtml, hasPrevious, grou
   const [title, setTitle] = useState(doc.title);
   const [group, setGroup] = useState(doc.group);
   const [summary, setSummary] = useState(doc.summary || '');
+  const [tags, setTags] = useState((doc.tags || []).join(', '));
+  /** 리서치 자료는 제품 버전 그룹이 없다 (서버가 고정값을 쓴다). */
+  const research = doc.category === 'research';
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -99,7 +103,13 @@ export default function LectureGuideEditor({ doc, initialHtml, hasPrevious, grou
     setBusy(true);
     setError('');
     setNotice('');
-    const res = await onSave({ title: title.trim(), group: group.trim(), summary: summary.trim(), html: current });
+    const res = await onSave({
+      title: title.trim(),
+      ...(research ? {} : { group: group.trim() }),
+      summary: summary.trim(),
+      tags: normalizeTags(tags),
+      html: current,
+    });
     setBusy(false);
     if (!res.ok) {
       setError(res.message || '저장하지 못했습니다.');
@@ -152,21 +162,33 @@ export default function LectureGuideEditor({ doc, initialHtml, hasPrevious, grou
             onChange={(e) => (setTitle(e.target.value), markDirty())}
           />
         </div>
+        {!research && (
+          <div className="form-group">
+            <label htmlFor="ref-edit-group">그룹 (제품 버전)</label>
+            <input
+              id="ref-edit-group"
+              className="form-input"
+              list="ref-edit-groups"
+              value={group}
+              maxLength={40}
+              onChange={(e) => (setGroup(e.target.value), markDirty())}
+            />
+            <datalist id="ref-edit-groups">
+              {groups.map((g) => (
+                <option key={g} value={g} />
+              ))}
+            </datalist>
+          </div>
+        )}
         <div className="form-group">
-          <label htmlFor="ref-edit-group">그룹 (제품 버전)</label>
+          <label htmlFor="ref-edit-tags">태그 (쉼표로 구분, 최대 {MAX_TAGS}개)</label>
           <input
-            id="ref-edit-group"
+            id="ref-edit-tags"
             className="form-input"
-            list="ref-edit-groups"
-            value={group}
-            maxLength={40}
-            onChange={(e) => (setGroup(e.target.value), markDirty())}
+            value={tags}
+            placeholder="예: 기술 조사, 경쟁사 비교"
+            onChange={(e) => (setTags(e.target.value), markDirty())}
           />
-          <datalist id="ref-edit-groups">
-            {groups.map((g) => (
-              <option key={g} value={g} />
-            ))}
-          </datalist>
         </div>
         <div className="form-group ref-docs-editor__summary">
           <label htmlFor="ref-edit-summary">한 줄 요약</label>
@@ -258,7 +280,7 @@ export default function LectureGuideEditor({ doc, initialHtml, hasPrevious, grou
       {notice && <p className="ref-docs-editor__notice">{notice}</p>}
 
       <div className="ref-docs-editor__actions">
-        <button type="button" className="btn btn-primary" disabled={busy || !title.trim() || !group.trim()} onClick={save}>
+        <button type="button" className="btn btn-primary" disabled={busy || !title.trim() || (!research && !group.trim())} onClick={save}>
           {busy ? '저장 중…' : '저장'}
         </button>
         <button type="button" className="btn btn-secondary" disabled={busy} onClick={close}>
