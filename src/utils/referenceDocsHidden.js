@@ -1,4 +1,5 @@
 import { getSupabaseClient, isSupabaseConfigured } from './supabaseClient.js';
+import { normalizeCategory, normalizeTags } from './referenceDocSearch.js';
 
 const TABLE = 'reference_doc_hidden';
 const ADMIN_API = '/api/reference-docs-admin';
@@ -43,24 +44,25 @@ export const restoreReferenceDoc = (docId) => callAdmin('DELETE', docId);
 
 const UPLOAD_TABLE = 'reference_doc_uploads';
 
-/** 관리자가 올린 가이드 목록 (본문 제외, anon 읽기). 실패하면 빈 배열. */
+/** 관리자가 올린 문서 목록 (본문 제외, anon 읽기). 종류 컬럼 SQL 을 아직 안 돌렸으면 강의 가이드로만 읽는다. 실패하면 빈 배열. */
 export async function listUploadedGuides() {
   if (!isSupabaseConfigured) return [];
   const client = getSupabaseClient();
   if (!client) return [];
   try {
-    const { data, error } = await client
-      .from(UPLOAD_TABLE)
-      .select('id, title, grp, summary, size_bytes, created_at')
-      .order('created_at', { ascending: true });
+    const base = 'id, title, grp, summary, size_bytes, created_at';
+    let res = await client.from(UPLOAD_TABLE).select(`${base}, category, tags`).order('created_at', { ascending: true });
+    if (res.error) res = await client.from(UPLOAD_TABLE).select(base).order('created_at', { ascending: true });
+    const { data, error } = res;
     if (error || !Array.isArray(data)) return [];
     return data.map((r) => ({
       id: r.id,
-      category: 'lecture',
+      category: normalizeCategory(r.category),
       format: 'html',
       group: r.grp,
       title: r.title,
       summary: r.summary || '',
+      tags: normalizeTags(r.tags),
       file: '',
       uploaded: true,
       sizeBytes: r.size_bytes,
@@ -93,13 +95,13 @@ async function readAdminResponse(res) {
 }
 
 /** 관리자 업로드 (서버가 정화·마스킹을 다시 적용한다). */
-export async function uploadLectureGuide({ title, group, summary, html, extraDomains }) {
+export async function uploadLectureGuide({ title, group, summary, html, extraDomains, category, tags }) {
   try {
     const res = await fetch(ADMIN_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',
-      body: JSON.stringify({ title, group, summary, html, extraDomains }),
+      body: JSON.stringify({ title, group, summary, html, extraDomains, category, tags }),
     });
     return await readAdminResponse(res);
   } catch (error) {

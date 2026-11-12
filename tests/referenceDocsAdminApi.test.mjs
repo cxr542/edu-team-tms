@@ -254,5 +254,33 @@ describe('reference docs admin API', () => {
       expect(db.tables.reference_doc_submissions).toHaveLength(0);
       expect(db.tables.reference_doc_uploads).toHaveLength(1);
     });
+
+    it('stores research submissions with the research group and normalized tags, and keeps them on approve', async () => {
+      const res = await submit({ ...good, group: '', category: 'research', tags: 'AWS, #aws, 경쟁사 ' });
+      expect(res.statusCode).toBe(200);
+      const [row] = db.tables.reference_doc_submissions;
+      expect(row).toMatchObject({ category: 'research', grp: '리서치 자료', tags: ['AWS', '경쟁사'] });
+
+      const list = await call(db, { method: 'GET', headers: adminHeaders(), url: '/api/reference-docs-admin' });
+      expect(list.body.data[0]).toMatchObject({ category: 'research', tags: ['AWS', '경쟁사'] });
+
+      await call(db, { method: 'POST', headers: adminHeaders(), body: { action: 'approve', submissionId: row.id } });
+      expect(db.tables.reference_doc_uploads[0]).toMatchObject({ category: 'research', grp: '리서치 자료', tags: ['AWS', '경쟁사'] });
+    });
+
+    it('lecture submissions without tags send no category/tags columns (works before the SQL is run)', async () => {
+      await submit(good);
+      const [row] = db.tables.reference_doc_submissions;
+      expect(row).not.toHaveProperty('category');
+      expect(row).not.toHaveProperty('tags');
+    });
+  });
+
+  it('admin upload accepts research category and ignores unknown categories', async () => {
+    const post = (body) => call(db, { method: 'POST', headers: adminHeaders(), body });
+    expect((await post({ title: 'r', category: 'research', html: '<p>x</p>' })).statusCode).toBe(200);
+    expect(db.tables.reference_doc_uploads[0]).toMatchObject({ category: 'research', grp: '리서치 자료', tags: [] });
+    expect((await post({ title: 'l', group: 'g', category: 'bogus', tags: ['a'], html: '<p>x</p>' })).statusCode).toBe(200);
+    expect(db.tables.reference_doc_uploads[1]).toMatchObject({ category: 'lecture', grp: 'g', tags: ['a'] });
   });
 });

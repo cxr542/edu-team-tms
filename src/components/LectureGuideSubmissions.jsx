@@ -106,7 +106,7 @@ export default function LectureGuideSubmissions({ onApproved }) {
               <div className="ref-docs-submissions__info">
                 <strong>{it.title}</strong>
                 <span className="ref-docs-submissions__meta">
-                  {it.group} · {it.submitter || '제출자 미기재'} · {formatKb(it.sizeBytes)} · {formatDate(it.createdAt)}
+                  {it.category === 'research' ? '리서치 자료' : it.group}{it.tags?.length ? ` · #${it.tags.join(' #')}` : ''} · {it.submitter || '제출자 미기재'} · {formatKb(it.sizeBytes)} · {formatDate(it.createdAt)}
                 </span>
                 {it.summary && <span className="ref-docs-submissions__meta">{it.summary}</span>}
               </div>

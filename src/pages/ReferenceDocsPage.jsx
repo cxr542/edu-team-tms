@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDown, ChevronRight, Menu } from 'lucide-react';
+import { ArrowDown, ChevronRight, Menu, Search } from 'lucide-react';
 import MarkdownDocViewer from '../components/MarkdownDocViewer';
 import DocTableOfContents from '../components/DocTableOfContents';
 import LectureGuideFrame from '../components/LectureGuideFrame';
@@ -30,6 +30,7 @@ import {
 } from '../utils/referenceDocsHidden';
 import { LECTURE_PRODUCT_ICONS } from '../constants/lectureProductIcons';
 import { buildProductTree, productColor } from '../utils/lectureGuideTree';
+import { filterDocsByQuery } from '../utils/referenceDocSearch';
 import { downloadHtmlFile, guideFileName } from '../utils/downloadHtml';
 import heroBg from '../assets/okestro/Cover_bg.jpg';
 import wordmark from '../assets/okestro/logo-wordmark.svg';
@@ -58,6 +59,7 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
   /** 편집기 상태: 열려 있을 때만 값이 있다. rev 는 저장 뒤 편집기를 새 본문으로 다시 여는 용도. */
   const [editing, setEditing] = useState(null);
   const [uploadedHtmlRev, setUploadedHtmlRev] = useState(0);
+  const [query, setQuery] = useState('');
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
   const articleScrollRef = useRef(null);
@@ -111,6 +113,7 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
   const guideGroups = useMemo(() => {
     const groups = LECTURE_GUIDE_GROUPS.map((g) => ({ name: g.name, docs: [...g.docs] }));
     for (const d of uploadedDocs) {
+      if (d.category === 'research') continue;
       let g = groups.find((x) => x.name === d.group);
       if (!g) {
         g = { name: d.group, docs: [] };
@@ -124,15 +127,34 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
   const isHidden = useCallback((id) => hiddenIds.includes(id), [hiddenIds]);
 
   /** 제품(대분류) → 버전(중분류) 트리. 일반 사용자에게는 숨김 문서를 뺀다. */
-  const visibleTree = useMemo(
-    () =>
+  const buildTree = useCallback(
+    (q) =>
       buildProductTree(
         guideGroups
-          .map((g) => ({ ...g, docs: g.docs.filter((d) => isAdminShell || !hiddenIds.includes(d.id)) }))
+          .map((g) => ({
+            ...g,
+            docs: filterDocsByQuery(
+              g.docs.filter((d) => isAdminShell || !hiddenIds.includes(d.id)),
+              q
+            ),
+          }))
           .filter((g) => g.docs.length > 0)
       ),
     [guideGroups, hiddenIds, isAdminShell]
   );
+  /** 목차(왼쪽)는 항상 전체, 첫 화면(오른쪽)만 검색어로 좁힌다. */
+  const visibleTree = useMemo(() => buildTree(''), [buildTree]);
+  const filteredTree = useMemo(() => buildTree(query), [buildTree, query]);
+
+  /** 리서치 자료: 최신순. 숨김은 관리자에게만 보인다. */
+  const researchDocs = useMemo(
+    () =>
+      uploadedDocs
+        .filter((d) => d.category === 'research' && (isAdminShell || !hiddenIds.includes(d.id)))
+        .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt))),
+    [uploadedDocs, hiddenIds, isAdminShell]
+  );
+  const filteredResearch = useMemo(() => filterDocsByQuery(researchDocs, query), [researchDocs, query]);
 
   const toggleHidden = useCallback(
     async (id, hide) => {
@@ -350,7 +372,7 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
                   className={`ref-docs-nav__link${isIndex ? ' is-active' : ''}`}
                   onClick={() => selectDoc(LECTURE_HOME_ID)}
                 >
-                  전체 가이드 모음
+                  전체 문서 모음
                 </button>
               </li>
             </ul>
@@ -390,6 +412,25 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
                 ))}
               </div>
             ))}
+            {researchDocs.length > 0 && (
+              <>
+                <p className="ref-docs-nav__title ref-docs-nav__title--section">리서치 자료</p>
+                <ul className="ref-docs-nav__list ref-docs-nav__list--guides">
+                  {researchDocs.map((d) => (
+                    <li key={d.id}>
+                      <button
+                        type="button"
+                        className={`ref-docs-nav__link${active?.id === d.id ? ' is-active' : ''}`}
+                        onClick={() => selectDoc(d.id)}
+                      >
+                        {d.title}
+                        {isHidden(d.id) && <span className="ref-docs-nav__badge">숨김</span>}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </div>
         </aside>
 
@@ -474,7 +515,21 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
                   onUploaded={onUploaded}
                 />
                 {isAdminShell && <LectureGuideSubmissions onApproved={onUploaded} />}
-                {visibleTree.map((p) => {
+                <div className="ref-docs-search">
+                  <Search size={16} aria-hidden />
+                  <input
+                    type="search"
+                    className="form-input"
+                    aria-label="문서 검색"
+                    placeholder="제목·요약·태그로 검색"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                  />
+                </div>
+                {query.trim() && filteredTree.length === 0 && filteredResearch.length === 0 && (
+                  <p className="ref-docs-hidden-notice">'{query.trim()}'에 해당하는 문서가 없습니다.</p>
+                )}
+                {filteredTree.map((p) => {
                   const icon = productColor(p.product, LECTURE_PRODUCT_ICONS, '');
                   return (
                     <section
@@ -534,6 +589,43 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
                     </section>
                   );
                 })}
+                {filteredResearch.length > 0 && (
+                  <section className="ref-docs-product ref-docs-research" style={{ '--okd-product': DEFAULT_GROUP_COLOR }}>
+                    <header className="ref-docs-product__head">
+                      <div className="ref-docs-product__title">
+                        <h2 className="ref-docs-product__name">리서치 자료</h2>
+                        <p className="ref-docs-product__meta">문서 {filteredResearch.length}개 · 최신순</p>
+                      </div>
+                    </header>
+                    <div className="ref-docs-index__grid">
+                      {filteredResearch.map((d) => (
+                        <button
+                          key={d.id}
+                          type="button"
+                          className={`ref-docs-card${isHidden(d.id) ? ' is-hidden' : ''}`}
+                          onClick={() => selectDoc(d.id)}
+                        >
+                          <span className="ref-docs-card__title">{d.title}</span>
+                          {d.summary && <span className="ref-docs-card__summary">{d.summary}</span>}
+                          {d.tags?.length > 0 && (
+                            <span className="ref-docs-card__tags">
+                              {d.tags.map((t) => (
+                                <span key={t} className="ref-docs-card__tag">
+                                  #{t}
+                                </span>
+                              ))}
+                            </span>
+                          )}
+                          <span
+                            className={`ref-docs-card__meta${isHidden(d.id) ? ' ref-docs-card__meta--hidden' : ''}`}
+                          >
+                            {isHidden(d.id) ? '숨김 · 관리자에게만 보임' : `${String(d.createdAt || '').slice(0, 10)} · 문서 열기`}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                )}
                 </div>
               </>
             ) : !active ? (
