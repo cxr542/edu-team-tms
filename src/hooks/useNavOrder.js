@@ -4,6 +4,7 @@ import {
   NAV_ORDER_STORAGE_KEY,
   applyNavOrder,
   moveNavItem,
+  moveNavItemToEdge,
   sanitizeNavOrder,
 } from '../utils/navOrder';
 
@@ -16,7 +17,7 @@ function loadNavOrder() {
   }
 }
 
-/** 사이드바 그룹별 메뉴 순서. 이 브라우저에만 저장되고, 저장이 없으면 기본 순서다. */
+/** 사이드바 그룹별 메뉴 순서. 이 브라우저에 보관(캐시)하고, 팀 공유 설정은 useSharedNavSettings 가 맞춘다. 저장이 없으면 기본 순서다. */
 export function useNavOrder() {
   const [saved, setSaved] = useState(loadNavOrder);
 
@@ -40,7 +41,16 @@ export function useNavOrder() {
     });
   }, []);
 
-  const resetOrder = useCallback(() => setSaved({}), []);
+  const moveItemToEdge = useCallback((group, id, edge) => {
+    setSaved((prev) => {
+      const current = applyNavOrder(NAV_GROUP_DEFAULT_ORDER[group] || [], prev[group]);
+      return { ...prev, [group]: moveNavItemToEdge(current, id, edge) };
+    });
+  }, []);
 
-  return { orderOf, moveItem, resetOrder };
+  const resetOrder = useCallback(() => setSaved({}), []);
+  /** 팀 공유 저장소에서 읽은 순서로 통째로 바꾼다 */
+  const replaceOrder = useCallback((next) => setSaved(sanitizeNavOrder(next)), []);
+
+  return { orderOf, moveItem, moveItemToEdge, resetOrder, replaceOrder, saved };
 }

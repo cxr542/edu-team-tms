@@ -240,8 +240,13 @@ export default function App() {
   const [viewerMenuSettingsOpen, setViewerMenuSettingsOpen] = useState(false);
   const [adminGateHintOpen, setAdminGateHintOpen] = useState(false);
 
-  const { labels: navLabels, updateLabel: onNavLabelSave, resetLabels: onNavLabelsReset, defaults: navDefaults } =
-    useNavLabels();
+  const {
+    labels: navLabels,
+    updateLabel: onNavLabelSave,
+    resetLabels: onNavLabelsReset,
+    replaceLabels: onNavLabelsReplace,
+    defaults: navDefaults,
+  } = useNavLabels();
   const provisionalDisplayModule = isViewer ? resolveViewerModule(module, viewerMenuVisibility) : module;
   const ledgerSnapshotEnabled = !isPublicViewer && provisionalDisplayModule === 'ledger';
   const {
@@ -966,6 +971,7 @@ export default function App() {
         navDefaults={navDefaults}
         onNavLabelSave={onNavLabelSave}
         onNavLabelsReset={onNavLabelsReset}
+        onNavLabelsReplace={onNavLabelsReplace}
         isViewer={isViewer}
         isPublicViewerScope={isPublicViewer}
         viewerMenuVisibility={activeViewerMenuVisibility}

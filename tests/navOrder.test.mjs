@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   NAV_GROUP_DEFAULT_ORDER,
   applyNavOrder,
+  diffNavLabels,
   moveNavItem,
+  moveNavItemToEdge,
   sanitizeNavOrder,
+  sanitizeNavSettings,
 } from '../src/utils/navOrder.js';
 
 describe('applyNavOrder', () => {
@@ -51,5 +54,36 @@ describe('default order', () => {
   it('lists each admin menu exactly once', () => {
     const all = Object.values(NAV_GROUP_DEFAULT_ORDER).flat();
     expect(new Set(all).size).toBe(all.length);
+  });
+});
+
+describe('moveNavItemToEdge', () => {
+  it('sends an item to the top or the bottom of its group', () => {
+    expect(moveNavItemToEdge(['a', 'b', 'c', 'd'], 'c', 'top')).toEqual(['c', 'a', 'b', 'd']);
+    expect(moveNavItemToEdge(['a', 'b', 'c', 'd'], 'b', 'bottom')).toEqual(['a', 'c', 'd', 'b']);
+  });
+
+  it('does nothing when it is already there or unknown', () => {
+    const order = ['a', 'b', 'c'];
+    expect(moveNavItemToEdge(order, 'a', 'top')).toBe(order);
+    expect(moveNavItemToEdge(order, 'c', 'bottom')).toBe(order);
+    expect(moveNavItemToEdge(order, 'z', 'top')).toBe(order);
+  });
+});
+
+describe('sanitizeNavSettings / diffNavLabels', () => {
+  it('keeps only known groups, known menu ids and trimmed names up to 40 chars', () => {
+    expect(sanitizeNavSettings({ order: { leader: ['kpi'] }, labels: { kpi: '  KPI  ', x: 'no' } })).toEqual({
+      order: { leader: ['kpi'] },
+      labels: { kpi: 'KPI' },
+    });
+    expect(sanitizeNavSettings(null)).toEqual({ order: {}, labels: {} });
+    expect(sanitizeNavSettings({ labels: [] })).toEqual({ order: {}, labels: {} });
+  });
+
+  it('diffs labels against the defaults so only renamed menus are shared', () => {
+    const defaults = { ledger: '팀 빌딩 관리', kanban: '칸반 보드' };
+    expect(diffNavLabels({ ledger: '팀 빌딩비', kanban: '칸반 보드' }, defaults)).toEqual({ ledger: '팀 빌딩비' });
+    expect(diffNavLabels({}, defaults)).toEqual({});
   });
 });
