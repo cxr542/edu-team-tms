@@ -40,5 +40,10 @@ export function useNavLabels() {
     setLabels({ ...DEFAULT_NAV_LABELS });
   }, []);
 
-  return { labels, updateLabel, resetLabels, defaults: DEFAULT_NAV_LABELS };
+  /** 팀 공유 저장소에서 읽은 이름으로 통째로 바꾼다 (기본 이름 위에 덮어쓴다) */
+  const replaceLabels = useCallback((next) => {
+    setLabels({ ...DEFAULT_NAV_LABELS, ...(next || {}) });
+  }, []);
+
+  return { labels, updateLabel, resetLabels, replaceLabels, defaults: DEFAULT_NAV_LABELS };
 }

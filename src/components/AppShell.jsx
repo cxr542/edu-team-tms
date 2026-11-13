@@ -63,6 +63,7 @@ import { canUseCompetencyPilot } from '../hooks/useTeamAccess';
 import { uiTooltip } from '../utils/uiTooltip';
 import NavLabelsModal from './NavLabelsModal';
 import { useNavOrder } from '../hooks/useNavOrder';
+import { useSharedNavSettings } from '../hooks/useSharedNavSettings';
 import MobileHomeGuideModal from './MobileHomeGuideModal';
 import AppModuleNavItem from './AppModuleNavItem';
 import { buildAppModuleUrl } from '../hooks/useAppModule';
@@ -82,6 +83,7 @@ export default function AppShell({
   navDefaults,
   onNavLabelSave,
   onNavLabelsReset,
+  onNavLabelsReplace,
   isViewer,
   isPublicViewerScope = false,
   viewerMenuVisibility = null,
@@ -92,7 +94,14 @@ export default function AppShell({
   children,
 }) {
   const [navLabelsOpen, setNavLabelsOpen] = useState(false);
-  const { orderOf, moveItem: moveNavItem, resetOrder: resetNavOrder } = useNavOrder();
+  const {
+    orderOf,
+    moveItem: moveNavItem,
+    moveItemToEdge: moveNavItemToEdge,
+    resetOrder: resetNavOrder,
+    replaceOrder: replaceNavOrder,
+    saved: savedNavOrder,
+  } = useNavOrder();
   const [mobileGuideOpen, setMobileGuideOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [supabaseHealth, setSupabaseHealth] = useState(null);
@@ -135,6 +144,31 @@ export default function AppShell({
   };
 
   const isAdminShell = Boolean(teamAccess?.isAdmin && !teamAccess?.isMemberScope);
+
+  // 메뉴 이름·순서는 팀 공유 저장소가 정본이다. 관리자 사이드바에서만 읽고 쓴다.
+  const sharedNav = useSharedNavSettings({
+    enabled: canEditNav && isAdminShell && !isPublicViewerScope,
+    labels: navLabels,
+    defaults: navDefaults,
+    order: savedNavOrder,
+    onRemote: ({ labels, order }) => {
+      onNavLabelsReplace?.(labels);
+      replaceNavOrder(order);
+    },
+  });
+  const handleNavMove = (group, id, delta) => {
+    moveNavItem(group, id, delta);
+    sharedNav.markChanged();
+  };
+  const handleNavMoveEdge = (group, id, edge) => {
+    moveNavItemToEdge(group, id, edge);
+    sharedNav.markChanged();
+  };
+  const handleNavLabelSave = (id, value) => {
+    if (navLabels[id] === value) return;
+    onNavLabelSave(id, value);
+    sharedNav.markChanged();
+  };
   const isMemberShell = Boolean(teamAccess?.isMemberScope);
 
   const showMemberWorkNav = !isViewer && (isMemberShell || isAdminShell);
@@ -686,14 +720,17 @@ export default function AppShell({
         onClose={() => setNavLabelsOpen(false)}
         labels={navLabels}
         defaults={navDefaults}
-        onSave={onNavLabelSave}
+        onSave={handleNavLabelSave}
         onReset={() => {
           onNavLabelsReset();
           resetNavOrder();
+          sharedNav.markChanged();
           setNavLabelsOpen(false);
         }}
         orderOf={orderOf}
-        onMove={moveNavItem}
+        onMove={handleNavMove}
+        onMoveEdge={handleNavMoveEdge}
+        shared={sharedNav}
       />
 
       <MobileHomeGuideModal
