@@ -3,17 +3,22 @@ import { Crown } from 'lucide-react';
 import { useJournal } from '../context/JournalProvider';
 import { useTeamAccess } from '../hooks/useTeamAccess';
 import { useLeaderKpiPendingBadge } from '../hooks/useLeaderKpiPendingBadge';
+import { useSupabaseTeamJournals } from '../hooks/useSupabaseTeamJournals';
+import { TEAM_KPI_MEMBERS } from '../constants/kpiMembers';
 import { URL_ACCESS_ADMIN } from '../constants/teamAccess';
 import { buildAppScopedUrl } from '../utils/appRoute';
 import { KPI_MEMBER_PARAM, KPI_TAB_PARAM } from '../utils/kpiDeepLink';
 import {
+  JOURNAL_SOURCE,
   KIND_TITLE,
   buildAiOfficeAgents,
   buildMemberTaskCounts,
   buildMonthlyMetrics,
   buildMonthlyProgress,
   buildWeeklyDone,
+  formatStamp,
   listOpenTasks,
+  pickJournalSource,
   pickRescues,
   summarizeOffice,
   timeOfDay,
@@ -634,9 +639,58 @@ function OpenTaskTable({ tasks, onOpenJournal }) {
   );
 }
 
+/** 일지를 어디서 읽었는지(Supabase / 이 브라우저)와 마지막 갱신 시각, 출처 전환·새로고침을 보여준다. */
+function SourceBar({ remote, picked, prefer, onTogglePrefer }) {
+  const names = Object.fromEntries(TEAM_KPI_MEMBERS.map((m) => [m.code, m.displayName]));
+  const parts = TEAM_KPI_MEMBERS.map(({ code }) => {
+    const src = picked.sources[code];
+    if (src === JOURNAL_SOURCE.SUPABASE) {
+      const at = formatStamp(picked.updatedAt[code]);
+      return `${names[code]} ☁️ Supabase${at ? ` (${at})` : ''}`;
+    }
+    if (src === JOURNAL_SOURCE.LOCAL) return `${names[code]} 💻 이 브라우저`;
+    return `${names[code]} — 일지 없음`;
+  });
+  let note = '';
+  if (remote.status === 'loading') note = 'Supabase에서 불러오는 중…';
+  else if (remote.status === 'error') note = `Supabase를 불러오지 못했어요${remote.message ? ` (${remote.message})` : ''}. 이 브라우저 데이터로 보여요.`;
+  else if (remote.status === 'empty') note = 'Supabase에 저장된 일지가 아직 없어요. 이 브라우저 데이터로 보여요.';
+  else if (prefer === JOURNAL_SOURCE.LOCAL) note = '이 브라우저 데이터를 우선해서 보고 있어요.';
+  return (
+    <section className="ai-office__source" aria-live="polite">
+      <div>
+        <b>데이터 출처</b> <span className="ai-office__muted">{parts.join(' · ')}</span>
+        {note && <div className="ai-office__muted">{note}</div>}
+      </div>
+      <div className="ai-office__source-actions">
+        <button type="button" className="ai-office__act" disabled={remote.loading} onClick={remote.refresh}>
+          {remote.loading ? '불러오는 중…' : '새로 고침'}
+        </button>
+        <button type="button" className="ai-office__act" onClick={onTogglePrefer}>
+          {prefer === JOURNAL_SOURCE.SUPABASE ? '이 브라우저 데이터로 보기' : 'Supabase 데이터로 보기'}
+        </button>
+      </div>
+    </section>
+  );
+}
+
 export default function AiOfficePage() {
-  const { memberJournals } = useJournal();
+  const { memberJournals: localJournals } = useJournal();
   const { isAdmin } = useTeamAccess();
+  // 팀 전체 일지는 Supabase 에 저장된 값을 우선 쓰고, 없는 구성원만 이 브라우저 데이터로 보완한다
+  const remote = useSupabaseTeamJournals(Boolean(isAdmin));
+  const [prefer, setPrefer] = useState(JOURNAL_SOURCE.SUPABASE);
+  const picked = useMemo(
+    () =>
+      pickJournalSource({
+        supabase: remote.memberJournals,
+        supabaseUpdatedAt: remote.updatedAtByMember,
+        local: localJournals,
+        prefer,
+      }),
+    [remote.memberJournals, remote.updatedAtByMember, localJournals, prefer],
+  );
+  const memberJournals = picked.memberJournals;
   const leaderPending = useLeaderKpiPendingBadge(Boolean(isAdmin));
   const today = toDateKey();
 
@@ -760,6 +814,15 @@ export default function AiOfficePage() {
         </p>
         <p className="ai-office__muted">{kingdomRoll}</p>
       </header>
+
+      <SourceBar
+        remote={remote}
+        picked={picked}
+        prefer={prefer}
+        onTogglePrefer={() =>
+          setPrefer((p) => (p === JOURNAL_SOURCE.SUPABASE ? JOURNAL_SOURCE.LOCAL : JOURNAL_SOURCE.SUPABASE))
+        }
+      />
 
       <section className={`ai-office__card ai-office__rescue${rescues.length ? '' : ' is-calm'}`} aria-live="polite">
         <h3>🚨 구조 알림</h3>
