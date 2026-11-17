@@ -91,7 +91,6 @@ import {
 } from '../utils/improveProjectLink';
 import { SHOW_BC_JOURNAL_TEAM_SHARE_UI } from '../constants/improveProjectSharingConfig';
 import { IMPROVE_PROJECT_BLOB_SHARE_ENABLED } from '../constants/improveProjectsShare';
-import { downloadJournalExcel, downloadTeamJournalExcel } from '../utils/journalExcelExport';
 import { buildMemberJournalSavePayload } from '../utils/journalSnapshot';
 import { fetchJournalSnapshot } from '../utils/journalSnapshot';
 import { saveJournalSnapshotToSupabase } from '../utils/supabaseJournalSnapshot';
@@ -1491,7 +1490,14 @@ export default function WeeklyJournalPage({ readOnly = false }) {
               <button
                 type="button"
                 className="btn btn-secondary"
-                onClick={() => {
+                onClick={async () => {
+                  let downloadJournalExcel;
+                  try {
+                    ({ downloadJournalExcel } = await import('../utils/journalExcelExport'));
+                  } catch (err) {
+                    showToast(`엑셀 모듈을 불러오지 못했습니다: ${err.message}`);
+                    return;
+                  }
                   const r = downloadJournalExcel({
                     days: journal.getMemberDays(memberCode) || {},
                     year,
@@ -1511,7 +1517,14 @@ export default function WeeklyJournalPage({ readOnly = false }) {
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={() => {
+                  onClick={async () => {
+                    let downloadTeamJournalExcel;
+                    try {
+                      ({ downloadTeamJournalExcel } = await import('../utils/journalExcelExport'));
+                    } catch (err) {
+                      showToast(`엑셀 모듈을 불러오지 못했습니다: ${err.message}`);
+                      return;
+                    }
                     const r = downloadTeamJournalExcel({
                       year,
                       month,

@@ -26,8 +26,6 @@ import {
   Eye,
   RefreshCw,
 } from 'lucide-react';
-import { parseExcelFile, exportToExcel } from './utils/excelParser';
-import confetti from 'canvas-confetti';
 import {
   loadUsageCategories,
   DEFAULT_ATTENDEES,
@@ -688,6 +686,7 @@ export default function App() {
 
     try {
       showAlert('지출 장부 엑셀 파일을 가져오는 중입니다...', 'info');
+      const { parseExcelFile } = await import('./utils/excelParser');
       const parsed = await parseExcelFile(file);
       
       if (parsed && parsed.length > 0) {
@@ -705,12 +704,14 @@ export default function App() {
         updateTransactionsList(merged);
         showAlert(`성공적으로 엑셀 장부를 동기화했습니다! (${parsed.length}건 로드)`, 'success');
         
-        // 폭죽 효과 트리거
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 }
-        });
+        // 폭죽 효과 트리거 (효과 전용이라 불러오기 실패는 무시)
+        import('canvas-confetti')
+          .then(({ default: confetti }) => confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+          }))
+          .catch(() => {});
       } else {
         showAlert('엑셀 파일에 유효한 지출 내역이 없습니다.', 'warning');
       }
@@ -723,8 +724,9 @@ export default function App() {
   };
 
   // 엑셀 장부 다운로드 내보내기
-  const handleExcelExport = () => {
+  const handleExcelExport = async () => {
     try {
+      const { exportToExcel } = await import('./utils/excelParser');
       exportToExcel(transactions, `교육팀_팀빌딩비_지출장부_${selectedYear}년_${selectedMonth}월.xlsx`);
       showAlert('최신 지출 장부가 엑셀로 저장되었습니다.', 'success');
     } catch (err) {

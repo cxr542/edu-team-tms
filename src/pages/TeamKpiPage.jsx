@@ -24,7 +24,6 @@ import {
   isMonthly01Submitted,
 } from '../constants/kpiStatuses';
 import { KPI_UI, KPI_WEEKLY_MM_SUM_LABEL } from '../constants/kpiUiLabels';
-import { exportKpiAnalysisWorkbook } from '../utils/kpiExcelExport';
 import { findImproveProject } from '../constants/improveProjects';
 import { isImproveInvestmentTask } from '../utils/computeTeamKpi';
 import {
@@ -222,8 +221,9 @@ export default function TeamKpiPage() {
     showToast(`${KPI_SHEET_02} 효과 ${metrics.rows02Effect.length}행 복사`);
   };
 
-  const doAnalysisExport = () => {
+  const doAnalysisExport = async () => {
     try {
+      const { exportKpiAnalysisWorkbook } = await import('../utils/kpiExcelExport');
       const result = exportKpiAnalysisWorkbook({
         year,
         monthIndex: month,
