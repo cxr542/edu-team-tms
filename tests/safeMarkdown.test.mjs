@@ -13,6 +13,17 @@ describe('safeMarkdown', () => {
     expect(block).toContain('<p>본문</p>');
   });
 
+  it('속성 없는 <br>만 줄바꿈으로 허용한다 (표 셀 포함)', () => {
+    const table = renderSafeMarkdown('| a | b |\n|---|---|\n| 첫째<br>• 둘째<BR/>셋째 | x |');
+    expect(table).toContain('<td>첫째<br>• 둘째<br>셋째</td>');
+
+    const withAttr = renderSafeMarkdown('a<br onclick=alert(1)>b <br class="x">');
+    expect(withAttr).not.toContain('<br ');
+    expect(withAttr).toContain('&lt;br onclick=alert(1)&gt;');
+
+    expect(renderSafeMarkdown('<br><img src=x onerror=alert(1)>')).not.toContain('<img');
+  });
+
   it('마크다운 자체는 정상 렌더된다', () => {
     const html = renderSafeMarkdown('# 제목\n\n**굵게** `code`\n\n- a\n- b');
     expect(html).toContain('<h1>제목</h1>');

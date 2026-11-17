@@ -2,7 +2,7 @@ import { Marked } from 'marked';
 
 /**
  * Markdown → HTML for content we inject with innerHTML (glossary bodies, reference docs).
- * - Raw HTML in the source is shown as text, never rendered.
+ * - Raw HTML in the source is shown as text, never rendered (except a bare `<br>`).
  * - Link/image URLs are limited to http(s), mailto and relative/anchor URLs.
  * Uses its own Marked instance so it does not depend on (or change) the global `marked` config.
  */
@@ -17,6 +17,7 @@ export function escapeHtml(value) {
 }
 
 const ALLOWED_SCHEME = /^(https?|mailto):/i;
+const LINE_BREAK_TAG = /^\s*<br\s*\/?>\s*$/i;
 
 /** True for http(s)/mailto URLs and scheme-less relative URLs (`slug`, `#id`, `/path`, `?q`). */
 export function isSafeHref(href) {
@@ -35,6 +36,8 @@ const safeMarked = new Marked({
   breaks: false,
   renderer: {
     html({ text }) {
+      // A bare line break (common inside GFM table cells) is the only raw HTML we render.
+      if (LINE_BREAK_TAG.test(text)) return '<br>';
       return escapeHtml(text);
     },
   },
