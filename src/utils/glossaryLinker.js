@@ -2,6 +2,8 @@
  * Glossary Term Auto-linker & Keyword Resolution
  */
 
+import { escapeHtml } from './safeMarkdown.js';
+
 function escapeRegExp(str) {
   return String(str || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -124,7 +126,8 @@ export function autoLinkGlossaryHtml(html, terms, currentSlug) {
         const replaced = part.replace(pattern, (matched) => {
           const item = matchMap.get(matched.toLowerCase());
           if (!item) return matched;
-          return `<a href="#${item.slug}" class="glossary-inline-link" data-glossary-slug="${item.slug}" title="${item.title} 바로가기">${matched}</a>`;
+          const slug = escapeHtml(item.slug);
+          return `<a href="#${slug}" class="glossary-inline-link" data-glossary-slug="${slug}" title="${escapeHtml(item.title)} 바로가기">${matched}</a>`;
         });
         result.push(replaced);
       }

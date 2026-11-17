@@ -203,6 +203,20 @@ describe('MIG entry and auto-linker', () => {
     ]);
   });
 
+  it('auto-link escapes term slug and title inside link attributes', async () => {
+    const { autoLinkGlossaryHtml } = await import('../src/utils/glossaryLinker.js');
+    const terms = [{ slug: 'bad"><img src=x onerror=alert(1)>', title: 'Bad" onmouseover="alert(1) & <b> (BAD)' }];
+    const out = autoLinkGlossaryHtml('<p>BAD 테스트</p>', terms, 'other');
+
+    expect(out).not.toContain('<img');
+    expect(out).not.toContain('<b>');
+    expect(out).not.toContain('onmouseover="');
+    expect(out).toContain('title="Bad&quot; onmouseover=&quot;alert(1) &amp; &lt;b&gt; (BAD) 바로가기"');
+
+    expect(out).toContain('data-glossary-slug="bad&quot;&gt;&lt;img src=x onerror=alert(1)&gt;"');
+    expect(out).toMatch(/>BAD<\/a> 테스트<\/p>$/);
+  });
+
   it('contains VMware VVF seed entry and extracts VVF acronym', async () => {
     const { buildGlossaryKeywords } = await import('../src/utils/glossaryLinker.js');
     const vvf = GLOSSARY_SEED_ENTRIES.find((e) => e.slug === 'vmware-vvf');
