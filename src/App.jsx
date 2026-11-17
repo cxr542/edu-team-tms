@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { lazy, Suspense, useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { 
   FileSpreadsheet, 
   Upload, 
@@ -69,24 +69,50 @@ import {
   readLedgerSnapshotFile,
 } from './utils/publishSnapshot';
 import AppShell from './components/AppShell';
-import WeeklyJournalPage from './pages/WeeklyJournalPage';
-import TeamKpiPage from './pages/TeamKpiPage';
-import CompetencyPage from './pages/CompetencyPage';
-import KpiApprovePage from './pages/KpiApprovePage';
-import KpiReportPage from './pages/KpiReportPage';
-import KanbanPage from './pages/KanbanPage';
-import AiOfficePage from './pages/AiOfficePage';
+// 화면 코드는 지연 로딩하지만, CSS는 예전과 같은 순서로 메인에 두어 적용 순서를 유지한다.
+import './components/JournalCategoryLegend.css';
+import './components/JournalMemberPrefsModal.css';
+import './components/MemberKpiApprovalPanel.css';
+import './components/JournalTaskTitleCombobox.css';
+import './pages/WeeklyJournalPage.css';
+const WeeklyJournalPage = lazy(() => import('./pages/WeeklyJournalPage'));
+import './components/CompetencyRubricPanel.css';
+import './components/Kpi3HqTargetTable.css';
+import './components/Kpi3CoachingReport.css';
+import './components/Kpi3ElementsPanel.css';
+import './components/TeamKpiIntegratedSummary.css';
+import './components/TeamKpiSummarySection.css';
+import './pages/TeamKpiPage.css';
+const TeamKpiPage = lazy(() => import('./pages/TeamKpiPage'));
+import './pages/CompetencyPage.css';
+const CompetencyPage = lazy(() => import('./pages/CompetencyPage'));
+import './pages/KpiReportPage.css';
+const KpiApprovePage = lazy(() => import('./pages/KpiApprovePage'));
+const KpiReportPage = lazy(() => import('./pages/KpiReportPage'));
+import './pages/KanbanPage.css';
+const KanbanPage = lazy(() => import('./pages/KanbanPage'));
+import './pages/AiOfficePage.css';
+const AiOfficePage = lazy(() => import('./pages/AiOfficePage'));
 import { useTeamAccess } from './hooks/useTeamAccess';
-import ReferenceDocsPage from './pages/ReferenceDocsPage';
-import AcademizerPage from './pages/AcademizerPage';
-import CloudChatbotEmbedPage from './pages/CloudChatbotEmbedPage';
-import LunchPickPage from './pages/LunchPickPage';
-import IdeaBankPage from './pages/IdeaBankPage';
-import AnnouncementsPage from './pages/AnnouncementsPage';
-import GlossaryPage from './pages/GlossaryPage';
-import GlossaryQuizPage from './pages/GlossaryQuizPage';
-import LectureJournalPage from './pages/LectureJournalPage';
-import PublicViewerGuidePage from './pages/PublicViewerGuidePage';
+import './pages/ReferenceDocsPage.css';
+const ReferenceDocsPage = lazy(() => import('./pages/ReferenceDocsPage'));
+import './pages/AcademizerPage.css';
+const AcademizerPage = lazy(() => import('./pages/AcademizerPage'));
+import './pages/CloudChatbotEmbedPage.css';
+const CloudChatbotEmbedPage = lazy(() => import('./pages/CloudChatbotEmbedPage'));
+import './pages/LunchPickPage.css';
+const LunchPickPage = lazy(() => import('./pages/LunchPickPage'));
+import './pages/IdeaBankPage.css';
+const IdeaBankPage = lazy(() => import('./pages/IdeaBankPage'));
+import './pages/AnnouncementsPage.css';
+const AnnouncementsPage = lazy(() => import('./pages/AnnouncementsPage'));
+import './pages/GlossaryPage.css';
+const GlossaryPage = lazy(() => import('./pages/GlossaryPage'));
+import './pages/GlossaryQuizPage.css';
+const GlossaryQuizPage = lazy(() => import('./pages/GlossaryQuizPage'));
+import './pages/LectureJournalPage.css';
+const LectureJournalPage = lazy(() => import('./pages/LectureJournalPage'));
+const PublicViewerGuidePage = lazy(() => import('./pages/PublicViewerGuidePage'));
 import { JournalProvider } from './context/JournalProvider';
 import { SUPABASE_MANUAL_MIRROR_ENABLED } from './constants/supabaseSync';
 import { isKpiRelatedModule, useAppModule } from './hooks/useAppModule';
@@ -986,6 +1012,7 @@ export default function App() {
           ) : null
         }
       >
+      <Suspense fallback={<LoadingScreen inline message="화면을 불러오는 중…" />}>
       {isPublicViewer ? (
         <PublicViewerGuidePage />
       ) : displayModule === 'docs' ? (
@@ -1996,6 +2023,7 @@ export default function App() {
       )}
       </>
       )}
+      </Suspense>
       </AppShell>
       {!isViewer && teamAccess.isLeader && !teamAccess.isMemberScope && (
         <ViewerMenuSettingsModal
