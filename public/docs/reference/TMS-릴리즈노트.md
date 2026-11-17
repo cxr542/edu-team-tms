@@ -7,6 +7,11 @@
 
 ## 2026-11-17
 
+### [업데이트] feat(security): 기본 보안 헤더 추가 (nosniff·Referrer-Policy·X-Frame-Options·Permissions-Policy)
+
+- 웹 보안 기본 헤더를 적용했어요. 화면과 기능의 변화는 없어요.
+- PR #265: https://github.com/cxr542/edu-team-tms/pull/265
+
 ### [수정] fix(glossary): 영문 약어가 긴 영문 단어 안에서 자동 링크되지 않게 (VMware → VM ware)
 
 - 용어집에서 "VMware" 같은 영문 단어가 중간에 잘려 엉뚱한 용어로 링크되던 문제를 고쳤어요.
