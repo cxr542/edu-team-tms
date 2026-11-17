@@ -1,18 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { marked } from 'marked';
 import { resolveReferenceDocIdFromHref } from '../constants/referenceDocs';
 import { enrichArticleHeadings } from '../utils/markdownDoc';
-
-const renderer = new marked.Renderer();
-renderer.html = (html) => {
-  return html
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-};
-marked.setOptions({ gfm: true, breaks: false, renderer });
+import { renderSafeMarkdown } from '../utils/safeMarkdown';
 
 function rewriteInternalDocLinks(html) {
   const template = document.createElement('template');
@@ -60,7 +49,7 @@ export default function MarkdownDocViewer({ src, className = '', onHeadingsChang
         if (cancelled) return;
         const decoder = new TextDecoder('utf-8');
         const md = decoder.decode(buffer);
-        setHtml(rewriteInternalDocLinks(marked.parse(md)));
+        setHtml(rewriteInternalDocLinks(renderSafeMarkdown(md)));
         setLoading(false);
       })
       .catch((e) => {
