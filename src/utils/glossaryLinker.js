@@ -6,6 +6,19 @@ function escapeRegExp(str) {
   return String(str || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+const ASCII_WORD_CHAR = /[A-Za-z0-9]/;
+
+/**
+ * Regex source for one keyword. Where the keyword starts/ends with an ASCII letter or digit,
+ * the neighbouring character must not be one, so "VM" does not match inside "VMware".
+ * Korean edges stay open so particles (e.g. "가상화를", "VM이") still link.
+ */
+function keywordPattern(keyword) {
+  const before = ASCII_WORD_CHAR.test(keyword[0]) ? '(?<![A-Za-z0-9])' : '';
+  const after = ASCII_WORD_CHAR.test(keyword[keyword.length - 1]) ? '(?![A-Za-z0-9])' : '';
+  return `${before}${escapeRegExp(keyword)}${after}`;
+}
+
 /**
  * Builds candidate keywords from existing glossary terms, excluding currentSlug.
  * Sorted by length descending so longer compound phrases match first.
@@ -82,7 +95,7 @@ export function autoLinkGlossaryHtml(html, terms, currentSlug) {
   const keywords = buildGlossaryKeywords(terms, currentSlug);
   if (keywords.length === 0) return html;
 
-  const pattern = new RegExp(keywords.map((k) => escapeRegExp(k.keyword)).join('|'), 'g');
+  const pattern = new RegExp(keywords.map((k) => keywordPattern(k.keyword)).join('|'), 'g');
   const matchMap = new Map();
   keywords.forEach((k) => matchMap.set(k.keyword.toLowerCase(), k));
 
