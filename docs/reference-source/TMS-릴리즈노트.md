@@ -7,6 +7,11 @@
 
 ## 2026-11-17
 
+### [수정] fix(glossary): escape term slug and title in auto-link attributes
+
+- fix(glossary): escape term slug and title in auto-link attributes
+- PR #269: https://github.com/cxr542/edu-team-tms/pull/269
+
 ### [업데이트] perf: lazy-load app pages with React.lazy
 
 - 첫 화면 로딩이 더 가벼워졌습니다. 메뉴를 처음 열 때 잠깐 로딩 표시가 보일 수 있습니다.
