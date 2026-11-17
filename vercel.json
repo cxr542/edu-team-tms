@@ -23,6 +23,10 @@
         {
           "key": "Permissions-Policy",
           "value": "camera=(), geolocation=(), payment=(), usb=()"
+        },
+        {
+          "key": "Content-Security-Policy-Report-Only",
+          "value": "default-src 'self'; script-src 'self' 'sha256-EnCMlsJdUbA5O6wuNlOSBlIOn2zt7x/tvvQ2YLVGCZo='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' data: https://cdn.jsdelivr.net https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://ujusdkcvojvtbksyovfv.supabase.co https://okestroacademy.tailc4ff05.ts.net; frame-src 'self' blob: https://cloud-chatbot-963d.onrender.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
         }
       ]
     }
