@@ -181,6 +181,28 @@ describe('MIG entry and auto-linker', () => {
     expect(outputHtml).toContain('<a href="http://ex.com">기존 MIG 링크</a>');
   });
 
+  it('auto-link does not match an English acronym inside a longer English word', async () => {
+    const { autoLinkGlossaryHtml } = await import('../src/utils/glossaryLinker.js');
+    const terms = [
+      { slug: 'vm-migration', title: 'VM 마이그레이션' },
+      { slug: 'virtualization', title: '가상화' },
+    ];
+    const out = autoLinkGlossaryHtml(
+      '<p>VMware(Broadcom), VMs, 2VM 은 그대로. VM 마이그레이션, VM이, (VM) 및 서버 가상화를 쓴다.</p>',
+      terms,
+      'other',
+    );
+    const linked = [...out.matchAll(/data-glossary-slug="([^"]+)"[^>]*>([^<]+)<\/a>/g)].map((m) => `${m[2]}→${m[1]}`);
+
+    expect(out).toContain('VMware(Broadcom), VMs, 2VM 은 그대로.');
+    expect(linked).toEqual([
+      'VM 마이그레이션→vm-migration',
+      'VM→vm-migration',
+      'VM→vm-migration',
+      '가상화→virtualization',
+    ]);
+  });
+
   it('contains VMware VVF seed entry and extracts VVF acronym', async () => {
     const { buildGlossaryKeywords } = await import('../src/utils/glossaryLinker.js');
     const vvf = GLOSSARY_SEED_ENTRIES.find((e) => e.slug === 'vmware-vvf');
