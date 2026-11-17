@@ -7,6 +7,11 @@
 
 ## 2026-11-17
 
+### [업데이트] feat(security): add Content-Security-Policy in Report-Only mode
+
+- 보안 정책(CSP)을 관찰 모드로 적용합니다. 화면과 기능 변화는 없습니다.
+- PR #266: https://github.com/cxr542/edu-team-tms/pull/266
+
 ### [업데이트] feat(security): 기본 보안 헤더 추가 (nosniff·Referrer-Policy·X-Frame-Options·Permissions-Policy)
 
 - 웹 보안 기본 헤더를 적용했어요. 화면과 기능의 변화는 없어요.
