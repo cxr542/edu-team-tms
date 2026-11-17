@@ -7,6 +7,11 @@
 
 ## 2026-11-17
 
+### [업데이트] perf: lazy-load xlsx and canvas-confetti
+
+- 첫 화면 로딩이 가벼워졌습니다. 엑셀 기능은 그대로입니다.
+- PR #267: https://github.com/cxr542/edu-team-tms/pull/267
+
 ### [업데이트] feat(security): add Content-Security-Policy in Report-Only mode
 
 - 보안 정책(CSP)을 관찰 모드로 적용합니다. 화면과 기능 변화는 없습니다.
