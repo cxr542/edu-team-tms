@@ -17,11 +17,11 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { marked } from 'marked';
 import AppModuleLink from '../components/AppModuleLink.jsx';
 import GlossaryErrorBanner from '../components/GlossaryErrorBanner.jsx';
 import { generateSlug, useGlossary } from '../hooks/useGlossary.js';
 import { autoLinkGlossaryHtml } from '../utils/glossaryLinker.js';
+import { escapeHtml, renderSafeMarkdown } from '../utils/safeMarkdown.js';
 import { isEditorMode } from '../utils/appMode.js';
 import { QUIZ_SUBJECT_OPTIONS } from '../utils/glossaryQuiz.js';
 import './GlossaryPage.css';
@@ -162,10 +162,10 @@ export default function GlossaryPage({
   const parsedMarkdown = useMemo(() => {
     if (!currentTerm?.body) return '';
     try {
-      const rawHtml = marked.parse(currentTerm.body);
+      const rawHtml = renderSafeMarkdown(currentTerm.body);
       return autoLinkGlossaryHtml(rawHtml, terms, currentTerm.slug);
     } catch {
-      return currentTerm.body;
+      return escapeHtml(currentTerm.body);
     }
   }, [currentTerm, terms]);
 
