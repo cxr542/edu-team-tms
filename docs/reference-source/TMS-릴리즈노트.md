@@ -7,6 +7,11 @@
 
 ## 2026-11-18
 
+### [신규] feat(security): enforce CSP on app routes
+
+- feat(security): enforce CSP on app routes
+- PR #271: https://github.com/cxr542/edu-team-tms/pull/271
+
 ### [업데이트] style: darken --text-muted to meet WCAG AA contrast
 
 - style: darken --text-muted to meet WCAG AA contrast
