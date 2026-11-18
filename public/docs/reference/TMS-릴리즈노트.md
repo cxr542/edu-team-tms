@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-11-18
+
+### [업데이트] style: darken --text-muted to meet WCAG AA contrast
+
+- style: darken --text-muted to meet WCAG AA contrast
+- PR #270: https://github.com/cxr542/edu-team-tms/pull/270
+
 ## 2026-11-17
 
 ### [수정] fix(glossary): escape term slug and title in auto-link attributes
