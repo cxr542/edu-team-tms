@@ -7,6 +7,11 @@
 
 ## 2026-11-18
 
+### [수정] fix(glossary): link acronyms only when they name the term
+
+- fix(glossary): link acronyms only when they name the term
+- PR #273: https://github.com/cxr542/edu-team-tms/pull/273
+
 ### [신규] feat(security): enforce CSP on /docs and the service worker
 
 - feat(security): enforce CSP on /docs and the service worker
