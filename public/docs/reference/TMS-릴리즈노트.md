@@ -7,6 +7,11 @@
 
 ## 2026-11-18
 
+### [기타] ci: add ESLint 10 and run lint on every PR
+
+- ci: add ESLint 10 and run lint on every PR
+- PR #276: https://github.com/cxr542/edu-team-tms/pull/276
+
 ### [기타] ci: check production security headers daily against vercel.json
 
 - ci: check production security headers daily against vercel.json
