@@ -38,7 +38,7 @@ export async function fetchAcademizerHealth() {
     credentials: 'same-origin',
     headers: { Accept: 'application/json' },
   });
-  let data = null;
+  let data;
   try {
     data = await res.json();
   } catch {
@@ -67,7 +67,7 @@ export async function postWizardPreview(apiBase, formData) {
   const base = String(apiBase || '').replace(/\/$/, '');
   if (!base) throw new Error('변환 API 주소가 없습니다.');
   const res = await postForm(`${base}/wizard/preview`, formData);
-  let data = null;
+  let data;
   try {
     data = await res.json();
   } catch {
@@ -97,7 +97,7 @@ export async function postAcademize(apiBase, formData) {
   if (!base) throw new Error('변환 API 주소가 없습니다.');
   const res = await postForm(`${base}/academize`, formData);
   if (!res.ok) {
-    let data = null;
+    let data;
     try {
       data = await res.json();
     } catch {
@@ -117,7 +117,7 @@ export async function postAcademize(apiBase, formData) {
   const disposition = res.headers.get('Content-Disposition') || '';
   const match = /filename\*?=(?:UTF-8'')?["']?([^"';]+)/i.exec(disposition);
   const filename = match ? decodeURIComponent(match[1]) : 'academy-deck.pptx';
-  let meta = null;
+  let meta;
   try {
     meta = decodeWarningsHeader(res.headers.get('X-Academize-Warnings') || '');
   } catch {

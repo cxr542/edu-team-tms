@@ -24,11 +24,9 @@ import {
   isMonthly01Submitted,
 } from '../constants/kpiStatuses';
 import { KPI_UI, KPI_WEEKLY_MM_SUM_LABEL } from '../constants/kpiUiLabels';
-import { findImproveProject } from '../constants/improveProjects';
 import { isImproveInvestmentTask } from '../utils/computeTeamKpi';
 import {
   collectImproveMmCandidates,
-  formatImproveCandidateSources,
 } from '../utils/improveProjectCandidates';
 import {
   buildImproveProjectRegistrationFromCandidate,
@@ -934,7 +932,6 @@ export default function TeamKpiPage() {
               </thead>
               <tbody>
                 {metrics.rows02Effect.map((row, i) => {
-                  const pct = row['생산성%'];
                   return (
                     <tr key={`${row.dayKey}-${i}`}>
                       <td>{formatDate(row.완료일)}</td>

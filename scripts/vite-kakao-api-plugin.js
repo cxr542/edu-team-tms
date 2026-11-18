@@ -143,7 +143,7 @@ export function announcementEngagementApiDevPlugin() {
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         const path = (req.url || '').split('?')[0];
-        let handler = null;
+        let handler;
         if (path === '/api/announcement-reactions') handler = announcementsHandler;
         else if (path === '/api/announcement-comments') handler = announcementsHandler;
         else if (path === '/api/glossary-admin') handler = announcementsHandler;

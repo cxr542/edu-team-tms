@@ -82,6 +82,7 @@ export function seoulDateKey(now = new Date()) {
 export function sanitizeReleaseNoteText(value) {
   return String(value || '')
     .replace(/\r\n?/g, '\n')
+    // eslint-disable-next-line no-control-regex -- 릴리즈 노트에 섞인 제어 문자를 공백으로 바꾸려는 의도된 패턴
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, ' ')
     .split('\n')
     .map((line) => line.trim())

@@ -17,7 +17,7 @@ function toMillis(value) {
 export function isHandledLocally(item, kpiOperational) {
   if (!item || !kpiOperational) return false;
   const code = item.member?.code;
-  let local = null;
+  let local;
   if (item.type === 'KPI1') {
     if (!Number.isInteger(item.year) || !Number.isInteger(item.monthIndex) || !code) return false;
     local = kpiOperational.months?.[ymKey(item.year, item.monthIndex)]?.[code]?.monthly01 ?? null;

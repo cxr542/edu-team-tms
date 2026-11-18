@@ -14,7 +14,6 @@ import {
   getTaskMmAxis,
   getWeeksInMonth,
   pad,
-  roundMm,
 } from './journalMm.js';
 
 function quarterFromMonth(month1to12) {
