@@ -27,3 +27,6 @@ jobs:
 
       - name: Build app
         run: npm run build
+
+      - name: Check initial JS bundle size
+        run: node scripts/check-bundle-size.mjs
