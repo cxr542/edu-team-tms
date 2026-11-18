@@ -11,7 +11,6 @@ import {
   TEAM_LEADER_MEMBER_CODE,
   findKpiMember,
   formatKpiMemberLabel,
-  formatKpiMemberRoleLine,
 } from '../constants/kpiMembers';
 import { URL_ACCESS_ADMIN } from '../constants/teamAccess';
 import { useJournal } from '../context/JournalProvider';
@@ -42,7 +41,6 @@ export default function CompetencyPage() {
   const journal = useJournal();
   const teamAccess = useTeamAccess();
   const [toast, setToast] = useState('');
-  const [cloudBusy, setCloudBusy] = useState(false);
 
   const pageMemberCode = resolvePageMember(teamAccess);
   const showHub = !pageMemberCode && teamAccess.isLeader;
@@ -66,7 +64,6 @@ export default function CompetencyPage() {
     [teamAccess, canEdit]
   );
 
-  const showCloudPull = canEdit && Boolean(selectedMember) && teamAccess.isLeader && !teamAccess.isMemberScope;
 
   return (
     <main className="team-kpi-main competency-page">

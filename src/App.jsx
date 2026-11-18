@@ -51,7 +51,7 @@ import {
   transactionDedupeKey,
 } from './utils/ledgerCopy';
 import { isViewerMode, formatPublishedAt } from './utils/appMode';
-import { isAdminAccessParam, URL_ACCESS_ADMIN } from './constants/teamAccess';
+import { URL_ACCESS_ADMIN } from './constants/teamAccess';
 import { isAdminGateUnlocked } from './constants/adminGate';
 import { parseAppRoute } from './utils/appRoute';
 import AdminGatePage from './components/AdminGatePage';

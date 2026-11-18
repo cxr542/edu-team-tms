@@ -40,12 +40,6 @@ const MAYOR = ['..FF..TT..FF..', '.FPPF.TT.FPPF.', ...HAMSTER.slice(2)];
 const SPRITES = { villager: HAMSTER, mayor: MAYOR };
 const EYE_ROW = 4;
 
-function darken(hex, f = 0.7) {
-  const n = parseInt(hex.slice(1), 16);
-  const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => Math.round(v * f));
-  return `#${c.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
-}
-
 function Sprite({ status, furIndex, kind = 'villager' }) {
   const vest = STATUS_COLOR[status] || STATUS_COLOR.대기;
   const rows = SPRITES[kind] || HAMSTER;
@@ -348,7 +342,7 @@ function Office({ agents, tod, pick, bursting, dispatched, finished, activeHelpe
           <span className="ai-office__partition is-side is-glass" style={{ left: u(28.4), top: u(0), height: u(10.6) }} />
 
           {/* 구성원 자리 */}
-          {seats.map(({ a, x, y, col, last }, i) => (
+          {seats.map(({ a, x, y, last }, i) => (
             <div
               key={a.id}
               className="ai-office__seat"

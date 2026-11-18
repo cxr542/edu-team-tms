@@ -103,7 +103,7 @@ export async function assertContentInLectureScope({
   });
 
   const text = await upstream.text();
-  let data = null;
+  let data;
   try {
     data = text ? JSON.parse(text) : null;
   } catch {
@@ -186,7 +186,7 @@ export async function fetchDirectChildren({
   });
 
   const text = await upstream.text();
-  let data = null;
+  let data;
   try {
     data = text ? JSON.parse(text) : null;
   } catch {

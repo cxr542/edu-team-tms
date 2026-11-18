@@ -25,7 +25,6 @@ import { COMPETENCY_USE_4060 } from '../constants/competencyConfig';
 import { mapMemberRoleToCompetency } from '../constants/competencyRubric';
 import { findKpiMember } from '../constants/kpiSchema';
 import {
-  computeCompetencyEval,
   isValidCompetencyIntLevel,
   mergeCompetencyEvalSidePatch,
   monthlyFinalScore,
@@ -51,7 +50,6 @@ import {
 import {
   isCompetencyMonthRecordSaveable,
   isValidCompetencyMemberCode,
-  mergeApprovedCompetencyMonthsIntoKpiStore,
   mergeCompetencyMonthsIntoKpiStore,
 } from '../utils/kpiOperationalCloudSnapshot';
 import {

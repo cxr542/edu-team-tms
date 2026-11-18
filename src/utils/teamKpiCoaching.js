@@ -15,10 +15,6 @@ const KPI2_TIPS = {
   action: 'KPI2 효과 건 제출·팀장 승인을 늘리고, 계획시간 대비 실적을 분기 말까지 끌어올리세요.',
 };
 
-function round2(n) {
-  return Math.round(n * 100) / 100;
-}
-
 function formatPct(n) {
   if (n == null || Number.isNaN(n)) return '—';
   return `${Number(n).toFixed(1)}%`;

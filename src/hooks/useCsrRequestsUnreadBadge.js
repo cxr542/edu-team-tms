@@ -3,7 +3,7 @@ import {
   listCsrRequestsFromSupabase,
   normalizeCsrRequest,
 } from '../utils/csrRequestsSupabase.js';
-import { countReceivedCsrRequests, extractReceivedCsrRequests } from '../utils/csrRequestsUnreadBadge.js';
+import { extractReceivedCsrRequests } from '../utils/csrRequestsUnreadBadge.js';
 
 const REFRESH_MS = 30000;
 

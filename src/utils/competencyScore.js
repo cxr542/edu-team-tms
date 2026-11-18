@@ -51,7 +51,7 @@ export function coerceDimStatus(value) {
 /**
  * dims 정규화: 빈 값 보정 (차원별 독립)
  */
-export function normalizeDimsChain(dims, roleId = 'default') {
+export function normalizeDimsChain(dims, _roleId = 'default') {
   const merged = { ...defaultCompetencyDims(), ...(dims || {}) };
   const result = {};
   for (const id of COMPETENCY_DIM_IDS) {
@@ -90,9 +90,9 @@ export function countConsecutiveMetFromStart(dims, roleId = 'default') {
 /**
  * 소수 누적 (충족 차원당 +0.2)
  * @param {Record<string, string>} dims
- * @param {string[]} [order]
+ * @param {string[]} [_order] 직군별 누적 순서 (현재는 쓰지 않음)
  */
-export function accumulateFractional(dims, order = ACCUMULATION_ORDER_BY_ROLE.default) {
+export function accumulateFractional(dims, _order = ACCUMULATION_ORDER_BY_ROLE.default) {
   if (!dims || !isDimsComplete(dims)) return null;
   let count = 0;
   for (const id of COMPETENCY_DIM_IDS) {
@@ -106,10 +106,10 @@ export function accumulateFractional(dims, order = ACCUMULATION_ORDER_BY_ROLE.de
  * default: 연속 충족 누적만 반영 — 5차원(협업/영향 포함) 각 +0.2, 품질 이전 단계도 누적
  * instructor/planner: 직군별 해제 조건 미충족 시 최대 +0.4
  * @param {number|null} accumulated
- * @param {Record<string, string>} dims
- * @param {string} roleId
+ * @param {Record<string, string>} _dims (현재는 쓰지 않음)
+ * @param {string} _roleId (현재는 쓰지 않음)
  */
-export function applyCap(accumulated, dims, roleId = 'default') {
+export function applyCap(accumulated, _dims, _roleId = 'default') {
   if (accumulated == null) return null;
   // 직군 공통: 캡(상한) 없이 충족한 개수만큼 0.2씩 온전히 반영
   return accumulated;

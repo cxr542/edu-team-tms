@@ -3,14 +3,27 @@ import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 
-// 첫 도입 단계: 오류는 CI에서 막고, 이미 코드에 걸려 있는 규칙은 경고로 시작한다.
-// 경고를 정리한 뒤 해당 규칙을 'error'로 올리고 lint 스크립트에 --max-warnings 0을 되돌린다.
-const STARTING_WARNINGS = {
-  'no-unused-vars': ['warn', { varsIgnorePattern: '^[A-Z_]' }],
-  'no-useless-assignment': 'warn',
-  'no-control-regex': 'warn',
-  'no-extra-boolean-cast': 'warn',
+// 정리를 마친 규칙은 오류로 막는다.
+// 쓰지 않는 인자는 이름 앞에 _를 붙여 남길 수 있고, 나머지(...rest)를 얻으려고 꺼낸 값은 허용한다.
+const CLEANED_RULES = {
+  'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_', ignoreRestSiblings: true }],
+  'no-useless-assignment': 'error',
+  'no-control-regex': 'error',
+  'no-extra-boolean-cast': 'error',
 };
+
+// 장부·일지 파일은 별도 작업에서 정리한다. 그때까지 아래 파일만 경고로 남긴다.
+// 정리가 끝나면 이 목록에서 빼고, 남은 경고(exhaustive-deps 등)를 정리한 뒤 lint에 --max-warnings 0을 되돌린다.
+const LEDGER_JOURNAL_PENDING_FILES = [
+  'src/components/CategoryManageModal.jsx',
+  'src/hooks/usePublicSnapshot.js',
+  'src/pages/WeeklyJournalPage.jsx',
+  'src/utils/journalCloudSnapshot.js',
+  'src/utils/journalMemberStore.js',
+  'src/utils/journalMm.js',
+  'src/utils/ledgerAccess.js',
+  'src/utils/publishSnapshot.js',
+];
 
 export default [
   {
@@ -43,7 +56,7 @@ export default [
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
-      ...STARTING_WARNINGS,
+      ...CLEANED_RULES,
     },
   },
   {
@@ -55,7 +68,14 @@ export default [
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
     rules: {
-      ...STARTING_WARNINGS,
+      ...CLEANED_RULES,
+    },
+  },
+  {
+    files: LEDGER_JOURNAL_PENDING_FILES,
+    rules: {
+      'no-unused-vars': ['warn', { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_', ignoreRestSiblings: true }],
+      'no-extra-boolean-cast': 'warn',
     },
   },
 ];

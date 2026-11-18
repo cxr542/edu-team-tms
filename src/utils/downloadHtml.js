@@ -1,6 +1,7 @@
 /** 문서 제목으로 안전한 .html 파일 이름을 만든다 (경로·특수문자 제거, 한글은 유지). */
 export function guideFileName(title, fallback = 'guide') {
   const base = String(title || '')
+    // eslint-disable-next-line no-control-regex -- 파일 이름에 쓸 수 없는 제어 문자를 지우려는 의도된 패턴
     .replace(/[\\/:*?"<>|\u0000-\u001f]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()

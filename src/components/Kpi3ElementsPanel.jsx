@@ -122,13 +122,11 @@ export default function Kpi3ElementsPanel({
   kpiMetrics,
   onToast,
 }) {
-  const [practiceText, setPracticeText] = useState('');
   const [dmWeightDraft, setDmWeightDraft] = useState(() => readDmWeightDraft({}));
   const [dmWeightApplyModal, setDmWeightApplyModal] = useState(null);
   const locked = quarterRec.quarter.locked;
   const readOnly = journal.kpiOperationalReadOnly || !canEdit;
   const canEditDmDetail = showManagerTabs || allowMemberDmEdit;
-  const canApplyQuarterScore = showManagerTabs;
   const q = quarterRec.quarter;
   const dmDetail = quarterRec.dmDetail || {};
   const leaderDetail = quarterRec.leaderDetail || {};

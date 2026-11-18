@@ -13,7 +13,7 @@ export async function fetchLectureJournalChildren(opts = {}) {
     cache: 'no-store',
   });
 
-  let data = null;
+  let data;
   try {
     data = await res.json();
   } catch {
