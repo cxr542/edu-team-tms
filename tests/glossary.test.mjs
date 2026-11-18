@@ -185,6 +185,7 @@ describe('MIG entry and auto-linker', () => {
     const { autoLinkGlossaryHtml } = await import('../src/utils/glossaryLinker.js');
     const terms = [
       { slug: 'vm-migration', title: 'VM 마이그레이션' },
+      { slug: 'vm', title: 'VM (Virtual Machine)' },
       { slug: 'virtualization', title: '가상화' },
     ];
     const out = autoLinkGlossaryHtml(
@@ -197,24 +198,55 @@ describe('MIG entry and auto-linker', () => {
     expect(out).toContain('VMware(Broadcom), VMs, 2VM 은 그대로.');
     expect(linked).toEqual([
       'VM 마이그레이션→vm-migration',
-      'VM→vm-migration',
-      'VM→vm-migration',
+      'VM→vm',
+      'VM→vm',
       '가상화→virtualization',
     ]);
   });
 
   it('auto-link escapes term slug and title inside link attributes', async () => {
     const { autoLinkGlossaryHtml } = await import('../src/utils/glossaryLinker.js');
-    const terms = [{ slug: 'bad"><img src=x onerror=alert(1)>', title: 'Bad" onmouseover="alert(1) & <b> (BAD)' }];
+    const terms = [{ slug: 'bad"><img src=x onerror=alert(1)>', title: 'BAD (Bad" onmouseover="alert`1` & <b>)' }];
     const out = autoLinkGlossaryHtml('<p>BAD 테스트</p>', terms, 'other');
 
     expect(out).not.toContain('<img');
     expect(out).not.toContain('<b>');
     expect(out).not.toContain('onmouseover="');
-    expect(out).toContain('title="Bad&quot; onmouseover=&quot;alert(1) &amp; &lt;b&gt; (BAD) 바로가기"');
+    expect(out).toContain('title="BAD (Bad&quot; onmouseover=&quot;alert`1` &amp; &lt;b&gt;) 바로가기"');
 
     expect(out).toContain('data-glossary-slug="bad&quot;&gt;&lt;img src=x onerror=alert(1)&gt;"');
     expect(out).toMatch(/>BAD<\/a> 테스트<\/p>$/);
+  });
+
+  it('uses an acronym as a keyword only when it names the term itself', async () => {
+    const { buildGlossaryKeywords } = await import('../src/utils/glossaryLinker.js');
+    const terms = [
+      { slug: 'mig', title: 'MIG (Multi-Instance GPU)' },
+      { slug: 'antigravity-cli', title: 'Antigravity CLI' },
+      { slug: 'llm-marketing-pipeline', title: 'LLM 에이전트를 활용한 마케팅 콘텐츠 무한 생성 파이프라인 수립기' },
+      { slug: 'vm-migration', title: 'VM 마이그레이션' },
+      { slug: 'vmware', title: 'VM웨어' },
+      { slug: 'vpa-recommendation', title: 'VPA Recommendation' },
+      { slug: 'ms-azure', title: 'MS Azure' },
+      { slug: 'hpe', title: 'HPE(HP Enterprise)' },
+      { slug: 'vmware-vvf', title: 'VMware VVF (VMware vSphere Foundation)' },
+      { slug: 'vmware-vcf', title: 'VMware VCF (VMware Cloud Foundation)' },
+      { slug: 'hpa', title: 'HPA (Horizontal Pod Autoscaler)' },
+      { slug: 'aws', title: 'AWS' },
+    ];
+    const bySlug = (keyword) => buildGlossaryKeywords(terms, 'other').find((k) => k.keyword === keyword)?.slug;
+
+    for (const word of ['GPU', 'CLI', 'LLM', 'VM', 'VPA', 'MS', 'HP']) {
+      expect(bySlug(word)).toBeUndefined();
+    }
+    expect(bySlug('MIG')).toBe('mig');
+    expect(bySlug('VVF')).toBe('vmware-vvf');
+    expect(bySlug('VCF')).toBe('vmware-vcf');
+    expect(bySlug('HPA')).toBe('hpa');
+    expect(bySlug('HPE')).toBe('hpe');
+    expect(bySlug('AWS')).toBe('aws');
+    expect(bySlug('Antigravity CLI')).toBe('antigravity-cli');
+    expect(bySlug('VM 마이그레이션')).toBe('vm-migration');
   });
 
   it('contains VMware VVF seed entry and extracts VVF acronym', async () => {

@@ -21,6 +21,18 @@ function keywordPattern(keyword) {
   return `${before}${escapeRegExp(keyword)}${after}`;
 }
 
+const STOP_ACRONYMS = ['AI', 'IT', 'UI', 'UX', 'TOP', 'ALL', 'THE', 'AND'];
+
+/** First letters of each word, upper-cased: "VMware vSphere Foundation" -> "VVF". */
+function initialsOf(text) {
+  return String(text || '')
+    .split(/[\s-]+/)
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join('')
+    .toUpperCase();
+}
+
 /**
  * Builds candidate keywords from existing glossary terms, excluding currentSlug.
  * Sorted by length descending so longer compound phrases match first.
@@ -53,13 +65,14 @@ export function buildGlossaryKeywords(terms, currentSlug) {
         }
       }
 
-      // Check uppercase acronyms (e.g. VVF, SM, MIG, TKG, VCF)
-      const acronyms = fullTitle.match(/\b[A-Z]{2,6}\b/g);
-      if (acronyms) {
+      // An acronym inside the outer part counts only when it abbreviates the parenthesised
+      // expansion: "VMware VVF (VMware vSphere Foundation)" -> VVF. Other capitalised words in a
+      // title (GPU in "MIG (Multi-Instance GPU)", CLI in "Antigravity CLI") are not this term.
+      if (parenMatch) {
+        const expansionInitials = initialsOf(parenMatch[2]);
+        const acronyms = parenMatch[1].match(/\b[A-Z]{2,6}\b/g) || [];
         acronyms.forEach((acr) => {
-          if (!['AI', 'IT', 'UI', 'UX', 'TOP', 'ALL', 'THE', 'AND'].includes(acr)) {
-            candidates.add(acr);
-          }
+          if (acr === expansionInitials && !STOP_ACRONYMS.includes(acr)) candidates.add(acr);
         });
       }
 
