@@ -21,6 +21,8 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  // 다른 출처(폰트·이미지·Supabase 등)는 브라우저가 직접 받게 둔다. 캐시도 같은 출처만 쓴다.
+  if (new URL(event.request.url).origin !== self.location.origin) return;
 
   event.respondWith(
     fetch(event.request).catch(() => caches.match(event.request)),

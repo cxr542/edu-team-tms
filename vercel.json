@@ -27,7 +27,7 @@
       ]
     },
     {
-      "source": "/((?!docs/|tools/|preview/|sw\\.js$).*)",
+      "source": "/((?!docs/|tools/|preview/).*)",
       "headers": [
         {
           "key": "Content-Security-Policy",
@@ -36,7 +36,16 @@
       ]
     },
     {
-      "source": "/((?:docs|tools|preview)/.*|sw\\.js)",
+      "source": "/docs/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'sha256-EnCMlsJdUbA5O6wuNlOSBlIOn2zt7x/tvvQ2YLVGCZo=' 'sha256-Evu92goHTUfty0FkCBAZqSyIMRoHgyc8ItDVQFVugj0=' 'sha256-QlzP0DWW6IwRXfVciAC48lui/yH8fzm+Av0HQ1ifC2o=' 'sha256-uDkaDilMvQaguHqGket16Yy/lJ5jhjh+TKXrvycWTJM='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' data: https://cdn.jsdelivr.net https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://ujusdkcvojvtbksyovfv.supabase.co https://okestroacademy.tailc4ff05.ts.net; frame-src 'self' blob: https://cloud-chatbot-963d.onrender.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+        }
+      ]
+    },
+    {
+      "source": "/((?:tools|preview)/.*)",
       "headers": [
         {
           "key": "Content-Security-Policy-Report-Only",
