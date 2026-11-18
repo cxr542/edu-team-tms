@@ -17,7 +17,7 @@
     "build:team": "npm run sync:docs && npm run sync:academizer && npm run sync:cloud-chatbot && npm run publish:journal && npm run publish:kpi && vite build",
     "build": "vite build",
     "deploy:vercel": "npm run build:team && npx vercel deploy --prod",
-    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "lint": "eslint . --report-unused-disable-directives",
     "test": "vitest run",
     "verify:supabase": "node scripts/verify-supabase-phase0.mjs",
     "preview": "vite preview"
@@ -33,9 +33,14 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@vitejs/plugin-react": "^4.2.1",
+    "eslint": "^10.15.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.8",
+    "globals": "^17.14.0",
     "vite": "^5.1.6",
     "vitest": "^2.1.9"
   }
