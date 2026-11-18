@@ -7,6 +7,11 @@
 
 ## 2026-11-18
 
+### [기타] ci: guard vercel.json security headers and initial bundle size
+
+- ci: guard vercel.json security headers and initial bundle size
+- PR #274: https://github.com/cxr542/edu-team-tms/pull/274
+
 ### [수정] fix(glossary): link acronyms only when they name the term
 
 - fix(glossary): link acronyms only when they name the term
