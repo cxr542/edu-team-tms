@@ -7,6 +7,11 @@
 
 ## 2026-11-18
 
+### [기타] ci: check production security headers daily against vercel.json
+
+- ci: check production security headers daily against vercel.json
+- PR #275: https://github.com/cxr542/edu-team-tms/pull/275
+
 ### [기타] ci: guard vercel.json security headers and initial bundle size
 
 - ci: guard vercel.json security headers and initial bundle size
