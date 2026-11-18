@@ -68,16 +68,16 @@ export default function LectureGuideFrame({ src, srcDoc, title, scrollEl, onHead
      * 실제로 스크롤되는 쪽을 고른다: 문서 영역이 자체 스크롤을 가지면 그것, 아니면 페이지(window).
      * (앱 셸이 화면 높이로 고정되지 않은 배치에서는 window 가 스크롤된다.)
      */
-    const useWindow = () =>
+    const isWindowScroll = () =>
       !scrollEl ||
       scrollEl.clientHeight > window.innerHeight || // 화면보다 큰 요소는 뷰포트가 될 수 없다
       scrollEl.scrollHeight <= scrollEl.clientHeight + 2;
-    const scrollTopNow = () => (useWindow() ? window.scrollY : scrollEl.scrollTop);
+    const scrollTopNow = () => (isWindowScroll() ? window.scrollY : scrollEl.scrollTop);
 
     /** iframe 안 요소의 위치를 스크롤 기준 좌표로 환산 */
     const absoluteTop = (el) => {
       const elTop = el.getBoundingClientRect().top + frame.getBoundingClientRect().top;
-      if (useWindow()) return elTop + window.scrollY;
+      if (isWindowScroll()) return elTop + window.scrollY;
       return elTop - scrollEl.getBoundingClientRect().top + scrollEl.scrollTop;
     };
 
@@ -85,7 +85,7 @@ export default function LectureGuideFrame({ src, srcDoc, title, scrollEl, onHead
       jumpRef.current = (id) => {
         const el = doc.getElementById(id);
         if (!el) return;
-        (useWindow() ? window : scrollEl).scrollTo({ top: absoluteTop(el) - 16, behavior: 'smooth' });
+        (isWindowScroll() ? window : scrollEl).scrollTo({ top: absoluteTop(el) - 16, behavior: 'smooth' });
         onActiveChange(id);
       };
     }
