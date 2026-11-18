@@ -7,6 +7,11 @@
 
 ## 2026-11-18
 
+### [신규] feat(security): enforce CSP on /docs and the service worker
+
+- feat(security): enforce CSP on /docs and the service worker
+- PR #272: https://github.com/cxr542/edu-team-tms/pull/272
+
 ### [신규] feat(security): enforce CSP on app routes
 
 - feat(security): enforce CSP on app routes
