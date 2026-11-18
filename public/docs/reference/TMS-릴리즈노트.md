@@ -7,6 +7,11 @@
 
 ## 2026-11-18
 
+### [기타] chore(lint): clean up unused vars and useless assignments, raise rules to error
+
+- chore(lint): clean up unused vars and useless assignments, raise rules to error
+- PR #277: https://github.com/cxr542/edu-team-tms/pull/277
+
 ### [기타] ci: add ESLint 10 and run lint on every PR
 
 - ci: add ESLint 10 and run lint on every PR
