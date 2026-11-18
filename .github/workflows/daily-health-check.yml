@@ -29,6 +29,9 @@ jobs:
       - name: Run production health check
         run: node scripts/prod-health-check.mjs
 
+      - name: Run production security header check
+        run: node scripts/prod-security-headers-check.mjs
+
       - name: Open issue on failure
         if: failure()
         uses: actions/github-script@v7
