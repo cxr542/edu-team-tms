@@ -7,6 +7,11 @@
 
 ## 2026-11-20
 
+### [기타] chore(lint): remove unused vars in ledger/journal files and drop the warn-only override
+
+- chore(lint): remove unused vars in ledger/journal files and drop the warn-only override
+- PR #280: https://github.com/cxr542/edu-team-tms/pull/280
+
 ### [기타] chore(lint): move non-component helpers out of component files for Fast Refresh
 
 - chore(lint): move non-component helpers out of component files for Fast Refresh
