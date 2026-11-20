@@ -1,7 +1,8 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import NavLabelsModal, { describeSharedStatus } from '../src/components/NavLabelsModal.jsx';
+import NavLabelsModal from '../src/components/NavLabelsModal.jsx';
+import { describeSharedStatus } from '../src/utils/navLabelsSharedStatus.js';
 import { DEFAULT_NAV_LABELS } from '../src/constants/navLabels.js';
 import { NAV_GROUP_DEFAULT_ORDER, applyNavOrder } from '../src/utils/navOrder.js';
 

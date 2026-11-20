@@ -3,7 +3,7 @@ import {
   defaultQuarterRecord,
   normalizeKpiOperationalStore,
 } from '../src/constants/kpiOperationalStore.js';
-import { describeNoticeDeadline } from '../src/components/Kpi3NoticeDeadline.jsx';
+import { describeNoticeDeadline } from '../src/utils/kpi3NoticeDeadline.js';
 
 const at = (y, m, d) => new Date(y, m - 1, d, 12, 0, 0);
 
