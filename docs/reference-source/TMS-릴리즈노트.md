@@ -7,6 +7,11 @@
 
 ## 2026-11-20
 
+### [기타] chore(lint): move non-component helpers out of component files for Fast Refresh
+
+- chore(lint): move non-component helpers out of component files for Fast Refresh
+- PR #279: https://github.com/cxr542/edu-team-tms/pull/279
+
 ### [기타] chore(lint): resolve safe react-hooks/exhaustive-deps warnings outside ledger/journal
 
 - chore(lint): resolve safe react-hooks/exhaustive-deps warnings outside ledger/journal
