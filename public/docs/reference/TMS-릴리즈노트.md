@@ -7,6 +7,11 @@
 
 ## 2026-11-20
 
+### [기타] chore(lint): resolve easy react-hooks/exhaustive-deps warnings in ledger/journal files
+
+- chore(lint): resolve easy react-hooks/exhaustive-deps warnings in ledger/journal files
+- PR #282: https://github.com/cxr542/edu-team-tms/pull/282
+
 ### [기타] chore(lint): move useMemberKpiApprovalToolbarState into its own hook file
 
 - chore(lint): move useMemberKpiApprovalToolbarState into its own hook file
