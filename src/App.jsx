@@ -324,12 +324,12 @@ export default function App() {
   const seedCategories = useMemo(() => {
     if (!usesPublishedLedgerData || !snapshot?.categories?.length) return null;
     return snapshot.categories;
-  }, [usesPublishedLedgerData, snapshot?.publishedAt, snapshot?.categories]);
+  }, [usesPublishedLedgerData, snapshot?.categories]);
 
   const seedTransactions = useMemo(() => {
     if (!usesPublishedLedgerData || !snapshot?.transactions?.length) return null;
     return snapshot.transactions;
-  }, [usesPublishedLedgerData, snapshot?.publishedAt, snapshot?.transactions]);
+  }, [usesPublishedLedgerData, snapshot?.transactions]);
 
   // 장부는 Supabase 가 기준이다. 관리자 편집 화면은 서버 API 로 행 단위 저장하고,
   // 읽기 전용 화면(팀원 조회·구성원 장부)은 공개 스냅샷(Supabase)을 읽는다.

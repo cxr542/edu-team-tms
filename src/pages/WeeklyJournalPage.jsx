@@ -461,10 +461,10 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     setSupabaseJournalPullStatus('idle');
   }, [memberCode]);
 
-  const showToast = (msg) => {
+  const showToast = useCallback((msg) => {
     setToast(msg);
     setTimeout(() => setToast(''), 2500);
-  };
+  }, []);
   const sharedSaveText = {
     queued: ' · 클라우드 동기화 대기 중',
     saving: ' · 클라우드 동기화 중',
@@ -900,7 +900,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         pendingScrollToastRef.current = null;
       },
     });
-  }, [scrollTick, year, month, collapsedWeeks, memberCode]);
+  }, [scrollTick, year, month, collapsedWeeks, memberCode, showToast]);
 
   const openEdit = (taskId, dayKey) => {
     const day = getDay(dayKey);
