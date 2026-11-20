@@ -128,7 +128,7 @@ export default function Kpi3ElementsPanel({
   const readOnly = journal.kpiOperationalReadOnly || !canEdit;
   const canEditDmDetail = showManagerTabs || allowMemberDmEdit;
   const q = quarterRec.quarter;
-  const dmDetail = quarterRec.dmDetail || {};
+  const dmDetail = useMemo(() => quarterRec.dmDetail || {}, [quarterRec.dmDetail]);
   const leaderDetail = quarterRec.leaderDetail || {};
   const practiceDetail = quarterRec.practiceDetail || { cases: [] };
 
@@ -427,6 +427,9 @@ export default function Kpi3ElementsPanel({
 
   useEffect(() => {
     setDmWeightDraft(readDmWeightDraft(dmDetail));
+    // 저장된 가중 비율(weightMode·manualLecturePct)이 바뀔 때만 입력값을 되돌린다.
+    // dmDetail 전체를 넣으면 강의 평균 등 다른 칸을 입력할 때마다 입력 중인 비율이 지워진다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [year, month, memberCode, dmDetail.weightMode, dmDetail.manualLecturePct]);
 
   const dmDualWeightsSaved = useMemo(() => {

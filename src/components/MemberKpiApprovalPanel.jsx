@@ -67,7 +67,7 @@ export function useMemberKpiApprovalToolbarState(year, month, memberCode) {
       actionCount,
       pendingKpi2,
     };
-  }, [metrics.rows02Effect, monthly01, monthly01Stored, month, readOnly]);
+  }, [metrics.rows02Effect, monthly01, monthly01Stored, year, month, readOnly]);
 }
 
 function MemberKpiApprovalBody({

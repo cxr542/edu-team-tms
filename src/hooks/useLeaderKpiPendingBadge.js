@@ -46,5 +46,7 @@ export function useLeaderKpiPendingBadge(enabled) {
       items,
       period,
     };
+    // tick은 브라우저 저장소(localStorage)를 다시 읽게 하는 새로고침 신호다. 빼면 배지가 갱신되지 않는다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, tick]);
 }
