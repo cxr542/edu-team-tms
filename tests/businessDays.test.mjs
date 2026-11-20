@@ -61,7 +61,7 @@ describe('businessDays — 확정 통보 마감 (분기 말 + 5영업일)', () =
   });
 });
 
-import { describeNoticeDeadline } from '../src/components/Kpi3NoticeDeadline.jsx';
+import { describeNoticeDeadline } from '../src/utils/kpi3NoticeDeadline.js';
 
 describe('describeNoticeDeadline — 화면 문구', () => {
   const at = (y, m, d) => new Date(y, m - 1, d, 12, 0, 0);
