@@ -698,7 +698,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     setSupabaseJournalSaveStatus('error');
     showToast(result.message || 'Supabase 저장 실패');
     return result;
-  }, [journal, memberCode, showSupabaseMirrorTools, showToast, supabaseJournalSaveStatus]);
+  }, [journal, memberCode, showSupabaseMirrorTools, showToast, supabaseJournalSaveStatus, setSupabaseFreshness]);
 
   const pullSelectedMemberFromSupabase = useCallback(async () => {
     if (!showSupabaseMirrorTools || supabaseJournalPullStatus === 'loading') return;
@@ -785,6 +785,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     showToast,
     supabaseJournalPullStatus,
     clearRemoteUpdateNotice,
+    setSupabaseFreshness,
   ]);
 
   const runStorageComparison = useCallback(async () => {
