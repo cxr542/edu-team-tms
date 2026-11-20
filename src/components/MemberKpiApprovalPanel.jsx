@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Send, Undo2 } from 'lucide-react';
 import { KPI_APPROVAL_REQUEST } from '../constants/kpiApprovalRequest';
 import { KPI1_NAME, KPI2_NAME } from '../constants/kpiDisplayNames';
@@ -14,6 +14,7 @@ import { useJournal, useTeamKpiMetrics } from '../context/JournalProvider';
 import { isEditorMode } from '../utils/appMode';
 import { apply01cToMonthly01 } from '../utils/kpiMonthlyClose';
 import { uiTooltip } from '../utils/uiTooltip';
+import { useMemberKpiApprovalToolbarState } from '../hooks/useMemberKpiApprovalToolbarState';
 import MemberJournalDialog from './MemberJournalDialog';
 import './MemberKpiApprovalPanel.css';
 
@@ -22,52 +23,6 @@ function statusClass(status) {
   if (status === KPI_STATUS.SUBMITTED) return 'is-pending';
   if (status === KPI_STATUS.REJECTED) return 'is-rejected';
   return 'is-draft';
-}
-
-export function useMemberKpiApprovalToolbarState(year, month, memberCode) {
-  const journal = useJournal();
-  const metrics = useTeamKpiMetrics(year, month, memberCode);
-  const monthly01Stored = journal.getMonthly01(year, month, memberCode);
-  const monthly01 = monthly01Stored ?? defaultMonthly01();
-  const readOnly = journal.kpiOperationalReadOnly || !isEditorMode();
-
-  return useMemo(() => {
-    const effectRows = metrics.rows02Effect || [];
-    const pendingKpi2 = effectRows.filter((r) => r.상태 === KPI_STATUS.SUBMITTED).length;
-    const actionableKpi2 = effectRows.filter(
-      (row) =>
-        row.taskId &&
-        !readOnly &&
-        (canSubmitKpiRecord(row.상태) || row.상태 === KPI_STATUS.SUBMITTED)
-    );
-    const canRequestKpi1 = canSubmitKpiRecord(monthly01.status) && !readOnly;
-    const canWithdrawKpi1 = canWithdrawMonthly01(monthly01.status, monthly01Stored) && !readOnly;
-    const needsAttention =
-      monthly01.status === KPI_STATUS.SUBMITTED ||
-      monthly01.status === KPI_STATUS.REJECTED ||
-      pendingKpi2 > 0;
-    const actionCount =
-      (canRequestKpi1 ? 1 : 0) +
-      (canWithdrawKpi1 ? 1 : 0) +
-      actionableKpi2.length +
-      (monthly01.status === KPI_STATUS.REJECTED ? 1 : 0);
-
-    return {
-      summaryMeta: [
-        `${month + 1}월 KPI1 ${kpiStatusLabelFor(monthly01.status, ymKey(year, month))}`,
-        pendingKpi2 > 0
-          ? `KPI2 대기 ${pendingKpi2}`
-          : actionableKpi2.length > 0
-            ? `KPI2 요청 가능 ${actionableKpi2.length}`
-            : effectRows.length > 0
-              ? `KPI2 ${effectRows.length}건`
-              : 'KPI2 없음',
-      ].join(' · '),
-      needsAttention,
-      actionCount,
-      pendingKpi2,
-    };
-  }, [metrics.rows02Effect, monthly01, monthly01Stored, year, month, readOnly]);
 }
 
 function MemberKpiApprovalBody({
