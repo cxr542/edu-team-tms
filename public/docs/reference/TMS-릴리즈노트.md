@@ -7,6 +7,11 @@
 
 ## 2026-11-20
 
+### [기타] chore(lint): move useMemberKpiApprovalToolbarState into its own hook file
+
+- chore(lint): move useMemberKpiApprovalToolbarState into its own hook file
+- PR #281: https://github.com/cxr542/edu-team-tms/pull/281
+
 ### [기타] chore(lint): remove unused vars in ledger/journal files and drop the warn-only override
 
 - chore(lint): remove unused vars in ledger/journal files and drop the warn-only override
