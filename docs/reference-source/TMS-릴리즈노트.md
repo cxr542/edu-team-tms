@@ -7,6 +7,11 @@
 
 ## 2026-11-20
 
+### [기타] chore(lint): list the stable setSupabaseFreshness setter in two useCallback deps
+
+- chore(lint): list the stable setSupabaseFreshness setter in two useCallback deps
+- PR #283: https://github.com/cxr542/edu-team-tms/pull/283
+
 ### [기타] chore(lint): resolve easy react-hooks/exhaustive-deps warnings in ledger/journal files
 
 - chore(lint): resolve easy react-hooks/exhaustive-deps warnings in ledger/journal files
