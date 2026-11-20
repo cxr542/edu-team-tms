@@ -288,7 +288,7 @@ export default function App() {
   });
   const sharedViewerMenuVisibility = useMemo(
     () => normalizeViewerMenuVisibility(snapshot?.viewerMenuVisibility),
-    [snapshot?.publishedAt, snapshot?.viewerMenuVisibility]
+    [snapshot?.viewerMenuVisibility]
   );
   const activeViewerMenuVisibility =
     isViewer && snapshot?.viewerMenuVisibility ? sharedViewerMenuVisibility : viewerMenuVisibility;
