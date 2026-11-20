@@ -871,3 +871,19 @@ button.ai-office__kpi[aria-pressed='true'] {
   gap: 0.6rem;
 }
 .ai-office__rosters .ai-office__roster { align-content: start; }
+
+/* 데이터 출처 표시줄 */
+.ai-office__source {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px dashed var(--border-color);
+  border-radius: 0.8rem;
+  background: var(--bg-secondary);
+  font-size: 0.8125rem;
+}
+.ai-office__source-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.ai-office__act:disabled { opacity: 0.6; cursor: default; }
