@@ -398,12 +398,14 @@ export function useWeeklyJournal({
 
   const getMemberDays = useCallback(
     (memberCode = JOURNAL_LINKED_MEMBER_CODE) => getMemberJournal(store, memberCode).days || {},
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- getMemberJournal(store, …)은 store.memberJournals만 읽는다. 메타만 바뀔 때는 콜백을 새로 만들 필요가 없다.
     [store.memberJournals]
   );
 
   const getDayData = useCallback(
     (key, memberCode = JOURNAL_LINKED_MEMBER_CODE) =>
       resolveJournalDay(key, getMemberJournal(store, memberCode).days[key]),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- getMemberJournal(store, …)은 store.memberJournals만 읽는다. 메타만 바뀔 때는 콜백을 새로 만들 필요가 없다.
     [store.memberJournals]
   );
 
@@ -458,6 +460,7 @@ export function useWeeklyJournal({
   const getMemberPrefs = useCallback(
     (memberCode = JOURNAL_LINKED_MEMBER_CODE) =>
       normalizeMemberPrefs(getMemberJournal(store, memberCode).prefs),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- getMemberJournal(store, …)은 store.memberJournals만 읽는다. 메타만 바뀔 때는 콜백을 새로 만들 필요가 없다.
     [store.memberJournals]
   );
 
@@ -484,6 +487,7 @@ export function useWeeklyJournal({
       const saved = slice.weekSummaries[weekKey] ?? (legacyWeekKey ? slice.weekSummaries[legacyWeekKey] : undefined);
       return resolveWeekColumnText(saved, template);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- getMemberJournal(store, …)은 store.memberJournals만 읽는다. 메타만 바뀔 때는 콜백을 새로 만들 필요가 없다.
     [store.memberJournals]
   );
 
@@ -494,6 +498,7 @@ export function useWeeklyJournal({
       const saved = slice.nextWeekPlans[weekKey] ?? (legacyWeekKey ? slice.nextWeekPlans[legacyWeekKey] : undefined);
       return resolveWeekColumnText(saved, template);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- getMemberJournal(store, …)은 store.memberJournals만 읽는다. 메타만 바뀔 때는 콜백을 새로 만들 필요가 없다.
     [store.memberJournals]
   );
 
@@ -537,12 +542,14 @@ export function useWeeklyJournal({
       const saved = memos[weekKey] ?? (legacyWeekKey ? memos[legacyWeekKey] : undefined);
       return String(saved ?? '');
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- getMemberJournal(store, …)은 store.memberJournals만 읽는다. 메타만 바뀔 때는 콜백을 새로 만들 필요가 없다.
     [store.memberJournals]
   );
 
   const getMemberKpiWeekMemos = useCallback(
     (memberCode = JOURNAL_LINKED_MEMBER_CODE) =>
       getMemberJournal(store, memberCode).kpiWeekMemos || {},
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- getMemberJournal(store, …)은 store.memberJournals만 읽는다. 메타만 바뀔 때는 콜백을 새로 만들 필요가 없다.
     [store.memberJournals]
   );
 
