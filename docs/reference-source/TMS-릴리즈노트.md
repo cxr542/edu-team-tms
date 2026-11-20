@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-11-20
+
+### [기타] chore(lint): resolve safe react-hooks/exhaustive-deps warnings outside ledger/journal
+
+- chore(lint): resolve safe react-hooks/exhaustive-deps warnings outside ledger/journal
+- PR #278: https://github.com/cxr542/edu-team-tms/pull/278
+
 ## 2026-11-18
 
 ### [기타] chore(lint): clean up unused vars and useless assignments, raise rules to error
