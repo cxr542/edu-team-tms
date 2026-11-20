@@ -16,7 +16,6 @@ export default function CategoryManageModal({
   onUpdate,
   onRemove,
   onReset,
-  transactions,
 }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState(null);

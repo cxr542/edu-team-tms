@@ -68,11 +68,6 @@ export function applyRemoteMemberJournalSave(localStore, remoteSnapshot, memberC
   const force = Boolean(options?.force);
   const remote = normalizeJournalCloudSnapshot(remoteSnapshot);
   const remoteMemberAt = remote.meta.memberUpdatedAt?.[memberCode] || remote.meta.updatedAt || null;
-  const local = normalizeJournalCloudSnapshot({
-    publishedAt: localStore?.meta?.updatedAt || null,
-    meta: localStore?.meta || {},
-    memberJournals: localStore?.memberJournals || createEmptyMemberJournals(),
-  });
   // Compare member-specific timestamps only (do not fall back to global updatedAt).
   const localMemberAt = localStore?.meta?.memberUpdatedAt?.[memberCode] || null;
   if (!force && isNewer(localMemberAt, remoteMemberAt)) {

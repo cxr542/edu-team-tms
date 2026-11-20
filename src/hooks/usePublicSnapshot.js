@@ -45,7 +45,6 @@ export function usePublicSnapshot(
         })
         .catch((err) => {
           const status = err?.status;
-          const body = err?.body || {};
           setSnapshotEmpty(false);
           if (err?.isWarning || status === 401 || status === 403) {
             if (!quiet) setWarning(err.message || '클라우드 장부 조회 접근이 제한되었습니다.');

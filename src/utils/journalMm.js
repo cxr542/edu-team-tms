@@ -90,7 +90,7 @@ export function getDayHoursInfo(data) {
   };
 }
 
-export function getDayAvailableMm(data) {
+export function getDayAvailableMm(_data) {
   return STANDARD_DAY_AVAILABLE_MM;
 }
 
