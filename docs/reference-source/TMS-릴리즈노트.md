@@ -7,6 +7,11 @@
 
 ## 2026-11-20
 
+### [기타] chore(lint): document intentional useWeeklyJournal deps and cap lint warnings at 4
+
+- chore(lint): document intentional useWeeklyJournal deps and cap lint warnings at 4
+- PR #284: https://github.com/cxr542/edu-team-tms/pull/284
+
 ### [기타] chore(lint): list the stable setSupabaseFreshness setter in two useCallback deps
 
 - chore(lint): list the stable setSupabaseFreshness setter in two useCallback deps
