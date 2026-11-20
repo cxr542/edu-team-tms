@@ -4,7 +4,7 @@ import { parseAppRoute } from './appRoute';
 /** `/` 랜딩(안내) 또는 member 없는 ?mode=view — 장부·런치 등 직접 노출 안 함 */
 export function isPublicViewerScope({ isViewer, isMemberScope, location }) {
   if (location && parseAppRoute(location).scope === 'public') return true;
-  return Boolean(isViewer) && !Boolean(isMemberScope);
+  return Boolean(isViewer) && !isMemberScope;
 }
 
 /** 사용자 B/C 장부 URL — mode와 무관하게 조회 전용 */

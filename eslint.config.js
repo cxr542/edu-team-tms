@@ -12,18 +12,7 @@ const CLEANED_RULES = {
   'no-extra-boolean-cast': 'error',
 };
 
-// 장부·일지 파일은 별도 작업에서 정리한다. 그때까지 아래 파일만 경고로 남긴다.
-// 정리가 끝나면 이 목록에서 빼고, 남은 경고(exhaustive-deps 등)를 정리한 뒤 lint에 --max-warnings 0을 되돌린다.
-const LEDGER_JOURNAL_PENDING_FILES = [
-  'src/components/CategoryManageModal.jsx',
-  'src/hooks/usePublicSnapshot.js',
-  'src/pages/WeeklyJournalPage.jsx',
-  'src/utils/journalCloudSnapshot.js',
-  'src/utils/journalMemberStore.js',
-  'src/utils/journalMm.js',
-  'src/utils/ledgerAccess.js',
-  'src/utils/publishSnapshot.js',
-];
+// 남은 경고(장부·일지 exhaustive-deps, HMR)를 정리한 뒤 lint에 --max-warnings 0을 되돌린다.
 
 export default [
   {
@@ -69,13 +58,6 @@ export default [
     },
     rules: {
       ...CLEANED_RULES,
-    },
-  },
-  {
-    files: LEDGER_JOURNAL_PENDING_FILES,
-    rules: {
-      'no-unused-vars': ['warn', { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_', ignoreRestSiblings: true }],
-      'no-extra-boolean-cast': 'warn',
     },
   },
 ];

@@ -83,6 +83,6 @@ export function getMemberJournal(store, memberCode) {
   return store?.memberJournals?.[memberCode] || emptyMemberJournal();
 }
 
-export function memberJournalCodes(store) {
+export function memberJournalCodes(_store) {
   return TEAM_KPI_MEMBERS.map((m) => m.code);
 }

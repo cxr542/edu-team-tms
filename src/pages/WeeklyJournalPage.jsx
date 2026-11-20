@@ -319,7 +319,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       const daysMap = journal.getMemberDays(memberCode) || {};
       const targetPrefix = `${year}-${String(month + 1).padStart(2, '0')}-`;
       const monthDays = Object.entries(daysMap)
-        .filter(([key, day]) => key.startsWith(targetPrefix))
+        .filter(([key]) => key.startsWith(targetPrefix))
         .map(([key, day]) => ({ dayKey: key, ...day }));
       
       let journalText = '';
@@ -355,7 +355,7 @@ export default function WeeklyJournalPage({ readOnly = false }) {
       let data;
       try {
         data = JSON.parse(text);
-      } catch (parseErr) {
+      } catch {
         setAiSummaryText(`서버 응답 오류 (HTML 반환 의심): ${text.substring(0, 200)}`);
         return;
       }
@@ -577,7 +577,6 @@ export default function WeeklyJournalPage({ readOnly = false }) {
     let leave = 0;
     let available = 0;
     let shortDays = 0;
-    let doneTasks = 0;
     const seen = new Set();
     weeks.forEach((week) => {
       week.days.forEach((d) => {
@@ -590,7 +589,6 @@ export default function WeeklyJournalPage({ readOnly = false }) {
         improve += day.mm.improve;
         leave += day.mm.leave;
         available += getDayAvailableMm(day);
-        doneTasks += (day.tasks || []).filter((t) => t.done).length;
         const info = getDayHoursInfo(day);
         if (info.show && info.isShort) shortDays += 1;
       });
