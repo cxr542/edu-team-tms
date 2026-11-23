@@ -7,6 +7,11 @@
 
 ## 2026-11-23
 
+### [신규] feat(api): KPI 승인 쓰기 서버 경로 추가 (아직 화면은 쓰지 않음, anon 쓰기 잠금 KPI 1단계)
+
+- feat(api): KPI 승인 쓰기 서버 경로 추가 (아직 화면은 쓰지 않음, anon 쓰기 잠금 KPI 1단계)
+- PR #288: https://github.com/cxr542/edu-team-tms/pull/288
+
 ### [수정] feat(csr): 관리자 전용 CSR 요청 수정·삭제
 
 - feat(csr): 관리자 전용 CSR 요청 수정·삭제
