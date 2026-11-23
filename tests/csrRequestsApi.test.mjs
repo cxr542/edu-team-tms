@@ -7,6 +7,9 @@ import { createAdminSessionCookie } from '../server/api-utils/adminSession.js';
 import { handleCsrRequests } from '../server/api-utils/csrRequests.js';
 import { makeFakeSupabase } from './helpers/fakeSupabase.mjs';
 
+// 연결 테스트가 진짜 클라이언트를 만들지 않게 한다(Node 20 CI 에는 WebSocket 이 없어 생성 단계에서 실패한다).
+vi.mock('@supabase/supabase-js', () => ({ createClient: () => ({}) }));
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ORIGIN = 'https://edu-team-tms-ten.vercel.app';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
