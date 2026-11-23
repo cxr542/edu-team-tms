@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-11-23
+
+### [신규] feat(api): add server route for CSR request writes (not used by the UI yet)
+
+- feat(api): add server route for CSR request writes (not used by the UI yet)
+- PR #285: https://github.com/cxr542/edu-team-tms/pull/285
+
 ## 2026-11-20
 
 ### [기타] chore(lint): document intentional useWeeklyJournal deps and cap lint warnings at 4
