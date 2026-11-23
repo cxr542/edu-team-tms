@@ -7,6 +7,11 @@
 
 ## 2026-11-23
 
+### [신규] feat(kpi): KPI 승인 쓰기를 anon upsert 대신 /api/kpi-approvals 로 보냄 (anon 쓰기 잠금 KPI 2단계)
+
+- feat(kpi): KPI 승인 쓰기를 anon upsert 대신 /api/kpi-approvals 로 보냄 (anon 쓰기 잠금 KPI 2단계)
+- PR #289: https://github.com/cxr542/edu-team-tms/pull/289
+
 ### [신규] feat(api): KPI 승인 쓰기 서버 경로 추가 (아직 화면은 쓰지 않음, anon 쓰기 잠금 KPI 1단계)
 
 - feat(api): KPI 승인 쓰기 서버 경로 추가 (아직 화면은 쓰지 않음, anon 쓰기 잠금 KPI 1단계)
