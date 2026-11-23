@@ -262,12 +262,147 @@ describe('CSR requests API', () => {
     });
   });
 
+  describe('PATCH (제목·내용·분류 수정)', () => {
+    const patch = (db, body, headers = admin()) => call(db, { method: 'PATCH', headers, body: { id: ID_A, ...body } });
+
+    it('lets an admin edit title, description and category without touching the rest', async () => {
+      const db = makeFakeSupabase({ csr_requests: [seedRow({ status: 'inProgress', admin_comment: '메모' })] });
+      const res = await patch(db, { title: '  새 제목  ', description: '새 내용', category: 'feature' });
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data).toMatchObject({ title: '새 제목', description: '새 내용', category: 'feature' });
+      expect(db.tables.csr_requests[0]).toMatchObject({
+        title: '새 제목',
+        description: '새 내용',
+        category: 'feature',
+        status: 'inProgress',
+        admin_comment: '메모',
+        requester: '최우성',
+        requester_code: 'B',
+        created_at: '2026-11-01T00:00:00.000Z',
+      });
+    });
+
+    it('rejects invalid content edits and non-admin edits before touching the DB', async () => {
+      const db = makeFakeSupabase({ csr_requests: [seedRow()] });
+      for (const body of [
+        { title: '   ' },
+        { title: 'a'.repeat(201) },
+        { description: 'a'.repeat(20_001) },
+        { category: 'weird' },
+        { category: 'constructor' },
+      ]) {
+        expect((await patch(db, body)).statusCode).toBe(400);
+      }
+      expect((await patch(db, { title: '해킹' }, member('wschoi'))).statusCode).toBe(403);
+      expect((await patch(db, { title: '해킹' }, { referer: `${ORIGIN}/admin` })).statusCode).toBe(403);
+      expect(db.log).toEqual([]);
+      expect(db.tables.csr_requests[0].title).toBe('원래 제목');
+    });
+  });
+
+  describe('DELETE (삭제)', () => {
+    function storageStub({ files = [], listError = null, removeError = null } = {}) {
+      const calls = [];
+      return {
+        calls,
+        storage: {
+          from: (bucket) => ({
+            list: async (folder, options) => {
+              calls.push({ op: 'list', bucket, folder, options });
+              return { data: listError ? null : files.map((name) => ({ name })), error: listError };
+            },
+            remove: async (paths) => {
+              calls.push({ op: 'remove', bucket, paths });
+              return { data: null, error: removeError };
+            },
+          }),
+        },
+      };
+    }
+    const withStorage = (db, stub) => ({ from: db.from, storage: stub.storage });
+    const del = (client, headers = admin(), body = { id: ID_A }) => call(client, { method: 'DELETE', headers, body });
+
+    it('rejects anything without an admin session on an admin route — and never touches the DB or storage', async () => {
+      const db = makeFakeSupabase({ csr_requests: [seedRow()] });
+      const stub = storageStub();
+      const client = withStorage(db, stub);
+      for (const headers of [
+        { referer: `${ORIGIN}/admin` },
+        member('wschoi'),
+        { referer: `${ORIGIN}/wschoi`, cookie: adminCookie() },
+        { referer: 'https://evil.example/admin', cookie: adminCookie() },
+        {},
+      ]) {
+        const res = await del(client, headers);
+        expect(res.statusCode).toBe(403);
+      }
+      expect(db.log).toEqual([]);
+      expect(stub.calls).toEqual([]);
+      expect(db.tables.csr_requests).toHaveLength(1);
+    });
+
+    it('rejects bad ids and returns 404 for an unknown request without deleting', async () => {
+      const db = makeFakeSupabase({ csr_requests: [seedRow()] });
+      const stub = storageStub();
+      const client = withStorage(db, stub);
+      expect((await del(client, admin(), { id: 'bad-id' })).statusCode).toBe(400);
+      expect((await del(client, admin(), 'not json')).statusCode).toBe(400);
+      const res = await del(client, admin(), { id: ID_UNKNOWN });
+      expect(res.statusCode).toBe(404);
+      expect(db.log.some((entry) => entry.op === 'delete')).toBe(false);
+      expect(stub.calls).toEqual([]);
+      expect(db.tables.csr_requests).toHaveLength(1);
+    });
+
+    it('removes attachment files first, then the request row', async () => {
+      const db = makeFakeSupabase({ csr_requests: [seedRow(), seedRow({ id: ID_UNKNOWN })] });
+      const stub = storageStub({ files: ['a-file.png', 'b-file.pdf'] });
+      const res = await del(withStorage(db, stub));
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data).toEqual({ id: ID_A, removedFiles: 2 });
+      expect(stub.calls[0]).toMatchObject({ op: 'list', bucket: 'csr-attachments', folder: ID_A });
+      expect(stub.calls[1]).toEqual({
+        op: 'remove',
+        bucket: 'csr-attachments',
+        paths: [`${ID_A}/a-file.png`, `${ID_A}/b-file.pdf`],
+      });
+      expect(db.tables.csr_requests.map((row) => row.id)).toEqual([ID_UNKNOWN]); // 다른 요청은 그대로
+    });
+
+    it('skips the storage remove call when there are no files', async () => {
+      const db = makeFakeSupabase({ csr_requests: [seedRow()] });
+      const stub = storageStub({ files: [] });
+      const res = await del(withStorage(db, stub));
+      expect(res.statusCode).toBe(200);
+      expect(stub.calls.map((c) => c.op)).toEqual(['list']);
+      expect(db.tables.csr_requests).toHaveLength(0);
+    });
+
+    it('keeps the request row when listing or removing files fails, without leaking the error text', async () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      for (const stubOptions of [
+        { listError: { message: 'list boom secret' } },
+        { files: ['a.png'], removeError: { message: 'remove boom secret' } },
+      ]) {
+        const db = makeFakeSupabase({ csr_requests: [seedRow()] });
+        const res = await del(withStorage(db, storageStub(stubOptions)));
+        expect(res.statusCode).toBe(500);
+        expect(res.body.message).not.toContain('boom');
+        expect(db.tables.csr_requests).toHaveLength(1);
+        expect(db.log.some((entry) => entry.op === 'delete')).toBe(false);
+      }
+      expect(spy).toHaveBeenCalled();
+      spy.mockRestore();
+    });
+  });
+
   it('answers other methods with 405', async () => {
     const db = makeFakeSupabase({ csr_requests: [] });
-    for (const method of ['GET', 'PUT', 'DELETE']) {
+    for (const method of ['GET', 'PUT']) {
       const res = await call(db, { method, headers: admin() });
       expect(res.statusCode).toBe(405);
-      expect(res.headers.allow).toBe('POST, PATCH');
+      expect(res.headers.allow).toBe('POST, PATCH, DELETE');
     }
     expect(db.log).toEqual([]);
   });

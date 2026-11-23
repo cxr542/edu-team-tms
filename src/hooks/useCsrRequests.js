@@ -7,6 +7,8 @@ import {
 import {
   listCsrRequestsFromSupabase,
   createCsrRequestInSupabase,
+  deleteCsrRequestFromSupabase,
+  updateCsrRequestContentInSupabase,
   updateCsrRequestStatusInSupabase,
 } from '../utils/csrRequestsSupabase.js';
 
@@ -178,6 +180,30 @@ export function useCsrRequests({ requesterCode, requesterName = null, canManage 
     [requests]
   );
 
+  const editRequest = useCallback(async (requestId, fields) => {
+    setSavingId(requestId);
+    const result = await updateCsrRequestContentInSupabase({ id: requestId, ...fields });
+    if (result.ok && result.data) {
+      setRequests((prev) => mergeById(prev, [result.data]));
+    } else if (!result.ok && result.status !== 'disabled') {
+      setError(result.message);
+    }
+    setSavingId(null);
+    return result;
+  }, []);
+
+  const deleteRequest = useCallback(async (requestId) => {
+    setSavingId(requestId);
+    const result = await deleteCsrRequestFromSupabase(requestId);
+    if (result.ok) {
+      setRequests((prev) => prev.filter((item) => item.id !== requestId));
+    } else if (result.status !== 'disabled') {
+      setError(result.message);
+    }
+    setSavingId(null);
+    return result;
+  }, []);
+
   const summary = useMemo(() => buildFallbackCountSummary(requests), [requests]);
 
   return {
@@ -190,6 +216,8 @@ export function useCsrRequests({ requesterCode, requesterName = null, canManage 
     refresh,
     createRequest,
     updateRequest,
+    editRequest,
+    deleteRequest,
     canManage,
     requesterCode,
     defaultRequesterLabel: requesterName || memberLabel(requesterCode),

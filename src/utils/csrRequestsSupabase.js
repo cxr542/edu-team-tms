@@ -8,6 +8,8 @@ import { TEAM_KPI_MEMBERS } from '../constants/kpiMembers.js';
 
 const CSR_REQUESTS_TABLE = 'csr_requests';
 const CSR_REQUESTS_API = '/api/csr-requests';
+const ADMIN_SESSION_MESSAGE =
+  '관리자 로그인이 만료되었거나 필요합니다. /admin 에서 다시 로그인한 뒤 시도해 주세요.';
 
 function result({ ok, status, message, data = null }) {
   return { ok, status, message, data };
@@ -136,7 +138,7 @@ export function buildCsrRequestDraft({
  * 쓰기는 서버 경로(/api/csr-requests)로만 한다. 서버가 id·상태·시각·요청자 이름을 정하고,
  * 상태·코멘트 수정은 관리자 세션 쿠키를 확인한다. 읽기는 아래 list 함수가 anon 으로 직접 한다.
  */
-async function callCsrApi(method, body, { forbiddenMessage } = {}) {
+async function callCsrApi(method, body, { forbiddenMessage, raw = false } = {}) {
   let res;
   try {
     res = await fetch(CSR_REQUESTS_API, {
@@ -161,7 +163,7 @@ async function callCsrApi(method, body, { forbiddenMessage } = {}) {
     ok: true,
     status: 'ok',
     message: 'CSR request saved.',
-    data: normalizeCsrRequest(data?.data),
+    data: raw ? data?.data ?? null : normalizeCsrRequest(data?.data),
   });
 }
 
@@ -242,9 +244,32 @@ export async function updateCsrRequestStatusInSupabase({
       adminComment:
         typeof adminComment === 'string' ? adminComment : String(target.adminComment || ''),
     },
-    {
-      forbiddenMessage:
-        '관리자 로그인이 만료되었거나 필요합니다. /admin 에서 다시 로그인한 뒤 시도해 주세요.',
-    }
+    { forbiddenMessage: ADMIN_SESSION_MESSAGE }
   );
+}
+
+/** 제목·내용·분류 수정(관리자 세션 필요). 상태·코멘트·요청자는 바꾸지 않는다. */
+export async function updateCsrRequestContentInSupabase({ id, title, description, category } = {}) {
+  if (!hasText(id)) return result({ ok: false, status: 'error', message: 'id is required.' });
+  if (!hasText(title)) return result({ ok: false, status: 'error', message: 'title is required.' });
+  if (!isConfigured()) return supabaseDisabledResult();
+
+  return callCsrApi(
+    'PATCH',
+    {
+      id: String(id).trim(),
+      title,
+      description: typeof description === 'string' ? description : '',
+      category: normalizeCsrRequestCategory(category),
+    },
+    { forbiddenMessage: ADMIN_SESSION_MESSAGE }
+  );
+}
+
+/** 요청 삭제(관리자 세션 필요). 서버가 첨부 파일까지 함께 지운다. */
+export async function deleteCsrRequestFromSupabase(id) {
+  if (!hasText(id)) return result({ ok: false, status: 'error', message: 'id is required.' });
+  if (!isConfigured()) return supabaseDisabledResult();
+
+  return callCsrApi('DELETE', { id: String(id).trim() }, { forbiddenMessage: ADMIN_SESSION_MESSAGE, raw: true });
 }
