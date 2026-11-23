@@ -147,6 +147,7 @@ export function announcementEngagementApiDevPlugin() {
         if (path === '/api/announcement-reactions') handler = announcementsHandler;
         else if (path === '/api/announcement-comments') handler = announcementsHandler;
         else if (path === '/api/glossary-admin') handler = announcementsHandler;
+        else if (path === '/api/csr-requests') handler = announcementsHandler;
         else {
           next();
           return;

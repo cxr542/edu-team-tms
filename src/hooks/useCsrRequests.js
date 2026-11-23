@@ -6,7 +6,7 @@ import {
 } from '../utils/csrRequestsSupabase.js';
 import {
   listCsrRequestsFromSupabase,
-  upsertCsrRequestToSupabase,
+  createCsrRequestInSupabase,
   updateCsrRequestStatusInSupabase,
 } from '../utils/csrRequestsSupabase.js';
 
@@ -133,7 +133,7 @@ export function useCsrRequests({ requesterCode, requesterName = null, canManage 
       }
 
       setSavingId(built.data.id);
-      const result = await upsertCsrRequestToSupabase(built.data);
+      const result = await createCsrRequestInSupabase(built.data);
       if (result.ok && result.data) {
         setRequests((prev) => mergeById(prev, [result.data]));
       } else if (!result.ok && result.status !== 'disabled') {

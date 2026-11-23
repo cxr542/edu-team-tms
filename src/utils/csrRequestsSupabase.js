@@ -7,7 +7,7 @@ import {
 import { TEAM_KPI_MEMBERS } from '../constants/kpiMembers.js';
 
 const CSR_REQUESTS_TABLE = 'csr_requests';
-const PAYLOAD_VERSION = 1;
+const CSR_REQUESTS_API = '/api/csr-requests';
 
 function result({ ok, status, message, data = null }) {
   return { ok, status, message, data };
@@ -132,73 +132,58 @@ export function buildCsrRequestDraft({
   };
 }
 
-function toRowPayload(request, updatedAt = null) {
-  const normalized = normalizeCsrRequest(request);
-  if (!normalized) return null;
-  const status = normalizeCsrRequestStatus(normalized.status);
-  const completedAt = status === 'done' ? normalized.completedAt || normalized.updatedAt || nowIso() : null;
-  return {
-    id: normalized.id || randomId(),
-    title: normalized.title,
-    description: normalized.description,
-    category: normalizeCsrRequestCategory(normalized.category),
-    status,
-    requester: normalized.requester,
-    requester_code: normalized.requesterCode,
-    admin_comment: normalized.adminComment,
-    created_at: normalized.createdAt || updatedAt || nowIso(),
-    updated_at: updatedAt || normalized.updatedAt || nowIso(),
-    completed_at: completedAt,
-    payload_version: PAYLOAD_VERSION,
-  };
-}
-
-async function saveRow(client, row) {
-  const { data, error } = await client
-    .from(CSR_REQUESTS_TABLE)
-    .upsert(row, { onConflict: 'id' })
-    .select()
-    .single();
-
-  if (error) {
-    return result({ ok: false, status: 'error', message: error.message });
+/**
+ * 쓰기는 서버 경로(/api/csr-requests)로만 한다. 서버가 id·상태·시각·요청자 이름을 정하고,
+ * 상태·코멘트 수정은 관리자 세션 쿠키를 확인한다. 읽기는 아래 list 함수가 anon 으로 직접 한다.
+ */
+async function callCsrApi(method, body, { forbiddenMessage } = {}) {
+  let res;
+  try {
+    res = await fetch(CSR_REQUESTS_API, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      credentials: 'same-origin',
+    });
+  } catch (error) {
+    return result({ ok: false, status: 'error', message: error?.message || '네트워크 오류' });
   }
-
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data?.ok === false) {
+    const forbidden = res.status === 403;
+    return result({
+      ok: false,
+      status: forbidden ? 'forbidden' : 'error',
+      message: (forbidden && forbiddenMessage) || data?.message || `HTTP ${res.status}`,
+    });
+  }
   return result({
     ok: true,
     status: 'ok',
-    message: 'CSR request saved to Supabase.',
-    data: normalizeCsrRequest(data),
+    message: 'CSR request saved.',
+    data: normalizeCsrRequest(data?.data),
   });
 }
 
-export async function upsertCsrRequestToSupabase(request) {
+/** 새 요청 등록. 보내는 값은 제목·내용·분류·요청자 코드뿐이다(나머지는 서버가 정한다). */
+export async function createCsrRequestInSupabase(request) {
   if (!request || typeof request !== 'object') {
     return result({ ok: false, status: 'error', message: 'request is required.' });
   }
   if (!hasText(request.title)) {
     return result({ ok: false, status: 'error', message: 'title is required.' });
   }
-  if (!hasText(request.requester)) {
-    return result({ ok: false, status: 'error', message: 'requester is required.' });
-  }
   if (!hasText(request.requesterCode)) {
     return result({ ok: false, status: 'error', message: 'requesterCode is required.' });
   }
   if (!isConfigured()) return supabaseDisabledResult();
 
-  const client = getSupabaseClient();
-  if (!client) return supabaseDisabledResult();
-
-  try {
-    const payload = toRowPayload(request);
-    if (!payload) {
-      return result({ ok: false, status: 'error', message: 'CSR request payload is invalid.' });
-    }
-    return await saveRow(client, payload);
-  } catch (error) {
-    return unexpectedErrorResult(error, 'save');
-  }
+  return callCsrApi('POST', {
+    title: request.title,
+    description: request.description,
+    category: normalizeCsrRequestCategory(request.category),
+    requesterCode: request.requesterCode,
+  });
 }
 
 export async function listCsrRequestsFromSupabase({ requesterCode } = {}) {
@@ -239,6 +224,7 @@ export async function listCsrRequestsFromSupabase({ requesterCode } = {}) {
   }
 }
 
+/** 상태·관리자 코멘트 수정(관리자 세션 필요). 제목·내용·요청자는 바꾸지 않는다. */
 export async function updateCsrRequestStatusInSupabase({
   request,
   id,
@@ -246,25 +232,19 @@ export async function updateCsrRequestStatusInSupabase({
   adminComment,
 } = {}) {
   const target = request || {};
-  const normalizedStatus = normalizeCsrRequestStatus(status ?? target.status);
-  const current = normalizeCsrRequest(target);
-  const payload = {
-    ...(current || {}),
-    id: String(id || target.id || '').trim(),
-    title: String(target.title || '').trim(),
-    description: String(target.description || '').trim(),
-    category: normalizeCsrRequestCategory(target.category),
-    status: normalizedStatus,
-    requester: String(target.requester || '').trim(),
-    requesterCode: readRequesterCode(target),
-    adminComment: typeof adminComment === 'string' ? adminComment.trim() : String(target.adminComment || '').trim(),
-    createdAt: target.createdAt || current?.createdAt || nowIso(),
-    updatedAt: nowIso(),
-    completedAt:
-      normalizedStatus === 'done'
-        ? current?.completedAt || target.completedAt || nowIso()
-        : null,
-  };
+  if (!isConfigured()) return supabaseDisabledResult();
 
-  return upsertCsrRequestToSupabase(payload);
+  return callCsrApi(
+    'PATCH',
+    {
+      id: String(id || target.id || '').trim(),
+      status: normalizeCsrRequestStatus(status ?? target.status),
+      adminComment:
+        typeof adminComment === 'string' ? adminComment : String(target.adminComment || ''),
+    },
+    {
+      forbiddenMessage:
+        '관리자 로그인이 만료되었거나 필요합니다. /admin 에서 다시 로그인한 뒤 시도해 주세요.',
+    }
+  );
 }
