@@ -2,6 +2,7 @@ import { getSupabaseClient, isSupabaseConfigured } from './supabaseClient.js';
 
 const CSR_ATTACHMENTS_TABLE = 'csr_request_attachments';
 const CSR_ATTACHMENTS_BUCKET = 'csr-attachments';
+const CSR_ATTACHMENTS_API = '/api/csr-attachments';
 
 export const CSR_ATTACHMENT_MAX_FILE_BYTES = 10 * 1024 * 1024; // 10MB
 export const CSR_ATTACHMENT_MAX_COUNT = 5;
@@ -30,17 +31,6 @@ function unexpectedErrorResult(error, operation) {
     message:
       error instanceof Error ? error.message : `Unknown Supabase CSR attachment ${operation} error.`,
   });
-}
-
-function randomId() {
-  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
-  return `att-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-/** Strip characters Supabase Storage paths don't like, keep it readable. */
-function sanitizeFileNameForPath(fileName) {
-  const name = String(fileName || 'file').trim() || 'file';
-  return name.replace(/[^\w.\-가-힣 ]/g, '_').slice(0, 150);
 }
 
 export function formatCsrAttachmentSize(bytes) {
@@ -122,11 +112,38 @@ export async function listCsrAttachmentsFromSupabase(requestId) {
   }
 }
 
+/** 서버 경로 호출. sign(업로드 토큰 발급)과 register(첨부 행 기록)에 쓴다. */
+async function callAttachmentsApi(body) {
+  let res;
+  try {
+    res = await fetch(CSR_ATTACHMENTS_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      credentials: 'same-origin',
+    });
+  } catch (error) {
+    return result({ ok: false, status: 'error', message: error?.message || '네트워크 오류' });
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data?.ok === false) {
+    return result({
+      ok: false,
+      status: res.status === 403 ? 'forbidden' : res.status === 409 ? 'conflict' : 'error',
+      message: data?.message || `HTTP ${res.status}`,
+    });
+  }
+  return result({ ok: true, status: 'ok', message: 'ok', data: data?.data ?? null });
+}
+
 /**
- * Upload one file to Storage then record it against the CSR request.
- * @param {{ requestId: string, file: File, uploadedBy: string }} args
+ * 파일 1개를 올리고 CSR 요청에 첨부로 기록한다. 직접 쓰지 않고 서버 경로를 거친다.
+ *  1) sign: 서버가 검사 후 경로와 1회용 업로드 토큰을 준다
+ *  2) 그 토큰으로 저장소에 직접 업로드(파일 본문은 서버를 거치지 않는다)
+ *  3) register: 서버가 업로드를 확인하고 첨부 행을 기록한다(올린 사람 표시도 서버가 정한다)
+ * @param {{ requestId: string, file: File }} args
  */
-export async function uploadCsrAttachmentToSupabase({ requestId, file, uploadedBy } = {}) {
+export async function uploadCsrAttachmentToSupabase({ requestId, file } = {}) {
   if (!requestId) return result({ ok: false, status: 'error', message: 'requestId is required.' });
   if (!file) return result({ ok: false, status: 'error', message: 'file is required.' });
   if (!isConfigured()) return supabaseDisabledResult();
@@ -139,45 +156,40 @@ export async function uploadCsrAttachmentToSupabase({ requestId, file, uploadedB
     return result({ ok: false, status: 'error', message: precheck.message });
   }
 
-  try {
-    const storagePath = `${requestId}/${randomId()}-${sanitizeFileNameForPath(file.name)}`;
+  const info = {
+    requestId,
+    fileName: file.name,
+    size: file.size,
+    contentType: file.type || undefined,
+  };
 
+  const signed = await callAttachmentsApi({ action: 'sign', ...info });
+  if (!signed.ok) return signed;
+  const { path, token } = signed.data || {};
+  if (!path || !token) {
+    return result({ ok: false, status: 'error', message: '업로드 주소를 받지 못했습니다.' });
+  }
+
+  try {
     const { error: uploadError } = await client.storage
       .from(CSR_ATTACHMENTS_BUCKET)
-      .upload(storagePath, file, {
+      .uploadToSignedUrl(path, token, file, {
         contentType: file.type || 'application/octet-stream',
-        upsert: false,
       });
-
     if (uploadError) {
       return result({ ok: false, status: 'error', message: uploadError.message });
     }
-
-    const { data, error: insertError } = await client
-      .from(CSR_ATTACHMENTS_TABLE)
-      .insert({
-        request_id: requestId,
-        file_name: file.name,
-        storage_path: storagePath,
-        file_size_bytes: file.size,
-        content_type: file.type || null,
-        uploaded_by: String(uploadedBy || '').trim(),
-      })
-      .select()
-      .single();
-
-    if (insertError) {
-      // Storage object is orphaned but harmless (private-by-convention path, never linked from any row).
-      return result({ ok: false, status: 'error', message: insertError.message });
-    }
-
-    return result({
-      ok: true,
-      status: 'ok',
-      message: 'CSR attachment uploaded.',
-      data: normalizeCsrAttachment(data),
-    });
   } catch (error) {
     return unexpectedErrorResult(error, 'upload');
   }
+
+  // 업로드는 됐지만 기록이 실패하면 저장소에 연결되지 않은 파일이 남는다(화면에는 보이지 않는다).
+  const registered = await callAttachmentsApi({ action: 'register', ...info, path });
+  if (!registered.ok) return registered;
+  return result({
+    ok: true,
+    status: 'ok',
+    message: 'CSR attachment uploaded.',
+    data: normalizeCsrAttachment(registered.data),
+  });
 }
