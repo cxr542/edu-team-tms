@@ -7,6 +7,11 @@
 
 ## 2026-11-23
 
+### [신규] feat(csr): CSR 쓰기를 anon upsert 대신 /api/csr-requests 로 보냄 (anon 쓰기 잠금 3단계 A)
+
+- feat(csr): CSR 쓰기를 anon upsert 대신 /api/csr-requests 로 보냄 (anon 쓰기 잠금 3단계 A)
+- PR #286: https://github.com/cxr542/edu-team-tms/pull/286
+
 ### [신규] feat(api): add server route for CSR request writes (not used by the UI yet)
 
 - feat(api): add server route for CSR request writes (not used by the UI yet)
