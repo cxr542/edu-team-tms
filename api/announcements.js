@@ -14,6 +14,7 @@ import { handleGlossaryAdmin } from '../server/api-utils/glossaryAdmin.js';
 import { handleReferenceDocsAdmin } from '../server/api-utils/referenceDocsAdmin.js';
 import { handleNavSettings } from '../server/api-utils/navSettings.js';
 import { handleCsrRequests } from '../server/api-utils/csrRequests.js';
+import { handleCsrAttachments } from '../server/api-utils/csrAttachments.js';
 import { handleKpiApprovals } from '../server/api-utils/kpiApprovals.js';
 
 const ANNOUNCEMENTS_TABLE = 'announcements';
@@ -561,6 +562,8 @@ export default async function handler(req, res) {
     return handleCsrRequests(req, res, client);
   } else if (pathname.includes('/api/kpi-approvals')) {
     return handleKpiApprovals(req, res, client);
+  } else if (pathname.includes('/api/csr-attachments')) {
+    return handleCsrAttachments(req, res, client);
   } else if (pathname.includes('/api/announcement-comments')) {
     return handleComments(req, res, client);
   } else if (pathname.includes('/api/announcement-reactions')) {
