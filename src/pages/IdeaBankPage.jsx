@@ -158,7 +158,6 @@ export default function IdeaBankPage({
       const uploadResult = await uploadCsrAttachmentToSupabase({
         requestId: result.data.id,
         file,
-        uploadedBy: requesterCode,
       });
       if (uploadResult.ok) uploaded += 1;
     }
