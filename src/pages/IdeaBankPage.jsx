@@ -39,6 +39,8 @@ export default function IdeaBankPage({
     refresh,
     createRequest,
     updateRequest,
+    editRequest,
+    deleteRequest,
   } = useCsrRequests({ requesterCode, requesterName, canManage: isManager });
 
   const [title, setTitle] = useState('');
@@ -182,6 +184,18 @@ export default function IdeaBankPage({
       return;
     }
     setMessage('요청 상태가 저장되었습니다.');
+  };
+
+  const handleManagerEdit = async (requestId, fields) => {
+    const result = await editRequest(requestId, fields);
+    setMessage(result.ok ? '요청 내용이 수정되었습니다.' : result.message || '요청을 수정하지 못했습니다.');
+    return result;
+  };
+
+  const handleManagerDelete = async (requestId) => {
+    const result = await deleteRequest(requestId);
+    setMessage(result.ok ? '요청이 삭제되었습니다.' : result.message || '요청을 삭제하지 못했습니다.');
+    return result;
   };
 
   const summaryCards = [
@@ -375,6 +389,8 @@ export default function IdeaBankPage({
                   }))
                 }
                 onSave={handleManagerSave}
+                onEdit={handleManagerEdit}
+                onDelete={handleManagerDelete}
               />
             );
           })

@@ -213,6 +213,66 @@ describe('csrRequestsSupabase', () => {
       expect(result).toMatchObject({ ok: false, status: 'error', message: 'Failed to fetch' });
     });
 
+    it('edits title, description and category by PATCH without status or requester fields', async () => {
+      const fetchMock = stubFetch(
+        respond(200, { ok: true, status: 'ok', data: { ...serverRow, title: '새 제목', category: 'feature' } })
+      );
+      const mod = await loadModule(client);
+
+      const result = await mod.updateCsrRequestContentInSupabase({
+        id: serverRow.id,
+        title: '새 제목',
+        description: '새 내용',
+        category: 'feature',
+        status: 'done',
+        requester: '위조',
+      });
+
+      const [, init] = fetchMock.mock.calls[0];
+      expect(init.method).toBe('PATCH');
+      expect(JSON.parse(init.body)).toEqual({
+        id: serverRow.id,
+        title: '새 제목',
+        description: '새 내용',
+        category: 'feature',
+      });
+      expect(result).toMatchObject({ ok: true, data: { title: '새 제목' } });
+    });
+
+    it('deletes by DELETE with only the id and explains an expired admin session', async () => {
+      let fetchMock = stubFetch(respond(200, { ok: true, status: 'ok', data: { id: serverRow.id, removedFiles: 1 } }));
+      let mod = await loadModule(client);
+      let result = await mod.deleteCsrRequestFromSupabase(serverRow.id);
+      let [url, init] = fetchMock.mock.calls[0];
+      expect(url).toBe('/api/csr-requests');
+      expect(init.method).toBe('DELETE');
+      expect(JSON.parse(init.body)).toEqual({ id: serverRow.id });
+      expect(result).toMatchObject({ ok: true, data: { id: serverRow.id } });
+
+      stubFetch(respond(403, { ok: false, status: 'forbidden', message: 'x' }));
+      mod = await loadModule(client);
+      result = await mod.deleteCsrRequestFromSupabase(serverRow.id);
+      expect(result).toMatchObject({ ok: false, status: 'forbidden' });
+      expect(result.message).toContain('다시 로그인');
+      expect(client.from).not.toHaveBeenCalled();
+    });
+
+    it('validates edit and delete input and skips the server when Supabase is not configured', async () => {
+      const fetchMock = stubFetch(respond(200, {}));
+      let mod = await loadModule(client);
+      expect((await mod.updateCsrRequestContentInSupabase({ id: serverRow.id, title: '  ' })).ok).toBe(false);
+      expect((await mod.updateCsrRequestContentInSupabase({ title: '제목' })).ok).toBe(false);
+      expect((await mod.deleteCsrRequestFromSupabase('')).ok).toBe(false);
+      expect(fetchMock).not.toHaveBeenCalled();
+
+      vi.resetModules();
+      vi.doMock('../src/utils/supabaseClient.js', () => ({ getSupabaseClient: () => null, isSupabaseConfigured: false }));
+      mod = await import('../src/utils/csrRequestsSupabase.js');
+      expect((await mod.deleteCsrRequestFromSupabase(serverRow.id)).status).toBe('disabled');
+      expect((await mod.updateCsrRequestContentInSupabase({ id: serverRow.id, title: '제목' })).status).toBe('disabled');
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
     it('does not call the server when Supabase is not configured', async () => {
       const fetchMock = stubFetch(respond(200, {}));
       vi.resetModules();
