@@ -7,6 +7,11 @@
 
 ## 2026-11-23
 
+### [수정] feat(csr): 관리자 전용 CSR 요청 수정·삭제
+
+- feat(csr): 관리자 전용 CSR 요청 수정·삭제
+- PR #287: https://github.com/cxr542/edu-team-tms/pull/287
+
 ### [신규] feat(csr): CSR 쓰기를 anon upsert 대신 /api/csr-requests 로 보냄 (anon 쓰기 잠금 3단계 A)
 
 - feat(csr): CSR 쓰기를 anon upsert 대신 /api/csr-requests 로 보냄 (anon 쓰기 잠금 3단계 A)
