@@ -7,6 +7,11 @@
 
 ## 2026-11-23
 
+### [신규] feat(kpi): 구성원 화면에서 제출·취소가 서버에 저장되지 않았을 때 사유를 알림
+
+- feat(kpi): 구성원 화면에서 제출·취소가 서버에 저장되지 않았을 때 사유를 알림
+- PR #292: https://github.com/cxr542/edu-team-tms/pull/292
+
 ### [신규] feat(csr): 첨부 업로드를 /api/csr-attachments 로 보냄 (anon 쓰기 잠금 5단계 2/3)
 
 - feat(csr): 첨부 업로드를 /api/csr-attachments 로 보냄 (anon 쓰기 잠금 5단계 2/3)
