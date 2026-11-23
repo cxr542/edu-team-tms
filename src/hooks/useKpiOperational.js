@@ -380,7 +380,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
 
   const submitMonthly01 = useCallback(
     (year, monthIndex, memberCode) => {
-      updateMonthly01(year, monthIndex, memberCode, {
+      return updateMonthly01(year, monthIndex, memberCode, {
         status: KPI_STATUS.SUBMITTED,
         submittedAt: new Date().toISOString(),
         rejectReason: '',
@@ -391,7 +391,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
 
   const withdrawMonthly01 = useCallback(
     (year, monthIndex, memberCode) => {
-      updateMonthly01(year, monthIndex, memberCode, {
+      return updateMonthly01(year, monthIndex, memberCode, {
         status: KPI_STATUS.DRAFT,
         submittedAt: null,
         approvedAt: null,
@@ -459,7 +459,7 @@ export function useKpiOperational({ readOnly = false } = {}) {
 
   const submitKpi2Row = useCallback(
     (memberCode, dayKey, taskId) => {
-      setKpi2RowStatus(memberCode, dayKey, taskId, {
+      return setKpi2RowStatus(memberCode, dayKey, taskId, {
         status: KPI_STATUS.SUBMITTED,
         submittedAt: new Date().toISOString(),
         rejectReason: '',

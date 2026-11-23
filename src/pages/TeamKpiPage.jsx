@@ -72,6 +72,7 @@ import {
   IMPROVE_PROJECTS_MERGE_POLICY_HINT,
   IMPROVE_PROJECTS_SHARE_HINT,
 } from '../utils/improveProjectsCloudSnapshot';
+import { notifyMirrorFailure } from '../utils/kpiApprovalHandled';
 import { readKpiDeepLinkFromUrl } from '../utils/kpiDeepLink';
 import './TeamKpiPage.css';
 
@@ -180,13 +181,14 @@ export default function TeamKpiPage() {
 
   const submitKpi1Monthly = () => {
     const mmPatch = apply01cToMonthly01(metrics.month01cTotals, monthly01Form, journalAvailableMm);
-    journal.updateMonthly01(year, month, memberCode, {
+    const saved = journal.updateMonthly01(year, month, memberCode, {
       ...mmPatch,
       status: KPI_STATUS.SUBMITTED,
       submittedAt: new Date().toISOString(),
       rejectReason: '',
     });
     showToast('제출됨 — 이제 「제출 취소 (철회)」로 다시 수정할 수 있습니다');
+    notifyMirrorFailure(saved, showToast);
   };
 
   const clearMonthlyDraftFromJournal = () => {
@@ -270,8 +272,9 @@ export default function TeamKpiPage() {
       return;
     }
     if (!window.confirm('월 확정 제출을 취소하고 M/D를 다시 수정할까요?')) return;
-    journal.withdrawMonthly01(year, month, memberCode);
+    const saved = journal.withdrawMonthly01(year, month, memberCode);
     showToast('제출을 취소했습니다 (작성 중). M/D 수정 후 다시 제출할 수 있습니다.');
+    notifyMirrorFailure(saved, showToast);
   };
 
   if (!teamAccess.isLeader) {
@@ -946,8 +949,9 @@ export default function TeamKpiPage() {
                             type="button"
                             className="btn btn-ghost btn-sm"
                             onClick={() => {
-                              journal.submitKpi2Row(memberCode, row.dayKey, row.taskId);
+                              const saved = journal.submitKpi2Row(memberCode, row.dayKey, row.taskId);
                               showToast(`${KPI2_NAME} 제출`);
+                              notifyMirrorFailure(saved, showToast);
                             }}
                           >
                             제출
