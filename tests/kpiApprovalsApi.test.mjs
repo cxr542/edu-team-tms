@@ -93,6 +93,23 @@ const kpi2Row = (over = {}) => ({
   ...over,
 });
 
+// 운영 DB 의 실제 컬럼(2026-11 조회). 저장소 SQL 과 다르다: created_at 이 없고 kpi2 에는 year_month(NOT NULL)가 있다.
+const PROD_COLUMNS = {
+  kpi_monthly_approvals: ['approved_at', 'approver', 'id', 'member_code', 'monthly01', 'payload', 'payload_version', 'reject_reason', 'status', 'submitted_at', 'updated_at', 'year_month'],
+  kpi2_row_approvals: ['approved_at', 'approver', 'day_key', 'id', 'kpi2_row_status', 'member_code', 'payload', 'payload_version', 'reject_reason', 'status', 'submitted_at', 'task_id', 'updated_at', 'year_month'],
+};
+
+/** 서버가 보낸 insert·update 가 운영에 없는 컬럼을 쓰지 않는지 확인한다(가짜 DB 는 아무 컬럼이나 받아 주므로). */
+function expectOnlyProductionColumns(db) {
+  const writes = db.log.filter((entry) => entry.op === 'insert' || entry.op === 'update');
+  expect(writes.length).toBeGreaterThan(0);
+  for (const entry of writes) {
+    for (const column of Object.keys(entry.payload)) {
+      expect(PROD_COLUMNS[entry.table], `${entry.table}.${column}`).toContain(column);
+    }
+  }
+}
+
 const emptyDb = (seed = {}) => makeFakeSupabase({ kpi_monthly_approvals: [], kpi2_row_approvals: [], ...seed });
 
 describe('KPI approvals API', () => {
@@ -164,6 +181,7 @@ describe('KPI approvals API', () => {
         rejectReason: '',
       });
       expect(row.monthly01).not.toHaveProperty('evil');
+      expectOnlyProductionColumns(db);
     });
 
     it('lets a member submit a KPI2 row', async () => {
@@ -177,6 +195,8 @@ describe('KPI approvals API', () => {
       const row = db.tables.kpi2_row_approvals[0];
       expect(row).toMatchObject({ member_code: 'B', day_key: '2026-11-05', task_id: 'task-1', status: 'submitted', approver: null });
       expect(row.kpi2_row_status).toMatchObject({ status: '제출', approver: '', approvedAt: null, rejectReason: '' });
+      expect(row.year_month).toBe('2026-11'); // 운영 테이블의 NOT NULL 컬럼
+      expectOnlyProductionColumns(db);
     });
 
     it('lets an admin session submit on behalf of a member', async () => {
@@ -194,6 +214,7 @@ describe('KPI approvals API', () => {
       expect(row).toMatchObject({ status: 'draft', submitted_at: null });
       expect(row.monthly01.status).toBe('작성중');
       expect(typeof row.monthly01.withdrawnAt).toBe('string');
+      expectOnlyProductionColumns(db);
     });
 
     it('does not let a member overwrite an approved row, but lets an admin session', async () => {
@@ -319,6 +340,7 @@ describe('KPI approvals API', () => {
         submittedAt: '2026-11-05T00:00:00.000Z',
       });
       expect(res.body.data).toMatchObject({ kind: 'monthly', status: 'approved' });
+      expectOnlyProductionColumns(db);
     });
 
     it('rejects a month with a reason (default 반려) and a custom approver', async () => {
@@ -339,6 +361,7 @@ describe('KPI approvals API', () => {
       expect(res.statusCode).toBe(200);
       expect(db.tables.kpi2_row_approvals[0]).toMatchObject({ status: 'approved', approver: '팀장' });
       expect(db.tables.kpi2_row_approvals[0].kpi2_row_status).toMatchObject({ status: '승인', approver: '팀장', rejectReason: '' });
+      expectOnlyProductionColumns(db);
 
       db = emptyDb({ kpi2_row_approvals: [kpi2Row()] });
       await decide(db, { ...kpi2Key, action: 'reject', reason: '근거 부족' });

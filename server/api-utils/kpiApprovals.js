@@ -192,7 +192,11 @@ async function submitRecord(req, res, client) {
     return fail(res, 409, 'conflict', '이미 승인된 항목은 변경할 수 없습니다.');
   }
 
+  // 운영 DB 의 kpi2_row_approvals 에는 year_month(NOT NULL, 기본값 없음)가 있어 날짜에서 뽑아 넣는다.
+  // 운영 테이블에는 created_at 컬럼이 없으므로(저장소 SQL 과 다름) 보내지 않는다.
+  const yearMonthColumn = target.kind === 'kpi2' ? { year_month: target.keys.day_key.slice(0, 7) } : {};
   const columns = {
+    ...yearMonthColumn,
     status: status.dbStatus,
     submitted_at: built.payload.submittedAt,
     approved_at: null,
@@ -205,7 +209,7 @@ async function submitRecord(req, res, client) {
 
   const { data, error } = current
     ? await applyFilters(client.from(table).update(columns), target.keys).select()
-    : await client.from(table).insert({ ...target.keys, ...columns, created_at: now }).select();
+    : await client.from(table).insert({ ...target.keys, ...columns }).select();
   if (error) return saveFailed(res, error);
   const saved = data?.[0];
   if (!saved) return fail(res, 404, 'not-found', '항목을 찾을 수 없습니다.');
