@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 function makeQuery(result) {
   const query = {
@@ -102,33 +102,9 @@ describe('csrRequestsSupabase', () => {
     });
   });
 
-  it('upserts CSR requests to Supabase', async () => {
-    let query;
-    const client = {
-      from: vi.fn(() => {
-        query = makeQuery({
-          data: {
-            id: 'csr-1',
-            title: 'KPI 저장 오류',
-            description: '상태가 저장되지 않음',
-            category: 'bug',
-            status: 'received',
-            requester: '김윤형',
-            requester_code: 'A',
-            admin_comment: '',
-            created_at: '2026-07-03T00:00:00.000Z',
-            updated_at: '2026-07-03T00:00:00.000Z',
-            completed_at: null,
-          },
-          error: null,
-        });
-        return query;
-      }),
-    };
-    const mod = await loadModule(client);
-
-    const result = await mod.upsertCsrRequestToSupabase({
-      id: 'csr-1',
+  describe('writes go through /api/csr-requests', () => {
+    const serverRow = {
+      id: '11111111-1111-4111-8111-111111111111',
       title: 'KPI 저장 오류',
       description: '상태가 저장되지 않음',
       category: 'bug',
@@ -139,24 +115,119 @@ describe('csrRequestsSupabase', () => {
       createdAt: '2026-07-03T00:00:00.000Z',
       updatedAt: '2026-07-03T00:00:00.000Z',
       completedAt: null,
+    };
+    const respond = (status, body) => ({ ok: status < 400, status, json: async () => body });
+    const stubFetch = (response) => {
+      const fn = vi.fn(async () => response);
+      vi.stubGlobal('fetch', fn);
+      return fn;
+    };
+    const client = { from: vi.fn(() => {
+      throw new Error('anon client must not be used for writes');
+    }) };
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
     });
 
-    expect(client.from).toHaveBeenCalledWith('csr_requests');
-    expect(query.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        requester: '김윤형',
-        requester_code: 'A',
-      }),
-      { onConflict: 'id' }
-    );
-    expect(result).toMatchObject({
-      ok: true,
-      status: 'ok',
-      data: {
-        id: 'csr-1',
+    it('creates a request by POST with only the member-controlled fields', async () => {
+      const fetchMock = stubFetch(respond(200, { ok: true, status: 'ok', data: serverRow }));
+      const mod = await loadModule(client);
+
+      const result = await mod.createCsrRequestInSupabase({
+        id: 'client-id',
+        title: 'KPI 저장 오류',
+        description: '상태가 저장되지 않음',
+        category: 'bug',
+        status: 'done',
+        requester: '다른이름',
         requesterCode: 'A',
-        status: 'received',
-      },
+        adminComment: 'hacked',
+      });
+
+      expect(client.from).not.toHaveBeenCalled();
+      const [url, init] = fetchMock.mock.calls[0];
+      expect(url).toBe('/api/csr-requests');
+      expect(init.method).toBe('POST');
+      expect(init.credentials).toBe('same-origin');
+      expect(JSON.parse(init.body)).toEqual({
+        title: 'KPI 저장 오류',
+        description: '상태가 저장되지 않음',
+        category: 'bug',
+        requesterCode: 'A',
+      });
+      expect(result).toMatchObject({
+        ok: true,
+        status: 'ok',
+        data: { id: serverRow.id, requesterCode: 'A', status: 'received', categoryLabel: '버그' },
+      });
+    });
+
+    it('updates status and comment by PATCH and sends nothing else', async () => {
+      const fetchMock = stubFetch(
+        respond(200, { ok: true, status: 'ok', data: { ...serverRow, status: 'done', adminComment: '완료' } })
+      );
+      const mod = await loadModule(client);
+
+      const result = await mod.updateCsrRequestStatusInSupabase({
+        request: { ...serverRow, title: '바꾸려는 제목', requester: '위조' },
+        id: serverRow.id,
+        status: 'done',
+        adminComment: '완료',
+      });
+
+      const [, init] = fetchMock.mock.calls[0];
+      expect(init.method).toBe('PATCH');
+      expect(JSON.parse(init.body)).toEqual({ id: serverRow.id, status: 'done', adminComment: '완료' });
+      expect(result).toMatchObject({ ok: true, data: { status: 'done', adminComment: '완료' } });
+      expect(client.from).not.toHaveBeenCalled();
+    });
+
+    it('explains an expired admin session on PATCH 403', async () => {
+      stubFetch(respond(403, { ok: false, status: 'forbidden', message: '관리자 화면에서만' }));
+      const mod = await loadModule(client);
+
+      const result = await mod.updateCsrRequestStatusInSupabase({ request: serverRow, status: 'done' });
+
+      expect(result).toMatchObject({ ok: false, status: 'forbidden' });
+      expect(result.message).toContain('다시 로그인');
+    });
+
+    it('shows the server message on POST 403 and survives network errors', async () => {
+      stubFetch(respond(403, { ok: false, status: 'forbidden', message: '본인 화면에서만 요청을 등록할 수 있습니다.' }));
+      let mod = await loadModule(client);
+      const draft = { title: '제목', description: '', category: 'bug', requesterCode: 'A' };
+
+      let result = await mod.createCsrRequestInSupabase(draft);
+      expect(result).toMatchObject({
+        ok: false,
+        status: 'forbidden',
+        message: '본인 화면에서만 요청을 등록할 수 있습니다.',
+      });
+
+      vi.stubGlobal('fetch', vi.fn(async () => {
+        throw new Error('Failed to fetch');
+      }));
+      mod = await loadModule(client);
+      result = await mod.createCsrRequestInSupabase(draft);
+      expect(result).toMatchObject({ ok: false, status: 'error', message: 'Failed to fetch' });
+    });
+
+    it('does not call the server when Supabase is not configured', async () => {
+      const fetchMock = stubFetch(respond(200, {}));
+      vi.resetModules();
+      vi.doMock('../src/utils/supabaseClient.js', () => ({
+        getSupabaseClient: () => null,
+        isSupabaseConfigured: false,
+      }));
+      const mod = await import('../src/utils/csrRequestsSupabase.js');
+
+      const created = await mod.createCsrRequestInSupabase({ title: '제목', requesterCode: 'A' });
+      const updated = await mod.updateCsrRequestStatusInSupabase({ request: serverRow, status: 'done' });
+
+      expect(created.status).toBe('disabled');
+      expect(updated.status).toBe('disabled');
+      expect(fetchMock).not.toHaveBeenCalled();
     });
   });
 
