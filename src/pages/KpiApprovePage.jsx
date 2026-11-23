@@ -9,7 +9,7 @@ import { loadAdminKpiPendingApprovals } from '../utils/kpiApprovePendingApproval
 import { KPI1_NAME, KPI2_NAME, KPI3_NAME, kpiTypeLabel } from '../constants/kpiDisplayNames';
 import { URL_ACCESS_ADMIN } from '../constants/teamAccess';
 import { WAIVED_APPROVAL_LABEL, splitWaivedApprovalItems } from '../constants/kpiApprovalPolicy';
-import { isHandledLocally, selectBulkApprovalTargets } from '../utils/kpiApprovalHandled';
+import { isHandledLocally, isMirrorFailure, selectBulkApprovalTargets } from '../utils/kpiApprovalHandled';
 import { uiTooltip } from '../utils/uiTooltip';
 import './TeamKpiPage.css';
 import './KpiReportPage.css';
@@ -90,11 +90,18 @@ export default function KpiApprovePage({ readOnly = false }) {
   const bulkTargets = useMemo(() => selectBulkApprovalTargets(pending), [pending]);
 
   /** 승인·반려는 서버 반영(Promise)이 끝나면 목록을 다시 읽는다 */
-  const refreshAfter = useCallback((mirrorPromise) => {
-    Promise.resolve(mirrorPromise)
-      .catch(() => {})
-      .finally(() => setRefreshTick((tick) => tick + 1));
-  }, []);
+  const refreshAfter = useCallback(
+    (mirrorPromise) => {
+      Promise.resolve(mirrorPromise)
+        .then((result) => {
+          // 서버에 저장하지 못했으면 사유를 알린다(관리자 로그인 만료 등). 이 브라우저에는 처리된 것으로 남는다.
+          if (isMirrorFailure(result)) showToast(`서버에 저장하지 못했습니다: ${result.message}`);
+        })
+        .catch(() => {})
+        .finally(() => setRefreshTick((tick) => tick + 1));
+    },
+    [showToast]
+  );
 
   const handleBulkApprove = useCallback(async () => {
     if (bulkBusy || bulkTargets.length === 0) return;
@@ -110,7 +117,16 @@ export default function KpiApprovePage({ readOnly = false }) {
           : approveKpi2Row(item.member.code, item.dayKey, item.taskId)
       );
       showToast(`${bulkTargets.length}건 일괄 승인`);
-      await Promise.allSettled(promises);
+      const settled = await Promise.allSettled(promises);
+      const failed = settled.filter(
+        (entry) => entry.status === 'rejected' || isMirrorFailure(entry.value)
+      );
+      if (failed.length > 0) {
+        const firstMessage = failed.find((entry) => entry.value?.message)?.value?.message;
+        showToast(
+          `${bulkTargets.length}건 중 ${failed.length}건을 서버에 저장하지 못했습니다${firstMessage ? `: ${firstMessage}` : ''}`
+        );
+      }
     } finally {
       setBulkBusy(false);
       setRefreshTick((tick) => tick + 1);

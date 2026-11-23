@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isHandledLocally, selectBulkApprovalTargets } from '../src/utils/kpiApprovalHandled.js';
+import { isHandledLocally, isMirrorFailure, selectBulkApprovalTargets } from '../src/utils/kpiApprovalHandled.js';
 import { kpi2RowId } from '../src/constants/kpiOperationalStore.js';
 
 const kpi1Item = (over = {}) => ({
@@ -56,5 +56,17 @@ describe('selectBulkApprovalTargets — 일괄 승인 대상', () => {
     const items = [{ type: 'KPI1' }, { type: 'KPI2' }, { type: 'KPI3' }, { type: 'KPI1' }];
     expect(selectBulkApprovalTargets(items).map((i) => i.type)).toEqual(['KPI1', 'KPI2', 'KPI1']);
     expect(selectBulkApprovalTargets()).toEqual([]);
+  });
+});
+
+describe('isMirrorFailure', () => {
+  it('treats only real failures as failures', () => {
+    expect(isMirrorFailure({ ok: false, status: 'forbidden', message: 'x' })).toBe(true);
+    expect(isMirrorFailure({ ok: false, status: 'conflict', message: 'x' })).toBe(true);
+    expect(isMirrorFailure({ ok: false, status: 'error', message: 'x' })).toBe(true);
+    expect(isMirrorFailure({ ok: false, status: 'disabled', message: 'x' })).toBe(false);
+    expect(isMirrorFailure({ ok: true, status: 'ok' })).toBe(false);
+    expect(isMirrorFailure(undefined)).toBe(false);
+    expect(isMirrorFailure(null)).toBe(false);
   });
 });

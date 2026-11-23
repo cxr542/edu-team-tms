@@ -1,175 +1,65 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-async function loadModuleWithClient(client) {
+async function loadModule() {
   vi.resetModules();
   vi.doMock('../src/utils/supabaseClient.js', () => ({
     isSupabaseConfigured: true,
-    getSupabaseClient: () => client,
+    getSupabaseClient: () => ({}),
   }));
   return import('../src/utils/kpiOperationalSupabase.js');
 }
 
+function stubFetch() {
+  const fn = vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ ok: true, status: 'ok', data: {} }) }));
+  vi.stubGlobal('fetch', fn);
+  return fn;
+}
+
+// 화면의 상태(작성중·제출·승인·반려)가 서버로 어떻게 보내지는지: 제출·회수는 POST, 승인·반려는 PATCH.
+// 상태 컬럼·시각 같은 실제 저장 값은 서버가 정하고, tests/kpiApprovalsApi.test.mjs 에서 검증한다.
+const CASES = [
+  ['작성중', 'POST', { status: 'draft' }],
+  ['제출', 'POST', { status: 'submitted' }],
+  ['승인', 'PATCH', { action: 'approve', approver: '팀장', reason: '' }],
+  ['반려', 'PATCH', { action: 'reject', approver: '팀장', reason: '사유' }],
+];
+
 describe('kpiOperationalSupabase mapping', () => {
-  it.each([
-    [
-      '작성중',
-      {
-        status: 'draft',
-        submittedAt: null,
-        approvedAt: null,
-        approver: null,
-        rejectReason: null,
-      },
-    ],
-    [
-      '제출',
-      {
-        status: 'submitted',
-        submittedAt: '2026-06-20T10:00:00.000Z',
-        approvedAt: null,
-        approver: null,
-        rejectReason: null,
-      },
-    ],
-    [
-      '승인',
-      {
-        status: 'approved',
-        submittedAt: '2026-06-20T10:00:00.000Z',
-        approvedAt: '2026-06-21T10:00:00.000Z',
-        approver: '팀장',
-        rejectReason: null,
-      },
-    ],
-    [
-      '반려',
-      {
-        status: 'rejected',
-        submittedAt: '2026-06-20T10:00:00.000Z',
-        approvedAt: '2026-06-21T10:00:00.000Z',
-        approver: '팀장',
-        rejectReason: '사유',
-      },
-    ],
-  ])('maps KPI1 monthly01 status %s to top-level Supabase fields', async (inputStatus, expectedFields) => {
-    const single = vi.fn().mockResolvedValue({
-      data: {
-        member_code: 'B',
-        year_month: '2026-06',
-        ...expectedFields,
-        monthly01: {
-          status: inputStatus,
-          submittedAt: expectedFields.submittedAt,
-          approvedAt: expectedFields.approvedAt,
-          approver: expectedFields.approver,
-          rejectReason: expectedFields.rejectReason,
-        },
-        payload_version: 1,
-        updated_at: '2026-06-20T10:00:00.000Z',
-      },
-      error: null,
-    });
-    const select = vi.fn().mockReturnValue({ single });
-    const upsert = vi.fn().mockReturnValue({ select });
-    const from = vi.fn().mockReturnValue({ upsert });
-    const mod = await loadModuleWithClient({ from });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it.each(CASES)('maps KPI1 monthly01 status %s to the server request', async (inputStatus, method, expected) => {
+    const fetchMock = stubFetch();
+    const mod = await loadModule();
 
     await mod.saveKpiMonthlyApprovalToSupabase({
       memberCode: 'B',
       yearMonth: '2026-06',
       monthly01: {
         status: inputStatus,
-        submittedAt: expectedFields.submittedAt,
-        approvedAt: expectedFields.approvedAt,
-        approver: expectedFields.approver,
-        rejectReason: expectedFields.rejectReason,
+        submittedAt: '2026-06-20T10:00:00.000Z',
+        approvedAt: '2026-06-21T10:00:00.000Z',
+        approver: '팀장',
+        rejectReason: expected.reason ?? '',
       },
-      updatedAt: '2026-06-20T10:00:00.000Z',
     });
 
-    expect(upsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        status: expectedFields.status,
-        submitted_at: expectedFields.submittedAt,
-        approved_at: expectedFields.approvedAt,
-        approver: expectedFields.approver,
-        reject_reason: expectedFields.rejectReason,
-        monthly01: expect.objectContaining({
-          status: inputStatus,
-          submittedAt: expectedFields.submittedAt,
-          approvedAt: expectedFields.approvedAt,
-          approver: expectedFields.approver,
-          rejectReason: expectedFields.rejectReason,
-        }),
-      }),
-      { onConflict: 'member_code,year_month' },
-    );
+    const [, init] = fetchMock.mock.calls[0];
+    const body = JSON.parse(init.body);
+    expect(init.method).toBe(method);
+    expect(body).toMatchObject({ kind: 'monthly', memberCode: 'B', yearMonth: '2026-06' });
+    if (method === 'POST') {
+      expect(body.record).toEqual({ status: expected.status });
+    } else {
+      expect(body).toMatchObject(expected);
+      expect(body).not.toHaveProperty('record');
+    }
   });
 
-  it.each([
-    [
-      '작성중',
-      {
-        status: 'draft',
-        submittedAt: null,
-        approvedAt: null,
-        approver: null,
-        rejectReason: null,
-      },
-    ],
-    [
-      '제출',
-      {
-        status: 'submitted',
-        submittedAt: '2026-06-21T09:00:00.000Z',
-        approvedAt: null,
-        approver: null,
-        rejectReason: null,
-      },
-    ],
-    [
-      '승인',
-      {
-        status: 'approved',
-        submittedAt: '2026-06-21T09:00:00.000Z',
-        approvedAt: '2026-06-21T10:00:00.000Z',
-        approver: '팀장',
-        rejectReason: null,
-      },
-    ],
-    [
-      '반려',
-      {
-        status: 'rejected',
-        submittedAt: '2026-06-21T09:00:00.000Z',
-        approvedAt: '2026-06-21T10:00:00.000Z',
-        approver: '팀장',
-        rejectReason: '사유',
-      },
-    ],
-  ])('maps KPI2 row status %s to top-level Supabase fields', async (inputStatus, expectedFields) => {
-    const single = vi.fn().mockResolvedValue({
-      data: {
-        member_code: 'B',
-        day_key: '2026-06-16',
-        task_id: 't1',
-        ...expectedFields,
-        kpi2_row_status: {
-          status: inputStatus,
-          submittedAt: expectedFields.submittedAt,
-          approvedAt: expectedFields.approvedAt,
-          approver: expectedFields.approver,
-          rejectReason: expectedFields.rejectReason,
-        },
-        payload_version: 1,
-        updated_at: '2026-06-21T10:00:00.000Z',
-      },
-      error: null,
-    });
-    const select = vi.fn().mockReturnValue({ single });
-    const upsert = vi.fn().mockReturnValue({ select });
-    const from = vi.fn().mockReturnValue({ upsert });
-    const mod = await loadModuleWithClient({ from });
+  it.each(CASES)('maps KPI2 row status %s to the server request', async (inputStatus, method, expected) => {
+    const fetchMock = stubFetch();
+    const mod = await loadModule();
 
     await mod.saveKpi2RowApprovalToSupabase({
       memberCode: 'B',
@@ -177,30 +67,21 @@ describe('kpiOperationalSupabase mapping', () => {
       taskId: 't1',
       kpi2RowStatus: {
         status: inputStatus,
-        submittedAt: expectedFields.submittedAt,
-        approvedAt: expectedFields.approvedAt,
-        approver: expectedFields.approver,
-        rejectReason: expectedFields.rejectReason,
+        submittedAt: '2026-06-20T10:00:00.000Z',
+        approvedAt: '2026-06-21T10:00:00.000Z',
+        approver: '팀장',
+        rejectReason: expected.reason ?? '',
       },
-      updatedAt: '2026-06-21T10:00:00.000Z',
     });
 
-    expect(upsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        status: expectedFields.status,
-        submitted_at: expectedFields.submittedAt,
-        approved_at: expectedFields.approvedAt,
-        approver: expectedFields.approver,
-        reject_reason: expectedFields.rejectReason,
-        kpi2_row_status: expect.objectContaining({
-          status: inputStatus,
-          submittedAt: expectedFields.submittedAt,
-          approvedAt: expectedFields.approvedAt,
-          approver: expectedFields.approver,
-          rejectReason: expectedFields.rejectReason,
-        }),
-      }),
-      { onConflict: 'member_code,day_key,task_id' },
-    );
+    const [, init] = fetchMock.mock.calls[0];
+    const body = JSON.parse(init.body);
+    expect(init.method).toBe(method);
+    expect(body).toMatchObject({ kind: 'kpi2', memberCode: 'B', dayKey: '2026-06-16', taskId: 't1' });
+    if (method === 'POST') {
+      expect(body.record).toEqual({ status: expected.status });
+    } else {
+      expect(body).toMatchObject(expected);
+    }
   });
 });

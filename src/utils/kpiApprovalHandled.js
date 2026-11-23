@@ -40,3 +40,8 @@ export function isHandledLocally(item, kpiOperational) {
 export function selectBulkApprovalTargets(items = []) {
   return items.filter((item) => item.type === 'KPI1' || item.type === 'KPI2');
 }
+
+/** 서버 저장 결과가 실패인지. 설정이 없어 건너뛴 'disabled' 는 실패로 보지 않는다. */
+export function isMirrorFailure(result) {
+  return Boolean(result) && result.ok === false && result.status !== 'disabled';
+}

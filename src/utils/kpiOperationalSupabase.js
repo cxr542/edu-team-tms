@@ -9,7 +9,9 @@ export {
 
 const KPI_MONTHLY_APPROVALS_TABLE = 'kpi_monthly_approvals';
 const KPI2_ROW_APPROVALS_TABLE = 'kpi2_row_approvals';
-const PAYLOAD_VERSION = 1;
+const KPI_APPROVALS_API = '/api/kpi-approvals';
+const ADMIN_SESSION_MESSAGE =
+  '관리자 로그인이 만료되었거나 필요합니다. /admin 에서 다시 로그인한 뒤 시도해 주세요.';
 const YEAR_MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
 
 function result({ ok, status, message, data = null }) {
@@ -18,10 +20,6 @@ function result({ ok, status, message, data = null }) {
 
 function hasText(value) {
   return typeof value === 'string' && value.trim().length > 0;
-}
-
-function nowIso() {
-  return new Date().toISOString();
 }
 
 function supabaseDisabledResult() {
@@ -51,64 +49,61 @@ function isConfigured() {
   return Boolean(getSupabaseClient());
 }
 
-function monthlyUpdatedAt(monthly01, fallback = null) {
-  return fallback || monthly01?.approvedAt || monthly01?.submittedAt || nowIso();
-}
-
-function rowUpdatedAt(row, fallback = null) {
-  return fallback || row?.approvedAt || row?.submittedAt || row?.updatedAt || nowIso();
-}
-
-function toApprovalTopLevelFields(record) {
-  return {
-    status: normalizeSupabaseApprovalStatus(record?.status),
-    submitted_at: record?.submittedAt ?? null,
-    approved_at: record?.approvedAt ?? null,
-    approver: record?.approver ?? null,
-    reject_reason: record?.rejectReason ?? null,
-  };
-}
-
-function toMonthlyApprovalRow(memberCode, yearMonth, monthly01, updatedAt = null) {
-  return {
-    member_code: memberCode.trim(),
-    year_month: yearMonth,
-    ...toApprovalTopLevelFields(monthly01),
-    monthly01,
-    payload_version: PAYLOAD_VERSION,
-    updated_at: monthlyUpdatedAt(monthly01, updatedAt),
-  };
-}
-
-function toKpi2ApprovalRow(memberCode, dayKey, taskId, kpi2RowStatus, updatedAt = null) {
-  return {
-    member_code: memberCode.trim(),
-    day_key: dayKey,
-    task_id: taskId,
-    ...toApprovalTopLevelFields(kpi2RowStatus),
-    kpi2_row_status: kpi2RowStatus,
-    payload_version: PAYLOAD_VERSION,
-    updated_at: rowUpdatedAt(kpi2RowStatus, updatedAt),
-  };
-}
-
-async function saveRow(client, table, row, conflictKey) {
-  const { data, error } = await client
-    .from(table)
-    .upsert(row, { onConflict: conflictKey })
-    .select()
-    .single();
-
-  if (error) {
-    return result({ ok: false, status: 'error', message: error.message });
+/**
+ * 쓰기는 서버 경로(/api/kpi-approvals)로만 한다. 서버가 상태·시각을 정하고, 승인·반려는 관리자 세션 쿠키를
+ * 확인한다. 읽기는 아래 get 함수들과 kpiOperationalSupabaseReads 가 anon 으로 직접 한다.
+ */
+async function callKpiApprovalsApi(method, body, { forbiddenMessage } = {}) {
+  let res;
+  try {
+    res = await fetch(KPI_APPROVALS_API, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      credentials: 'same-origin',
+    });
+  } catch (error) {
+    return result({ ok: false, status: 'error', message: error?.message || '네트워크 오류' });
   }
-
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data?.ok === false) {
+    const forbidden = res.status === 403;
+    return result({
+      ok: false,
+      status: forbidden ? 'forbidden' : res.status === 409 ? 'conflict' : 'error',
+      message: (forbidden && forbiddenMessage) || data?.message || `HTTP ${res.status}`,
+    });
+  }
   return result({
     ok: true,
     status: 'ok',
-    message: 'KPI approval row saved to Supabase.',
-    data,
+    message: 'KPI approval row saved.',
+    data: data?.data ?? null,
   });
+}
+
+/** 구성원 제출·회수(작성중·제출)는 POST, 관리자 승인·반려는 PATCH 로 보낸다. */
+function sendApprovalRecord(target, record) {
+  const status = normalizeSupabaseApprovalStatus(record?.status);
+  if (status === 'approved' || status === 'rejected') {
+    return callKpiApprovalsApi(
+      'PATCH',
+      {
+        ...target,
+        action: status === 'approved' ? 'approve' : 'reject',
+        approver: typeof record?.approver === 'string' ? record.approver : '',
+        reason: typeof record?.rejectReason === 'string' ? record.rejectReason : '',
+      },
+      { forbiddenMessage: ADMIN_SESSION_MESSAGE }
+    );
+  }
+  const body = { status };
+  // 업무 수치만 보낸다. 상태·시각·승인 정보는 서버가 정한다.
+  ['work', 'improve', 'leave', 'available'].forEach((field) => {
+    if (typeof record?.[field] === 'number' && Number.isFinite(record[field])) body[field] = record[field];
+  });
+  if (typeof record?.note === 'string') body.note = record.note;
+  return callKpiApprovalsApi('POST', { ...target, record: body });
 }
 
 async function loadRow(client, table, filters, selectFields, emptyMessage) {
@@ -138,7 +133,6 @@ export async function saveKpiMonthlyApprovalToSupabase({
   memberCode,
   yearMonth,
   monthly01,
-  updatedAt,
 } = {}) {
   if (!hasText(memberCode)) {
     return result({ ok: false, status: 'error', message: 'memberCode is required.' });
@@ -152,16 +146,10 @@ export async function saveKpiMonthlyApprovalToSupabase({
   }
   if (!isConfigured()) return supabaseDisabledResult();
 
-  try {
-    return await saveRow(
-      getSupabaseClient(),
-      KPI_MONTHLY_APPROVALS_TABLE,
-      toMonthlyApprovalRow(memberCode, normalizedYearMonth, monthly01, updatedAt),
-      'member_code,year_month'
-    );
-  } catch (error) {
-    return unexpectedErrorResult(error, 'save');
-  }
+  return sendApprovalRecord(
+    { kind: 'monthly', memberCode: memberCode.trim(), yearMonth: normalizedYearMonth },
+    monthly01
+  );
 }
 
 export async function getKpiMonthlyApprovalFromSupabase(memberCode, yearMonth) {
@@ -192,7 +180,6 @@ export async function saveKpi2RowApprovalToSupabase({
   dayKey,
   taskId,
   kpi2RowStatus,
-  updatedAt,
 } = {}) {
   if (!hasText(memberCode)) {
     return result({ ok: false, status: 'error', message: 'memberCode is required.' });
@@ -208,16 +195,10 @@ export async function saveKpi2RowApprovalToSupabase({
   }
   if (!isConfigured()) return supabaseDisabledResult();
 
-  try {
-    return await saveRow(
-      getSupabaseClient(),
-      KPI2_ROW_APPROVALS_TABLE,
-      toKpi2ApprovalRow(memberCode, dayKey, taskId, kpi2RowStatus, updatedAt),
-      'member_code,day_key,task_id'
-    );
-  } catch (error) {
-    return unexpectedErrorResult(error, 'save');
-  }
+  return sendApprovalRecord(
+    { kind: 'kpi2', memberCode: memberCode.trim(), dayKey: dayKey.trim(), taskId: taskId.trim() },
+    kpi2RowStatus
+  );
 }
 
 export async function getKpi2RowApprovalFromSupabase(memberCode, dayKey, taskId) {
