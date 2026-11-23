@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { isHandledLocally, isMirrorFailure, selectBulkApprovalTargets } from '../src/utils/kpiApprovalHandled.js';
+import { describe, expect, it, vi } from 'vitest';
+import { isHandledLocally, isMirrorFailure, notifyMirrorFailure, selectBulkApprovalTargets } from '../src/utils/kpiApprovalHandled.js';
 import { kpi2RowId } from '../src/constants/kpiOperationalStore.js';
 
 const kpi1Item = (over = {}) => ({
@@ -68,5 +68,49 @@ describe('isMirrorFailure', () => {
     expect(isMirrorFailure({ ok: true, status: 'ok' })).toBe(false);
     expect(isMirrorFailure(undefined)).toBe(false);
     expect(isMirrorFailure(null)).toBe(false);
+  });
+});
+
+describe('notifyMirrorFailure', () => {
+  const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+  it('tells the user why the server save failed (409, 403, network)', async () => {
+    for (const [status, message] of [
+      ['conflict', '이미 승인된 항목은 변경할 수 없습니다.'],
+      ['forbidden', '본인 화면에서만 제출할 수 있습니다.'],
+      ['error', 'Failed to fetch'],
+    ]) {
+      const notify = vi.fn();
+      notifyMirrorFailure(Promise.resolve({ ok: false, status, message }), notify);
+      await flush();
+      expect(notify).toHaveBeenCalledTimes(1);
+      expect(notify).toHaveBeenCalledWith(`서버에 저장하지 못했습니다: ${message}`);
+    }
+  });
+
+  it('stays quiet for success, disabled, missing results and rejected promises', async () => {
+    // 거절된 약속은 만든 즉시 처리되도록 함수로 늦게 만든다(미리 만들면 테스트 쪽에서 처리 안 된 거절이 된다).
+    for (const makeMirror of [
+      () => Promise.resolve({ ok: true, status: 'ok' }),
+      () => Promise.resolve({ ok: false, status: 'disabled', message: 'x' }),
+      () => Promise.resolve(undefined),
+      () => undefined,
+      () => ({ ok: true, status: 'ok' }),
+      () => Promise.reject(new Error('boom')),
+    ]) {
+      const notify = vi.fn();
+      expect(() => notifyMirrorFailure(makeMirror(), notify)).not.toThrow();
+      await flush();
+      expect(notify).not.toHaveBeenCalled();
+    }
+  });
+
+  it('accepts a plain failed result and a missing notify function', async () => {
+    const notify = vi.fn();
+    notifyMirrorFailure({ ok: false, status: 'conflict', message: '한도' }, notify);
+    await flush();
+    expect(notify).toHaveBeenCalledWith('서버에 저장하지 못했습니다: 한도');
+    expect(() => notifyMirrorFailure({ ok: false, status: 'error', message: 'x' })).not.toThrow();
+    await flush();
   });
 });

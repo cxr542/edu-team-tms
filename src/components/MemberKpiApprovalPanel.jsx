@@ -13,6 +13,7 @@ import {
 import { useJournal, useTeamKpiMetrics } from '../context/JournalProvider';
 import { isEditorMode } from '../utils/appMode';
 import { apply01cToMonthly01 } from '../utils/kpiMonthlyClose';
+import { notifyMirrorFailure } from '../utils/kpiApprovalHandled';
 import { uiTooltip } from '../utils/uiTooltip';
 import { useMemberKpiApprovalToolbarState } from '../hooks/useMemberKpiApprovalToolbarState';
 import MemberJournalDialog from './MemberJournalDialog';
@@ -56,25 +57,28 @@ function MemberKpiApprovalBody({
       monthly01,
       metrics.journalAvailable
     );
-    journal.updateMonthly01(year, month, memberCode, {
+    const saved = journal.updateMonthly01(year, month, memberCode, {
       ...mmPatch,
       status: KPI_STATUS.SUBMITTED,
       submittedAt: new Date().toISOString(),
       rejectReason: '',
     });
     onToast?.(`${month + 1}월 ${KPI1_NAME} 승인 요청을 보냈습니다`);
+    notifyMirrorFailure(saved, onToast);
   };
 
   const withdrawKpi1Approval = () => {
     if (!window.confirm('승인 대기 중인 월 확정 요청을 취소할까요?')) return;
-    journal.withdrawMonthly01(year, month, memberCode);
+    const saved = journal.withdrawMonthly01(year, month, memberCode);
     onToast?.('월 확정 승인 요청을 취소했습니다');
+    notifyMirrorFailure(saved, onToast);
   };
 
   const requestKpi2Approval = (row) => {
     if (!row.taskId) return;
-    journal.submitKpi2Row(memberCode, row.dayKey, row.taskId);
+    const saved = journal.submitKpi2Row(memberCode, row.dayKey, row.taskId);
     onToast?.(`「${row.업무명}」 ${KPI2_NAME} 승인 요청`);
+    notifyMirrorFailure(saved, onToast);
   };
 
   const hasAction =

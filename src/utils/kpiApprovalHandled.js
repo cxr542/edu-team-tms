@@ -45,3 +45,15 @@ export function selectBulkApprovalTargets(items = []) {
 export function isMirrorFailure(result) {
   return Boolean(result) && result.ok === false && result.status !== 'disabled';
 }
+
+/**
+ * 서버 저장(mirror)이 실패했으면 사유를 알린다. 성공·`disabled`·결과 없음은 조용히 넘어가고,
+ * 거절된 약속도 화면을 깨지 않도록 무시한다. 호출한 쪽의 성공 알림은 그대로 둔다.
+ */
+export function notifyMirrorFailure(mirrorPromise, notify) {
+  Promise.resolve(mirrorPromise)
+    .then((result) => {
+      if (isMirrorFailure(result)) notify?.(`서버에 저장하지 못했습니다: ${result.message}`);
+    })
+    .catch(() => {});
+}
