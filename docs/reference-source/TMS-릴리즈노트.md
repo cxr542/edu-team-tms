@@ -7,6 +7,11 @@
 
 ## 2026-11-23
 
+### [신규] feat(csr): 첨부 업로드를 /api/csr-attachments 로 보냄 (anon 쓰기 잠금 5단계 2/3)
+
+- feat(csr): 첨부 업로드를 /api/csr-attachments 로 보냄 (anon 쓰기 잠금 5단계 2/3)
+- PR #291: https://github.com/cxr542/edu-team-tms/pull/291
+
 ### [신규] feat(api): CSR 첨부 업로드 서버 경로 추가 (아직 화면은 쓰지 않음, anon 쓰기 잠금 5단계 1/3)
 
 - feat(api): CSR 첨부 업로드 서버 경로 추가 (아직 화면은 쓰지 않음, anon 쓰기 잠금 5단계 1/3)
