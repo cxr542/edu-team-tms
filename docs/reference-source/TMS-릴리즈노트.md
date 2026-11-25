@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-11-25
+
+### [신규] feat(docs): download all lecture guides as one ZIP
+
+- feat(docs): download all lecture guides as one ZIP
+- PR #293: https://github.com/cxr542/edu-team-tms/pull/293
+
 ## 2026-11-23
 
 ### [신규] feat(kpi): 구성원 화면에서 제출·취소가 서버에 저장되지 않았을 때 사유를 알림
