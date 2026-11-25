@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDown, ChevronRight, Menu, Search } from 'lucide-react';
+import { ArrowDown, ChevronRight, Download, Menu, Search } from 'lucide-react';
 import MarkdownDocViewer from '../components/MarkdownDocViewer';
 import DocTableOfContents from '../components/DocTableOfContents';
 import LectureGuideFrame from '../components/LectureGuideFrame';
@@ -32,6 +32,7 @@ import { LECTURE_PRODUCT_ICONS } from '../constants/lectureProductIcons';
 import { buildProductTree, productColor } from '../utils/lectureGuideTree';
 import { filterDocsByQuery } from '../utils/referenceDocSearch';
 import { downloadHtmlFile, guideFileName } from '../utils/downloadHtml';
+import { buildGuideZip, downloadBlob } from '../utils/guideZip';
 import heroBg from '../assets/okestro/Cover_bg.jpg';
 import wordmark from '../assets/okestro/logo-wordmark.svg';
 import './ReferenceDocsPage.css';
@@ -54,6 +55,7 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
   const [navOpen, setNavOpen] = useState(false);
   const [hiddenIds, setHiddenIds] = useState([]);
   const [uploadedDocs, setUploadedDocs] = useState([]);
+  const [zipBusy, setZipBusy] = useState(false);
   const [uploadsLoaded, setUploadsLoaded] = useState(false);
   const [uploadedHtml, setUploadedHtml] = useState({ id: '', html: '', error: '' });
   /** 편집기 상태: 열려 있을 때만 값이 있다. rev 는 저장 뒤 편집기를 새 본문으로 다시 여는 용도. */
@@ -211,6 +213,44 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
   useEffect(() => {
     setEditing(null);
   }, [docId]);
+
+  /** 강의가이드 전체(저장소 + 업로드, 보이는 것만)를 ZIP 하나로 내려받는다. */
+  const downloadAllGuides = useCallback(async () => {
+    setZipBusy(true);
+    setActionError('');
+    try {
+      const items = [];
+      for (const g of guideGroups) {
+        for (const d of g.docs) {
+          if (!isAdminShell && hiddenIds.includes(d.id)) continue;
+          items.push({
+            folder: g.name,
+            title: d.title,
+            load: async () => {
+              if (d.uploaded) {
+                const res = await fetchUploadedGuideHtml(d.id);
+                return res.ok ? res.html : '';
+              }
+              const res = await fetch(referenceDocPublicUrl(d.file));
+              return res.ok ? res.text() : '';
+            },
+          });
+        }
+      }
+      const { blob, count, failed } = await buildGuideZip(items);
+      if (count === 0) {
+        setActionError('내려받을 가이드가 없습니다.');
+      } else {
+        const d = new Date();
+        const ymd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+        downloadBlob(`강의가이드-전체-${ymd}.zip`, blob);
+        if (failed.length) setActionError(`${failed.length}개는 불러오지 못해 제외했습니다: ${failed.join(', ')}`);
+      }
+    } catch {
+      setActionError('ZIP 파일을 만들지 못했습니다.');
+    }
+    setZipBusy(false);
+  }, [guideGroups, hiddenIds, isAdminShell]);
 
   const downloadActive = useCallback(async () => {
     if (!active) return;
@@ -515,6 +555,12 @@ export default function ReferenceDocsPage({ isAdminShell = false }) {
                   onUploaded={onUploaded}
                 />
                 {isAdminShell && <LectureGuideSubmissions onApproved={onUploaded} />}
+                <div className="ref-docs-zip">
+                  <button type="button" className="ref-docs-html-actions__btn" disabled={zipBusy} onClick={downloadAllGuides}>
+                    <Download size={14} aria-hidden /> {zipBusy ? 'ZIP 만드는 중…' : '전체 다운로드 (ZIP)'}
+                  </button>
+                  {actionError && <p className="ref-docs-admin-bar__error">{actionError}</p>}
+                </div>
                 <div className="ref-docs-search">
                   <Search size={16} aria-hidden />
                   <input

@@ -1282,3 +1282,14 @@
   flex-wrap: wrap;
   gap: 0.4rem;
 }
+
+.ref-docs-zip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0 0 0.75rem;
+}
+.ref-docs-zip .ref-docs-admin-bar__error {
+  margin: 0;
+}
