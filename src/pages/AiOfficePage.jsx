@@ -20,6 +20,7 @@ import {
   listOpenTasks,
   pickJournalSource,
   pickRescues,
+  summarizeTaskCounts,
   summarizeOffice,
   timeOfDay,
   toDateKey,
@@ -485,10 +486,10 @@ function DetailPanel({ detail, monthIndex, metrics, counts, openTasks, agent, ac
   let links = [];
 
   if (detail.kind === 'tasks') {
-    title = '완료·미완료 업무 상세';
+    title = `${month} 완료·미완료 업무 상세`;
     body = (
       <>
-        <p className="ai-office__muted">일지 업무 기준, 오늘까지 누적이에요. 미완료는 오늘까지 날짜인데 완료 표시가 없는 업무이고, 예정은 오늘 이후 계획이에요.</p>
+        <p className="ai-office__muted">{month}에 적힌 일지 업무만 센 값이에요(다른 달은 포함하지 않아요). 미완료는 오늘까지 날짜인데 완료 표시가 없는 업무이고, 예정은 오늘 이후 계획이에요. 완료율 = 완료 ÷ (완료 + 미완료)예요.</p>
         <div className="ai-office__scroll">
           <table className="ai-office__table">
             <thead><tr><th>구성원</th><th>완료</th><th>미완료</th><th>예정</th><th>완료율</th></tr></thead>
@@ -502,7 +503,7 @@ function DetailPanel({ detail, monthIndex, metrics, counts, openTasks, agent, ac
             </tbody>
           </table>
         </div>
-        <h4>미완료 업무 (최근 {openTasks.items.length}건 / 전체 {openTasks.total}건)</h4>
+        <h4>{month} 미완료 업무 (최근 {openTasks.items.length}건 / 전체 {openTasks.total}건)</h4>
         <OpenTaskTable tasks={openTasks.items} onOpenJournal={actions.openJournalAt} />
       </>
     );
@@ -568,7 +569,7 @@ function DetailPanel({ detail, monthIndex, metrics, counts, openTasks, agent, ac
         {mt && count ? (
           <div className="ai-office__scroll">
             <table className="ai-office__table">
-              <thead><tr><th>완료</th><th>미완료</th><th>예정</th><th>가동률 ({month})</th><th>생산성 ({month})</th></tr></thead>
+              <thead><tr><th>완료 ({month})</th><th>미완료 ({month})</th><th>예정 ({month})</th><th>가동률 ({month})</th><th>생산성 ({month})</th></tr></thead>
               <tbody>
                 <tr>
                   <td>{count.done}</td><td>{count.open}</td><td>{count.planned}</td>
@@ -580,7 +581,7 @@ function DetailPanel({ detail, monthIndex, metrics, counts, openTasks, agent, ac
         ) : null}
         {openTasks.items.length > 0 && (
           <>
-            <h4>미완료 업무 (최근 {openTasks.items.length}건 / 전체 {openTasks.total}건)</h4>
+            <h4>{month} 미완료 업무 (최근 {openTasks.items.length}건 / 전체 {openTasks.total}건)</h4>
             <OpenTaskTable tasks={openTasks.items} onOpenJournal={actions.openJournalAt} />
           </>
         )}
@@ -716,16 +717,21 @@ export default function AiOfficePage() {
 
   const [detail, setDetail] = useState(null);
   const detailRef = useRef(null);
-  const counts = useMemo(() => buildMemberTaskCounts(memberJournals, today), [memberJournals, today]);
+  // 완료·미완료 건수와 목록은 위에서 고른 월(지표 기준 월)만 센다
+  const counts = useMemo(
+    () => buildMemberTaskCounts(memberJournals, today, { year, monthIndex }),
+    [memberJournals, today, year, monthIndex],
+  );
+  const monthTotals = useMemo(() => summarizeTaskCounts(counts), [counts]);
   const detailAgent = detail?.kind === 'member' ? agents.find((a) => a.id === detail.code) : null;
   const openTasks = useMemo(() => {
     if (!detail) return { items: [], total: 0 };
-    if (detail.kind === 'tasks') return listOpenTasks(memberJournals, { today, limit: 30 });
+    if (detail.kind === 'tasks') return listOpenTasks(memberJournals, { today, limit: 30, year, monthIndex });
     if (detail.kind === 'member' && detail.code !== 'admin') {
-      return listOpenTasks(memberJournals, { today, memberCode: detail.code, limit: 10 });
+      return listOpenTasks(memberJournals, { today, memberCode: detail.code, limit: 10, year, monthIndex });
     }
     return { items: [], total: 0 };
-  }, [detail, memberJournals, today]);
+  }, [detail, memberJournals, today, year, monthIndex]);
   const toggleDetail = useCallback((next) => {
     setDetail((cur) => (cur && cur.kind === next.kind && cur.code === next.code ? null : next));
   }, []);
@@ -860,8 +866,8 @@ export default function AiOfficePage() {
       </div>
 
       <section className="ai-office__kpis">
-        <button type="button" className="ai-office__card ai-office__kpi" aria-pressed={detail?.kind === 'tasks'} onClick={() => toggleDetail({ kind: 'tasks' })}><span>완료한 업무</span><strong>{summary.done.toLocaleString()}</strong><em>일지 기준, 오늘까지 누적 · 눌러서 상세</em></button>
-        <button type="button" className="ai-office__card ai-office__kpi" aria-pressed={detail?.kind === 'tasks'} onClick={() => toggleDetail({ kind: 'tasks' })}><span>업무 완료율</span><strong>{pct(summary.rate)}</strong><em>완료 ÷ 전체 업무 · 눌러서 상세</em></button>
+        <button type="button" className="ai-office__card ai-office__kpi" aria-pressed={detail?.kind === 'tasks'} onClick={() => toggleDetail({ kind: 'tasks' })}><span>완료한 업무 ({monthIndex + 1}월)</span><strong>{monthTotals.done.toLocaleString()}</strong><em>{monthIndex + 1}월 일지 기준 · 눌러서 상세</em></button>
+        <button type="button" className="ai-office__card ai-office__kpi" aria-pressed={detail?.kind === 'tasks'} onClick={() => toggleDetail({ kind: 'tasks' })}><span>업무 완료율 ({monthIndex + 1}월)</span><strong>{monthTotals.settled ? pct(monthTotals.rate) : '—'}</strong><em>{monthTotals.settled ? `완료 ${monthTotals.done} ÷ (완료+미완료 ${monthTotals.settled}) · 눌러서 상세` : `${monthIndex + 1}월에 끝났거나 지난 업무가 없어요 · 눌러서 상세`}</em></button>
         <button type="button" className="ai-office__card ai-office__kpi" aria-pressed={detail?.kind === 'util'} onClick={() => toggleDetail({ kind: 'util' })}><span>팀 가동률 ({monthIndex + 1}월)</span><strong>{pctValue(metrics.team.utilization)}</strong><em>업무·향상·휴일 M/M ÷ 가용 M/M · 눌러서 상세</em></button>
         <button type="button" className="ai-office__card ai-office__kpi" aria-pressed={detail?.kind === 'prod'} onClick={() => toggleDetail({ kind: 'prod' })}><span>팀 생산성 ({monthIndex + 1}월)</span><strong>{pctValue(metrics.team.productivity)}</strong><em>{metrics.team.effectCount ? `효과 ${metrics.team.effectCount}건 · 계획 ÷ 실작업 · 눌러서 상세` : '이 달 효과 건 없음 · 눌러서 상세'}</em></button>
       </section>

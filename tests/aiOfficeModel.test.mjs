@@ -17,6 +17,7 @@ import {
   pickRescues,
   summarizeMemberJournal,
   summarizeOffice,
+  summarizeTaskCounts,
   timeOfDay,
 } from '../src/utils/aiOfficeModel.js';
 
@@ -253,5 +254,45 @@ describe('formatStamp', () => {
     expect(formatStamp(new Date(2026, 10, 13, 9, 5).toISOString())).toBe('11/13 09:05');
     expect(formatStamp(null)).toBe('');
     expect(formatStamp('not a date')).toBe('');
+  });
+});
+
+describe('month-scoped task counts', () => {
+  const mj = {
+    A: {
+      days: {
+        '2026-10-05': { tasks: [task(true), task(true), task(false)] },
+        '2026-11-03': { tasks: [task(true), { ...task(false), title: '11월 미완료' }] },
+        '2026-11-20': { tasks: [task(false)] },
+        '2025-11-03': { tasks: [task(true), task(true), task(true)] },
+      },
+    },
+    B: { days: { '2026-11-04': { tasks: [task(true), task(true)] } } },
+  };
+
+  it('counts only the chosen month (not other months or years)', () => {
+    const [a, b, c] = buildMemberTaskCounts(mj, '2026-11-10', { year: 2026, monthIndex: 10 });
+    expect(a).toMatchObject({ code: 'A', done: 1, open: 1, planned: 1 });
+    expect(b).toMatchObject({ code: 'B', done: 2, open: 0, planned: 0 });
+    expect(c).toMatchObject({ code: 'C', done: 0, open: 0, planned: 0 });
+  });
+
+  it('still counts everything when no month is given', () => {
+    const [a] = buildMemberTaskCounts(mj, '2026-11-10');
+    expect(a).toMatchObject({ done: 6, open: 2, planned: 1 });
+  });
+
+  it('sums the month into team totals; the rate ignores planned tasks', () => {
+    const totals = summarizeTaskCounts(buildMemberTaskCounts(mj, '2026-11-10', { year: 2026, monthIndex: 10 }));
+    expect(totals).toMatchObject({ done: 3, open: 1, planned: 1, settled: 4 });
+    expect(totals.rate).toBeCloseTo(3 / 4);
+    expect(summarizeTaskCounts(buildMemberTaskCounts({}, '2026-11-10', { year: 2026, monthIndex: 10 }))).toMatchObject({ settled: 0, rate: 0 });
+  });
+
+  it('lists open tasks of the chosen month only', () => {
+    const { items, total } = listOpenTasks(mj, { today: '2026-11-10', year: 2026, monthIndex: 10 });
+    expect(total).toBe(1);
+    expect(items[0].title).toBe('11월 미완료');
+    expect(listOpenTasks(mj, { today: '2026-11-10' }).total).toBe(2);
   });
 });
