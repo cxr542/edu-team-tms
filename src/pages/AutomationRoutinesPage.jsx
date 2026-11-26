@@ -5,6 +5,12 @@ import {
   listAutomationRoutines,
 } from '../constants/automationRoutines';
 import { fetchReleaseNoteCheck, summarizeReleaseNoteCheck } from '../utils/releaseNoteCheckApi';
+import {
+  archiveAnnouncements,
+  describeArchivePreview,
+  previewAnnouncementArchive,
+  restoreAnnouncements,
+} from '../utils/announcementArchiveApi';
 import './AutomationRoutinesPage.css';
 
 const DEMO_RUN_MS = 1200;
@@ -13,27 +19,64 @@ function formatTime(date) {
   return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
 }
 
-/** live 루틴의 실행기. 결과는 { ok, label, lines, message } 로 돌려준다. 읽기 전용만 둔다. */
+/**
+ * live 루틴의 실행기. 모든 함수는 { ok, ... } 를 돌려주고 실패하면 { ok:false, message } 다.
+ *  - run(ctx)      : 실행. ctx = preview 가 돌려준 값. { label, lines, undoIds? }
+ *  - preview()     : (데이터를 바꾸는 루틴만) 바뀔 내용을 미리 보여 준다. { lines, ids }
+ *  - undo(undoIds) : (되돌릴 수 있는 루틴만) 방금 한 일을 되돌린다. { label }
+ */
 const LIVE_RUNNERS = {
-  async releaseNoteCheck() {
-    const res = await fetchReleaseNoteCheck();
-    if (!res.ok) return { ok: false, message: res.message };
-    const { label, lines } = summarizeReleaseNoteCheck(res.data);
-    return { ok: true, label, lines };
+  releaseNoteCheck: {
+    async run() {
+      const res = await fetchReleaseNoteCheck();
+      if (!res.ok) return { ok: false, message: res.message };
+      return { ok: true, ...summarizeReleaseNoteCheck(res.data) };
+    },
+  },
+  announcementArchive: {
+    async preview() {
+      const res = await previewAnnouncementArchive();
+      if (!res.ok) return { ok: false, message: res.message };
+      return {
+        ok: true,
+        lines: describeArchivePreview(res.data),
+        ids: res.data.items.map((i) => i.id),
+      };
+    },
+    async run({ ids }) {
+      const res = await archiveAnnouncements(ids);
+      if (!res.ok) return { ok: false, message: res.message };
+      const { changedIds, skipped } = res.data;
+      return {
+        ok: true,
+        label: `${changedIds.length}건 보관`,
+        lines: [
+          `${changedIds.length}건을 게시 해제했습니다.`,
+          ...(skipped > 0 ? [`${skipped}건은 그 사이 조건이 바뀌어 건너뛰었습니다.`] : []),
+        ],
+        undoIds: changedIds,
+      };
+    },
+    async undo(undoIds) {
+      const res = await restoreAnnouncements(undoIds);
+      if (!res.ok) return { ok: false, message: res.message };
+      return { ok: true, label: `${res.data.changedIds.length}건 되돌림` };
+    },
   },
 };
 
 /**
  * 관리자 루틴 자동화 — 카드 한 장 = 루틴 한 개.
- * 실행 흐름: 미리보기 → 확인 → 실행 → 결과·기록.
- * live 루틴(읽기 전용 점검)만 실제로 실행하고, 나머지는 데모라 데이터를 바꾸지 않는다.
+ * 실행 흐름: 미리보기 → 확인 → 실행 → 결과·기록(→ 되돌리기).
+ * live 루틴만 실제로 실행하고, 나머지는 데모라 데이터를 바꾸지 않는다.
  * 상태·기록은 이 화면 메모리에만 있다.
  */
 export default function AutomationRoutinesPage() {
-  const [runs, setRuns] = useState({}); // id -> { status: 'running' | 'done', at, result }
+  const [runs, setRuns] = useState({}); // id -> { status: 'running'|'done'|'error'|'undone', at, result, lines, undoIds, message }
   const [history, setHistory] = useState([]);
   const [pending, setPending] = useState(null); // 미리보기 중인 루틴
   const [confirmable, setConfirmable] = useState(false);
+  const [previewState, setPreviewState] = useState({ loading: false, error: '', lines: [], ids: [] });
   const dialogRef = useRef(null);
   const timers = useRef([]);
 
@@ -49,9 +92,16 @@ export default function AutomationRoutinesPage() {
   const total = listAutomationRoutines().length;
   const todayCount = history.length;
 
-  async function executeLive(routine) {
+  function pushHistory(routine, at, result) {
+    setHistory((prev) => [
+      { id: `${routine.id}-${at.getTime()}`, at, title: routine.title, where: routine.where, result },
+      ...prev,
+    ]);
+  }
+
+  async function executeLive(routine, ctx) {
     setRuns((prev) => ({ ...prev, [routine.id]: { status: 'running' } }));
-    const out = await LIVE_RUNNERS[routine.runner]();
+    const out = await LIVE_RUNNERS[routine.runner].run(ctx);
     const at = new Date();
     if (!out.ok) {
       setRuns((prev) => ({ ...prev, [routine.id]: { status: 'error', at, message: out.message } }));
@@ -59,17 +109,32 @@ export default function AutomationRoutinesPage() {
     }
     setRuns((prev) => ({
       ...prev,
-      [routine.id]: { status: 'done', at, result: out.label, lines: out.lines },
+      [routine.id]: { status: 'done', at, result: out.label, lines: out.lines, undoIds: out.undoIds },
     }));
-    setHistory((prev) => [
-      { id: `${routine.id}-${at.getTime()}`, at, title: routine.title, where: routine.where, result: out.label },
-      ...prev,
-    ]);
+    pushHistory(routine, at, out.label);
   }
 
-  function execute(routine) {
+  async function undoLive(routine) {
+    const run = runs[routine.id];
+    if (!run?.undoIds?.length) return;
+    setRuns((prev) => ({ ...prev, [routine.id]: { ...run, status: 'running' } }));
+    const out = await LIVE_RUNNERS[routine.runner].undo(run.undoIds);
+    const at = new Date();
+    if (!out.ok) {
+      // 되돌리기 실패: 다시 시도할 수 있게 undoIds 는 그대로 둔다.
+      setRuns((prev) => ({ ...prev, [routine.id]: { ...run, status: 'error', at, message: out.message } }));
+      return;
+    }
+    setRuns((prev) => ({
+      ...prev,
+      [routine.id]: { status: 'undone', at, result: out.label, lines: ['방금 보관한 공지를 다시 게시했습니다.'] },
+    }));
+    pushHistory(routine, at, out.label);
+  }
+
+  function execute(routine, ctx) {
     if (routine.live) {
-      executeLive(routine);
+      executeLive(routine, ctx);
       return;
     }
     setRuns((prev) => ({ ...prev, [routine.id]: { status: 'running' } }));
@@ -79,17 +144,26 @@ export default function AutomationRoutinesPage() {
         ...prev,
         [routine.id]: { status: 'done', at, result: routine.resultLabel },
       }));
-      setHistory((prev) => [
-        { id: `${routine.id}-${at.getTime()}`, at, title: routine.title, where: routine.where, result: routine.resultLabel },
-        ...prev,
-      ]);
+      pushHistory(routine, at, routine.resultLabel);
     }, DEMO_RUN_MS);
     timers.current.push(t);
   }
 
-  function openPreview(routine, canConfirm) {
+  async function openPreview(routine, canConfirm) {
     setConfirmable(canConfirm);
     setPending(routine);
+    const runner = LIVE_RUNNERS[routine.runner];
+    if (routine.live && runner?.preview) {
+      setPreviewState({ loading: true, error: '', lines: [], ids: [] });
+      const out = await runner.preview();
+      setPreviewState(
+        out.ok
+          ? { loading: false, error: '', lines: out.lines, ids: out.ids }
+          : { loading: false, error: out.message, lines: [], ids: [] },
+      );
+    } else {
+      setPreviewState({ loading: false, error: '', lines: routine.preview || [], ids: [] });
+    }
   }
 
   function handleRun(routine) {
@@ -99,6 +173,13 @@ export default function AutomationRoutinesPage() {
     }
     openPreview(routine, true);
   }
+
+  // 되돌릴 대상이 없는(대상 0건·오류) 미리보기에서는 확인 버튼을 숨긴다.
+  const canRunFromPreview =
+    confirmable &&
+    !previewState.loading &&
+    !previewState.error &&
+    (!pending?.live || previewState.ids.length > 0);
 
   return (
     <div className="automation-page">
@@ -110,8 +191,8 @@ export default function AutomationRoutinesPage() {
       </header>
 
       <p className="automation-demo-banner" role="note">
-        「릴리즈노트 누락분 점검」만 실제로 실행됩니다(읽기 전용). <b>데모</b> 표시 카드는 실행 흐름만 보여 주며
-        실제 데이터는 변경되지 않고, 건수는 예시입니다.
+        「릴리즈노트 누락분 점검」(읽기 전용)과 「오래된 공지 보관 처리」(게시 해제, 되돌리기 가능)만 실제로
+        실행됩니다. <b>데모</b> 표시 카드는 실행 흐름만 보여 주며 실제 데이터는 변경되지 않고, 건수는 예시입니다.
       </p>
 
       <section className="automation-stats" aria-label="요약">
@@ -136,7 +217,9 @@ export default function AutomationRoutinesPage() {
               const run = runs[routine.id];
               const running = run?.status === 'running';
               const done = run?.status === 'done';
+              const undone = run?.status === 'undone';
               const failed = run?.status === 'error';
+              const canUndo = routine.undoable && done && run.undoIds?.length > 0;
               return (
                 <article key={routine.id} className="automation-card">
                   <div className="automation-card__top">
@@ -154,22 +237,24 @@ export default function AutomationRoutinesPage() {
                   <p>{routine.description}</p>
                   <div className="automation-card__meta" role="status" aria-live="polite">
                     <span
-                      className={`automation-dot${running ? ' is-running' : done ? ' is-done' : failed ? ' is-failed' : ''}`}
+                      className={`automation-dot${running ? ' is-running' : done || undone ? ' is-done' : failed ? ' is-failed' : ''}`}
                       aria-hidden="true"
                     />
                     <span>
                       {running
-                        ? '실행 중…'
+                        ? '처리 중…'
                         : done
                           ? `방금 완료 ${formatTime(run.at)}`
-                          : failed
-                            ? `실패 ${formatTime(run.at)}`
-                            : '아직 실행 안 함'}
+                          : undone
+                            ? `되돌림 ${formatTime(run.at)}`
+                            : failed
+                              ? `실패 ${formatTime(run.at)}`
+                              : '아직 실행 안 함'}
                     </span>
-                    {done && <b className="automation-card__result">{run.result}</b>}
+                    {(done || undone) && <b className="automation-card__result">{run.result}</b>}
                   </div>
                   {failed && <p className="automation-card__error">{run.message}</p>}
-                  {done && run.lines && (
+                  {(done || undone) && run.lines && (
                     <ul className="automation-card__lines">
                       {run.lines.map((line) => (
                         <li key={line}>{line}</li>
@@ -183,9 +268,19 @@ export default function AutomationRoutinesPage() {
                       disabled={running}
                       onClick={() => handleRun(routine)}
                     >
-                      {running ? '실행 중…' : routine.readOnly ? '점검하기' : '실행'}
+                      {running ? '처리 중…' : routine.readOnly ? '점검하기' : '실행'}
                     </button>
-                    {!routine.readOnly && (
+                    {canUndo && (
+                      <button
+                        type="button"
+                        className="automation-btn"
+                        disabled={running}
+                        onClick={() => undoLive(routine)}
+                      >
+                        되돌리기
+                      </button>
+                    )}
+                    {!routine.readOnly && !canUndo && (
                       <button
                         type="button"
                         className="automation-btn"
@@ -230,24 +325,31 @@ export default function AutomationRoutinesPage() {
           <>
             <h3>{pending.title}</h3>
             {pending.where === 'pc' && <p className="automation-dialog__note">내 PC의 에이전트가 실행합니다.</p>}
-            <ul>
-              {(pending.preview || []).map((line) => (
-                <li key={line}>{line}</li>
-              ))}
-            </ul>
+            {previewState.loading ? (
+              <p className="automation-dialog__note" role="status">미리보기를 불러오는 중…</p>
+            ) : previewState.error ? (
+              <p className="automation-card__error" role="alert">{previewState.error}</p>
+            ) : (
+              <ul>
+                {previewState.lines.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            )}
             <p className="automation-dialog__note">미리보기 결과입니다. 확인 전에는 아무것도 변경되지 않습니다.</p>
             <div className="automation-dialog__row">
               <button type="button" className="automation-btn" onClick={() => setPending(null)}>
                 {confirmable ? '취소' : '닫기'}
               </button>
-              {confirmable && (
+              {canRunFromPreview && (
                 <button
                   type="button"
                   className="automation-btn automation-btn--primary"
                   onClick={() => {
                     const r = pending;
+                    const ctx = { ids: previewState.ids };
                     setPending(null);
-                    execute(r);
+                    execute(r, ctx);
                   }}
                 >
                   확인하고 실행
