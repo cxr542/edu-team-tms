@@ -152,7 +152,7 @@ export async function loadAdminKpiPendingApprovals({
     }
   }
 
-  const items = buildAdminKpiPendingApprovalItemsFromSupabaseRows({
+  const supabaseItems = buildAdminKpiPendingApprovalItemsFromSupabaseRows({
     year,
     monthIndex,
     monthlyApprovals: supabaseResult.data?.monthlyApprovals || [],
@@ -160,6 +160,10 @@ export async function loadAdminKpiPendingApprovals({
     getMemberDays,
     improveProjects,
   });
+  // 서버 승인 테이블에는 KPI1·KPI2만 있다. KPI3(역량 팀장 확정 요청)는 로컬 목록에서만 나오므로 합친다.
+  // 빼면 그 달에 서버 행이 하나라도 있을 때 KPI3 요청이 화면에서 사라지고 배지 숫자와 어긋난다.
+  const localKpi3Items = (fallbackPendingApprovals() || []).filter((item) => item?.type === 'KPI3');
+  const items = [...supabaseItems, ...localKpi3Items];
 
   return {
     ...supabaseResult,
