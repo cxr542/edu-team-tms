@@ -231,13 +231,23 @@ export function buildMonthlyMetrics(memberJournals, year, monthIndex) {
   };
 }
 
-/** 구성원별 업무 건수: 완료 / 미완료(오늘까지) / 예정(오늘 이후) */
-export function buildMemberTaskCounts(memberJournals, today = toDateKey()) {
+/** 'YYYY-MM' 접두사. year·monthIndex 가 모두 있어야 월 범위가 되고, 없으면 null(전체 기간). */
+function monthPrefix({ year, monthIndex } = {}) {
+  return Number.isInteger(year) && Number.isInteger(monthIndex) ? `${year}-${pad(monthIndex + 1)}` : null;
+}
+
+/**
+ * 구성원별 업무 건수: 완료 / 미완료(오늘까지) / 예정(오늘 이후).
+ * month({ year, monthIndex })를 주면 그 달의 날짜에 적힌 업무만 센다.
+ */
+export function buildMemberTaskCounts(memberJournals, today = toDateKey(), month = {}) {
+  const prefix = monthPrefix(month);
   return TEAM_KPI_MEMBERS.map((member) => {
     let done = 0;
     let open = 0;
     let planned = 0;
     for (const [day, entry] of Object.entries(memberJournals?.[member.code]?.days || {})) {
+      if (prefix && !day.startsWith(prefix)) continue;
       for (const task of workTasksOf(entry)) {
         if (task?.done) done += 1;
         else if (day <= today) open += 1;
@@ -249,16 +259,26 @@ export function buildMemberTaskCounts(memberJournals, today = toDateKey()) {
   });
 }
 
+/** 구성원별 건수를 팀 합계로 묶는다. 완료율 = 완료 ÷ (완료 + 미완료), 오늘 이후 예정은 분모에 넣지 않는다. */
+export function summarizeTaskCounts(counts) {
+  const done = counts.reduce((s, c) => s + c.done, 0);
+  const open = counts.reduce((s, c) => s + c.open, 0);
+  const planned = counts.reduce((s, c) => s + c.planned, 0);
+  const settled = done + open;
+  return { done, open, planned, settled, rate: settled ? done / settled : 0 };
+}
+
 /**
- * 오늘까지의 미완료 업무 목록(최근 날짜 순). memberCode 를 주면 그 구성원만.
+ * 오늘까지의 미완료 업무 목록(최근 날짜 순). memberCode 를 주면 그 구성원만, year·monthIndex 를 주면 그 달만.
  * @returns {{ items: { code: string, name: string, day: string, title: string, cat: string, plan: number }[], total: number }}
  */
-export function listOpenTasks(memberJournals, { today = toDateKey(), memberCode = null, limit = 30 } = {}) {
+export function listOpenTasks(memberJournals, { today = toDateKey(), memberCode = null, limit = 30, year, monthIndex } = {}) {
+  const prefix = monthPrefix({ year, monthIndex });
   const items = [];
   for (const member of TEAM_KPI_MEMBERS) {
     if (memberCode && member.code !== memberCode) continue;
     for (const [day, entry] of Object.entries(memberJournals?.[member.code]?.days || {})) {
-      if (day > today) continue;
+      if (day > today || (prefix && !day.startsWith(prefix))) continue;
       for (const task of workTasksOf(entry)) {
         if (task?.done) continue;
         items.push({
