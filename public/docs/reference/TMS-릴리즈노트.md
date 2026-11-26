@@ -7,6 +7,11 @@
 
 ## 2026-11-26
 
+### [수정] fix(toolbar): make the approval bell's count badge visible
+
+- fix(toolbar): make the approval bell's count badge visible
+- PR #308: https://github.com/cxr542/edu-team-tms/pull/308
+
 ### [수정] fix(kpi-approve): show KPI3 requests even when the month has server rows
 
 - fix(kpi-approve): show KPI3 requests even when the month has server rows
