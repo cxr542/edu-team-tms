@@ -7,6 +7,11 @@
 
 ## 2026-11-26
 
+### [신규] feat(ui): 메인(접속 안내) 화면에 Okestro Design System 적용
+
+- feat(ui): 메인(접속 안내) 화면에 Okestro Design System 적용
+- PR #298: https://github.com/cxr542/edu-team-tms/pull/298
+
 ### [신규] feat(admin): wire the announcement archive routine (unpublish, undoable)
 
 - feat(admin): wire the announcement archive routine (unpublish, undoable)
