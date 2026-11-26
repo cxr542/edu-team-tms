@@ -7,6 +7,11 @@
 
 ## 2026-11-26
 
+### [신규] feat(admin): add a BarnDog shortcut card to the routine automation menu
+
+- feat(admin): add a BarnDog shortcut card to the routine automation menu
+- PR #301: https://github.com/cxr542/edu-team-tms/pull/301
+
 ### [신규] feat(admin): exclude release-note announcements from the archive routine
 
 - feat(admin): exclude release-note announcements from the archive routine
