@@ -55,12 +55,12 @@ describe('public viewer landing UI', () => {
     );
   });
 
-  it('shows user portal cards first and admin section separately', () => {
+  it('shows the user list first and the admin row in a separate section', () => {
     expect(guideSource).toContain('업무 화면으로');
     expect(guideSource).toContain('PUBLIC_VIEWER_USER_PORTALS');
     expect(guideSource).toContain('PUBLIC_VIEWER_ADMIN_PORTAL');
-    expect(guideSource).toContain('public-viewer-portal__section');
-    expect(guideSource).toContain('public-viewer-portal__grid--users');
+    expect(guideSource).toContain('pv-section-head');
+    expect(guideSource).toContain('pv-list');
     expect(guideSource).toContain('전체 북마크 URL 목록 (관리자)');
     expect(accessSource).toContain("parseAppRoute(location).scope === 'public'");
   });
