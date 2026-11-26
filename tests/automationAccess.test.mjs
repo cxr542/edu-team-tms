@@ -21,7 +21,15 @@ describe('automation module', () => {
   it('has unique routines; demo ones have a preview; live ones are read-only or previewable+undoable', () => {
     const list = listAutomationRoutines();
     expect(new Set(list.map((r) => r.id)).size).toBe(list.length);
-    list.filter((r) => !r.live && !r.readOnly).forEach((r) => expect(r.preview?.length).toBeGreaterThan(0));
+    list.filter((r) => !r.live && !r.readOnly && !r.link).forEach((r) => expect(r.preview?.length).toBeGreaterThan(0));
+    // 바로가기 카드는 이 PC 로컬 주소만, 실행 없이 연다
+    list
+      .filter((r) => r.link)
+      .forEach((r) => {
+        expect(r.where).toBe('pc');
+        expect(r.link.href).toMatch(/^http:\/\/127\.0\.0\.1:\d+\//);
+        expect(r.live || r.readOnly || r.preview).toBeFalsy();
+      });
     list.filter((r) => r.live).forEach((r) => expect(r.readOnly === true || r.undoable === true).toBe(true));
   });
 });

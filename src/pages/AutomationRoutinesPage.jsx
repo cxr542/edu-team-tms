@@ -225,7 +225,9 @@ export default function AutomationRoutinesPage() {
                   <div className="automation-card__top">
                     <span className="automation-card__icon" aria-hidden="true">{routine.emoji}</span>
                     <span className="automation-card__badges">
-                      {!routine.live && <span className="automation-where automation-where--demo">데모</span>}
+                      {!routine.live && !routine.link && (
+                        <span className="automation-where automation-where--demo">데모</span>
+                      )}
                       <span
                         className={`automation-where${routine.where === 'pc' ? ' automation-where--pc' : ''}`}
                       >
@@ -235,6 +237,7 @@ export default function AutomationRoutinesPage() {
                   </div>
                   <h3>{routine.title}</h3>
                   <p>{routine.description}</p>
+                  {!routine.link && (
                   <div className="automation-card__meta" role="status" aria-live="polite">
                     <span
                       className={`automation-dot${running ? ' is-running' : done || undone ? ' is-done' : failed ? ' is-failed' : ''}`}
@@ -253,6 +256,7 @@ export default function AutomationRoutinesPage() {
                     </span>
                     {(done || undone) && <b className="automation-card__result">{run.result}</b>}
                   </div>
+                  )}
                   {failed && <p className="automation-card__error">{run.message}</p>}
                   {(done || undone) && run.lines && (
                     <ul className="automation-card__lines">
@@ -261,6 +265,18 @@ export default function AutomationRoutinesPage() {
                       ))}
                     </ul>
                   )}
+                  {routine.link ? (
+                  <div className="automation-card__actions">
+                    <a
+                      className="automation-btn automation-btn--primary automation-btn--link"
+                      href={routine.link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {routine.link.label}
+                    </a>
+                  </div>
+                  ) : (
                   <div className="automation-card__actions">
                     <button
                       type="button"
@@ -291,6 +307,7 @@ export default function AutomationRoutinesPage() {
                       </button>
                     )}
                   </div>
+                  )}
                 </article>
               );
             })}

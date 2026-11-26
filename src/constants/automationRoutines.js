@@ -3,6 +3,7 @@
  * `live: true` 인 루틴만 실제 실행기(runner)가 연결돼 있다.
  *  - 읽기 전용(readOnly) 점검, 또는
  *  - 데이터를 바꾸는 루틴: 서버 미리보기(preview)와 되돌리기(undoable)가 모두 있어야 한다.
+ * `link` 루틴은 실행 없이 주소만 새 탭으로 여는 바로가기다(이 PC 로컬 주소 전용).
  * 나머지는 실행 흐름(미리보기 → 확인 → 실행 → 결과)만 보여 주는 데모이며 어떤 데이터도 바꾸지 않는다.
  * 데이터를 바꾸는 루틴을 live 로 바꾸려면 별도 승인이 필요하다(AGENTS.md).
  */
@@ -113,6 +114,15 @@ export const AUTOMATION_GROUPS = [
         where: 'pc',
         preview: ['30일 경과 파일 34개 → 정리됨/월별 폴더'],
         resultLabel: '34개 이동',
+      },
+      {
+        id: 'barndog-open',
+        emoji: '🐶',
+        title: 'BarnDog 관리 열기',
+        description:
+          '코딩 도구에 스킬·MCP를 설치·연결하는 내 PC 관리 화면을 새 탭으로 엽니다. 이 PC에서 BarnDog가 켜져 있을 때만 열립니다.',
+        where: 'pc',
+        link: { href: 'http://127.0.0.1:4747/', label: '열기' },
       },
     ],
   },
