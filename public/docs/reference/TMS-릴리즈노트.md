@@ -7,6 +7,11 @@
 
 ## 2026-11-26
 
+### [신규] feat(admin): wire the announcement archive routine (unpublish, undoable)
+
+- feat(admin): wire the announcement archive routine (unpublish, undoable)
+- PR #297: https://github.com/cxr542/edu-team-tms/pull/297
+
 ### [신규] feat(admin): wire the release-note check routine to a real read-only run
 
 - feat(admin): wire the release-note check routine to a real read-only run
