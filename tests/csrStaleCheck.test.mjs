@@ -3,12 +3,6 @@ import { createAdminSessionCookie } from '../server/api-utils/adminSession.js';
 import { handleCsrStaleCheck } from '../server/api-utils/csrStaleCheck.js';
 import { isStaleCsr } from '../src/utils/csrStale.js';
 import { summarizeCsrStaleCheck } from '../src/utils/csrStaleCheckApi.js';
-import {
-  BROWSER_CACHE_ENTRIES,
-  clearCacheEntries,
-  listCacheEntries,
-  restoreCacheEntries,
-} from '../src/utils/browserCache.js';
 import { makeFakeSupabase } from './helpers/fakeSupabase.mjs';
 
 const NOW = new Date('2026-11-26T00:00:00.000Z');
@@ -91,44 +85,5 @@ describe('stale CSR check API', () => {
     await handleCsrStaleCheck({ method: 'POST', headers: adminHeaders() }, res, db);
     expect(res.statusCode).toBe(405);
     expect(db.log).toHaveLength(0);
-  });
-});
-
-function fakeStorage(seed = {}) {
-  const m = new Map(Object.entries(seed));
-  return {
-    getItem: (k) => (m.has(k) ? m.get(k) : null),
-    setItem: (k, v) => void m.set(k, String(v)),
-    removeItem: (k) => void m.delete(k),
-    keys: () => [...m.keys()],
-  };
-}
-
-describe('browser cache cleanup', () => {
-  it('clears only allowlisted cache keys and never operating data', () => {
-    const [a, b] = BROWSER_CACHE_ENTRIES;
-    const session = fakeStorage({ [a.key]: 'cache-a', [b.key]: 'cache-b', 'tms-weekly-journal-v1': 'session-journal' });
-    const local = fakeStorage({ 'tms-weekly-journal-v1': 'journal', 'tms-transactions-v1': 'ledger', [a.key]: 'same-name-in-local' });
-    const storages = { session, local };
-
-    expect(listCacheEntries(storages).map((e) => e.key)).toEqual([a.key, b.key]);
-    const snapshot = clearCacheEntries(storages);
-
-    expect(snapshot).toHaveLength(2);
-    expect(session.keys()).toEqual(['tms-weekly-journal-v1']);
-    expect(local.keys().sort()).toEqual([a.key, 'tms-transactions-v1', 'tms-weekly-journal-v1'].sort());
-  });
-
-  it('restores the snapshot and ignores keys outside the allowlist', () => {
-    const [a] = BROWSER_CACHE_ENTRIES;
-    const session = fakeStorage({ [a.key]: 'cache-a' });
-    const storages = { session, local: fakeStorage() };
-    const snapshot = clearCacheEntries(storages);
-    expect(session.getItem(a.key)).toBeNull();
-
-    const restored = restoreCacheEntries(storages, [...snapshot, { storage: 'local', key: 'tms-transactions-v1', value: 'evil' }]);
-    expect(restored).toBe(1);
-    expect(session.getItem(a.key)).toBe('cache-a');
-    expect(storages.local.getItem('tms-transactions-v1')).toBeNull();
   });
 });

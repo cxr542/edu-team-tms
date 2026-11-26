@@ -13,7 +13,6 @@
 /** 실행 위치 */
 export const AUTOMATION_WHERE = {
   server: '서버',
-  browser: '브라우저',
   pc: '내 PC',
 };
 
@@ -21,7 +20,7 @@ export const AUTOMATION_GROUPS = [
   {
     id: 'tms',
     title: 'TMS 데이터 정리',
-    hint: '서버·브라우저에서 실행',
+    hint: '서버에서 실행',
     routines: [
       {
         id: 'announcements-archive',
@@ -31,17 +30,6 @@ export const AUTOMATION_GROUPS = [
         where: 'server',
         live: true,
         runner: 'announcementArchive',
-        undoable: true,
-      },
-      {
-        id: 'browser-cache',
-        emoji: '🧹',
-        title: '브라우저 임시 캐시 비우기',
-        description:
-          '이 브라우저 탭의 다시 만들어지는 임시 캐시(카카오 장소 검색, 점심 「오늘 제외」)만 지웁니다. 일지·장부·KPI·설정은 건드리지 않습니다.',
-        where: 'browser',
-        live: true,
-        runner: 'browserCache',
         undoable: true,
       },
       {

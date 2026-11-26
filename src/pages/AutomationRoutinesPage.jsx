@@ -12,12 +12,6 @@ import {
   restoreAnnouncements,
 } from '../utils/announcementArchiveApi';
 import { fetchCsrStaleCheck, summarizeCsrStaleCheck } from '../utils/csrStaleCheckApi';
-import {
-  browserStorages,
-  clearCacheEntries,
-  listCacheEntries,
-  restoreCacheEntries,
-} from '../utils/browserCache';
 import './AutomationRoutinesPage.css';
 
 const DEMO_RUN_MS = 1200;
@@ -45,34 +39,6 @@ const LIVE_RUNNERS = {
       const res = await fetchCsrStaleCheck();
       if (!res.ok) return { ok: false, message: res.message };
       return { ok: true, ...summarizeCsrStaleCheck(res.data) };
-    },
-  },
-  browserCache: {
-    async preview() {
-      const entries = listCacheEntries(browserStorages());
-      return {
-        ok: true,
-        lines:
-          entries.length === 0
-            ? ['지울 임시 캐시가 없습니다.']
-            : [
-                ...entries.map((e) => `${e.label} (${e.bytes.toLocaleString('ko-KR')}자)`),
-                '일지·장부·KPI·설정은 제외, 지운 뒤에도 되돌리기 가능',
-              ],
-        ids: entries.map((e) => `${e.storage}:${e.key}`),
-      };
-    },
-    async run() {
-      const snapshot = clearCacheEntries(browserStorages());
-      return {
-        ok: true,
-        label: `${snapshot.length}개 키 정리`,
-        lines: snapshot.length === 0 ? ['지울 캐시가 없었습니다.'] : [`${snapshot.length}개 캐시 키를 지웠습니다.`],
-        undoIds: snapshot,
-      };
-    },
-    async undo(snapshot) {
-      return { ok: true, label: `${restoreCacheEntries(browserStorages(), snapshot)}개 되돌림` };
     },
   },
   announcementArchive: {
@@ -244,7 +210,7 @@ export default function AutomationRoutinesPage() {
       </header>
 
       <p className="automation-demo-banner" role="note">
-        서버·브라우저 카드는 이 화면에서 바로 실행합니다(점검은 읽기 전용, 변경 루틴은 미리보기 후 실행하며
+        서버 카드는 이 화면에서 바로 실행합니다(점검은 읽기 전용, 변경 루틴은 미리보기 후 실행하며
         되돌리기 가능). 「내 PC」 카드는 웹에서 직접 실행할 수 없어, 에이전트에게 시킬 요청문을 복사합니다.
       </p>
 
@@ -405,7 +371,7 @@ export default function AutomationRoutinesPage() {
       </section>
 
       <p className="automation-foot">
-        <b>서버</b> = TMS API에서 처리 · <b>브라우저</b> = 이 화면 안에서 처리 · <b>내 PC</b> = 웹에서 직접 불가,
+        <b>서버</b> = TMS API에서 처리 · <b>내 PC</b> = 웹에서 직접 불가,
         내 컴퓨터의 에이전트가 실행합니다.
       </p>
 
