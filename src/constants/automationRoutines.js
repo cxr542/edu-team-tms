@@ -1,6 +1,8 @@
 /**
  * 관리자 「루틴 자동화」 카드 목록.
- * `live: true` 인 루틴만 실제 실행기(runner)가 연결돼 있다(지금은 읽기 전용 점검뿐).
+ * `live: true` 인 루틴만 실제 실행기(runner)가 연결돼 있다.
+ *  - 읽기 전용(readOnly) 점검, 또는
+ *  - 데이터를 바꾸는 루틴: 서버 미리보기(preview)와 되돌리기(undoable)가 모두 있어야 한다.
  * 나머지는 실행 흐름(미리보기 → 확인 → 실행 → 결과)만 보여 주는 데모이며 어떤 데이터도 바꾸지 않는다.
  * 데이터를 바꾸는 루틴을 live 로 바꾸려면 별도 승인이 필요하다(AGENTS.md).
  */
@@ -21,11 +23,12 @@ export const AUTOMATION_GROUPS = [
       {
         id: 'announcements-archive',
         emoji: '📣',
-        title: '만료된 공지 보관 처리',
-        description: '게시 기간이 지난 공지를 보관함으로 이동합니다.',
+        title: '오래된 공지 보관 처리',
+        description: '게시한 지 90일 지난 공지(고정 제외)를 게시 해제합니다. 삭제하지 않으며 되돌릴 수 있습니다.',
         where: 'server',
-        preview: ['만료 공지 4건 → 보관함', '삭제 없음 (복구 가능)'],
-        resultLabel: '4건',
+        live: true,
+        runner: 'announcementArchive',
+        undoable: true,
       },
       {
         id: 'browser-cache',

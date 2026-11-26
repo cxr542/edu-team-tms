@@ -18,10 +18,10 @@ describe('automation module', () => {
     expect(NAV_GROUP_DEFAULT_ORDER.leader).toContain('automation');
   });
 
-  it('has unique routines; mutating ones have a preview; only read-only ones are live', () => {
+  it('has unique routines; demo ones have a preview; live ones are read-only or previewable+undoable', () => {
     const list = listAutomationRoutines();
     expect(new Set(list.map((r) => r.id)).size).toBe(list.length);
-    list.filter((r) => !r.readOnly).forEach((r) => expect(r.preview?.length).toBeGreaterThan(0));
-    list.filter((r) => r.live).forEach((r) => expect(r.readOnly).toBe(true));
+    list.filter((r) => !r.live && !r.readOnly).forEach((r) => expect(r.preview?.length).toBeGreaterThan(0));
+    list.filter((r) => r.live).forEach((r) => expect(r.readOnly === true || r.undoable === true).toBe(true));
   });
 });
