@@ -7,6 +7,11 @@
 
 ## 2026-11-26
 
+### [수정] fix(admin): keep the admin login when a screen opens in a new tab
+
+- fix(admin): keep the admin login when a screen opens in a new tab
+- PR #306: https://github.com/cxr542/edu-team-tms/pull/306
+
 ### [신규] feat(admin): remove the browser cache card from the routine automation menu
 
 - feat(admin): remove the browser cache card from the routine automation menu
