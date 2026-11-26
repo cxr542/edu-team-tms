@@ -1,9 +1,9 @@
 /**
  * 관리자 「루틴 자동화」 카드 목록.
- * 실제 실행기(runner)는 아직 연결하지 않았다. AUTOMATION_DEMO_MODE 가 true 인 동안
- * 화면은 실행 흐름(미리보기 → 확인 → 실행 → 결과)만 보여 주고 어떤 데이터도 바꾸지 않는다.
+ * `live: true` 인 루틴만 실제 실행기(runner)가 연결돼 있다(지금은 읽기 전용 점검뿐).
+ * 나머지는 실행 흐름(미리보기 → 확인 → 실행 → 결과)만 보여 주는 데모이며 어떤 데이터도 바꾸지 않는다.
+ * 데이터를 바꾸는 루틴을 live 로 바꾸려면 별도 승인이 필요하다(AGENTS.md).
  */
-export const AUTOMATION_DEMO_MODE = true;
 
 /** 실행 위치 */
 export const AUTOMATION_WHERE = {
@@ -52,6 +52,8 @@ export const AUTOMATION_GROUPS = [
         description: '머지된 PR 중 릴리즈노트에 빠진 항목을 찾아 알려 줍니다. (읽기 전용)',
         where: 'server',
         readOnly: true,
+        live: true,
+        runner: 'releaseNoteCheck',
         resultLabel: '누락 0건',
       },
     ],
