@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EDU-TMS 관리자 · 루틴 자동화 시안</title>
+<style>
+:root{
+  --blue:#1F3DFF; --blue-50:#EAEEFF; --bg:#F4F6FB; --card:#fff; --line:#E3E7F1;
+  --ink:#1d1d1f; --ink2:#3A4056; --muted:#6b6b6b;
+  --ok:#248a3d; --ok-bg:rgba(36,138,61,.1); --warn:#e05500; --warn-bg:rgba(247,98,5,.1);
+  --danger:#d92d20; --danger-bg:rgba(217,45,32,.08);
+  font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--ink);font-size:14px;padding:28px 16px 80px}
+.wrap{max-width:1040px;margin:0 auto}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+h1{font-size:22px;font-weight:800;letter-spacing:-.01em}
+.sub{color:var(--muted);margin-top:4px}
+.seg{display:inline-flex;background:#fff;border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{border:0;background:none;padding:6px 14px;border-radius:8px;font:inherit;font-weight:600;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--blue);color:#fff}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.stat b{display:block;font-size:20px;margin-top:2px}
+.stat span{color:var(--muted);font-size:12px}
+.group{margin:22px 0 10px;font-weight:700;font-size:13px;color:var(--ink2);display:flex;align-items:center;gap:8px}
+.group small{font-weight:400;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(236px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 2px rgba(0,0,0,.04);transition:border-color .15s,box-shadow .15s}
+.card:hover{border-color:rgba(31,61,255,.45);box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.top{display:flex;align-items:center;justify-content:space-between}
+.ico{width:38px;height:38px;border-radius:10px;background:var(--blue-50);display:grid;place-items:center;font-size:19px}
+.where{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:#f0f1f5;color:var(--ink2)}
+.where.pc{background:var(--warn-bg);color:var(--warn)}
+.card h3{font-size:15px;font-weight:700}
+.card p{color:var(--muted);font-size:12.5px;line-height:1.45;min-height:36px}
+.meta{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;min-height:18px}
+.dot{width:7px;height:7px;border-radius:50%;background:#c4c8d4}
+.dot.ok{background:var(--ok)}.dot.run{background:var(--blue);animation:p 1s infinite}.dot.warn{background:var(--warn)}
+@keyframes p{50%{opacity:.3}}
+.badge{margin-left:auto;font-weight:700;color:var(--ok)}
+.actions{display:flex;gap:8px;margin-top:auto}
+.run{flex:1;border:0;border-radius:10px;background:var(--blue);color:#fff;font:inherit;font-weight:700;padding:9px 0;cursor:pointer}
+.run:hover{background:#1530d6}
+.run:disabled{background:#c4c8d4;cursor:default}
+.ghost{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 12px;font:inherit;font-weight:600;color:var(--ink2);cursor:pointer}
+.ghost:hover{background:#f3f4f6}
+.simple .stats,.simple .meta,.simple .where,.simple .ghost,.simple .history,.simple .group small{display:none}
+.simple .card p{min-height:0}
+.history{margin-top:26px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 16px}
+.history h2{font-size:14px;padding:12px 0 4px}
+.h{display:grid;grid-template-columns:90px 1fr auto;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:13px;align-items:center}
+.h:first-of-type{border-top:0}
+.h time{color:var(--muted);font-size:12px}
+.pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}.pill.warn{background:var(--warn-bg);color:var(--warn)}
+dialog{border:0;border-radius:16px;padding:22px;width:min(440px,92vw);box-shadow:0 16px 48px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(5,11,46,.45)}
+dialog h3{font-size:17px;margin-bottom:6px}
+dialog ul{margin:12px 0;padding:12px 14px 12px 30px;background:var(--bg);border-radius:10px;font-size:13px;line-height:1.7}
+dialog .note{font-size:12px;color:var(--muted)}
+dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+dialog .row .run{flex:none;padding:9px 18px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#111;color:#fff;padding:11px 18px;border-radius:12px;opacity:0;transition:.25s;pointer-events:none;font-weight:600}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.foot{margin-top:28px;font-size:12px;color:var(--muted);line-height:1.6}
+@media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap" id="root">
+  <header>
+    <div>
+      <h1>루틴 자동화</h1>
+      <p class="sub">쌓이는 정리 업무를 버튼 한 번으로 실행합니다. <b>(시안 · 실제 동작 없음)</b></p>
+    </div>
+    <div class="seg" role="group" aria-label="시안 선택">
+      <button id="vB" aria-pressed="true">B 추천안</button>
+      <button id="vA" aria-pressed="false">A 심플</button>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><span>등록된 루틴</span><b>8</b></div>
+    <div class="stat"><span>오늘 실행</span><b id="sToday">3</b></div>
+    <div class="stat"><span>정리된 항목(이번 주)</span><b>142</b></div>
+    <div class="stat"><span>마지막 실패</span><b>없음</b></div>
+  </div>
+
+  <div id="groups"></div>
+
+  <section class="history">
+    <h2>최근 실행 기록</h2>
+    <div id="hist"></div>
+  </section>
+
+  <p class="foot">
+    실행 위치 배지: <b>서버</b> = TMS API에서 처리 · <b>브라우저</b> = 이 화면 안에서 처리 · <b>내 PC</b> = 웹에서 직접 불가, 내 컴퓨터의 에이전트(Claude/Handlus)가 실행.<br>
+    삭제·덮어쓰기 계열 카드는 「미리보기 → 확인 → 실행」 2단계를 거칩니다.
+  </p>
+</div>
+
+<dialog id="dlg">
+  <h3 id="dT"></h3>
+  <p class="note" id="dD"></p>
+  <ul id="dL"></ul>
+  <p class="note">미리보기 결과입니다. 확인 전에는 아무것도 변경되지 않습니다.</p>
+  <div class="row">
+    <button class="ghost" id="dNo">취소</button>
+    <button class="run" id="dYes">확인하고 실행</button>
+  </div>
+</dialog>
+<div class="toast" id="toast"></div>
+
+<script>
+const GROUPS=[
+  {name:'TMS 데이터 정리',hint:'서버·브라우저에서 실행',items:[
+    {id:'ann',ico:'📣',t:'만료된 공지 보관 처리',d:'게시 기간이 지난 공지를 보관함으로 이동합니다.',where:'서버',last:'오늘 09:12',res:'4건',preview:['만료 공지 4건 → 보관함','삭제 없음 (복구 가능)']},
+    {id:'cache',ico:'🧹',t:'브라우저 임시 캐시 비우기',d:'이 브라우저의 오래된 임시 초안/캐시 키를 정리합니다. 일지·장부는 건드리지 않습니다.',where:'브라우저',last:'어제 18:40',res:'12개 키',preview:['임시 초안 키 12개','일지·KPI·장부 키는 제외']},
+    {id:'csr',ico:'✅',t:'처리 완료 CSR 요청 마감',d:'답변이 끝난 지 30일 지난 요청을 닫힘 상태로 바꿉니다.',where:'서버',last:'11/24',res:'7건',preview:['완료 후 30일 경과 7건 → 닫힘']},
+    {id:'rel',ico:'📝',t:'릴리즈노트 누락분 점검',d:'머지된 PR 중 릴리즈노트에 빠진 항목을 찾아 알려줍니다. (읽기 전용)',where:'서버',last:'오늘 09:30',res:'누락 0건',safe:true}
+  ]},
+  {name:'메일 · 메신저',hint:'내 PC 에이전트가 실행',items:[
+    {id:'mail',ico:'✉️',t:'읽지 않은 메일 읽음 처리',d:'뉴스레터·알림 등 중요하지 않은 발신자의 읽지 않은 메일을 읽음으로 바꿉니다.',where:'내 PC',last:'11/25',res:'63건',preview:['알림/뉴스레터 63건 → 읽음','받은편지함 이동·삭제 없음','VIP·팀원 발신 메일은 제외']},
+    {id:'teams',ico:'💬',t:'오래된 알림 정리',d:'7일 지난 봇 알림 메시지를 읽음 처리합니다.',where:'내 PC',last:'—',res:'',preview:['봇 알림 21건 → 읽음']}
+  ]},
+  {name:'내 컴퓨터',hint:'내 PC 에이전트가 실행',items:[
+    {id:'desk',ico:'🗂️',t:'바탕화면 정리',d:'바탕화면 파일을 종류별 폴더로 옮깁니다. 삭제하지 않습니다.',where:'내 PC',last:'11/20',res:'18개 이동',preview:['스크린샷 11개 → 사진/스크린샷','문서 5개 → 문서/정리됨','기타 2개 → 정리됨/기타','삭제되는 파일 0개']},
+    {id:'dl',ico:'⬇️',t:'다운로드 폴더 오래된 파일 이동',d:'30일 지난 파일을 「정리됨」으로 이동합니다.',where:'내 PC',last:'—',res:'',preview:['30일 경과 파일 34개 → 정리됨/2026-11']}
+  ]}
+];
+const HIST=[
+  ['방금','공지 보관 처리 · 서버','ok','4건'],
+  ['어제','메일 읽음 처리 · 내 PC','ok','63건'],
+  ['11/24','CSR 요청 마감 · 서버','ok','7건'],
+  ['11/20','바탕화면 정리 · 내 PC','warn','18건 중 1건 건너뜀 (사용 중 파일)']
+];
+const $=s=>document.querySelector(s);
+const root=$('#root');
+const all=GROUPS.flatMap(g=>g.items);
+
+function render(){
+  $('#groups').innerHTML=GROUPS.map(g=>`
+    <div class="group">${g.name}<small>· ${g.hint}</small></div>
+    <div class="grid">${g.items.map(i=>`
+      <article class="card" id="c-${i.id}">
+        <div class="top"><div class="ico">${i.ico}</div><span class="where ${i.where==='내 PC'?'pc':''}">${i.where}</span></div>
+        <h3>${i.t}</h3>
+        <p>${i.d}</p>
+        <div class="meta"><span class="dot ${i.last==='—'?'':'ok'}"></span><span class="st">${i.last==='—'?'아직 실행 안 함':'마지막 '+i.last}</span><span class="badge">${i.res}</span></div>
+        <div class="actions">
+          <button class="run" data-run="${i.id}">${i.safe?'점검하기':'실행'}</button>
+          ${i.safe?'':`<button class="ghost" data-prev="${i.id}">미리보기</button>`}
+        </div>
+      </article>`).join('')}</div>`).join('');
+  $('#hist').innerHTML=HIST.map(h=>`<div class="h"><time>${h[0]}</time><span>${h[1]}</span><span class="pill ${h[2]}">${h[3]}</span></div>`).join('');
+}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2200)}
+function exec(it){
+  const c=$('#c-'+it.id),b=c.querySelector('.run'),st=c.querySelector('.st'),d=c.querySelector('.dot'),bd=c.querySelector('.badge');
+  b.disabled=true;b.textContent='실행 중…';d.className='dot run';st.textContent='실행 중';
+  setTimeout(()=>{
+    b.disabled=false;b.textContent=it.safe?'점검하기':'실행';d.className='dot ok';st.textContent='방금 완료';bd.textContent=it.res||'완료';
+    $('#sToday').textContent=+$('#sToday').textContent+1;
+    toast(it.t+' — 완료');
+  },1300);
+}
+function confirmRun(it,runAfter=true){
+  if(!it.preview){exec(it);return}
+  $('#dT').textContent=it.t;$('#dD').textContent=it.where==='내 PC'?'내 PC의 에이전트가 실행합니다.':'';
+  $('#dL').innerHTML=it.preview.map(p=>`<li>${p}</li>`).join('');
+  $('#dYes').style.display=runAfter?'':'none';
+  $('#dYes').onclick=()=>{$('#dlg').close();exec(it)};
+  $('#dNo').onclick=()=>$('#dlg').close();
+  $('#dlg').showModal();
+}
+document.addEventListener('click',e=>{
+  const r=e.target.closest('[data-run]'),p=e.target.closest('[data-prev]');
+  if(r){const it=all.find(i=>i.id===r.dataset.run);
+    // A 심플: 바로 실행, B: 미리보기 후 확인
+    if(root.classList.contains('simple')) exec(it); else confirmRun(it)}
+  if(p)confirmRun(all.find(i=>i.id===p.dataset.prev),false);
+});
+function setV(simple){root.classList.toggle('simple',simple);$('#vA').setAttribute('aria-pressed',simple);$('#vB').setAttribute('aria-pressed',!simple)}
+$('#vA').onclick=()=>setV(true);$('#vB').onclick=()=>setV(false);
+render();
+</script>
+</body>
+</html>

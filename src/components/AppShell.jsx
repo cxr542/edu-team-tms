@@ -28,6 +28,7 @@ import {
   User,
   Trello,
   Crown,
+  Zap,
 } from 'lucide-react';
 import LeaderKpiApprovalBell from './LeaderKpiApprovalBell';
 import { useGuideSubmissionsBadge } from '../hooks/useGuideSubmissionsBadge';
@@ -246,6 +247,7 @@ export default function AppShell({
     kpi: BarChart3,
     'kpi-report': PieChart,
     'kpi-approve': CheckCircle,
+    automation: Zap,
   };
   const renderOrdered = (group, badges = {}) =>
     orderOf(group).map((id) => {
