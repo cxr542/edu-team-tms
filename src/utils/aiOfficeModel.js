@@ -283,3 +283,49 @@ export function timeOfDay(date) {
   if (h >= 17 && h < 20) return 'dusk';
   return 'night';
 }
+
+export const JOURNAL_SOURCE = { SUPABASE: 'supabase', LOCAL: 'local' };
+
+/** 업무나 M/M 이 하나라도 적힌 날이 있어야 '일지가 있다'고 본다 (휴일 표시만 있는 슬라이스는 비어 있는 것으로 취급) */
+const hasDays = (slice) =>
+  Object.values(slice?.days || {}).some(
+    (entry) =>
+      workTasksOf(entry).length > 0 || Number(entry?.mm?.work) > 0 || Number(entry?.mm?.improve) > 0,
+  );
+
+/**
+ * 구성원별로 어느 저장소의 일지를 쓸지 고른다. prefer 쪽에 일지가 있으면 그것을, 없으면 다른 쪽을 쓴다.
+ * 둘 다 비어 있으면 그 구성원은 'none'(일지 없음)으로 남긴다. Supabase 갱신 시각은 supabaseUpdatedAt(스냅샷 meta)에서 읽는다.
+ * @returns {{ memberJournals: Record<string, any>, sources: Record<string, 'supabase'|'local'|'none'>, updatedAt: Record<string, string|null> }}
+ */
+export function pickJournalSource({ supabase, supabaseUpdatedAt, local, prefer = JOURNAL_SOURCE.SUPABASE } = {}) {
+  const memberJournals = {};
+  const sources = {};
+  const updatedAt = {};
+  for (const member of TEAM_KPI_MEMBERS) {
+    const remote = supabase?.[member.code];
+    const mine = local?.[member.code];
+    const order =
+      prefer === JOURNAL_SOURCE.LOCAL
+        ? [[JOURNAL_SOURCE.LOCAL, mine], [JOURNAL_SOURCE.SUPABASE, remote]]
+        : [[JOURNAL_SOURCE.SUPABASE, remote], [JOURNAL_SOURCE.LOCAL, mine]];
+    const hit = order.find(([, slice]) => hasDays(slice));
+    if (!hit) {
+      sources[member.code] = 'none';
+      continue;
+    }
+    const [source, slice] = hit;
+    memberJournals[member.code] = slice;
+    sources[member.code] = source;
+    updatedAt[member.code] =
+      source === JOURNAL_SOURCE.SUPABASE ? supabaseUpdatedAt?.[member.code] || slice.updatedAt || slice.savedAt || null : null;
+  }
+  return { memberJournals, sources, updatedAt };
+}
+
+/** ISO 시각 → 'M/D HH:MM' (로컬 시간). 값이 없거나 잘못되면 빈 문자열. */
+export function formatStamp(iso) {
+  const d = iso ? new Date(iso) : null;
+  if (!d || Number.isNaN(d.getTime())) return '';
+  return `${d.getMonth() + 1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}

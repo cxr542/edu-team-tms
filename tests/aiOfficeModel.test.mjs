@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { computeMonthKpi1Totals } from '../src/utils/computeTeamKpi.js';
 import {
   CHARACTER_KIND,
+  JOURNAL_SOURCE,
   KIND_TITLE,
   buildAiOfficeAgents,
   buildMemberTaskCounts,
@@ -9,8 +10,10 @@ import {
   buildMonthlyProgress,
   buildWeeklyDone,
   deriveMemberStatus,
+  formatStamp,
   listOpenTasks,
   mondayOf,
+  pickJournalSource,
   pickRescues,
   summarizeMemberJournal,
   summarizeOffice,
@@ -197,5 +200,58 @@ describe('hamster villagers', () => {
     });
     expect(Object.keys(CHARACTER_KIND)).toEqual(['admin']);
     agents.forEach((a) => expect(KIND_TITLE[a.kind]).toBeTruthy());
+  });
+});
+
+describe('pickJournalSource', () => {
+  const slice = (day, updatedAt) => ({ days: { [day]: { tasks: [task(true)] } }, updatedAt });
+  const supabase = { A: slice('2026-06-08', '2026-06-11T05:00:00.000Z'), B: slice('2026-06-09', null) };
+  const local = { A: slice('2026-06-01', null), C: slice('2026-06-02', null) };
+
+  it('prefers Supabase and falls back to the browser per member', () => {
+    const { memberJournals, sources, updatedAt } = pickJournalSource({ supabase, local });
+    expect(sources).toEqual({ A: 'supabase', B: 'supabase', C: 'local' });
+    expect(Object.keys(memberJournals.A.days)).toEqual(['2026-06-08']);
+    expect(updatedAt.A).toBe('2026-06-11T05:00:00.000Z');
+    expect(updatedAt.C).toBeNull();
+  });
+
+  it('reads the Supabase update time from the snapshot meta when the slice has none', () => {
+    const { updatedAt } = pickJournalSource({
+      supabase: { B: slice('2026-06-09', null) },
+      supabaseUpdatedAt: { B: '2026-06-12T01:00:00.000Z' },
+      local: {},
+    });
+    expect(updatedAt.B).toBe('2026-06-12T01:00:00.000Z');
+  });
+
+  it('can prefer the browser data instead', () => {
+    const { sources, memberJournals } = pickJournalSource({ supabase, local, prefer: JOURNAL_SOURCE.LOCAL });
+    expect(sources).toEqual({ A: 'local', B: 'supabase', C: 'local' });
+    expect(Object.keys(memberJournals.A.days)).toEqual(['2026-06-01']);
+  });
+
+  it('marks members with no journal anywhere as none and leaves them out', () => {
+    const { sources, memberJournals } = pickJournalSource({ supabase: {}, local: {} });
+    expect(sources).toEqual({ A: 'none', B: 'none', C: 'none' });
+    expect(memberJournals).toEqual({});
+    expect(pickJournalSource().sources.A).toBe('none');
+  });
+
+  it('treats a slice with only holiday days (no tasks, no M/M) as empty', () => {
+    const holidayOnly = { days: { '2026-06-03': { holiday: true, mm: { work: 0, improve: 0, leave: 1 }, tasks: [] } } };
+    expect(pickJournalSource({ supabase: { A: holidayOnly }, local: { A: slice('2026-06-01', null) } }).sources.A).toBe('local');
+  });
+
+  it('treats a slice without days as empty', () => {
+    expect(pickJournalSource({ supabase: { A: { days: {} } }, local: {} }).sources.A).toBe('none');
+  });
+});
+
+describe('formatStamp', () => {
+  it('formats a time as M/D HH:MM and tolerates bad input', () => {
+    expect(formatStamp(new Date(2026, 10, 13, 9, 5).toISOString())).toBe('11/13 09:05');
+    expect(formatStamp(null)).toBe('');
+    expect(formatStamp('not a date')).toBe('');
   });
 });
