@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-11-26
+
+### [신규] feat(admin): add routine automation card menu (demo mode)
+
+- feat(admin): add routine automation card menu (demo mode)
+- PR #294: https://github.com/cxr542/edu-team-tms/pull/294
+
 ## 2026-11-25
 
 ### [신규] feat(docs): download all lecture guides as one ZIP
