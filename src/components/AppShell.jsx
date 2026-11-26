@@ -12,6 +12,7 @@ import {
   Eye,
   FileSpreadsheet,
   GraduationCap,
+  ClipboardList,
   Pencil,
   PieChart,
   Settings,
@@ -238,6 +239,7 @@ export default function AppShell({
     csr: Lightbulb,
     lunch: UtensilsCrossed,
     'lecture-journal': GraduationCap,
+    'meeting-minutes': ClipboardList,
     kanban: Trello,
     'ai-office': Crown,
     journal: Calendar,
@@ -292,6 +294,7 @@ export default function AppShell({
     !viewerMenuVisibility.lunch &&
     !viewerMenuVisibility.csr &&
     !viewerMenuVisibility['lecture-journal'] &&
+    !viewerMenuVisibility['meeting-minutes'] &&
     !viewerMenuVisibility['kpi-report'] &&
     !viewerMenuVisibility['kpi-approve'] &&
     !viewerMenuVisibility.docs;
@@ -377,6 +380,7 @@ export default function AppShell({
                     {navBtn('lunch', UtensilsCrossed, { viewer: true })}
                     {navBtn('csr', Lightbulb, { viewer: true })}
                     {navBtn('lecture-journal', GraduationCap, { viewer: true })}
+                    {navBtn('meeting-minutes', ClipboardList, { viewer: true })}
                   </NavGroup>
                   <NavGroup title={NAV_GROUP_VIEWER_KPI} className="project-nav-group--leader">
                     {navBtn('kpi-report', PieChart, { viewer: true })}
@@ -402,6 +406,7 @@ export default function AppShell({
                       {navBtn('lunch', UtensilsCrossed)}
                       {navBtn('csr', Lightbulb)}
                       {navBtn('lecture-journal', GraduationCap)}
+                      {navBtn('meeting-minutes', ClipboardList)}
                       {navBtn('kanban', Trello)}
                       {navBtn('academizer', Presentation)}
                     </NavGroup>

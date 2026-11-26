@@ -8,7 +8,7 @@ export const NAV_ORDER_STORAGE_KEY = 'tms-nav-order-v1';
  * 새 메뉴가 생기면 저장된 순서 맨 뒤에 붙는다(applyNavOrder).
  */
 export const NAV_GROUP_DEFAULT_ORDER = {
-  common: ['ledger', 'announcements', 'csr', 'lunch', 'lecture-journal', 'kanban', 'academizer', 'ai-office'],
+  common: ['ledger', 'announcements', 'csr', 'lunch', 'lecture-journal', 'meeting-minutes', 'kanban', 'academizer', 'ai-office'],
   memberWork: ['journal', 'competency'],
   experimental: ['cloud-chatbot'],
   leader: ['kpi', 'kpi-report', 'kpi-approve', 'automation'],

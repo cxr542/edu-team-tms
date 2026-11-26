@@ -114,6 +114,7 @@ import './pages/AutomationRoutinesPage.css';
 const AutomationRoutinesPage = lazy(() => import('./pages/AutomationRoutinesPage'));
 import './pages/LectureJournalPage.css';
 const LectureJournalPage = lazy(() => import('./pages/LectureJournalPage'));
+const MeetingMinutesPage = lazy(() => import('./pages/MeetingMinutesPage'));
 const PublicViewerGuidePage = lazy(() => import('./pages/PublicViewerGuidePage'));
 import { JournalProvider } from './context/JournalProvider';
 import { SUPABASE_MANUAL_MIRROR_ENABLED } from './constants/supabaseSync';
@@ -1027,6 +1028,8 @@ export default function App() {
         <LunchPickPage />
       ) : displayModule === 'lecture-journal' ? (
         <LectureJournalPage />
+      ) : displayModule === 'meeting-minutes' ? (
+        <MeetingMinutesPage />
       ) : displayModule === 'csr' ? (
         <IdeaBankPage
           readOnly={isViewer}
