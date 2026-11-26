@@ -11,6 +11,13 @@ import {
   previewAnnouncementArchive,
   restoreAnnouncements,
 } from '../utils/announcementArchiveApi';
+import { fetchCsrStaleCheck, summarizeCsrStaleCheck } from '../utils/csrStaleCheckApi';
+import {
+  browserStorages,
+  clearCacheEntries,
+  listCacheEntries,
+  restoreCacheEntries,
+} from '../utils/browserCache';
 import './AutomationRoutinesPage.css';
 
 const DEMO_RUN_MS = 1200;
@@ -31,6 +38,41 @@ const LIVE_RUNNERS = {
       const res = await fetchReleaseNoteCheck();
       if (!res.ok) return { ok: false, message: res.message };
       return { ok: true, ...summarizeReleaseNoteCheck(res.data) };
+    },
+  },
+  csrStaleCheck: {
+    async run() {
+      const res = await fetchCsrStaleCheck();
+      if (!res.ok) return { ok: false, message: res.message };
+      return { ok: true, ...summarizeCsrStaleCheck(res.data) };
+    },
+  },
+  browserCache: {
+    async preview() {
+      const entries = listCacheEntries(browserStorages());
+      return {
+        ok: true,
+        lines:
+          entries.length === 0
+            ? ['지울 임시 캐시가 없습니다.']
+            : [
+                ...entries.map((e) => `${e.label} (${e.bytes.toLocaleString('ko-KR')}자)`),
+                '일지·장부·KPI·설정은 제외, 지운 뒤에도 되돌리기 가능',
+              ],
+        ids: entries.map((e) => `${e.storage}:${e.key}`),
+      };
+    },
+    async run() {
+      const snapshot = clearCacheEntries(browserStorages());
+      return {
+        ok: true,
+        label: `${snapshot.length}개 키 정리`,
+        lines: snapshot.length === 0 ? ['지울 캐시가 없었습니다.'] : [`${snapshot.length}개 캐시 키를 지웠습니다.`],
+        undoIds: snapshot,
+      };
+    },
+    async undo(snapshot) {
+      return { ok: true, label: `${restoreCacheEntries(browserStorages(), snapshot)}개 되돌림` };
     },
   },
   announcementArchive: {
@@ -76,6 +118,7 @@ export default function AutomationRoutinesPage() {
   const [history, setHistory] = useState([]);
   const [pending, setPending] = useState(null); // 미리보기 중인 루틴
   const [confirmable, setConfirmable] = useState(false);
+  const [copied, setCopied] = useState({}); // id -> 'ok' | 'fail'
   const [previewState, setPreviewState] = useState({ loading: false, error: '', lines: [], ids: [] });
   const dialogRef = useRef(null);
   const timers = useRef([]);
@@ -127,7 +170,7 @@ export default function AutomationRoutinesPage() {
     }
     setRuns((prev) => ({
       ...prev,
-      [routine.id]: { status: 'undone', at, result: out.label, lines: ['방금 보관한 공지를 다시 게시했습니다.'] },
+      [routine.id]: { status: 'undone', at, result: out.label, lines: ['방금 한 작업을 되돌렸습니다.'] },
     }));
     pushHistory(routine, at, out.label);
   }
@@ -166,6 +209,16 @@ export default function AutomationRoutinesPage() {
     }
   }
 
+  async function copyPrompt(routine) {
+    let state = 'ok';
+    try {
+      await navigator.clipboard.writeText(routine.prompt.text);
+    } catch {
+      state = 'fail';
+    }
+    setCopied((prev) => ({ ...prev, [routine.id]: state }));
+  }
+
   function handleRun(routine) {
     if (routine.readOnly) {
       execute(routine);
@@ -191,8 +244,8 @@ export default function AutomationRoutinesPage() {
       </header>
 
       <p className="automation-demo-banner" role="note">
-        「릴리즈노트 누락분 점검」(읽기 전용)과 「오래된 공지 보관 처리」(게시 해제, 되돌리기 가능)만 실제로
-        실행됩니다. <b>데모</b> 표시 카드는 실행 흐름만 보여 주며 실제 데이터는 변경되지 않고, 건수는 예시입니다.
+        서버·브라우저 카드는 이 화면에서 바로 실행합니다(점검은 읽기 전용, 변경 루틴은 미리보기 후 실행하며
+        되돌리기 가능). 「내 PC」 카드는 웹에서 직접 실행할 수 없어, 에이전트에게 시킬 요청문을 복사합니다.
       </p>
 
       <section className="automation-stats" aria-label="요약">
@@ -225,7 +278,7 @@ export default function AutomationRoutinesPage() {
                   <div className="automation-card__top">
                     <span className="automation-card__icon" aria-hidden="true">{routine.emoji}</span>
                     <span className="automation-card__badges">
-                      {!routine.live && !routine.link && (
+                      {!routine.live && !routine.link && !routine.prompt && (
                         <span className="automation-where automation-where--demo">데모</span>
                       )}
                       <span
@@ -237,7 +290,7 @@ export default function AutomationRoutinesPage() {
                   </div>
                   <h3>{routine.title}</h3>
                   <p>{routine.description}</p>
-                  {!routine.link && (
+                  {!routine.link && !routine.prompt && (
                   <div className="automation-card__meta" role="status" aria-live="polite">
                     <span
                       className={`automation-dot${running ? ' is-running' : done || undone ? ' is-done' : failed ? ' is-failed' : ''}`}
@@ -265,7 +318,26 @@ export default function AutomationRoutinesPage() {
                       ))}
                     </ul>
                   )}
-                  {routine.link ? (
+                  {routine.prompt && (
+                    <p className="automation-card__copied" role="status" aria-live="polite">
+                      {copied[routine.id] === 'ok'
+                        ? '복사했습니다. Claude 같은 에이전트에 붙여 넣으세요.'
+                        : copied[routine.id] === 'fail'
+                          ? '복사하지 못했습니다. 브라우저 권한을 확인해 주세요.'
+                          : '웹에서 직접 실행하지 않고, 에이전트에게 시킬 요청문을 복사합니다.'}
+                    </p>
+                  )}
+                  {routine.prompt ? (
+                  <div className="automation-card__actions">
+                    <button
+                      type="button"
+                      className="automation-btn automation-btn--primary"
+                      onClick={() => copyPrompt(routine)}
+                    >
+                      {routine.prompt.label}
+                    </button>
+                  </div>
+                  ) : routine.link ? (
                   <div className="automation-card__actions">
                     <a
                       className="automation-btn automation-btn--primary automation-btn--link"
