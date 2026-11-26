@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  AUTOMATION_DEMO_MODE,
   AUTOMATION_GROUPS,
   AUTOMATION_WHERE,
   listAutomationRoutines,
 } from '../constants/automationRoutines';
+import { fetchReleaseNoteCheck, summarizeReleaseNoteCheck } from '../utils/releaseNoteCheckApi';
 import './AutomationRoutinesPage.css';
 
 const DEMO_RUN_MS = 1200;
@@ -13,10 +13,21 @@ function formatTime(date) {
   return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
 }
 
+/** live 루틴의 실행기. 결과는 { ok, label, lines, message } 로 돌려준다. 읽기 전용만 둔다. */
+const LIVE_RUNNERS = {
+  async releaseNoteCheck() {
+    const res = await fetchReleaseNoteCheck();
+    if (!res.ok) return { ok: false, message: res.message };
+    const { label, lines } = summarizeReleaseNoteCheck(res.data);
+    return { ok: true, label, lines };
+  },
+};
+
 /**
  * 관리자 루틴 자동화 — 카드 한 장 = 루틴 한 개.
  * 실행 흐름: 미리보기 → 확인 → 실행 → 결과·기록.
- * 지금은 데모 모드라 실제 데이터를 바꾸지 않는다(상태도 이 화면 메모리에만 있다).
+ * live 루틴(읽기 전용 점검)만 실제로 실행하고, 나머지는 데모라 데이터를 바꾸지 않는다.
+ * 상태·기록은 이 화면 메모리에만 있다.
  */
 export default function AutomationRoutinesPage() {
   const [runs, setRuns] = useState({}); // id -> { status: 'running' | 'done', at, result }
@@ -38,7 +49,29 @@ export default function AutomationRoutinesPage() {
   const total = listAutomationRoutines().length;
   const todayCount = history.length;
 
+  async function executeLive(routine) {
+    setRuns((prev) => ({ ...prev, [routine.id]: { status: 'running' } }));
+    const out = await LIVE_RUNNERS[routine.runner]();
+    const at = new Date();
+    if (!out.ok) {
+      setRuns((prev) => ({ ...prev, [routine.id]: { status: 'error', at, message: out.message } }));
+      return;
+    }
+    setRuns((prev) => ({
+      ...prev,
+      [routine.id]: { status: 'done', at, result: out.label, lines: out.lines },
+    }));
+    setHistory((prev) => [
+      { id: `${routine.id}-${at.getTime()}`, at, title: routine.title, where: routine.where, result: out.label },
+      ...prev,
+    ]);
+  }
+
   function execute(routine) {
+    if (routine.live) {
+      executeLive(routine);
+      return;
+    }
     setRuns((prev) => ({ ...prev, [routine.id]: { status: 'running' } }));
     const t = setTimeout(() => {
       const at = new Date();
@@ -76,11 +109,10 @@ export default function AutomationRoutinesPage() {
         </div>
       </header>
 
-      {AUTOMATION_DEMO_MODE && (
-        <p className="automation-demo-banner" role="note">
-          데모 모드입니다. 실행 흐름만 보여 주며 실제 데이터는 변경되지 않습니다. 목록의 건수는 예시입니다.
-        </p>
-      )}
+      <p className="automation-demo-banner" role="note">
+        「릴리즈노트 누락분 점검」만 실제로 실행됩니다(읽기 전용). <b>데모</b> 표시 카드는 실행 흐름만 보여 주며
+        실제 데이터는 변경되지 않고, 건수는 예시입니다.
+      </p>
 
       <section className="automation-stats" aria-label="요약">
         <div className="automation-stat">
@@ -104,28 +136,46 @@ export default function AutomationRoutinesPage() {
               const run = runs[routine.id];
               const running = run?.status === 'running';
               const done = run?.status === 'done';
+              const failed = run?.status === 'error';
               return (
                 <article key={routine.id} className="automation-card">
                   <div className="automation-card__top">
                     <span className="automation-card__icon" aria-hidden="true">{routine.emoji}</span>
-                    <span
-                      className={`automation-where${routine.where === 'pc' ? ' automation-where--pc' : ''}`}
-                    >
-                      {AUTOMATION_WHERE[routine.where]}
+                    <span className="automation-card__badges">
+                      {!routine.live && <span className="automation-where automation-where--demo">데모</span>}
+                      <span
+                        className={`automation-where${routine.where === 'pc' ? ' automation-where--pc' : ''}`}
+                      >
+                        {AUTOMATION_WHERE[routine.where]}
+                      </span>
                     </span>
                   </div>
                   <h3>{routine.title}</h3>
                   <p>{routine.description}</p>
                   <div className="automation-card__meta" role="status" aria-live="polite">
                     <span
-                      className={`automation-dot${running ? ' is-running' : done ? ' is-done' : ''}`}
+                      className={`automation-dot${running ? ' is-running' : done ? ' is-done' : failed ? ' is-failed' : ''}`}
                       aria-hidden="true"
                     />
                     <span>
-                      {running ? '실행 중…' : done ? `방금 완료 ${formatTime(run.at)}` : '아직 실행 안 함'}
+                      {running
+                        ? '실행 중…'
+                        : done
+                          ? `방금 완료 ${formatTime(run.at)}`
+                          : failed
+                            ? `실패 ${formatTime(run.at)}`
+                            : '아직 실행 안 함'}
                     </span>
                     {done && <b className="automation-card__result">{run.result}</b>}
                   </div>
+                  {failed && <p className="automation-card__error">{run.message}</p>}
+                  {done && run.lines && (
+                    <ul className="automation-card__lines">
+                      {run.lines.map((line) => (
+                        <li key={line}>{line}</li>
+                      ))}
+                    </ul>
+                  )}
                   <div className="automation-card__actions">
                     <button
                       type="button"

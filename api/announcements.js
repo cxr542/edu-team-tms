@@ -16,6 +16,7 @@ import { handleNavSettings } from '../server/api-utils/navSettings.js';
 import { handleCsrRequests } from '../server/api-utils/csrRequests.js';
 import { handleCsrAttachments } from '../server/api-utils/csrAttachments.js';
 import { handleKpiApprovals } from '../server/api-utils/kpiApprovals.js';
+import { handleReleaseNoteCheck } from '../server/api-utils/releaseNoteCheck.js';
 
 const ANNOUNCEMENTS_TABLE = 'announcements';
 const COMMENTS_TABLE = 'announcement_comments';
@@ -541,6 +542,11 @@ function detectPathname(req) {
 
 // Master Dispatcher
 export default async function handler(req, res) {
+  // 읽기 전용 점검: Supabase 없이 동작하므로 service client 확인보다 먼저 분기한다.
+  if (detectPathname(req).includes('/api/release-note-check')) {
+    return handleReleaseNoteCheck(req, res);
+  }
+
   const client = getServiceClient();
   if (!client) {
     return json(res, 501, {
