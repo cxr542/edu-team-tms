@@ -24,7 +24,7 @@ export const AUTOMATION_GROUPS = [
         id: 'announcements-archive',
         emoji: '📣',
         title: '오래된 공지 보관 처리',
-        description: '게시한 지 90일 지난 공지(고정 제외)를 게시 해제합니다. 삭제하지 않으며 되돌릴 수 있습니다.',
+        description: '게시한 지 90일 지난 공지(릴리즈노트 분류·고정 제외)를 게시 해제합니다. 삭제하지 않으며 되돌릴 수 있습니다.',
         where: 'server',
         live: true,
         runner: 'announcementArchive',

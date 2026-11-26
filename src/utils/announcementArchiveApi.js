@@ -40,6 +40,6 @@ export function describeArchivePreview(data) {
     `게시 ${data.days}일 경과 공지 ${items.length}건${data.truncated ? '(한 번에 처리하는 최대 건수)' : ''} → 게시 해제`,
     ...shown,
     ...(rest > 0 ? [`… 외 ${rest}건`] : []),
-    '고정 공지는 제외, 삭제 없음(되돌릴 수 있음)',
+    '릴리즈노트 분류·고정 공지는 제외, 삭제 없음(되돌릴 수 있음)',
   ];
 }
