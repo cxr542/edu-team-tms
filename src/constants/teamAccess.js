@@ -31,7 +31,7 @@ export const TEAM_COMMON_MODULES = new Set([
 export const EXPERIMENTAL_MODULES = new Set(['cloud-chatbot']);
 
 /** 관리자 전용 메뉴 */
-export const LEADER_ONLY_MODULES = new Set(['kpi', 'kpi-report', 'kpi-approve', 'ai-office']);
+export const LEADER_ONLY_MODULES = new Set(['kpi', 'kpi-report', 'kpi-approve', 'ai-office', 'automation']);
 
 export function isLeaderOnlyModule(module) {
   return LEADER_ONLY_MODULES.has(module);

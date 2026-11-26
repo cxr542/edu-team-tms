@@ -39,6 +39,7 @@ const APP_MODULES = new Set([
   'kpi-report',
   'glossary',
   'glossary-quiz',
+  'automation',
 ]);
 
 /** 옛 module 쿼리 → 현재 모듈 id (북마크 호환) */

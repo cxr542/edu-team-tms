@@ -11,7 +11,7 @@ export const NAV_GROUP_DEFAULT_ORDER = {
   common: ['ledger', 'announcements', 'csr', 'lunch', 'lecture-journal', 'kanban', 'academizer', 'ai-office'],
   memberWork: ['journal', 'competency'],
   experimental: ['cloud-chatbot'],
-  leader: ['kpi', 'kpi-report', 'kpi-approve'],
+  leader: ['kpi', 'kpi-report', 'kpi-approve', 'automation'],
 };
 
 /** 저장된 순서를 기본 목록에 입히는 규칙: 저장된 것 중 아직 있는 메뉴를 먼저, 새 메뉴는 뒤에 */

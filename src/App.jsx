@@ -110,6 +110,8 @@ import './pages/GlossaryPage.css';
 const GlossaryPage = lazy(() => import('./pages/GlossaryPage'));
 import './pages/GlossaryQuizPage.css';
 const GlossaryQuizPage = lazy(() => import('./pages/GlossaryQuizPage'));
+import './pages/AutomationRoutinesPage.css';
+const AutomationRoutinesPage = lazy(() => import('./pages/AutomationRoutinesPage'));
 import './pages/LectureJournalPage.css';
 const LectureJournalPage = lazy(() => import('./pages/LectureJournalPage'));
 const PublicViewerGuidePage = lazy(() => import('./pages/PublicViewerGuidePage'));
@@ -1040,6 +1042,8 @@ export default function App() {
         />
       ) : displayModule === 'glossary-quiz' ? (
         <GlossaryQuizPage />
+      ) : displayModule === 'automation' && !isViewer ? (
+        <AutomationRoutinesPage />
       ) : displayModule === 'announcements' ? (
         <AnnouncementsPage
           readOnly={isViewer}
