@@ -7,6 +7,11 @@
 
 ## 2026-11-26
 
+### [수정] fix(kpi-approve): show KPI3 requests even when the month has server rows
+
+- fix(kpi-approve): show KPI3 requests even when the month has server rows
+- PR #307: https://github.com/cxr542/edu-team-tms/pull/307
+
 ### [수정] fix(admin): keep the admin login when a screen opens in a new tab
 
 - fix(admin): keep the admin login when a screen opens in a new tab
