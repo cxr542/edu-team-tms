@@ -7,6 +7,11 @@
 
 ## 2026-11-26
 
+### [수정] fix(automation): target the Mac Mail app in the mark-read prompt
+
+- fix(automation): target the Mac Mail app in the mark-read prompt
+- PR #309: https://github.com/cxr542/edu-team-tms/pull/309
+
 ### [수정] fix(toolbar): make the approval bell's count badge visible
 
 - fix(toolbar): make the approval bell's count badge visible
