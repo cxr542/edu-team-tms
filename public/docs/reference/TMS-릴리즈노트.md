@@ -7,6 +7,11 @@
 
 ## 2026-11-26
 
+### [신규] feat(admin): exclude release-note announcements from the archive routine
+
+- feat(admin): exclude release-note announcements from the archive routine
+- PR #300: https://github.com/cxr542/edu-team-tms/pull/300
+
 ### [기타] chore(ui): 배너·사이드바·메뉴 토글의 이모지 제거
 
 - chore(ui): 배너·사이드바·메뉴 토글의 이모지 제거
