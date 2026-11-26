@@ -7,6 +7,11 @@
 
 ## 2026-11-26
 
+### [신규] feat(admin): replace the remaining demo routine cards with real behaviour
+
+- feat(admin): replace the remaining demo routine cards with real behaviour
+- PR #302: https://github.com/cxr542/edu-team-tms/pull/302
+
 ### [신규] feat(admin): add a BarnDog shortcut card to the routine automation menu
 
 - feat(admin): add a BarnDog shortcut card to the routine automation menu
