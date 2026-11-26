@@ -339,3 +339,9 @@
   max-height: 9rem;
   overflow: auto;
 }
+
+.automation-btn--link {
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
+}
