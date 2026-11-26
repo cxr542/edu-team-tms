@@ -30,6 +30,7 @@ import {
   Trello,
   Crown,
   Zap,
+  Menu,
 } from 'lucide-react';
 import LeaderKpiApprovalBell from './LeaderKpiApprovalBell';
 import { useGuideSubmissionsBadge } from '../hooks/useGuideSubmissionsBadge';
@@ -558,13 +559,13 @@ export default function AppShell({
 
             <p className="sidebar-note project-sidebar-note">
               {isPublicViewerScope ? (
-                <>📌 역할별 접속 안내 · 북마크 URL 선택</>
+                <>역할별 접속 안내 · 북마크 URL 선택</>
               ) : isViewer ? (
-                <>👀 교육팀 조회 · 팀 빌딩비 장부</>
+                <>교육팀 조회 · 팀 빌딩비 장부</>
               ) : teamAccess?.isMemberScope ? (
-                <>👤 사용자 · 일지·역량·팀 공통·참고문서</>
+                <>사용자 · 일지·역량·팀 공통·참고문서</>
               ) : (
-                <>⚙️ 관리자 · 장부·KPI·팀 일지</>
+                <>관리자 · 장부·KPI·팀 일지</>
               )}
               {!isProd && (
                 <>
@@ -584,12 +585,13 @@ export default function AppShell({
               type="button"
               className="btn btn-secondary project-nav-toggle"
               id="sidebar-toggle-toolbar"
+              aria-label="사이드바 메뉴 열기·닫기"
               aria-expanded={drawerOpen}
               aria-controls="sidebar"
               {...uiTooltip('사이드바 메뉴 열기·닫기', 'below')}
               onClick={toggleSidebar}
             >
-              ☰
+              <Menu size={18} aria-hidden />
             </button>
             {!isProd && (
               <a

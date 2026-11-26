@@ -166,14 +166,14 @@ export function getEnvironmentBannerMeta({ isViewer }) {
   if (isProductionEnvironment()) {
     return {
       envLabel: '운영',
-      meta: `🚀 ${version} · ${modeHint} · 공개 스냅샷 동기화`,
+      meta: `${version} · ${modeHint} · 공개 스냅샷 동기화`,
       devWarning: null,
     };
   }
 
   return {
     envLabel: '개발',
-    meta: `🔧 ${version} · ${modeHint} · 브라우저별 로컬 저장 (운영 URL과 분리)`,
+    meta: `${version} · ${modeHint} · 브라우저별 로컬 저장 (운영 URL과 분리)`,
     devWarning: '개발 환경입니다. 실제 장부·일지는 운영 URL에서 관리하세요.',
   };
 }
