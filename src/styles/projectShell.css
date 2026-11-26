@@ -1506,7 +1506,7 @@ html.project-sidebar-collapsed-boot .project-supabase-auth {
   position: absolute;
   top: 0;
   right: 0;
-  background-color: var(--danger-color);
+  background-color: var(--color-danger, #d92d20);
   color: white;
   font-size: 0.65rem;
   font-weight: bold;
