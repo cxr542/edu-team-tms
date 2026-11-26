@@ -7,6 +7,11 @@
 
 ## 2026-11-26
 
+### [신규] feat(docs): 승인 대기 문서 전체 승인
+
+- feat(docs): 승인 대기 문서 전체 승인
+- PR #303: https://github.com/cxr542/edu-team-tms/pull/303
+
 ### [신규] feat(admin): replace the remaining demo routine cards with real behaviour
 
 - feat(admin): replace the remaining demo routine cards with real behaviour
