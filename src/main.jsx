@@ -23,6 +23,7 @@ if (typeof window !== 'undefined') {
 import './styles/projectShell.css'
 import './styles/pageHeader.css'
 import './styles/uiTooltip.css'
+import './styles/okestroTokens.css'
 import './pages/PublicViewerGuidePage.css'
 
 // 새 배포 후 이미 열려 있던 탭은 옛 화면 파일(해시가 바뀐 청크)을 찾지 못한다.
