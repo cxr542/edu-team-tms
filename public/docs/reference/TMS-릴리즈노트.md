@@ -7,6 +7,11 @@
 
 ## 2026-11-26
 
+### [신규] feat(admin): remove the browser cache card from the routine automation menu
+
+- feat(admin): remove the browser cache card from the routine automation menu
+- PR #305: https://github.com/cxr542/edu-team-tms/pull/305
+
 ### [수정] fix(ai-office): 완료한 업무·업무 완료율을 선택한 월 기준으로 산정
 
 - AI 사무실의 완료한 업무·업무 완료율이 선택한 월 기준으로 계산돼요
