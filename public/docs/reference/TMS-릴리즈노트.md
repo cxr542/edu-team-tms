@@ -7,6 +7,11 @@
 
 ## 2026-11-26
 
+### [신규] feat(admin): wire the release-note check routine to a real read-only run
+
+- feat(admin): wire the release-note check routine to a real read-only run
+- PR #296: https://github.com/cxr542/edu-team-tms/pull/296
+
 ### [신규] feat(nav): 강의일지 하단 회의록 메뉴 추가
 
 - feat(nav): 강의일지 하단 회의록 메뉴 추가
