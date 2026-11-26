@@ -1,6 +1,6 @@
 /**
  * 공지 보관 처리 (service role). 관리자 세션이 있어야 한다.
- *  - GET                          : 미리보기. 보관 대상 공지 목록만 돌려준다(아무것도 바꾸지 않음).
+ *  - GET                          : 미리보기. 보관 대상 공지 목록만 돌려준다(아무것도 바꾸지 않음). 릴리즈노트 분류·고정 공지는 제외.
  *  - POST {action:'archive', ids} : ids 중 지금도 대상인 공지를 게시 해제한다(삭제 아님).
  *  - POST {action:'restore', ids} : ids 중 게시 해제된(게시 이력이 있는) 공지를 다시 게시한다.
  * 쓰기는 is_published 한 칸뿐이다. 서버가 조건을 다시 확인하므로 미리보기 이후 바뀐 공지는 건드리지 않는다.
@@ -49,6 +49,7 @@ export async function handleAnnouncementArchive(req, res, client) {
       .select(COLUMNS)
       .eq('is_published', true)
       .eq('is_pinned', false)
+      .neq('category', 'release')
       .lt('published_at', archiveCutoffIso(now))
       .order('published_at', { ascending: true })
       .limit(ARCHIVE_MAX_IDS);

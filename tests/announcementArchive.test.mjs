@@ -18,10 +18,12 @@ const row = (id, extra = {}) => ({
 });
 
 describe('announcement archive rules', () => {
-  it('archives only published, unpinned, 90+ day old announcements', () => {
+  it('archives only published, unpinned, non-release, 90+ day old announcements', () => {
     expect(isArchiveCandidate(row('a'), NOW)).toBe(true);
     expect(isArchiveCandidate(row('a', { published_at: daysAgo(89) }), NOW)).toBe(false);
     expect(isArchiveCandidate(row('a', { is_pinned: true }), NOW)).toBe(false);
+    expect(isArchiveCandidate(row('a', { category: 'release' }), NOW)).toBe(false);
+    expect(isArchiveCandidate(row('a', { category: 'guide' }), NOW)).toBe(true);
     expect(isArchiveCandidate(row('a', { is_published: false }), NOW)).toBe(false);
     expect(isArchiveCandidate(row('a', { published_at: null }), NOW)).toBe(false);
   });
@@ -81,6 +83,7 @@ describe('announcement archive API', () => {
         row('old2', { published_at: daysAgo(200) }),
         row('new1', { published_at: daysAgo(10) }),
         row('pinned', { is_pinned: true }),
+        row('release', { category: 'release' }),
         row('draft', { is_published: false, published_at: null }),
       ],
     });
@@ -99,7 +102,7 @@ describe('announcement archive API', () => {
   it('previews candidates without changing anything', async () => {
     const res = await call(db, { method: 'GET', headers: adminHeaders() });
     expect(res.statusCode).toBe(200);
-    expect(res.body.data.items.map((i) => i.id)).toEqual(['old2', 'old1']);
+    expect(res.body.data.items.map((i) => i.id)).toEqual(['old2', 'old1']); // release·pinned·draft·new 제외
     expect(db.log.every((l) => l.op === 'select')).toBe(true);
   });
 
@@ -107,17 +110,18 @@ describe('announcement archive API', () => {
     const res = await call(db, {
       method: 'POST',
       headers: adminHeaders(),
-      body: { action: 'archive', ids: ['old1', 'new1', 'pinned', 'draft', 'missing'] },
+      body: { action: 'archive', ids: ['old1', 'new1', 'pinned', 'release', 'draft', 'missing'] },
     });
     expect(res.body.data.changedIds).toEqual(['old1']);
-    expect(res.body.data.skipped).toBe(4);
+    expect(res.body.data.skipped).toBe(5);
     const byId = Object.fromEntries(db.tables.announcements.map((r) => [r.id, r]));
     expect(byId.old1.is_published).toBe(false);
     expect(byId.old1.title).toBe('공지 old1'); // 다른 칸은 그대로
     expect(byId.old2.is_published).toBe(true);
     expect(byId.new1.is_published).toBe(true);
     expect(byId.pinned.is_published).toBe(true);
-    expect(db.tables.announcements).toHaveLength(5); // 삭제 없음
+    expect(byId.release.is_published).toBe(true); // 릴리즈노트 분류는 직접 ids 로 보내도 건드리지 않는다
+    expect(db.tables.announcements).toHaveLength(6); // 삭제 없음
     expect(db.log.filter((l) => l.op === 'update').every((l) => Object.keys(l.payload).join() === 'is_published')).toBe(true);
     expect(db.log.some((l) => l.op === 'delete')).toBe(false);
   });

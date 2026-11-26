@@ -24,6 +24,7 @@ export function makeFakeSupabase(seed = {}) {
       upsert: (p, o) => ((st.op = 'upsert'), (st.payload = p), (st.opts = o), q),
       eq: (c, v) => (st.filters.push((r) => r[c] === v), q),
       in: (c, vs) => (st.filters.push((r) => vs.includes(r[c])), q),
+      neq: (c, v) => (st.filters.push((r) => r[c] !== v), q),
       gte: (c, v) => (st.filters.push((r) => r[c] >= v), q),
       lt: (c, v) => (st.filters.push((r) => r[c] < v), q),
       order: (c, { ascending = true } = {}) => (st.orders.push([c, ascending]), q),
