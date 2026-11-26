@@ -1,9 +1,10 @@
 /**
  * Client helper for Confluence lecture-journal list proxy.
- * @param {{ parentId?: string, parentType?: 'folder' | 'page' }} [opts]
+ * @param {{ parentId?: string, parentType?: 'folder' | 'page', root?: 'lecture' | 'meeting' }} [opts]
  */
 export async function fetchLectureJournalChildren(opts = {}) {
   const params = new URLSearchParams({ action: 'list' });
+  if (opts.root === 'meeting') params.set('root', 'meeting');
   if (opts.parentId) params.set('parentId', String(opts.parentId));
   if (opts.parentType) params.set('parentType', String(opts.parentType));
 
@@ -27,7 +28,7 @@ export async function fetchLectureJournalChildren(opts = {}) {
       error:
         data?.message ||
         data?.error ||
-        `강의일지 API 오류 (${res.status})`,
+        `Confluence 목록 API 오류 (${res.status})`,
       status: res.status,
     };
   }

@@ -2,7 +2,7 @@
 
 export const VIEWER_MENU_STORAGE_KEY = 'tms-viewer-menu-v1';
 
-/** @typedef {'ledger' | 'lunch' | 'csr' | 'lecture-journal' | 'kpi-report' | 'kpi-approve' | 'docs' | 'glossary'} ViewerMenuModuleId */
+/** @typedef {'ledger' | 'lunch' | 'csr' | 'lecture-journal' | 'meeting-minutes' | 'kpi-report' | 'kpi-approve' | 'docs' | 'glossary'} ViewerMenuModuleId */
 
 /** @type {ViewerMenuModuleId[]} */
 export const VIEWER_MENU_MODULE_IDS = [
@@ -10,6 +10,7 @@ export const VIEWER_MENU_MODULE_IDS = [
   'lunch',
   'csr',
   'lecture-journal',
+  'meeting-minutes',
   'kpi-report',
   'kpi-approve',
   'docs',
@@ -22,6 +23,7 @@ export const DEFAULT_VIEWER_MENU_VISIBILITY = {
   lunch: false,
   csr: false,
   'lecture-journal': false,
+  'meeting-minutes': false,
   'kpi-report': false,
   'kpi-approve': false,
   docs: false,
@@ -49,6 +51,11 @@ export const VIEWER_MENU_OPTIONS = [
     id: 'lecture-journal',
     required: false,
     description: '강의일지 (Confluence) · 팀원 조회용',
+  },
+  {
+    id: 'meeting-minutes',
+    required: false,
+    description: '회의록 (Confluence) · 팀원 조회용',
   },
   {
     id: 'kpi-report',

@@ -6,6 +6,8 @@ export const DEFAULT_CONFLUENCE_BASE_URL = 'https://okestro.atlassian.net';
 export const DEFAULT_CONFLUENCE_SPACE_KEY = 'rDzwjbV6p8qL';
 /** Phase 0 confirmed: 「02. 강의일지 폴더」 */
 export const DEFAULT_LECTURE_FOLDER_ID = '1867843025';
+/** 「회의록」 폴더 (강의일지 하단 메뉴) */
+export const DEFAULT_MEETING_FOLDER_ID = '3580297995';
 
 /**
  * @param {NodeJS.ProcessEnv | Record<string, string | undefined>} [env]
@@ -19,6 +21,9 @@ export function resolveConfluenceConfig(env = process.env) {
   const folderId = String(
     env.CONFLUENCE_LECTURE_FOLDER_ID || DEFAULT_LECTURE_FOLDER_ID
   ).trim();
+  const meetingFolderId = String(
+    env.CONFLUENCE_MEETING_FOLDER_ID || DEFAULT_MEETING_FOLDER_ID
+  ).trim();
   const parentType = String(env.CONFLUENCE_LECTURE_PARENT_TYPE || 'folder')
     .trim()
     .toLowerCase();
@@ -30,6 +35,7 @@ export function resolveConfluenceConfig(env = process.env) {
     email,
     apiToken,
     folderId,
+    meetingFolderId,
     parentType: parentType === 'page' ? 'page' : 'folder',
     spaceKey,
     configured,

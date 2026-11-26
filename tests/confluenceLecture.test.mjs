@@ -144,6 +144,29 @@ describe('api/confluence-lecture handler', () => {
     expect(calledUrl).toContain('/wiki/api/v2/folders/1867843025/direct-children');
   });
 
+  it('lists the meeting-minutes root folder when root=meeting', async () => {
+    const fetchImpl = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify({ results: [] }),
+    }));
+    const res = mockRes();
+    await handler(
+      {
+        method: 'GET',
+        headers: { referer: 'https://edu-team-tms-ten.vercel.app/yhkim' },
+        url: '/api/confluence-lecture?action=list&root=meeting',
+      },
+      res,
+      { env: { CONFLUENCE_EMAIL: 'a@x.com', CONFLUENCE_API_TOKEN: 't' }, fetchImpl }
+    );
+    expect(res.statusCode).toBe(200);
+    expect(parseBody(res).rootFolderId).toBe('3580297995');
+    expect(String(fetchImpl.mock.calls[0][0])).toContain(
+      '/wiki/api/v2/folders/3580297995/direct-children'
+    );
+  });
+
   it('allows listing a nested folder when the lecture root is an ancestor', async () => {
     const fetchImpl = vi
       .fn()

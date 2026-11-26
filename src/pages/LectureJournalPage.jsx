@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   BookOpen,
   ChevronRight,
@@ -11,13 +11,17 @@ import {
 import { fetchLectureJournalChildren } from '../utils/confluenceLectureApi.js';
 import './LectureJournalPage.css';
 
-const ROOT_CRUMB = { id: '', title: '강의일지', type: 'folder' };
 
 /**
  * @typedef {{ id: string, title: string, type: string }} Crumb
  */
 
-export default function LectureJournalPage() {
+export default function LectureJournalPage({
+  root = 'lecture',
+  title = '강의일지',
+  tagline = 'Confluence 「02. 강의일지 폴더」 목록 · 본문은 Confluence에서 엽니다',
+} = {}) {
+  const ROOT_CRUMB = useMemo(() => ({ id: '', title, type: 'folder' }), [title]);
   const [crumbs, setCrumbs] = useState(/** @type {Crumb[]} */ ([ROOT_CRUMB]));
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +41,7 @@ export default function LectureJournalPage() {
         leaf.id && leaf.id !== ''
           ? { parentId: leaf.id, parentType: leaf.type === 'page' ? 'page' : 'folder' }
           : {};
+      opts.root = root;
       const data = await fetchLectureJournalChildren(opts);
       if (data.rootFolderId) setRootFolderId(data.rootFolderId);
       if (!data.available) {
@@ -53,7 +58,7 @@ export default function LectureJournalPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [root]);
 
   useEffect(() => {
     load(crumbs);
@@ -81,10 +86,8 @@ export default function LectureJournalPage() {
             <BookOpen size={22} />
           </span>
           <div>
-            <h1>강의일지</h1>
-            <p className="lecture-journal-header__tagline">
-              Confluence 「02. 강의일지 폴더」 목록 · 본문은 Confluence에서 엽니다
-            </p>
+            <h1>{title}</h1>
+            <p className="lecture-journal-header__tagline">{tagline}</p>
           </div>
         </div>
         <button

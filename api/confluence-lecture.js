@@ -1,6 +1,6 @@
 /**
  * Confluence 강의일지 proxy — 토큰은 서버 환경변수만 사용
- * GET /api/confluence-lecture?action=list&parentId=&parentType=folder|page
+ * GET /api/confluence-lecture?action=list&root=lecture|meeting&parentId=&parentType=folder|page
  */
 import {
   assertContentInLectureScope,
@@ -55,25 +55,32 @@ export default async function handler(req, res, options = {}) {
     return json(res, 400, { error: 'Unsupported action', available: false, items: [] });
   }
 
+  // root=meeting → 「회의록」 폴더, 그 외 → 「02. 강의일지 폴더」
+  const isMeeting = (url.searchParams.get('root') || '').trim().toLowerCase() === 'meeting';
+  const rootFolderId = isMeeting ? config.meetingFolderId : config.folderId;
+  const scopedConfig = { ...config, folderId: rootFolderId };
+
   const rawParentId = url.searchParams.get('parentId');
   const requestedId = sanitizeContentId(rawParentId);
   if (rawParentId != null && String(rawParentId).trim() !== '' && !requestedId) {
     return json(res, 400, { error: 'Invalid parentId', available: false, items: [] });
   }
-  const parentId = requestedId || config.folderId;
+  const parentId = requestedId || rootFolderId;
   const rawType = (url.searchParams.get('parentType') || '').trim().toLowerCase();
   const parentType =
     rawType === 'page' || rawType === 'folder'
       ? rawType
       : requestedId
         ? 'folder'
-        : config.parentType;
+        : isMeeting
+          ? 'folder'
+          : config.parentType;
   const fetchImpl = options.fetchImpl || fetch;
 
   try {
     if (requestedId) {
       await assertContentInLectureScope({
-        config,
+        config: scopedConfig,
         parentId,
         parentType,
         fetchImpl,
@@ -87,7 +94,7 @@ export default async function handler(req, res, options = {}) {
     });
     return json(res, 200, {
       available: true,
-      rootFolderId: config.folderId,
+      rootFolderId,
       spaceKey: config.spaceKey,
       baseUrl: config.baseUrl,
       ...listed,

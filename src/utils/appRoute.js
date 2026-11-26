@@ -30,6 +30,7 @@ const APP_MODULES = new Set([
   'lunch',
   'csr',
   'lecture-journal',
+  'meeting-minutes',
   'journal',
   'competency',
   'kanban',
