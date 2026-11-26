@@ -7,6 +7,11 @@
 
 ## 2026-11-26
 
+### [업데이트] feat(ai-office): 팀 일지를 Supabase에서 우선 읽기 (브라우저 데이터는 보완)
+
+- AI 사무실이 Supabase에 저장된 팀 일지를 우선 읽고, 데이터 출처와 마지막 갱신 시각을 표시
+- PR #261: https://github.com/cxr542/edu-team-tms/pull/261
+
 ### [신규] feat(docs): 승인 대기 문서 전체 승인
 
 - feat(docs): 승인 대기 문서 전체 승인
