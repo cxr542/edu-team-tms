@@ -135,13 +135,56 @@ describe('kpiApprovePendingApprovals', () => {
       year: 2026,
       monthIndex: 5,
     });
-    expect(fallbackPendingApprovals).not.toHaveBeenCalled();
     expect(result).toMatchObject({
       source: 'supabase',
       status: 'ok',
     });
     expect(result.data).toHaveLength(1);
     expect(result.data[0]).toMatchObject({ type: 'KPI1', member: { code: 'A' } });
+  });
+
+  it('keeps local KPI3 requests when Supabase has rows (server tables hold only KPI1/KPI2)', async () => {
+    const localKpi3 = {
+      type: 'KPI3',
+      year: 2026,
+      monthIndex: 8,
+      member: { code: 'C', displayName: '신혜윤' },
+      label: '신혜윤 · 9월 역량 · 승인 요청',
+    };
+    const fallbackPendingApprovals = vi.fn().mockReturnValue([
+      { type: 'KPI2', member: { code: 'B' } },
+      localKpi3,
+    ]);
+    const { mod } = await loadModuleWithSupabaseResult({
+      ok: true,
+      status: 'ok',
+      message: 'ok',
+      data: {
+        monthlyApprovals: [
+          {
+            member_code: 'A',
+            year_month: '2026-09',
+            status: 'submitted',
+            submitted_at: '2026-09-20T10:00:00.000Z',
+            monthly01: { status: KPI_STATUS.SUBMITTED, submittedAt: '2026-09-20T10:00:00.000Z' },
+          },
+        ],
+        kpi2RowApprovals: [],
+      },
+    });
+
+    const result = await mod.loadAdminKpiPendingApprovals({
+      year: 2026,
+      monthIndex: 8,
+      getMemberDays: () => ({}),
+      improveProjects: [],
+      fallbackPendingApprovals,
+    });
+
+    expect(result.source).toBe('supabase');
+    // local KPI1/KPI2 stay out (server wins); local KPI3 is added
+    expect(result.data.map((item) => item.type)).toEqual(['KPI1', 'KPI3']);
+    expect(result.data[1]).toBe(localKpi3);
   });
 
   it('falls back to localStorage when Supabase is disabled', async () => {
