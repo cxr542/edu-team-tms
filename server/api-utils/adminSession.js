@@ -74,3 +74,9 @@ export function hasValidAdminSession(req) {
   if (providedSig.length !== expectedSig.length) return false;
   return crypto.timingSafeEqual(providedSig, expectedSig);
 }
+
+/** Expire the admin session cookie (logout). */
+export function clearAdminSessionCookie() {
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  return `${ADMIN_SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`;
+}

@@ -59,3 +59,33 @@ describe('admin-session login throttle', () => {
     for (let i = 0; i < MAX_FAILURES - 1; i += 1) expect((await login('wrong')).statusCode).toBe(401);
   });
 });
+
+const call = async (method, cookie = '') => {
+  const handler = (await import('../api/admin-session.js')).default;
+  const res = createRes();
+  await handler({ method, headers: cookie ? { cookie } : {}, body: {} }, res);
+  return res;
+};
+
+describe('admin-session restore and logout', () => {
+  beforeEach(() => {
+    resetLoginThrottleMemory();
+    process.env.TMS_ADMIN_GATE_PASSWORD = 'secret-gate';
+    process.env.TMS_ADMIN_SESSION_SECRET = 'session-secret';
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+  });
+
+  it('GET reports an active session only with a valid cookie (new tab restore)', async () => {
+    const loggedIn = await login('secret-gate', '9.9.9.9');
+    const cookie = String(loggedIn.headers['set-cookie']).split(';')[0];
+    expect((await call('GET', cookie)).body).toEqual({ ok: true, active: true });
+    expect((await call('GET')).body).toEqual({ ok: true, active: false });
+    expect((await call('GET', 'tms-admin-session=1.2.forged')).body.active).toBe(false);
+  });
+
+  it('DELETE expires the session cookie (logout)', async () => {
+    const res = await call('DELETE');
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['set-cookie']).toMatch(/tms-admin-session=;.*Max-Age=0/);
+  });
+});
