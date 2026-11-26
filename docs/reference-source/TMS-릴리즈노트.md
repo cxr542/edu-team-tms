@@ -7,6 +7,11 @@
 
 ## 2026-11-26
 
+### [기타] chore(ui): 배너·사이드바·메뉴 토글의 이모지 제거
+
+- chore(ui): 배너·사이드바·메뉴 토글의 이모지 제거
+- PR #299: https://github.com/cxr542/edu-team-tms/pull/299
+
 ### [신규] feat(ui): 메인(접속 안내) 화면에 Okestro Design System 적용
 
 - feat(ui): 메인(접속 안내) 화면에 Okestro Design System 적용
