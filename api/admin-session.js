@@ -1,4 +1,9 @@
-import { createAdminSessionCookie, verifyAdminPassword } from '../server/api-utils/adminSession.js';
+import {
+  clearAdminSessionCookie,
+  createAdminSessionCookie,
+  hasValidAdminSession,
+  verifyAdminPassword,
+} from '../server/api-utils/adminSession.js';
 import { isAllowedPublishOrigin } from '../server/api-utils/publishOrigin.js';
 import { checkLoginAllowed, recordLoginResult } from '../server/api-utils/adminLoginThrottle.js';
 
@@ -9,8 +14,20 @@ function json(res, status, body) {
 }
 
 export default async function handler(req, res) {
+  // GET: a new tab has no sessionStorage flag — let it restore from the HttpOnly cookie.
+  if (req.method === 'GET') {
+    res.setHeader('Cache-Control', 'no-store');
+    return json(res, 200, { ok: true, active: hasValidAdminSession(req) });
+  }
+
+  // DELETE: logout must also expire the cookie, otherwise GET would log straight back in.
+  if (req.method === 'DELETE') {
+    res.setHeader('Set-Cookie', clearAdminSessionCookie());
+    return json(res, 200, { ok: true });
+  }
+
   if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
+    res.setHeader('Allow', 'GET, POST, DELETE');
     return json(res, 405, { error: 'method not allowed' });
   }
 

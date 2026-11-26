@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Lock, ArrowLeft, HelpCircle } from 'lucide-react';
 import {
   isAdminGateConfigured,
+  restoreAdminGateFromServer,
   unlockAdminGate,
   verifyAdminGatePassword,
 } from '../constants/adminGate';
@@ -15,6 +16,25 @@ export default function AdminGatePage({ onUnlocked }) {
   const [hintOpen, setHintOpen] = useState(false);
   const configured = isAdminGateConfigured();
   const [passwordHint, setPasswordHint] = useState('');
+  const [restoring, setRestoring] = useState(true);
+  const onUnlockedRef = useRef(onUnlocked);
+  onUnlockedRef.current = onUnlocked;
+
+  // 새 탭·새 창: 서버 세션 쿠키가 살아 있으면 비밀번호 없이 복원
+  useEffect(() => {
+    let alive = true;
+    restoreAdminGateFromServer().then((restored) => {
+      if (!alive) return;
+      if (restored) {
+        onUnlockedRef.current?.();
+        return;
+      }
+      setRestoring(false);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -89,6 +109,11 @@ export default function AdminGatePage({ onUnlocked }) {
             운영 배포에 <code>VITE_ADMIN_GATE_PASSWORD</code> 환경 변수를 설정해야 합니다.
           </p>
         )}
+        {restoring ? (
+          <p className="admin-gate__lead" role="status">
+            관리자 세션 확인 중…
+          </p>
+        ) : (
         <form className="admin-gate__form" onSubmit={handleSubmit}>
           <label className="admin-gate__label" htmlFor="admin-gate-password">
             접근 비밀번호
@@ -130,6 +155,7 @@ export default function AdminGatePage({ onUnlocked }) {
             들어가기
           </button>
         </form>
+        )}
         <a className="admin-gate__back" href={withAppBase('/')}>
           <ArrowLeft size={16} aria-hidden />
           접속 안내로 돌아가기

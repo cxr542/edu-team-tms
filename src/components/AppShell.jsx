@@ -59,7 +59,7 @@ import {
   isProductionEnvironment,
 } from '../constants/appEnv';
 import { isEditorMode } from '../utils/appMode';
-import { lockAdminGate } from '../constants/adminGate';
+import { logoutAdminGate } from '../constants/adminGate';
 import { useFontSizePreference } from '../hooks/useFontSizePreference';
 import { useProjectSidebar } from '../hooks/useProjectSidebar';
 import { canUseCompetencyPilot } from '../hooks/useTeamAccess';
@@ -697,8 +697,8 @@ export default function AppShell({
                   <button
                     type="button"
                     className="btn btn--hub project-toolbar__scope-link"
-                    onClick={() => {
-                      lockAdminGate();
+                    onClick={async () => {
+                      await logoutAdminGate();
                       window.location.reload();
                     }}
                     {...uiTooltip('관리자 화면에서 로그아웃 (다시 비밀번호 필요)', 'below')}
