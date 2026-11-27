@@ -7,6 +7,11 @@
 
 ## 2026-11-27
 
+### [신규] feat(lunch): 여의도 추천에 카카오 근처 식당을 실시간으로 합치기
+
+- feat(lunch): 여의도 추천에 카카오 근처 식당을 실시간으로 합치기
+- PR #314: https://github.com/cxr542/edu-team-tms/pull/314
+
 ### [신규] feat(lunch): 이번 주 점심 칸을 눌러 바로 기록
 
 - feat(lunch): 이번 주 점심 칸을 눌러 바로 기록
