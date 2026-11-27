@@ -1202,6 +1202,21 @@
   justify-content: center;
 }
 
+.lunch-more .lunch-more__check {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+  grid-column: 1 / -1;
+  font-size: 0.8rem;
+  color: var(--lunch-ink);
+  cursor: pointer;
+}
+
+.lunch-more .lunch-more__check small {
+  color: var(--lunch-muted);
+}
+
 .lunch-week {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
