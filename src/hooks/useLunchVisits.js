@@ -3,10 +3,10 @@ import { kstTodayKey } from '../utils/lunchVisits';
 
 export const LUNCH_VISITS_API = '/api/lunch-visits';
 
-async function callApi(method, body) {
+async function callApi(method, body, query = '') {
   let res;
   try {
-    res = await fetch(method === 'GET' ? `${LUNCH_VISITS_API}?days=120` : LUNCH_VISITS_API, {
+    res = await fetch(method === 'GET' ? `${LUNCH_VISITS_API}?days=120` : `${LUNCH_VISITS_API}${query}`, {
       method,
       headers: body ? { 'Content-Type': 'application/json' } : undefined,
       body: body ? JSON.stringify(body) : undefined,
@@ -51,14 +51,15 @@ export function useLunchVisits() {
     };
   }, []);
 
-  /** 오늘 점심을 기록(같은 날이면 바꿈). 실패하면 { ok:false, message } */
+  /** 점심을 기록(기본 오늘, day 로 지난 6일 안의 날짜). 같은 날이면 바꾼다. 실패하면 { ok:false, message } */
   const recordToday = useCallback(
-    async (spot) => {
+    async (spot, day) => {
       if (status !== 'ready') return { ok: false, message: '서버 기록을 쓸 수 없습니다.' };
       const r = await callApi('POST', {
         spotId: spot.id,
         spotName: spot.name,
         category: spot.category || '',
+        ...(day ? { day } : {}),
       });
       if (!r.ok) return r;
       const visit = r.data.visit;
@@ -68,9 +69,10 @@ export function useLunchVisits() {
     [status]
   );
 
-  const clearToday = useCallback(async () => {
+  /** 기록 지우기(기본 오늘) */
+  const clearToday = useCallback(async (day) => {
     if (status !== 'ready') return { ok: false, message: '서버 기록을 쓸 수 없습니다.' };
-    const r = await callApi('DELETE');
+    const r = await callApi('DELETE', undefined, day ? `?day=${encodeURIComponent(day)}` : '');
     if (!r.ok) return r;
     setVisits((prev) => prev.filter((v) => v.day !== r.data.day));
     return { ok: true };

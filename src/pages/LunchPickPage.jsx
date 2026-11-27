@@ -381,26 +381,158 @@ function AltMini({ spot, busy, onChoose, onExclude }) {
 }
 
 /** C안 오른쪽 — 이번 주 점심 · 자주 간 곳 */
-function LunchSidePanel({ week, top, serverReady, onFind }) {
+/** 이번 주 칸을 눌렀을 때 그 날 점심을 바로 고르는 작은 창 */
+function WeekDayPicker({ day, catalog, top, busy, onRecord, onClear, onClose }) {
+  const [query, setQuery] = useState('');
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const q = query.trim().toLowerCase();
+  const options = useMemo(() => {
+    if (q) {
+      return catalog
+        .filter(
+          (s) =>
+            s.name.toLowerCase().includes(q) ||
+            (s.category || '').toLowerCase().includes(q) ||
+            spotMenuLine(s).toLowerCase().includes(q)
+        )
+        .slice(0, 6);
+    }
+    // 검색 전에는 자주 간 곳부터 보여준다
+    const byId = new Map(catalog.map((s) => [s.id, s]));
+    const frequent = top.map((t) => byId.get(t.spotId) || { id: t.spotId, name: t.spotName, category: '' });
+    const seen = new Set(frequent.map((s) => s.id));
+    return [...frequent, ...catalog.filter((s) => !seen.has(s.id))].slice(0, 6);
+  }, [q, catalog, top]);
+  const exact = q && catalog.some((s) => s.name.toLowerCase() === q);
+
+  const [, mm, dd] = day.key.split('-');
+  return (
+    <div
+      className="lunch-daypick"
+      role="dialog"
+      aria-label={`${day.label}요일 점심 기록`}
+      onKeyDown={(e) => e.key === 'Escape' && onClose()}
+    >
+      <div className="lunch-daypick__head">
+        <strong>
+          {Number(mm)}/{Number(dd)} ({day.label}) 점심
+        </strong>
+        <button type="button" className="lunch-daypick__close" onClick={onClose} aria-label="닫기">
+          <X size={14} aria-hidden />
+        </button>
+      </div>
+      <input
+        ref={inputRef}
+        type="search"
+        className="form-input lunch-daypick__search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="식당 이름·종류로 찾기"
+      />
+      <ul className="lunch-daypick__list">
+        {options.map((s) => (
+          <li key={s.id}>
+            <button type="button" disabled={busy} onClick={() => onRecord(s)}>
+              <span>{s.name}</span>
+              {s.category && <small>{s.category}</small>}
+            </button>
+          </li>
+        ))}
+        {q && !exact && (
+          <li>
+            <button
+              type="button"
+              className="is-manual"
+              disabled={busy}
+              onClick={() => onRecord({ id: `manual:${query.trim()}`, name: query.trim(), category: '' })}
+            >
+              <Plus size={12} aria-hidden />
+              <span>「{query.trim()}」(으)로 기록</span>
+            </button>
+          </li>
+        )}
+        {!options.length && !q && <li className="lunch-daypick__empty">단골 식당이 아직 없어요.</li>}
+      </ul>
+      {day.visit && (
+        <button type="button" className="lunch-link lunch-daypick__clear" disabled={busy} onClick={onClear}>
+          <Undo2 size={12} aria-hidden />
+          이 날 기록 지우기
+        </button>
+      )}
+    </div>
+  );
+}
+
+function LunchSidePanel({ week, top, serverReady, canEdit, catalog, busy, onRecordDay, onClearDay, onFind }) {
+  const [openKey, setOpenKey] = useState(null);
+  const openDay = week.find((d) => d.key === openKey) || null;
+
+  const record = async (spot) => {
+    const ok = await onRecordDay(openDay, spot);
+    if (ok) setOpenKey(null);
+  };
+  const clear = async () => {
+    const ok = await onClearDay(openDay);
+    if (ok) setOpenKey(null);
+  };
+
   return (
     <aside className="lunch-side" aria-label="점심 기록">
       <section className="lunch-side__card">
         <h3 className="lunch-side__title">이번 주 점심</h3>
         <ol className="lunch-week">
-          {week.map((d) => (
-            <li
-              key={d.key}
-              className={`lunch-week__day${d.isToday ? ' is-today' : ''}${d.isFuture ? ' is-future' : ''}`}
-            >
-              <span className="lunch-week__label">{d.label}</span>
-              <span className="lunch-week__spot" title={d.visit?.spotName || ''}>
-                {d.visit ? d.visit.spotName : d.isToday ? '?' : '–'}
-              </span>
-            </li>
-          ))}
+          {week.map((d) => {
+            const text = d.visit ? d.visit.spotName : d.isToday ? '?' : '–';
+            const editable = canEdit && !d.isFuture;
+            return (
+              <li
+                key={d.key}
+                className={`lunch-week__day${d.isToday ? ' is-today' : ''}${d.isFuture ? ' is-future' : ''}${
+                  openKey === d.key ? ' is-open' : ''
+                }`}
+              >
+                <span className="lunch-week__label">{d.label}</span>
+                {editable ? (
+                  <button
+                    type="button"
+                    className="lunch-week__spot lunch-week__spot--btn"
+                    title={d.visit ? `${d.visit.spotName} — 눌러서 바꾸기` : '눌러서 이 날 점심 기록'}
+                    aria-expanded={openKey === d.key}
+                    onClick={() => setOpenKey((k) => (k === d.key ? null : d.key))}
+                  >
+                    {text}
+                  </button>
+                ) : (
+                  <span className="lunch-week__spot" title={d.visit?.spotName || ''}>
+                    {text}
+                  </span>
+                )}
+              </li>
+            );
+          })}
         </ol>
+        {openDay && (
+          <WeekDayPicker
+            key={openDay.key}
+            day={openDay}
+            catalog={catalog}
+            top={top}
+            busy={busy}
+            onRecord={record}
+            onClear={clear}
+            onClose={() => setOpenKey(null)}
+          />
+        )}
         {!serverReady && (
           <p className="lunch-side__hint">서버 기록을 불러오지 못해 이 브라우저 기록으로 보여줘요.</p>
+        )}
+        {serverReady && canEdit && !openDay && (
+          <p className="lunch-side__hint">칸을 누르면 그 날 점심을 바로 기록해요.</p>
         )}
       </section>
 
@@ -629,6 +761,33 @@ export default function LunchPickPage() {
     const r = await clearToday();
     setVisitBusy(false);
     if (!r.ok) setRegisterToast(`기록을 취소하지 못했어요: ${r.message}`);
+  };
+
+  /** 이번 주 칸에서 고른 날 점심 기록. 성공하면 true */
+  const handleRecordDay = async (day, spot) => {
+    if (day.isToday) {
+      markVisited(spot.id);
+    }
+    setVisitBusy(true);
+    const r = await recordToday(spot, day.isToday ? undefined : day.key);
+    setVisitBusy(false);
+    if (!r.ok) {
+      setRegisterToast(`서버에 기록하지 못했어요: ${r.message}`);
+      return false;
+    }
+    return true;
+  };
+
+  const handleClearDay = async (day) => {
+    if (day.isToday && todayVisit) unmarkVisited(todayVisit.spotId);
+    setVisitBusy(true);
+    const r = await clearToday(day.isToday ? undefined : day.key);
+    setVisitBusy(false);
+    if (!r.ok) {
+      setRegisterToast(`기록을 지우지 못했어요: ${r.message}`);
+      return false;
+    }
+    return true;
   };
 
   const togglePriceWithin = () =>
@@ -1005,6 +1164,11 @@ export default function LunchPickPage() {
             week={weekView}
             top={topSpots}
             serverReady={serverReady || visitsStatus === 'loading'}
+            canEdit={serverReady}
+            catalog={catalogSpots}
+            busy={visitBusy}
+            onRecordDay={handleRecordDay}
+            onClearDay={handleClearDay}
             onFind={() => setTab('find')}
           />
         </div>
