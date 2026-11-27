@@ -23,7 +23,9 @@ alter table public.lunch_visits enable row level security;
 revoke all on table public.lunch_visits from anon, authenticated;
 grant select, insert, update, delete on table public.lunch_visits to service_role;
 
--- 확인: service_role 만 SELECT/INSERT/UPDATE/DELETE 가 보여야 한다.
+-- 확인: anon·authenticated 행이 하나도 없어야 한다.
+-- service_role 은 Supabase 기본 권한 때문에 7개(TRUNCATE·REFERENCES·TRIGGER 포함)가 보일 수 있고, 정상이다.
+-- postgres(테이블 소유자) 행도 보일 수 있다.
 select grantee, privilege_type
 from information_schema.role_table_grants
 where table_schema = 'public'
