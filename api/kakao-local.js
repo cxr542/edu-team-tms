@@ -65,7 +65,8 @@ export default async function handler(req, res, options = {}) {
   kakaoUrl.searchParams.set('y', lat);
   if (purpose === 'food') {
     kakaoUrl.searchParams.set('radius', radius);
-    kakaoUrl.searchParams.set('sort', 'distance');
+    // 거리순은 늘 가장 가까운 곳만 주므로, 넓은 반경은 화면이 accuracy(정확도순)를 고를 수 있다.
+    kakaoUrl.searchParams.set('sort', url.searchParams.get('sort') === 'accuracy' ? 'accuracy' : 'distance');
     kakaoUrl.searchParams.set('category_group_code', 'FD6');
   } else {
     kakaoUrl.searchParams.set('sort', 'accuracy');
@@ -92,6 +93,7 @@ export default async function handler(req, res, options = {}) {
       id: doc.id,
       name: doc.place_name,
       category: doc.category_name?.split('>').pop()?.trim() || '음식점',
+      categoryPath: doc.category_name || '',
       address: doc.road_address_name || doc.address_name || '',
       lat: doc.y ? parseFloat(doc.y) : null,
       lng: doc.x ? parseFloat(doc.x) : null,
