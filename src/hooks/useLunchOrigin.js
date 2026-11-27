@@ -14,6 +14,7 @@ import {
  *   customLat?: number,
  *   customLng?: number,
  *   customRadiusM?: number,
+ *   radiusM?: number,
  * }} StoredOrigin */
 
 function readStored() {
@@ -28,8 +29,10 @@ function readStored() {
 
 /** @param {StoredOrigin | null} stored */
 export function resolveOrigin(stored) {
+  // 프리셋 위치도 반경만 따로 고를 수 있다(배달까지 넓게 보기).
+  const radiusOverride = Number(stored?.radiusM) > 0 ? { radiusM: Number(stored.radiusM) } : {};
   if (!stored || stored.presetId === DEFAULT_LUNCH_ORIGIN.id) {
-    return { ...DEFAULT_LUNCH_ORIGIN };
+    return { ...DEFAULT_LUNCH_ORIGIN, ...radiusOverride };
   }
   if (stored.presetId === CUSTOM_ORIGIN_PRESET_ID) {
     const lat = Number(stored.customLat);
@@ -46,7 +49,7 @@ export function resolveOrigin(stored) {
     }
   }
   const preset = LUNCH_ORIGIN_PRESETS.find((p) => p.id === stored.presetId);
-  return preset ? { ...preset } : { ...DEFAULT_LUNCH_ORIGIN };
+  return preset ? { ...preset, ...radiusOverride } : { ...DEFAULT_LUNCH_ORIGIN, ...radiusOverride };
 }
 
 export function useLunchOrigin() {
@@ -73,7 +76,21 @@ export function useLunchOrigin() {
         });
         return;
       }
-      applyStored({ presetId });
+      const prev = readStored();
+      applyStored(prev?.radiusM ? { presetId, radiusM: prev.radiusM } : { presetId });
+    },
+    [applyStored]
+  );
+
+  /** 지금 기준 위치의 반경만 바꾼다(직접 지정이면 그 반경, 프리셋이면 덮어쓰기 값). */
+  const setRadius = useCallback(
+    (radiusM) => {
+      const prev = readStored() || { presetId: DEFAULT_LUNCH_ORIGIN.id };
+      if (prev.presetId === CUSTOM_ORIGIN_PRESET_ID) {
+        applyStored({ ...prev, customRadiusM: radiusM });
+        return;
+      }
+      applyStored({ ...prev, radiusM });
     },
     [applyStored]
   );
@@ -112,6 +129,7 @@ export function useLunchOrigin() {
     stored,
     setPreset,
     setCustomOrigin,
+    setRadius,
     resetOrigin,
     presets: LUNCH_ORIGIN_PRESETS,
     customPresetId: CUSTOM_ORIGIN_PRESET_ID,

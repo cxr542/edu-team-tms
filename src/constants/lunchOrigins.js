@@ -80,6 +80,14 @@ export function formatRadiusKm(radiusM) {
   return `${Number.isInteger(km) ? km : km.toFixed(1)}km`;
 }
 
+/** 기준 위치 반경 빠른 선택(배달까지 생각하면 넓게) */
+export const LUNCH_RADIUS_OPTIONS = [
+  { value: 1000, label: '1km', hint: '걸어서' },
+  { value: 2000, label: '2km', hint: '' },
+  { value: 3000, label: '3km', hint: '배달' },
+  { value: 5000, label: '5km', hint: '' },
+];
+
 /** @param {number|string} km */
 export function kmToRadiusM(km) {
   const n = Number(km);
