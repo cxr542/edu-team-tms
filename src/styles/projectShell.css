@@ -1048,6 +1048,13 @@ html.project-sidebar-collapsed-boot .project-sidebar-rail__icon {
   margin-left: 0;
 }
 
+/* 오른쪽 끝 버튼의 툴팁을 가운데 정렬하면 숨긴 상태에서도 화면 밖으로 나가 가로 스크롤이 생긴다 → 오른쪽 맞춤 */
+.project-toolbar__actions [data-ui-tooltip]::after {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
 .leader-kpi-approval-bell {
   position: relative;
   display: inline-flex;
