@@ -111,6 +111,34 @@ describe('/api/lunch-visits', () => {
     expect(list.body.visits.map((v) => v.day)).toEqual(['2026-11-25']);
   });
 
+  it('POST day 로 지난 6일 안의 날짜를 채울 수 있고, 미래·너무 오래된 날짜·형식 오류는 400', async () => {
+    const db = makeFakeSupabase({ lunch_visits: [] });
+    const post = (day) =>
+      call(db, { method: 'POST', headers: member('yhkim'), body: { spotId: 's1', spotName: '백반마을', day } });
+    const ok = await post('2026-11-24');
+    expect(ok.statusCode).toBe(200);
+    expect(ok.body.visit.day).toBe('2026-11-24');
+    expect((await post('2026-11-20')).statusCode).toBe(200); // 6일 전
+    expect((await post('2026-11-19')).statusCode).toBe(400); // 7일 전
+    expect((await post('2026-11-27')).statusCode).toBe(400); // 내일
+    expect((await post('11/24')).statusCode).toBe(400);
+    const list = await call(db, { method: 'GET', headers: member('yhkim') });
+    expect(list.body.visits.map((v) => v.day)).toEqual(['2026-11-24', '2026-11-20']);
+  });
+
+  it('DELETE ?day= 로 그 날 기록만 지운다', async () => {
+    const db = makeFakeSupabase({
+      lunch_visits: [row({ visited_on: '2026-11-26' }), row({ visited_on: '2026-11-25' })],
+    });
+    const res = await call(db, { method: 'DELETE', url: '/api/lunch-visits?day=2026-11-25', headers: member('yhkim') });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.day).toBe('2026-11-25');
+    const list = await call(db, { method: 'GET', headers: member('yhkim') });
+    expect(list.body.visits.map((v) => v.day)).toEqual(['2026-11-26']);
+    const bad = await call(db, { method: 'DELETE', url: '/api/lunch-visits?day=2026-12-01', headers: member('yhkim') });
+    expect(bad.statusCode).toBe(400);
+  });
+
   it('DB 오류는 일반 문구 500', async () => {
     const db = { from: () => { const q = { select: () => q, eq: () => q, gte: () => q, order: () => q, then: (r) => r({ data: null, error: { message: 'permission denied' } }) }; return q; } };
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});

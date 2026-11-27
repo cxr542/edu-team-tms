@@ -1255,6 +1255,129 @@
   color: var(--lunch-muted);
 }
 
+.lunch-week__spot--btn {
+  border: none;
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s ease, outline-color 0.12s ease;
+}
+
+.lunch-week__spot--btn:hover,
+.lunch-week__spot--btn:focus-visible {
+  background: var(--primary-glow);
+  outline: 1px solid rgba(31, 61, 255, 0.45);
+}
+
+.lunch-week__day.is-open .lunch-week__spot--btn {
+  background: var(--primary);
+  color: #fff;
+  outline: none;
+}
+
+.lunch-daypick {
+  margin-top: 0.6rem;
+  padding: 0.65rem;
+  border: 1px solid var(--lunch-border);
+  border-radius: var(--lunch-radius-sm);
+  background: var(--lunch-surface);
+  box-shadow: var(--shadow-md);
+}
+
+.lunch-daypick__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+  font-size: 0.8rem;
+  color: var(--lunch-ink);
+}
+
+.lunch-daypick__close {
+  display: inline-flex;
+  padding: 0.2rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--lunch-muted);
+  cursor: pointer;
+}
+
+.lunch-daypick__close:hover {
+  background: var(--lunch-cream);
+}
+
+.lunch-daypick__search {
+  width: 100%;
+  font-size: 0.8rem;
+}
+
+.lunch-daypick__list {
+  margin: 0.45rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.lunch-daypick__list button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--lunch-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.lunch-daypick__list button span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lunch-daypick__list button small {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: var(--lunch-muted);
+}
+
+.lunch-daypick__list button:hover:not(:disabled),
+.lunch-daypick__list button:focus-visible {
+  background: var(--primary-glow);
+}
+
+.lunch-daypick__list button.is-manual {
+  justify-content: flex-start;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.lunch-daypick__list button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.lunch-daypick__empty {
+  padding: 0.4rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--lunch-muted);
+}
+
+.lunch-daypick__clear {
+  margin-top: 0.4rem;
+}
+
 .lunch-top {
   margin: 0;
   padding: 0;

@@ -4,6 +4,7 @@
  * unless only `balance` changed.
  */
 export function makeFakeSupabase(seed = {}) {
+  let autoId = 0;
   const tables = {
     ledger_transactions: [],
     ledger_categories: [],
@@ -48,7 +49,10 @@ export function makeFakeSupabase(seed = {}) {
         return { data: out, error: null };
       }
       if (st.op === 'insert') {
-        const list = Array.isArray(st.payload) ? st.payload : [st.payload];
+        // 기본키를 안 보내면 DB 처럼 자동 값을 붙인다(gen_random_uuid 흉내).
+        const list = (Array.isArray(st.payload) ? st.payload : [st.payload]).map((p) =>
+          p[pk[name]] == null ? { ...p, [pk[name]]: `auto-${++autoId}` } : p
+        );
         for (const p of list) {
           if (rows.some((r) => r[pk[name]] === p[pk[name]])) {
             return { data: null, error: { code: '23505', message: 'duplicate key' } };

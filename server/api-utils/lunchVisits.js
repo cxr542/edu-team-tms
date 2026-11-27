@@ -2,8 +2,9 @@
  * 오늘 뭐 먹지 — 구성원별 점심 방문 기록 (service role, 테이블 lunch_visits).
  *
  * - GET     요청한 화면 주소의 구성원 기록을 최근 순으로 돌려준다(기본 120일).
- * - POST    오늘(한국 시간) 점심을 기록한다. 하루 한 곳이라 같은 날 다시 보내면 바꾼다.
- * - DELETE  오늘 기록을 지운다("여기 갈래요" 취소).
+ * - POST    점심을 기록한다(기본 오늘, 한국 시간). 하루 한 곳이라 같은 날 다시 보내면 바꾼다.
+ *           몸통 day(YYYY-MM-DD)로 지난 6일 안의 날짜도 고를 수 있다(빠뜨린 날 채우기). 미래는 거절.
+ * - DELETE  기록을 지운다(기본 오늘, ?day= 로 지난 6일 안의 날짜).
  *
  * 구성원은 Referer 주소(/yhkim, /wschoi, /hyshin)로만 정한다. 몸통의 구성원 값은 받지 않는다.
  * Origin/Referer 는 인증이 아니다. 점심 기록이라 이 약한 검사로 충분하다고 보고, 관리자 화면(/admin)은
@@ -17,6 +18,8 @@ export const LUNCH_VISITS_TABLE = 'lunch_visits';
 const DEFAULT_DAYS = 120;
 const MAX_DAYS = 400;
 const LIMITS = { spotId: 200, spotName: 120, category: 40 };
+const BACKFILL_DAYS = 6;
+const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 const COLUMNS = 'member_code, visited_on, spot_id, spot_name, category, updated_at';
 
 function json(res, status, body) {
@@ -36,6 +39,15 @@ function asText(value) {
 /** 한국 시간 기준 YYYY-MM-DD */
 export function kstDayKey(now = new Date()) {
   return new Date(now.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+/** 요청한 날짜가 오늘~지난 6일 안이면 그 날짜, 비었으면 오늘, 아니면 null */
+function resolveDay(raw, now) {
+  const today = kstDayKey(now);
+  if (raw == null || raw === '') return today;
+  if (typeof raw !== 'string' || !DAY_RE.test(raw)) return null;
+  const earliest = kstDayKey(new Date(now.getTime() - BACKFILL_DAYS * 24 * 60 * 60 * 1000));
+  return raw >= earliest && raw <= today ? raw : null;
 }
 
 function dbFailed(res, action, error) {
@@ -102,7 +114,8 @@ async function recordVisit(req, res, client, now) {
     return fail(res, 400, 'invalid', 'spotName 이 올바르지 않습니다.');
   }
 
-  const day = kstDayKey(now);
+  const day = resolveDay(body.day, now);
+  if (!day) return fail(res, 400, 'invalid', `오늘부터 ${BACKFILL_DAYS}일 전까지만 기록할 수 있습니다.`);
   const fields = { spot_id: spotId, spot_name: spotName, category, updated_at: now.toISOString() };
 
   const { data: existing, error: findError } = await client
@@ -125,10 +138,12 @@ async function recordVisit(req, res, client, now) {
   });
 }
 
-async function clearToday(req, res, client, now) {
+async function clearDay(req, res, client, now) {
   const memberCode = requireMember(req, res);
   if (!memberCode) return undefined;
-  const day = kstDayKey(now);
+  const url = new URL(req.url || '/', 'http://local');
+  const day = resolveDay(url.searchParams.get('day'), now);
+  if (!day) return fail(res, 400, 'invalid', `오늘부터 ${BACKFILL_DAYS}일 전까지만 지울 수 있습니다.`);
   const { error } = await client
     .from(LUNCH_VISITS_TABLE)
     .delete()
@@ -143,7 +158,7 @@ export async function handleLunchVisits(req, res, client, options = {}) {
   const now = options.now || new Date();
   if (req.method === 'GET') return listVisits(req, res, client, now);
   if (req.method === 'POST') return recordVisit(req, res, client, now);
-  if (req.method === 'DELETE') return clearToday(req, res, client, now);
+  if (req.method === 'DELETE') return clearDay(req, res, client, now);
   res.setHeader('Allow', 'GET, POST, DELETE');
   return fail(res, 405, 'error', 'method not allowed');
 }
