@@ -96,6 +96,10 @@
       "destination": "/api/announcements"
     },
     {
+      "source": "/api/lunch-visits",
+      "destination": "/api/announcements"
+    },
+    {
       "source": "/api/csr-attachments",
       "destination": "/api/announcements"
     },
