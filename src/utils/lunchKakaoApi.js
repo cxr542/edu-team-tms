@@ -60,6 +60,24 @@ export async function searchKakaoLocal({ query, page = 1, lat, lng, radius, purp
   }
 }
 
+let probePromise = null;
+
+/**
+ * 카카오 장소 검색을 쓸 수 있는지(서버에 키가 있는지) 한 번만 확인한다.
+ * @returns {Promise<boolean>}
+ */
+export function probeKakaoLocal() {
+  if (!probePromise) {
+    probePromise = fetch('/api/kakao-local?probe=1')
+      .then(async (res) => {
+        const body = await res.json().catch(() => null);
+        return res.ok && body?.available === true;
+      })
+      .catch(() => false);
+  }
+  return probePromise;
+}
+
 /**
  * 식당 이름으로 카카오 장소 1건 조회 (등록 폼 지도 URL 자동 채우기)
  * @param {{ name: string, lat?: number, lng?: number, radius?: number }} opts

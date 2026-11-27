@@ -14,14 +14,16 @@
 .project-main .lecture-journal-header,
 .project-main .kanban-header,
 .project-main .announcements-header,
-.project-main .csr-board-header {
+.project-main .csr-board-header,
+.project-main .lunch-top-bar {
   margin-bottom: 1.25rem;
   gap: 1rem;
 }
 
 /* 아이콘 박스: 연한 블루 배경 + 블루 아이콘 */
 .project-main .academizer-header__icon,
-.project-main .lecture-journal-header__icon {
+.project-main .lecture-journal-header__icon,
+.project-main .lunch-top-bar__icon {
   width: var(--page-header-icon-size);
   height: var(--page-header-icon-size);
   border-radius: 12px;
@@ -51,7 +53,8 @@
 .project-main .kanban-header__title h2,
 .project-main .announcements-header__title h2,
 .project-main .csr-board-header__title h2,
-.project-main .glossary-header__title {
+.project-main .glossary-header__title,
+.project-main .lunch-top-bar__title h1 {
   margin: 0;
   font-size: var(--page-header-title-size);
   font-weight: 700;
@@ -65,7 +68,8 @@
 .project-main .lecture-journal-header__tagline,
 .project-main .kanban-header__title p,
 .project-main .announcements-header__title p,
-.project-main .csr-board-header__title p {
+.project-main .csr-board-header__title p,
+.project-main .lunch-top-bar__tagline {
   margin: 0.25rem 0 0;
   font-size: 0.875rem;
   line-height: 1.5;

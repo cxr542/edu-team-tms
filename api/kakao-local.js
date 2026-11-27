@@ -46,6 +46,10 @@ export default async function handler(req, res, options = {}) {
   }
 
   const url = new URL(req.url, `http://${req.headers.host}`);
+  // 화면이 검색 전에 "자동 찾기를 쓸 수 있는지"만 묻는 용도 — 카카오를 부르지 않는다.
+  if (url.searchParams.get('probe') === '1') {
+    return json(res, 200, { available: true, places: [] });
+  }
   const query = url.searchParams.get('query') || '파크원타워 맛집';
   const page = Math.min(Math.max(parseInt(url.searchParams.get('page') || '1', 10), 1), 45);
   const lat = url.searchParams.get('lat') || '37.5261';
