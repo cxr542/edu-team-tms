@@ -7,6 +7,11 @@
 
 ## 2026-11-27
 
+### [수정] fix(toolbar): 오른쪽 위 버튼 툴팁 때문에 생기던 가로 넘침 수정
+
+- fix(toolbar): 오른쪽 위 버튼 툴팁 때문에 생기던 가로 넘침 수정
+- PR #311: https://github.com/cxr542/edu-team-tms/pull/311
+
 ### [신규] feat(lunch): 오늘 뭐 먹지 2단 화면(C안) + 방문 기록 서버 저장
 
 - feat(lunch): 오늘 뭐 먹지 2단 화면(C안) + 방문 기록 서버 저장
