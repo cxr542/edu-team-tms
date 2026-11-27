@@ -1,17 +1,17 @@
-/* 오늘 뭐 먹지 — 맛집 앱 스타일 (크림 톤 · 라운드 카드 · 카테고리 히어로) */
+/* 오늘 뭐 먹지 — 다른 메뉴와 같은 앱 토큰(흰 카드 · 회색 테두리 · 블루 강조)을 쓴다 */
 
 .lunch-pick-main {
-  --lunch-cream: #faf7f4;
+  --lunch-cream: var(--bg-tertiary);
   --lunch-surface: #ffffff;
-  --lunch-ink: #1a1d26;
-  --lunch-muted: #6b7280;
-  --lunch-border: rgba(26, 29, 38, 0.08);
-  --lunch-accent: #006dff;
+  --lunch-ink: var(--text-primary);
+  --lunch-muted: var(--text-muted);
+  --lunch-border: var(--border-color);
+  --lunch-accent: var(--primary);
   --lunch-coral: #f15928;
-  --lunch-radius: 20px;
-  --lunch-radius-sm: 14px;
-  --lunch-shadow: 0 8px 32px rgba(26, 29, 38, 0.08);
-  --lunch-shadow-hover: 0 12px 40px rgba(0, 109, 255, 0.14);
+  --lunch-radius: var(--radius-md);
+  --lunch-radius-sm: var(--radius-sm);
+  --lunch-shadow: var(--shadow-sm);
+  --lunch-shadow-hover: var(--shadow-md);
 
   flex: 1;
   min-height: 0;
@@ -40,9 +40,9 @@
   padding: 0.6rem 0.85rem;
   margin-bottom: 0.75rem;
   border-radius: var(--lunch-radius-sm);
-  background: #eef6ff;
-  border: 1px solid rgba(0, 109, 255, 0.2);
-  color: #0b4a9e;
+  background: var(--primary-glow);
+  border: 1px solid rgba(31, 61, 255, 0.2);
+  color: var(--primary-focus);
 }
 
 .lunch-pick-toast__dismiss {
@@ -66,14 +66,14 @@
 }
 
 .lunch-pick-banner--info {
-  background: #eef6ff;
-  border-color: rgba(0, 109, 255, 0.25);
-  color: #0b4a9e;
+  background: var(--primary-glow);
+  border-color: rgba(31, 61, 255, 0.25);
+  color: var(--primary-focus);
 }
 
 /* —— Content panel —— */
 .lunch-pick-panel {
-  background: var(--lunch-cream);
+  background: var(--lunch-surface);
   border-radius: var(--lunch-radius);
   padding: 1.1rem 1.15rem 1.5rem;
   color: var(--lunch-ink);
@@ -109,9 +109,9 @@
 
 .lunch-tag-btn.is-on {
   border-color: var(--lunch-accent);
-  background: linear-gradient(135deg, #eef6ff, #fff);
+  background: linear-gradient(135deg, var(--primary-glow), #fff);
   color: var(--lunch-accent);
-  box-shadow: 0 2px 8px rgba(0, 109, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(31, 61, 255, 0.15);
 }
 
 /* —— Buttons —— */
@@ -156,7 +156,7 @@
 
 .lunch-btn--map {
   color: var(--lunch-accent);
-  background: #eef6ff;
+  background: var(--primary-glow);
   text-decoration: none;
 }
 
@@ -191,7 +191,7 @@
 
 /* —— Cards —— */
 .lunch-card {
-  --lunch-card-accent: #006dff;
+  --lunch-card-accent: var(--primary);
   background: var(--lunch-surface);
   border: 1px solid var(--lunch-border);
   border-radius: var(--lunch-radius);
@@ -207,7 +207,7 @@
 }
 
 .lunch-card--primary {
-  border-color: rgba(0, 109, 255, 0.2);
+  border-color: rgba(31, 61, 255, 0.2);
   box-shadow: var(--lunch-shadow-hover);
 }
 
@@ -307,7 +307,7 @@
 }
 
 .lunch-card__badge--custom {
-  background: #eef6ff;
+  background: var(--primary-glow);
   color: var(--lunch-accent);
 }
 
@@ -491,7 +491,7 @@
 
 .lunch-origin-preset-btn.is-active {
   border-color: var(--lunch-accent);
-  background: #eef6ff;
+  background: var(--primary-glow);
   color: var(--lunch-accent);
 }
 
@@ -650,7 +650,7 @@
 }
 
 .lunch-map-suggest__item:hover {
-  background: #eef6ff;
+  background: var(--primary-glow);
 }
 
 .lunch-map-suggest__name {
@@ -738,7 +738,7 @@
 .lunch-edit-drawer__title {
   font-size: 1rem;
   font-weight: 900;
-  color: #1a1d26;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
 }
 
@@ -755,7 +755,7 @@
 }
 
 .lunch-edit-drawer__close:hover {
-  background: rgba(0, 109, 255, 0.12);
+  background: rgba(31, 61, 255, 0.12);
   color: var(--lunch-accent);
 }
 
@@ -770,29 +770,31 @@
 /* 상단 바: 제목·위치 한 줄 + 탭 */
 .lunch-top-bar {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-  margin: 0.25rem 0 1rem;
 }
 
-.lunch-top-bar__title h1 {
-  margin: 0;
-  font-size: 1.45rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  color: var(--lunch-ink);
+.lunch-top-bar__brand {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 0;
 }
 
-.lunch-top-bar__title p {
+.lunch-top-bar__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.lunch-top-bar__tagline {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 0.3rem;
-  margin: 0.25rem 0 0;
-  font-size: 0.82rem;
-  color: var(--lunch-muted);
 }
 
 .lunch-seg {
@@ -911,13 +913,13 @@
 }
 
 .lunch-chip:hover {
-  border-color: rgba(0, 109, 255, 0.4);
+  border-color: rgba(31, 61, 255, 0.4);
 }
 
 .lunch-chip.is-on {
-  background: #eef6ff;
-  border-color: rgba(0, 109, 255, 0.45);
-  color: #0b4a9e;
+  background: var(--primary-glow);
+  border-color: rgba(31, 61, 255, 0.45);
+  color: var(--primary-focus);
 }
 
 .lunch-chip.is-on.is-strong {
@@ -994,7 +996,7 @@
 .lunch-hero__icon {
   width: 84px;
   height: 84px;
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1098,8 +1100,8 @@
 
 .lunch-pill--soft {
   font-size: 0.68rem;
-  background: #eef6ff;
-  color: #0b4a9e;
+  background: var(--primary-glow);
+  color: var(--primary-focus);
 }
 
 /* 대안 미니 카드 */
@@ -1242,9 +1244,9 @@
 }
 
 .lunch-week__day.is-today .lunch-week__spot {
-  background: #eef6ff;
-  outline: 1px dashed rgba(0, 109, 255, 0.5);
-  color: #0b4a9e;
+  background: var(--primary-glow);
+  outline: 1px dashed rgba(31, 61, 255, 0.5);
+  color: var(--primary-focus);
 }
 
 .lunch-week__day.is-future .lunch-week__spot {

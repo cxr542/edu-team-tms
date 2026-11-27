@@ -10,6 +10,7 @@ import {
   Sparkles,
   Trash2,
   Undo2,
+  UtensilsCrossed,
   X,
 } from 'lucide-react';
 import LunchAddSpotForm from '../components/LunchAddSpotForm';
@@ -38,7 +39,7 @@ import {
   kakaoPlaceToSpot,
   recommendLunch,
 } from '../utils/lunchRecommend';
-import { searchKakaoLocal } from '../utils/lunchKakaoApi';
+import { probeKakaoLocal, searchKakaoLocal } from '../utils/lunchKakaoApi';
 import { getCategoryVisual } from '../utils/lunchCategoryVisual';
 import { enrichSpotWithPriceInfo, formatMenuPrice } from '../utils/lunchMenuPrice';
 import {
@@ -721,7 +722,18 @@ export default function LunchPickPage() {
     [handleAddSpot]
   );
 
+  useEffect(() => {
+    let alive = true;
+    probeKakaoLocal().then((ok) => {
+      if (alive) setKakaoAvailable(ok);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   const runSearch = async () => {
+    if (!kakaoAvailable) return;
     setSearchLoading(true);
     setSearchError(null);
     const res = await searchKakaoLocal({
@@ -754,22 +766,27 @@ export default function LunchPickPage() {
   return (
     <main className="lunch-pick-main">
       <header className="lunch-top-bar">
-        <div className="lunch-top-bar__title">
-          <h1>오늘 뭐 먹지</h1>
-          <p>
-            <MapPin size={13} aria-hidden />
-            {origin.label} · 반경 {formatRadiusKm(origin.radiusM)} · 단골 {catalogCount}곳
-            {customCount > 0 && ` (내 등록 ${customCount})`}
-            <button
-              type="button"
-              className="lunch-link"
-              onClick={() => setShowOriginSettings((v) => !v)}
-              aria-expanded={showOriginSettings}
-            >
-              <Settings2 size={12} aria-hidden />
-              {showOriginSettings ? '닫기' : '위치 변경'}
-            </button>
-          </p>
+        <div className="lunch-top-bar__brand">
+          <span className="lunch-top-bar__icon" aria-hidden="true">
+            <UtensilsCrossed size={20} />
+          </span>
+          <div className="lunch-top-bar__title">
+            <h1>오늘 뭐 먹지</h1>
+            <p className="lunch-top-bar__tagline">
+              <MapPin size={13} aria-hidden />
+              {origin.label} · 반경 {formatRadiusKm(origin.radiusM)} · 단골 {catalogCount}곳
+              {customCount > 0 && ` (내 등록 ${customCount})`}
+              <button
+                type="button"
+                className="lunch-link"
+                onClick={() => setShowOriginSettings((v) => !v)}
+                aria-expanded={showOriginSettings}
+              >
+                <Settings2 size={12} aria-hidden />
+                {showOriginSettings ? '닫기' : '위치 변경'}
+              </button>
+            </p>
+          </div>
         </div>
         <nav className="lunch-seg" aria-label="점심 메뉴">
           {TABS.map((t) => (
@@ -806,12 +823,6 @@ export default function LunchPickPage() {
           <button type="button" className="lunch-pick-toast__dismiss" onClick={() => setRegisterToast('')}>
             닫기
           </button>
-        </p>
-      )}
-
-      {!kakaoAvailable && tab === 'find' && (
-        <p className="lunch-pick-banner" role="status">
-          카카오 지도 검색 API가 설정되지 않았습니다. 단골 목록·오늘 추천은 그대로 사용할 수 있습니다.
         </p>
       )}
 
@@ -977,7 +988,7 @@ export default function LunchPickPage() {
                 <p className="lunch-empty__title">조건에 맞는 맛집이 없어요</p>
                 <p className="lunch-empty__hint">
                   {!useSeedCatalog && !nearbyKakaoAvailable
-                    ? '카카오 API 키를 설정하거나 찾기·등록에서 맛집을 단골에 추가해 보세요.'
+                    ? '찾기·등록에서 맛집을 단골에 추가해 보세요.'
                     : '조건을 줄이거나 「조건 더보기」에서 제외를 초기화해 보세요.'}
                   {seedSpots.length > 0 && !useSeedCatalog && (
                     <>
@@ -1036,6 +1047,11 @@ export default function LunchPickPage() {
             <p className="lunch-search-hint">
               {origin.label} 기준 반경 {formatRadiusKm(origin.radiusM)}
             </p>
+            {!kakaoAvailable && (
+              <p className="lunch-pick-banner" role="status">
+                지금은 카카오 장소 검색을 쓸 수 없어요. 아래 「직접 등록」으로 식당을 추가해 주세요.
+              </p>
+            )}
             <div className="lunch-search-bar">
               <input
                 type="search"
@@ -1044,8 +1060,14 @@ export default function LunchPickPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && runSearch()}
                 placeholder="파크원타워 맛집, 국밥"
+                disabled={!kakaoAvailable}
               />
-              <button type="button" className="btn btn-primary" onClick={runSearch} disabled={searchLoading}>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={runSearch}
+                disabled={searchLoading || !kakaoAvailable}
+              >
                 검색
               </button>
             </div>
@@ -1066,6 +1088,7 @@ export default function LunchPickPage() {
             <LunchAddSpotForm
               onAdd={handleAddSpot}
               submitLabel="단골에 등록"
+              kakaoAvailable={kakaoAvailable}
               searchCenter={{
                 lat: origin.center.lat,
                 lng: origin.center.lng,
@@ -1107,6 +1130,7 @@ export default function LunchPickPage() {
                 onAdd={handleSaveEdit}
                 submitLabel="수정 저장"
                 onCancel={() => setEditingSpot(null)}
+                kakaoAvailable={kakaoAvailable}
                 searchCenter={{
                   lat: origin.center.lat,
                   lng: origin.center.lng,

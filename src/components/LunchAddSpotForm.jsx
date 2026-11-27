@@ -42,6 +42,7 @@ function applyKakaoPlaceToForm(place) {
  *   onCancel?: () => void,
  *   submitLabel?: string,
  *   searchCenter?: { lat: number, lng: number, radiusM?: number },
+ *   kakaoAvailable?: boolean,
  * }} props
  */
 export default function LunchAddSpotForm({
@@ -50,13 +51,15 @@ export default function LunchAddSpotForm({
   onCancel,
   submitLabel = '단골에 등록',
   searchCenter,
+  kakaoAvailable = true,
 }) {
   const [form, setForm] = useState({ ...EMPTY, ...initial });
   const [message, setMessage] = useState('');
   const [mapLookupStatus, setMapLookupStatus] = useState('idle'); // idle | loading | ok | pick | none | error | unavailable
   const [mapSuggestions, setMapSuggestions] = useState([]);
   const [mapLookupHint, setMapLookupHint] = useState('');
-  const skipNextLookup = useRef(false);
+  // 수정 화면은 저장된 지도 URL을 처음부터 덮어쓰지 않도록 첫 자동 찾기를 건너뛴다.
+  const skipNextLookup = useRef(Boolean(initial?.name));
   const debounceRef = useRef(null);
 
   const toggleTag = (key) => {
@@ -90,25 +93,31 @@ export default function LunchAddSpotForm({
         return;
       }
 
-      setMapLookupStatus('loading');
-      setMapLookupHint('카카오 지도에서 장소를 찾는 중…');
-
-      const res = await lookupKakaoPlaceByName({
-        name,
-        lat: searchCenter?.lat,
-        lng: searchCenter?.lng,
-        radius: searchCenter?.radiusM,
-      });
+      // 서버에 카카오 키가 없으면 부르지 않고 바로 검색 링크로 대신한다.
+      let res = { available: false, places: [] };
+      if (kakaoAvailable) {
+        setMapLookupStatus('loading');
+        setMapLookupHint('카카오 지도에서 장소를 찾는 중…');
+        res = await lookupKakaoPlaceByName({
+          name,
+          lat: searchCenter?.lat,
+          lng: searchCenter?.lng,
+          radius: searchCenter?.radiusM,
+        });
+      }
 
       if (!res.available) {
         const searchUrl = buildKakaoMapSearchUrl(name);
         if (searchUrl) {
-          setForm((f) => ({ ...f, mapUrl: searchUrl }));
+          // 직접 넣은 정확한 장소 주소는 지우지 않는다(비었거나 검색 링크일 때만 바꿈).
+          setForm((f) =>
+            !f.mapUrl || f.mapUrl.startsWith('https://map.kakao.com/link/search/') ? { ...f, mapUrl: searchUrl } : f
+          );
         }
         setMapLookupStatus('unavailable');
         setMapSuggestions([]);
         setMapLookupHint(
-          'KAKAO_REST_API_KEY 미설정 — 카카오맵 검색 링크를 넣었습니다. .env.local에 REST API 키를 넣고 dev 서버를 재시작하면 정확한 장소 URL·주소가 채워집니다.'
+          '자동 찾기를 쓸 수 없어 지도 URL에 카카오맵 검색 링크를 넣었어요. 종류·도보·주소는 직접 채워 주세요.'
         );
         return;
       }
@@ -144,7 +153,7 @@ export default function LunchAddSpotForm({
       setMapLookupStatus('pick');
       setMapLookupHint(`${res.places.length}곳 찾음 — 아래에서 선택하면 지도 URL이 채워집니다.`);
     },
-    [form.name, pickPlace, searchCenter]
+    [form.name, pickPlace, searchCenter, kakaoAvailable]
   );
 
   useEffect(() => {
@@ -348,7 +357,9 @@ export default function LunchAddSpotForm({
             type="url"
             value={form.mapUrl}
             onChange={(e) => setForm((f) => ({ ...f, mapUrl: e.target.value }))}
-            placeholder="식당 이름 입력 시 자동 검색 · https://map.kakao.com/..."
+            placeholder={
+              kakaoAvailable ? '식당 이름 입력 시 자동 검색 · https://map.kakao.com/...' : 'https://map.kakao.com/...'
+            }
           />
           {form.mapUrl && (
             <a
@@ -395,10 +406,13 @@ export default function LunchAddSpotForm({
         )}
       </div>
       {message && <p className="lunch-add-form__msg">{message}</p>}
-      <p className="lunch-add-form__hint">
-        식당 이름을 입력하면 기준 위치 근처에서 카카오 지도 URL·주소·종류를 자동으로 채웁니다. API
-        미설정 시 URL을 직접 입력하세요.
-      </p>
+      {!mapLookupHint && (
+        <p className="lunch-add-form__hint">
+          {kakaoAvailable
+            ? '식당 이름을 입력하면 기준 위치 근처에서 찾아 지도 URL·주소·종류·도보 시간을 채워요. 여러 곳이 나오면 이름 아래 목록에서 고르세요.'
+            : '식당 이름을 입력하면 지도 URL에 카카오맵 검색 링크가 들어가요. 링크에서 정확한 장소를 확인해 바꿔 넣어도 돼요.'}
+        </p>
+      )}
     </form>
   );
 }
