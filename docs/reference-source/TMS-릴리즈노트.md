@@ -7,6 +7,11 @@
 
 ## 2026-11-27
 
+### [신규] feat(lunch): 점심 메뉴 검색어로 근처 식당 넓게 모으고 빵집·디저트 거르기
+
+- feat(lunch): 점심 메뉴 검색어로 근처 식당 넓게 모으고 빵집·디저트 거르기
+- PR #316: https://github.com/cxr542/edu-team-tms/pull/316
+
 ### [신규] feat(lunch): 배달용으로 반경 넓히기(최대 5km)
 
 - feat(lunch): 배달용으로 반경 넓히기(최대 5km)
