@@ -33,9 +33,9 @@ function writeCache(query, page, data, purpose = 'food', area = '') {
  * @param {{ query: string, page?: number, lat?: number, lng?: number, radius?: number }} opts
  * @returns {Promise<{ places: import('../hooks/useLunchSpots').KakaoPlace[], available: boolean, error?: string }>}
  */
-export async function searchKakaoLocal({ query, page = 1, lat, lng, radius, purpose = 'food' }) {
+export async function searchKakaoLocal({ query, page = 1, lat, lng, radius, purpose = 'food', sort }) {
   const q = String(query || '').trim() || '여의도역 맛집';
-  const area = [lat, lng, radius].map((v) => (v == null ? '' : String(v))).join(',');
+  const area = [lat, lng, radius, sort].map((v) => (v == null ? '' : String(v))).join(',');
   const cached = readCache(q, page, purpose, area);
   if (cached) return cached;
 
@@ -43,6 +43,7 @@ export async function searchKakaoLocal({ query, page = 1, lat, lng, radius, purp
   if (lat != null) params.set('lat', String(lat));
   if (lng != null) params.set('lng', String(lng));
   if (radius != null) params.set('radius', String(radius));
+  if (sort) params.set('sort', sort);
 
   try {
     const res = await fetch(`/api/kakao-local?${params}`);
@@ -150,4 +151,19 @@ export async function lookupKakaoCoordsByName({ name, lat, lng }) {
     placeName: pick.name,
     available: true,
   };
+}
+
+/** 점심 식사 가게를 넓게 모으기 위한 카카오 검색어(음식점 분류 안에서 거리순) */
+export const LUNCH_KAKAO_QUERIES = ['한식', '국밥', '칼국수', '백반', '중식', '일식', '분식', '도시락', '양식', '아시안'];
+
+// 점심 한 끼로 맞지 않는 카카오 분류(빵집·디저트·카페·술집)
+const NON_MEAL_CATEGORY_RE = /간식|제과|베이커리|디저트|카페|아이스크림|도넛|떡,한과|초콜릿|술집|호프|와인|칵테일/;
+
+/**
+ * 카카오 분류 경로로 점심 식사 가게인지 본다(빵집·디저트·카페·술집 제외).
+ * @param {{ categoryPath?: string, category?: string }} place
+ */
+export function isLunchMealPlace(place) {
+  const path = `${place?.categoryPath || ''} ${place?.category || ''}`;
+  return !NON_MEAL_CATEGORY_RE.test(path);
 }
