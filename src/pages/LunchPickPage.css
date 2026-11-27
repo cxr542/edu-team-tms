@@ -1278,6 +1278,31 @@
   color: var(--lunch-muted);
 }
 
+.lunch-regulars__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.3rem 0;
+}
+
+.lunch-regulars__row + .lunch-regulars__row {
+  border-top: 1px dashed var(--lunch-border);
+}
+
+.lunch-regulars__who {
+  flex: 0 0 3rem;
+  padding-top: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--lunch-ink);
+}
+
+.lunch-regulars__none {
+  padding-top: 0.3rem;
+  font-size: 0.76rem;
+  color: var(--lunch-muted);
+}
+
 .lunch-regulars__list {
   display: flex;
   flex-wrap: wrap;

@@ -168,7 +168,9 @@ export default function LunchAddSpotForm({
     return () => clearTimeout(debounceRef.current);
   }, [form.name, runMapLookup]);
 
-  const handleSubmit = (e) => {
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const repName = form.repMenuName.trim();
     const repPrice = parseInt(form.repMenuPrice, 10);
@@ -187,7 +189,8 @@ export default function LunchAddSpotForm({
       priceLevel = menus[0].priceWon <= LUNCH_ALLOWANCE_WON ? LUNCH_PRICE_WITHIN : LUNCH_PRICE_OVER;
     }
 
-    const spot = onAdd({
+    setSaving(true);
+    const spot = await onAdd({
       id: form.id || undefined,
       addedAt: form.addedAt || undefined,
       name: form.name,
@@ -202,6 +205,11 @@ export default function LunchAddSpotForm({
       weight: Number(form.weight),
       tags: form.tags,
     });
+    setSaving(false);
+    if (spot?.error) {
+      setMessage(spot.error);
+      return;
+    }
     if (spot) {
       setMessage(`「${spot.name}」을(를) 등록했습니다.`);
       skipNextLookup.current = true;
@@ -395,7 +403,7 @@ export default function LunchAddSpotForm({
         ))}
       </div>
       <div className="lunch-add-form__actions">
-        <button type="submit" className="btn btn-primary">
+        <button type="submit" className="btn btn-primary" disabled={saving}>
           <Plus size={16} aria-hidden />
           {submitLabel}
         </button>

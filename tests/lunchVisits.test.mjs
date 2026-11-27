@@ -114,3 +114,24 @@ describe('findRegularSpots / isRegularSpot', () => {
     expect(isRegularSpot(null, regulars)).toBe(false);
   });
 });
+
+describe('regularsByMember / regularOwners', () => {
+  it('구성원별로 따로 세고, 식당마다 단골인 구성원을 찾는다', async () => {
+    const { regularsByMember, regularOwners } = await import('../src/utils/lunchVisits.js');
+    const t = (memberCode, day, spotName) => ({ memberCode, day, spotId: `id-${spotName}`, spotName });
+    const visits = [
+      t('B', '2026-11-27', '순대실록'), t('B', '2026-11-20', '순대실록'), t('B', '2026-11-13', '순대실록'),
+      t('A', '2026-11-27', '순대실록'), t('A', '2026-11-26', '순대실록'), // A 는 2회 — 단골 아님
+      t('C', '2026-11-25', '백반마을'), t('C', '2026-11-24', '백반마을'), t('C', '2026-11-23', '백반마을'),
+    ];
+    const byMember = regularsByMember(visits, '2026-11-27');
+    expect(byMember.map((m) => `${m.memberCode}:${m.regulars.map((r) => r.spotName).join(',')}`)).toEqual([
+      'A:',
+      'B:순대실록',
+      'C:백반마을',
+    ]);
+    expect(regularOwners({ id: 'x', name: '순대 실록' }, byMember)).toEqual(['B']);
+    expect(regularOwners({ id: 'id-백반마을', name: '?' }, byMember)).toEqual(['C']);
+    expect(regularOwners({ id: 'z', name: '없음' }, byMember)).toEqual([]);
+  });
+});

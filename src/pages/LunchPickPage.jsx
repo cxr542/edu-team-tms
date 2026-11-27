@@ -34,7 +34,9 @@ import { formatRadiusKm, usesYeouidoSeedCatalog } from '../constants/lunchOrigin
 import { useLunchOrigin } from '../hooks/useLunchOrigin';
 import { useLunchNearbySpots } from '../hooks/useLunchNearbySpots';
 import { useLunchSpots } from '../hooks/useLunchSpots';
+import { useLunchTeamSpots, useLunchTeamVisits } from '../hooks/useLunchTeamSpots';
 import { useLunchVisits } from '../hooks/useLunchVisits';
+import { findKpiMember } from '../constants/kpiMembers';
 import {
   buildHistoryExcludeIds,
   kakaoPlaceToSpot,
@@ -51,16 +53,29 @@ import {
   mergeVisitHistory,
   REGULAR_DAYS,
   REGULAR_MIN_VISITS,
+  regularOwners,
+  regularsByMember,
   topVisitedSpots,
   visitsFromLegacyHistory,
 } from '../utils/lunchVisits';
 
 const REGULAR_RULE = `최근 ${REGULAR_DAYS}일 ${REGULAR_MIN_VISITS}회 이상`;
 
-function RegularBadge({ compact = false }) {
+const normalizeSpotName = (name) => String(name || '').replace(/\s+/g, '').toLowerCase();
+
+/** 구성원 코드 → 이름(성 뺀 부분, 예: 윤형) */
+function memberShortName(code) {
+  if (code === 'admin') return '관리자';
+  const name = findKpiMember(code)?.displayName || code;
+  return name.length >= 3 ? name.slice(1) : name;
+}
+
+/** @param {{ label?: string | null, compact?: boolean }} props label 예: '단골', '단골 · 우성', '우성 단골' */
+function RegularBadge({ label = '단골', compact = false }) {
+  if (!label) return null;
   return (
-    <span className={`lunch-regular${compact ? ' lunch-regular--compact' : ''}`} title={`단골 — ${REGULAR_RULE} 간 곳`}>
-      ★{compact ? '' : ' 단골'}
+    <span className={`lunch-regular${compact ? ' lunch-regular--compact' : ''}`} title={`★ ${label} — ${REGULAR_RULE} 간 곳`}>
+      ★{compact ? '' : ` ${label}`}
     </span>
   );
 }
@@ -129,10 +144,15 @@ function SpotCard({
       <div className="lunch-card__body">
         <div className="lunch-card__head">
           <h3>{priced.name}</h3>
-          {regular && <RegularBadge />}
+          {regular && <RegularBadge label={regular} />}
           {priced.source === 'kakao' && <span className="lunch-card__badge">검색</span>}
           {priced.source === 'custom' && (
-            <span className="lunch-card__badge lunch-card__badge--custom">등록</span>
+            <span className="lunch-card__badge lunch-card__badge--custom">이 브라우저</span>
+          )}
+          {priced.source === 'team' && (
+            <span className="lunch-card__badge lunch-card__badge--custom">
+              {memberShortName(priced.createdBy)} 등록
+            </span>
           )}
         </div>
 
@@ -305,8 +325,11 @@ function PickHero({ spot, todayVisit, busy, regular = false, onChoose, onReroll,
         </p>
         <h2 className="lunch-hero__name">
           {priced.name}
-          {regular && <RegularBadge />}
-          {priced.source === 'custom' && <span className="lunch-pill lunch-pill--soft">내 등록</span>}
+          {regular && <RegularBadge label={regular} />}
+          {priced.source === 'custom' && <span className="lunch-pill lunch-pill--soft">이 브라우저</span>}
+          {priced.source === 'team' && (
+            <span className="lunch-pill lunch-pill--soft">{memberShortName(priced.createdBy)} 등록</span>
+          )}
           {priced.source === 'kakao' && <span className="lunch-pill lunch-pill--soft">주변</span>}
         </h2>
         <p className="lunch-hero__meta">{spotMetaLine(priced)}</p>
@@ -379,7 +402,7 @@ function AltMini({ spot, busy, regular = false, onChoose, onExclude }) {
         <div className="lunch-mini__title">
           <h3>
             {priced.name}
-            {regular && <RegularBadge compact />}
+            {regular && <RegularBadge label={regular} compact />}
           </h3>
           <p>{[priced.category, priced.walkMinutes != null ? `${priced.walkMinutes}분` : ''].filter(Boolean).join(' · ')}</p>
         </div>
@@ -589,7 +612,30 @@ function LunchSidePanel({ week, top, regulars = [], serverReady, canEdit, catalo
 }
 
 export default function LunchPickPage() {
-  const { spots: seedAndCustomSpots, meta, loading, error, reloadCustom } = useLunchSpots();
+  const { spots: seedAndLocalSpots, meta, loading, error, reloadCustom } = useLunchSpots();
+  const team = useLunchTeamSpots();
+  const teamReady = team.status === 'ready';
+  /** 팀 시드 + 팀 공용 식당(서버) + 아직 이 브라우저에만 있는 식당. 같은 이름은 시드 → 팀 → 브라우저 순으로 하나만 */
+  const seedAndCustomSpots = useMemo(() => {
+    const seen = new Set();
+    const out = [];
+    const ordered = [
+      ...seedAndLocalSpots.filter((s) => s.source !== 'custom'),
+      ...team.spots,
+      ...seedAndLocalSpots.filter((s) => s.source === 'custom'),
+    ];
+    for (const s of ordered) {
+      const key = normalizeSpotName(s.name);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(s);
+    }
+    return out;
+  }, [seedAndLocalSpots, team.spots]);
+  const localCustomSpots = useMemo(
+    () => seedAndLocalSpots.filter((s) => s.source === 'custom'),
+    [seedAndLocalSpots]
+  );
   const { history, markVisited, unmarkVisited, clearHistory } = useLunchHistory();
   const {
     visits: serverVisits,
@@ -634,11 +680,11 @@ export default function LunchPickPage() {
   const { addSpot, removeSpot } = useLunchCustomSpots();
 
   const seedSpots = useMemo(
-    () => seedAndCustomSpots.filter((s) => s.source !== 'custom'),
+    () => seedAndCustomSpots.filter((s) => s.source !== 'custom' && s.source !== 'team'),
     [seedAndCustomSpots]
   );
   const customSpotsList = useMemo(
-    () => seedAndCustomSpots.filter((s) => s.source === 'custom'),
+    () => seedAndCustomSpots.filter((s) => s.source === 'custom' || s.source === 'team'),
     [seedAndCustomSpots]
   );
 
@@ -732,6 +778,33 @@ export default function LunchPickPage() {
   /** 단골 = 최근 30일 3회 이상 간 곳(내 기록 기준) */
   const regulars = useMemo(() => findRegularSpots(displayVisits, todayKey), [displayVisits, todayKey]);
   const isRegular = useCallback((spot) => isRegularSpot(spot, regulars), [regulars]);
+
+  /** 팀 전체 단골(구성원별) — 내 기록이 바뀌면 다시 불러온다 */
+  const myMemberCode = team.actor && team.actor !== 'admin' ? team.actor : null;
+  const teamVisits = useLunchTeamVisits(serverVisits.map((v) => `${v.day}:${v.spotId}`).join('|'));
+  const teamRegulars = useMemo(() => regularsByMember(teamVisits, todayKey), [teamVisits, todayKey]);
+  /** 카드에 붙일 단골 문구: 내 단골이면 '단골', 다른 구성원 것도 있으면 이름을 덧붙인다 */
+  const regularLabel = useCallback(
+    (spot) => {
+      if (!spot) return null;
+      const mine = isRegular(spot);
+      const others = regularOwners(spot, teamRegulars)
+        .filter((code) => code !== myMemberCode)
+        .map(memberShortName);
+      if (mine) return others.length ? `단골 · ${others.join('·')}` : '단골';
+      return others.length ? `${others.join('·')} 단골` : null;
+    },
+    [isRegular, teamRegulars, myMemberCode]
+  );
+  /** 식당 탭 단골 칸: 나를 먼저, 그다음 다른 구성원 */
+  const regularRows = useMemo(() => {
+    const rows = [{ code: myMemberCode, label: '나', regulars }];
+    for (const m of teamRegulars) {
+      if (m.memberCode === myMemberCode) continue;
+      rows.push({ code: m.memberCode, label: memberShortName(m.memberCode), regulars: m.regulars });
+    }
+    return rows;
+  }, [myMemberCode, regulars, teamRegulars]);
 
   const spotsForPick = useMemo(
     () => spots.map((s) => enrichSpotWithPriceInfo(s)),
@@ -845,25 +918,63 @@ export default function LunchPickPage() {
     (filters.historySkipDays !== DEFAULT_LUNCH_FILTERS.historySkipDays ? 1 : 0) +
     (filters.priceLevel === LUNCH_PRICE_OVER ? 1 : 0);
 
+  /** 서버(팀 목록)를 쓸 수 있으면 팀 목록에, 아니면 이 브라우저에 등록. 실패하면 { error } */
   const handleAddSpot = useCallback(
-    (input) => {
-      const spot = addSpot(input);
-      if (spot) {
-        reloadCustom();
+    async (input) => {
+      if (teamReady) {
+        const r = await team.addSpot(input);
+        return r.ok ? r.spot : { error: r.message };
       }
+      const spot = addSpot(input);
+      if (spot) reloadCustom();
       return spot;
     },
-    [addSpot, reloadCustom]
+    [teamReady, team, addSpot, reloadCustom]
   );
 
   const handleRemoveCustom = useCallback(
-    (spot) => {
-      if (!window.confirm(`「${spot.name}」을(를) 등록 목록에서 삭제할까요?`)) return;
+    async (spot) => {
+      const where = spot.source === 'team' ? '팀 식당 목록' : '이 브라우저 목록';
+      if (!window.confirm(`「${spot.name}」을(를) ${where}에서 삭제할까요?`)) return;
+      if (spot.source === 'team') {
+        const r = await team.removeSpot(spot.id);
+        if (!r.ok) setRegisterToast(`삭제하지 못했어요: ${r.message}`);
+        return;
+      }
       removeSpot(spot.id);
       reloadCustom();
     },
-    [removeSpot, reloadCustom]
+    [team, removeSpot, reloadCustom]
   );
+
+  /** 고칠 수 있는 식당: 이 브라우저 등록, 또는 팀 목록 중 내가 등록했거나 관리자 */
+  const canManageSpot = useCallback((spot) => spot?.source === 'custom' || team.canManage(spot), [team]);
+
+  /** 이 브라우저에만 있던 식당을 팀 목록으로 올린다(이미 있으면 브라우저 것만 정리) */
+  const [uploadingLocal, setUploadingLocal] = useState(false);
+  const handleUploadLocal = useCallback(async () => {
+    setUploadingLocal(true);
+    let added = 0;
+    let existed = 0;
+    let failed = 0;
+    for (const spot of localCustomSpots) {
+      const r = await team.addSpot(spot);
+      if (r.ok) added += 1;
+      else if (r.duplicateId) existed += 1;
+      else {
+        failed += 1;
+        continue;
+      }
+      removeSpot(spot.id);
+    }
+    reloadCustom();
+    setUploadingLocal(false);
+    setRegisterToast(
+      `팀 목록으로 ${added}곳 올렸어요.${existed ? ` ${existed}곳은 이미 있어 이 브라우저 것만 정리했어요.` : ''}${
+        failed ? ` ${failed}곳은 올리지 못했어요.` : ''
+      }`
+    );
+  }, [localCustomSpots, team, removeSpot, reloadCustom]);
 
   const editInitialFromSpot = useCallback((spot) => {
     const repMenu = spot.menus?.[0];
@@ -886,20 +997,24 @@ export default function LunchPickPage() {
   }, []);
 
   const handleSaveEdit = useCallback(
-    (input) => {
+    async (input) => {
       if (!editingSpot) return null;
-      const saved = handleAddSpot({
-        ...input,
-        id: editingSpot.id,
-        addedAt: editingSpot.addedAt,
-      });
+      let saved;
+      if (editingSpot.source === 'team') {
+        const r = await team.updateSpot(editingSpot.id, input);
+        if (!r.ok) return { error: r.message };
+        saved = r.spot;
+      } else {
+        saved = addSpot({ ...input, id: editingSpot.id, addedAt: editingSpot.addedAt });
+        if (saved) reloadCustom();
+      }
       if (saved) {
         setEditingSpot(null);
         setRegisterToast(`「${saved.name}」 정보를 수정했습니다.`);
       }
       return saved;
     },
-    [editingSpot, handleAddSpot]
+    [editingSpot, team, addSpot, reloadCustom]
   );
 
   const handleStartEdit = useCallback((spot) => {
@@ -907,8 +1022,8 @@ export default function LunchPickPage() {
   }, []);
 
   const handleAddFromSearch = useCallback(
-    (spot) => {
-      const added = handleAddSpot({
+    async (spot) => {
+      const added = await handleAddSpot({
         name: spot.name,
         category: spot.category || '기타',
         priceLevel:
@@ -923,7 +1038,8 @@ export default function LunchPickPage() {
         menuHints: spot.menuHints || [],
         tags: spot.tags || [],
       });
-      if (added) setRegisterToast(`「${added.name}」을(를) 식당 목록에 추가했습니다.`);
+      if (added?.error) setRegisterToast(added.error);
+      else if (added) setRegisterToast(`「${added.name}」을(를) 식당 목록에 추가했습니다.`);
     },
     [handleAddSpot]
   );
@@ -981,7 +1097,9 @@ export default function LunchPickPage() {
             <p className="lunch-top-bar__tagline">
               <MapPin size={13} aria-hidden />
               {origin.label} · 반경 {formatRadiusKm(origin.radiusM)} · 식당 {catalogCount}곳
-              {customCount > 0 && ` (내 등록 ${customCount})`}
+              {teamReady
+                ? team.spots.length > 0 && ` (팀 등록 ${team.spots.length})`
+                : customCount > 0 && ` (내 등록 ${customCount})`}
               <button
                 type="button"
                 className="lunch-link"
@@ -1174,12 +1292,12 @@ export default function LunchPickPage() {
                   spot={heroSpot}
                   todayVisit={todayVisit}
                   busy={visitBusy}
-                  regular={isRegular(heroSpot)}
+                  regular={regularLabel(heroSpot)}
                   onChoose={handleVisit}
                   onReroll={runPick}
                   onExclude={handleExclude}
                   onUndo={handleUndoToday}
-                  onEdit={heroSpot.source === 'custom' ? handleStartEdit : undefined}
+                  onEdit={canManageSpot(heroSpot) ? handleStartEdit : undefined}
                 />
                 {altSpots.length > 0 && (
                   <>
@@ -1190,7 +1308,7 @@ export default function LunchPickPage() {
                           key={s.id}
                           spot={s}
                           busy={visitBusy}
-                          regular={isRegular(s)}
+                          regular={regularLabel(s)}
                           onChoose={handleVisit}
                           onExclude={handleExclude}
                         />
@@ -1243,7 +1361,9 @@ export default function LunchPickPage() {
           <div className="lunch-panel-head">
             <p className="lunch-catalog-intro">
               {useSeedCatalog ? `팀 시드 ${seedCount}곳` : `${origin.label} 주변 ${nearbySpots.length}곳`}
-              {customCount > 0 && ` + 내가 등록 ${customCount}곳`}
+              {teamReady
+                ? team.spots.length > 0 && ` + 팀 등록 ${team.spots.length}곳`
+                : customCount > 0 && ` + 내가 등록 ${customCount}곳`}
             </p>
             <input
               type="search"
@@ -1253,24 +1373,39 @@ export default function LunchPickPage() {
               onChange={(e) => setCatalogQuery(e.target.value)}
             />
           </div>
+          {teamReady && localCustomSpots.length > 0 && (
+            <p className="lunch-pick-banner lunch-pick-banner--info" role="status">
+              이 브라우저에만 있는 식당이 {localCustomSpots.length}곳 있어요. 팀 목록으로 올리면 다른 구성원에게도 보여요.{' '}
+              <button type="button" className="lunch-link lunch-link--strong" onClick={handleUploadLocal} disabled={uploadingLocal}>
+                {uploadingLocal ? '올리는 중…' : '팀 목록으로 올리기'}
+              </button>
+            </p>
+          )}
           <section className="lunch-regulars" aria-label="단골">
             <h3 className="lunch-regulars__title">
-              ★ 단골 <small>{REGULAR_RULE} 간 곳 · 내 기록 기준</small>
+              ★ 단골 <small>{REGULAR_RULE} 간 곳 · 구성원별</small>
             </h3>
-            {regulars.length ? (
-              <ul className="lunch-regulars__list">
-                {regulars.map((g) => (
-                  <li key={g.name}>
-                    <strong>{g.spotName}</strong>
-                    <span>{g.count}회</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="lunch-side__hint">
-                아직 단골이 없어요. 같은 곳을 {REGULAR_DAYS}일 안에 {REGULAR_MIN_VISITS}번 가면 단골이 돼요.
-              </p>
-            )}
+            {regularRows.map((row) => (
+              <div key={row.code || 'me'} className="lunch-regulars__row">
+                <span className="lunch-regulars__who">{row.label}</span>
+                {row.regulars.length ? (
+                  <ul className="lunch-regulars__list">
+                    {row.regulars.map((g) => (
+                      <li key={g.name}>
+                        <strong>{g.spotName}</strong>
+                        <span>{g.count}회</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <span className="lunch-regulars__none">
+                    {row.label === '나'
+                      ? `아직 없어요. 같은 곳을 ${REGULAR_DAYS}일 안에 ${REGULAR_MIN_VISITS}번 가면 단골이 돼요.`
+                      : '아직 없어요.'}
+                  </span>
+                )}
+              </div>
+            ))}
           </section>
           <div className="lunch-catalog-grid">
             {catalogFiltered.map((s) => (
@@ -1278,10 +1413,10 @@ export default function LunchPickPage() {
                 key={s.id}
                 spot={s}
                 variant="alt"
-                regular={isRegular(s)}
+                regular={regularLabel(s)}
                 onVisit={handleVisit}
-                onEdit={s.source === 'custom' ? handleStartEdit : undefined}
-                onRemove={s.source === 'custom' ? handleRemoveCustom : undefined}
+                onEdit={canManageSpot(s) ? handleStartEdit : undefined}
+                onRemove={canManageSpot(s) ? handleRemoveCustom : undefined}
               />
             ))}
           </div>
@@ -1331,7 +1466,9 @@ export default function LunchPickPage() {
           <section className="lunch-pick-panel">
             <h2 className="lunch-register-title">직접 등록</h2>
             <p className="lunch-register-lead">
-              등록한 식당은 이 브라우저의 식당 목록에 합쳐집니다. 팀 공유는 JSON 백업 후 시드 파일에 반영하세요.
+              {teamReady
+                ? '등록한 식당은 팀 식당 목록에 올라가 모든 구성원에게 보여요. 수정·삭제는 등록한 사람과 관리자만 할 수 있어요.'
+                : '팀 식당 목록을 불러오지 못해, 등록한 식당은 이 브라우저에만 저장돼요.'}
             </p>
             <LunchAddSpotForm
               onAdd={handleAddSpot}
