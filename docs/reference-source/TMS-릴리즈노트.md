@@ -7,6 +7,11 @@
 
 ## 2026-11-27
 
+### [신규] feat(lunch): 팀 공용 식당 목록 + 구성원별 단골 공유
+
+- feat(lunch): 팀 공용 식당 목록 + 구성원별 단골 공유
+- PR #318: https://github.com/cxr542/edu-team-tms/pull/318
+
 ### [신규] feat(lunch): 방문 기록으로 ★단골 정하기(최근 30일 3회)
 
 - feat(lunch): 방문 기록으로 ★단골 정하기(최근 30일 3회)
