@@ -46,15 +46,29 @@ import { getCategoryVisual } from '../utils/lunchCategoryVisual';
 import { enrichSpotWithPriceInfo, formatMenuPrice } from '../utils/lunchMenuPrice';
 import {
   buildWeekView,
+  findRegularSpots,
+  isRegularSpot,
   mergeVisitHistory,
+  REGULAR_DAYS,
+  REGULAR_MIN_VISITS,
   topVisitedSpots,
   visitsFromLegacyHistory,
 } from '../utils/lunchVisits';
+
+const REGULAR_RULE = `최근 ${REGULAR_DAYS}일 ${REGULAR_MIN_VISITS}회 이상`;
+
+function RegularBadge({ compact = false }) {
+  return (
+    <span className={`lunch-regular${compact ? ' lunch-regular--compact' : ''}`} title={`단골 — ${REGULAR_RULE} 간 곳`}>
+      ★{compact ? '' : ' 단골'}
+    </span>
+  );
+}
 import './LunchPickPage.css';
 
 const TABS = [
   { id: 'today', label: '추천' },
-  { id: 'catalog', label: '단골' },
+  { id: 'catalog', label: '식당' },
   { id: 'find', label: '찾기·등록' },
 ];
 
@@ -83,6 +97,7 @@ function SpotCard({
   onAddToCatalog,
   onEdit,
   onRemove,
+  regular = false,
 }) {
   const priced = enrichSpotWithPriceInfo(spot);
   const visual = getCategoryVisual(priced.category, priced.tags);
@@ -114,6 +129,7 @@ function SpotCard({
       <div className="lunch-card__body">
         <div className="lunch-card__head">
           <h3>{priced.name}</h3>
+          {regular && <RegularBadge />}
           {priced.source === 'kakao' && <span className="lunch-card__badge">검색</span>}
           {priced.source === 'custom' && (
             <span className="lunch-card__badge lunch-card__badge--custom">등록</span>
@@ -204,7 +220,7 @@ function SpotCard({
           )}
           {onAddToCatalog && (
             <button type="button" className="lunch-btn lunch-btn--soft" onClick={() => onAddToCatalog(spot)}>
-              단골에 추가
+              식당에 추가
             </button>
           )}
           {onEdit && (
@@ -271,7 +287,7 @@ function PricePill({ level }) {
 }
 
 /** C안 — 오늘의 픽 (가로형 카드) */
-function PickHero({ spot, todayVisit, busy, onChoose, onReroll, onExclude, onUndo, onEdit }) {
+function PickHero({ spot, todayVisit, busy, regular = false, onChoose, onReroll, onExclude, onUndo, onEdit }) {
   const priced = enrichSpotWithPriceInfo(spot);
   const visual = getCategoryVisual(priced.category, priced.tags);
   const chosen = todayVisit?.spotId === spot.id;
@@ -289,6 +305,7 @@ function PickHero({ spot, todayVisit, busy, onChoose, onReroll, onExclude, onUnd
         </p>
         <h2 className="lunch-hero__name">
           {priced.name}
+          {regular && <RegularBadge />}
           {priced.source === 'custom' && <span className="lunch-pill lunch-pill--soft">내 등록</span>}
           {priced.source === 'kakao' && <span className="lunch-pill lunch-pill--soft">주변</span>}
         </h2>
@@ -349,7 +366,7 @@ function PickHero({ spot, todayVisit, busy, onChoose, onReroll, onExclude, onUnd
 }
 
 /** C안 — 대안 미니 카드 */
-function AltMini({ spot, busy, onChoose, onExclude }) {
+function AltMini({ spot, busy, regular = false, onChoose, onExclude }) {
   const priced = enrichSpotWithPriceInfo(spot);
   const visual = getCategoryVisual(priced.category, priced.tags);
   const menu = spotMenuLine(priced);
@@ -360,7 +377,10 @@ function AltMini({ spot, busy, onChoose, onExclude }) {
           {visual.emoji}
         </span>
         <div className="lunch-mini__title">
-          <h3>{priced.name}</h3>
+          <h3>
+            {priced.name}
+            {regular && <RegularBadge compact />}
+          </h3>
           <p>{[priced.category, priced.walkMinutes != null ? `${priced.walkMinutes}분` : ''].filter(Boolean).join(' · ')}</p>
         </div>
       </div>
@@ -458,7 +478,7 @@ function WeekDayPicker({ day, catalog, top, busy, onRecord, onClear, onClose }) 
             </button>
           </li>
         )}
-        {!options.length && !q && <li className="lunch-daypick__empty">단골 식당이 아직 없어요.</li>}
+        {!options.length && !q && <li className="lunch-daypick__empty">등록된 식당이 아직 없어요.</li>}
       </ul>
       {day.visit && (
         <button type="button" className="lunch-link lunch-daypick__clear" disabled={busy} onClick={onClear}>
@@ -470,7 +490,7 @@ function WeekDayPicker({ day, catalog, top, busy, onRecord, onClear, onClose }) 
   );
 }
 
-function LunchSidePanel({ week, top, serverReady, canEdit, catalog, busy, onRecordDay, onClearDay, onFind }) {
+function LunchSidePanel({ week, top, regulars = [], serverReady, canEdit, catalog, busy, onRecordDay, onClearDay, onFind }) {
   const [openKey, setOpenKey] = useState(null);
   const openDay = week.find((d) => d.key === openKey) || null;
 
@@ -546,7 +566,10 @@ function LunchSidePanel({ week, top, serverReady, canEdit, catalog, busy, onReco
           <ul className="lunch-top">
             {top.map((t) => (
               <li key={t.spotId}>
-                <span>{t.spotName}</span>
+                <span>
+                  {t.spotName}
+                  {isRegularSpot({ id: t.spotId, name: t.spotName }, regulars) && <RegularBadge compact />}
+                </span>
                 <span className="lunch-top__count">{t.count}회</span>
               </li>
             ))}
@@ -554,6 +577,7 @@ function LunchSidePanel({ week, top, serverReady, canEdit, catalog, busy, onReco
         ) : (
           <p className="lunch-side__hint">「여기 갈래요」를 누르면 기록이 쌓여요.</p>
         )}
+        <p className="lunch-side__hint">★ 단골: {REGULAR_RULE} 간 곳</p>
       </section>
 
       <button type="button" className="lunch-btn lunch-btn--soft lunch-side__find" onClick={onFind}>
@@ -631,7 +655,7 @@ export default function LunchPickPage() {
     return merged;
   }, [useSeedCatalog, includeKakao, seedAndCustomSpots, nearbySpots, customSpotsList]);
 
-  /** 단골 탭: 팀 시드는 기준 위치와 무관하게 항상 표시 + 주변(카카오) + 내 등록 */
+  /** 식당 탭: 팀 시드는 기준 위치와 무관하게 항상 표시 + 주변(카카오) + 내 등록 */
   const catalogSpots = useMemo(() => {
     const seen = new Set();
     const merged = [];
@@ -705,6 +729,9 @@ export default function LunchPickPage() {
   );
   const weekView = useMemo(() => buildWeekView(todayKey, displayVisits), [todayKey, displayVisits]);
   const topSpots = useMemo(() => topVisitedSpots(displayVisits, 3), [displayVisits]);
+  /** 단골 = 최근 30일 3회 이상 간 곳(내 기록 기준) */
+  const regulars = useMemo(() => findRegularSpots(displayVisits, todayKey), [displayVisits, todayKey]);
+  const isRegular = useCallback((spot) => isRegularSpot(spot, regulars), [regulars]);
 
   const spotsForPick = useMemo(
     () => spots.map((s) => enrichSpotWithPriceInfo(s)),
@@ -896,7 +923,7 @@ export default function LunchPickPage() {
         menuHints: spot.menuHints || [],
         tags: spot.tags || [],
       });
-      if (added) setRegisterToast(`「${added.name}」을(를) 단골에 추가했습니다.`);
+      if (added) setRegisterToast(`「${added.name}」을(를) 식당 목록에 추가했습니다.`);
     },
     [handleAddSpot]
   );
@@ -953,7 +980,7 @@ export default function LunchPickPage() {
             <h1>오늘 뭐 먹지</h1>
             <p className="lunch-top-bar__tagline">
               <MapPin size={13} aria-hidden />
-              {origin.label} · 반경 {formatRadiusKm(origin.radiusM)} · 단골 {catalogCount}곳
+              {origin.label} · 반경 {formatRadiusKm(origin.radiusM)} · 식당 {catalogCount}곳
               {customCount > 0 && ` (내 등록 ${customCount})`}
               <button
                 type="button"
@@ -1016,12 +1043,12 @@ export default function LunchPickPage() {
         <p className="lunch-pick-banner lunch-pick-banner--info" role="status">
           {nearbyKakaoAvailable ? (
             <>
-              <strong>{origin.label}</strong> 주변 {nearbySpots.length}곳에서 추천해요. 단골 탭에는 팀 시드{' '}
+              <strong>{origin.label}</strong> 주변 {nearbySpots.length}곳에서 추천해요. 식당 탭에는 팀 시드{' '}
               {seedSpots.length}곳이 그대로 있습니다.
             </>
           ) : (
             <>
-              카카오 API가 필요합니다. <strong>{origin.label}</strong> 주변 추천은 찾기·등록으로 채우고, 단골
+              카카오 API가 필요합니다. <strong>{origin.label}</strong> 주변 추천은 찾기·등록으로 채우고, 식당
               탭에서 팀 시드 {seedSpots.length}곳을 확인하세요.
             </>
           )}
@@ -1147,6 +1174,7 @@ export default function LunchPickPage() {
                   spot={heroSpot}
                   todayVisit={todayVisit}
                   busy={visitBusy}
+                  regular={isRegular(heroSpot)}
                   onChoose={handleVisit}
                   onReroll={runPick}
                   onExclude={handleExclude}
@@ -1158,7 +1186,14 @@ export default function LunchPickPage() {
                     <h2 className="lunch-c__heading">{todayVisit ? '다른 후보' : '이것도 괜찮아요'}</h2>
                     <div className="lunch-mini-grid">
                       {altSpots.map((s) => (
-                        <AltMini key={s.id} spot={s} busy={visitBusy} onChoose={handleVisit} onExclude={handleExclude} />
+                        <AltMini
+                          key={s.id}
+                          spot={s}
+                          busy={visitBusy}
+                          regular={isRegular(s)}
+                          onChoose={handleVisit}
+                          onExclude={handleExclude}
+                        />
                       ))}
                     </div>
                   </>
@@ -1175,7 +1210,7 @@ export default function LunchPickPage() {
                 <p className="lunch-empty__title">조건에 맞는 맛집이 없어요</p>
                 <p className="lunch-empty__hint">
                   {!useSeedCatalog && !nearbyKakaoAvailable
-                    ? '찾기·등록에서 맛집을 단골에 추가해 보세요.'
+                    ? '찾기·등록에서 맛집을 식당 목록에 추가해 보세요.'
                     : '조건을 줄이거나 「조건 더보기」에서 제외를 초기화해 보세요.'}
                   {seedSpots.length > 0 && !useSeedCatalog && (
                     <>
@@ -1191,6 +1226,7 @@ export default function LunchPickPage() {
           <LunchSidePanel
             week={weekView}
             top={topSpots}
+            regulars={regulars}
             serverReady={serverReady || visitsStatus === 'loading'}
             canEdit={serverReady}
             catalog={catalogSpots}
@@ -1217,12 +1253,32 @@ export default function LunchPickPage() {
               onChange={(e) => setCatalogQuery(e.target.value)}
             />
           </div>
+          <section className="lunch-regulars" aria-label="단골">
+            <h3 className="lunch-regulars__title">
+              ★ 단골 <small>{REGULAR_RULE} 간 곳 · 내 기록 기준</small>
+            </h3>
+            {regulars.length ? (
+              <ul className="lunch-regulars__list">
+                {regulars.map((g) => (
+                  <li key={g.name}>
+                    <strong>{g.spotName}</strong>
+                    <span>{g.count}회</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="lunch-side__hint">
+                아직 단골이 없어요. 같은 곳을 {REGULAR_DAYS}일 안에 {REGULAR_MIN_VISITS}번 가면 단골이 돼요.
+              </p>
+            )}
+          </section>
           <div className="lunch-catalog-grid">
             {catalogFiltered.map((s) => (
               <SpotCard
                 key={s.id}
                 spot={s}
                 variant="alt"
+                regular={isRegular(s)}
                 onVisit={handleVisit}
                 onEdit={s.source === 'custom' ? handleStartEdit : undefined}
                 onRemove={s.source === 'custom' ? handleRemoveCustom : undefined}
@@ -1275,11 +1331,11 @@ export default function LunchPickPage() {
           <section className="lunch-pick-panel">
             <h2 className="lunch-register-title">직접 등록</h2>
             <p className="lunch-register-lead">
-              등록한 식당은 이 브라우저의 단골 목록에 합쳐집니다. 팀 공유는 JSON 백업 후 시드 파일에 반영하세요.
+              등록한 식당은 이 브라우저의 식당 목록에 합쳐집니다. 팀 공유는 JSON 백업 후 시드 파일에 반영하세요.
             </p>
             <LunchAddSpotForm
               onAdd={handleAddSpot}
-              submitLabel="단골에 등록"
+              submitLabel="식당 등록"
               kakaoAvailable={kakaoAvailable}
               searchCenter={{
                 lat: origin.center.lat,
@@ -1301,11 +1357,11 @@ export default function LunchPickPage() {
             className="lunch-edit-drawer"
             role="dialog"
             aria-modal="true"
-            aria-label="단골 식당 수정"
+            aria-label="식당 수정"
             onClick={(e) => e.stopPropagation()}
           >
             <header className="lunch-edit-drawer__header">
-              <div className="lunch-edit-drawer__title">단골 식당 수정</div>
+              <div className="lunch-edit-drawer__title">식당 수정</div>
               <button
                 type="button"
                 className="lunch-edit-drawer__close"
