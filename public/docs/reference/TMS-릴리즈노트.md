@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-11-27
+
+### [신규] feat(lunch): 오늘 뭐 먹지 2단 화면(C안) + 방문 기록 서버 저장
+
+- feat(lunch): 오늘 뭐 먹지 2단 화면(C안) + 방문 기록 서버 저장
+- PR #310: https://github.com/cxr542/edu-team-tms/pull/310
+
 ## 2026-11-26
 
 ### [수정] fix(automation): target the Mac Mail app in the mark-read prompt
