@@ -7,6 +7,11 @@
 
 ## 2026-11-27
 
+### [신규] feat(lunch): 배달용으로 반경 넓히기(최대 5km)
+
+- feat(lunch): 배달용으로 반경 넓히기(최대 5km)
+- PR #315: https://github.com/cxr542/edu-team-tms/pull/315
+
 ### [신규] feat(lunch): 여의도 추천에 카카오 근처 식당을 실시간으로 합치기
 
 - feat(lunch): 여의도 추천에 카카오 근처 식당을 실시간으로 합치기
