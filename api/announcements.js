@@ -16,6 +16,7 @@ import { handleNavSettings } from '../server/api-utils/navSettings.js';
 import { handleCsrRequests } from '../server/api-utils/csrRequests.js';
 import { handleCsrAttachments } from '../server/api-utils/csrAttachments.js';
 import { handleKpiApprovals } from '../server/api-utils/kpiApprovals.js';
+import { handleLunchSpots } from '../server/api-utils/lunchSpots.js';
 import { handleLunchVisits } from '../server/api-utils/lunchVisits.js';
 import { handleReleaseNoteCheck } from '../server/api-utils/releaseNoteCheck.js';
 import { handleAnnouncementArchive } from '../server/api-utils/announcementArchive.js';
@@ -573,6 +574,8 @@ export default async function handler(req, res) {
     return handleKpiApprovals(req, res, client);
   } else if (pathname.includes('/api/lunch-visits')) {
     return handleLunchVisits(req, res, client);
+  } else if (pathname.includes('/api/lunch-spots')) {
+    return handleLunchSpots(req, res, client);
   } else if (pathname.includes('/api/csr-stale-check')) {
     return handleCsrStaleCheck(req, res, client);
   } else if (pathname.includes('/api/announcement-archive')) {

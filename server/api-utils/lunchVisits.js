@@ -2,6 +2,7 @@
  * 오늘 뭐 먹지 — 구성원별 점심 방문 기록 (service role, 테이블 lunch_visits).
  *
  * - GET     요청한 화면 주소의 구성원 기록을 최근 순으로 돌려준다(기본 120일).
+ *           ?scope=team 이면 팀 전체(구성원 코드 포함) 기록을 준다 — 서로의 단골을 보여주는 용도(기본 30일).
  * - POST    점심을 기록한다(기본 오늘, 한국 시간). 하루 한 곳이라 같은 날 다시 보내면 바꾼다.
  *           몸통 day(YYYY-MM-DD)로 지난 6일 안의 날짜도 고를 수 있다(빠뜨린 날 채우기). 미래는 거절.
  * - DELETE  기록을 지운다(기본 오늘, ?day= 로 지난 6일 안의 날짜).
@@ -10,9 +11,10 @@
  * Origin/Referer 는 인증이 아니다. 점심 기록이라 이 약한 검사로 충분하다고 보고, 관리자 화면(/admin)은
  * 구성원이 없으므로 거절한다.
  */
+import { hasValidAdminSession } from './adminSession.js';
 import { readJsonBody } from './announcementEngagement.js';
 import { isAllowedPublishOrigin } from './publishOrigin.js';
-import { memberCodeFromReferer } from './requestScope.js';
+import { isAdminRouteReferer, memberCodeFromReferer } from './requestScope.js';
 
 export const LUNCH_VISITS_TABLE = 'lunch_visits';
 const DEFAULT_DAYS = 120;
@@ -79,7 +81,35 @@ function requireMember(req, res) {
   return memberCode;
 }
 
+const TEAM_DEFAULT_DAYS = 30;
+
+/** 팀 전체 기록(구성원 또는 관리자 세션) */
+async function listTeamVisits(req, res, client, now, url) {
+  const source = req.headers?.referer || req.headers?.origin || '';
+  if (!isAllowedPublishOrigin(source)) return fail(res, 403, 'forbidden', '허용되지 않은 요청입니다.');
+  const allowed = isAdminRouteReferer(req) ? hasValidAdminSession(req) : Boolean(memberCodeFromReferer(req));
+  if (!allowed) return fail(res, 403, 'forbidden', '구성원 화면에서만 볼 수 있습니다.');
+
+  const rawDays = Number.parseInt(url.searchParams.get('days') || '', 10);
+  const days = Number.isFinite(rawDays) && rawDays > 0 ? Math.min(rawDays, DEFAULT_DAYS) : TEAM_DEFAULT_DAYS;
+  const since = kstDayKey(new Date(now.getTime() - days * 24 * 60 * 60 * 1000));
+  const { data, error } = await client
+    .from(LUNCH_VISITS_TABLE)
+    .select(COLUMNS)
+    .gte('visited_on', since)
+    .order('visited_on', { ascending: false });
+  if (error) return dbFailed(res, 'list-team', error);
+  return json(res, 200, {
+    ok: true,
+    today: kstDayKey(now),
+    visits: (data || []).map((row) => ({ memberCode: row.member_code, ...toVisit(row) })),
+  });
+}
+
 async function listVisits(req, res, client, now) {
+  const scopeUrl = new URL(req.url || '/', 'http://local');
+  if (scopeUrl.searchParams.get('scope') === 'team') return listTeamVisits(req, res, client, now, scopeUrl);
+
   const memberCode = requireMember(req, res);
   if (!memberCode) return undefined;
 

@@ -12,7 +12,7 @@ export function makeFakeSupabase(seed = {}) {
     admin_login_attempts: [],
     ...seed,
   };
-  const pk = { ledger_transactions: 'id', ledger_categories: 'id', ledger_settings: 'key', reference_doc_uploads: 'id', reference_doc_submissions: 'id', lunch_visits: 'id' };
+  const pk = { ledger_transactions: 'id', ledger_categories: 'id', ledger_settings: 'key', reference_doc_uploads: 'id', reference_doc_submissions: 'id', lunch_visits: 'id', lunch_spots: 'id' };
   const log = [];
 
   function builder(name) {
@@ -51,7 +51,7 @@ export function makeFakeSupabase(seed = {}) {
       if (st.op === 'insert') {
         // 기본키를 안 보내면 DB 처럼 자동 값을 붙인다(gen_random_uuid 흉내).
         const list = (Array.isArray(st.payload) ? st.payload : [st.payload]).map((p) =>
-          p[pk[name]] == null ? { ...p, [pk[name]]: `auto-${++autoId}` } : p
+          p[pk[name]] == null ? { ...p, [pk[name]]: `00000000-0000-4000-8000-${String(++autoId).padStart(12, '0')}` } : p
         );
         for (const p of list) {
           if (rows.some((r) => r[pk[name]] === p[pk[name]])) {

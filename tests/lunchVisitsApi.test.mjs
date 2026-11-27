@@ -139,6 +139,21 @@ describe('/api/lunch-visits', () => {
     expect(bad.statusCode).toBe(400);
   });
 
+  it('scope=team 은 구성원 코드와 함께 팀 전체 기록(기본 30일)을 준다', async () => {
+    const db = makeFakeSupabase({
+      lunch_visits: [
+        row({ member_code: 'A', visited_on: '2026-11-26' }),
+        row({ member_code: 'B', visited_on: '2026-11-25', spot_name: '백반마을', spot_id: 's2' }),
+        row({ member_code: 'C', visited_on: '2026-10-01' }),
+      ],
+    });
+    const res = await call(db, { method: 'GET', url: '/api/lunch-visits?scope=team', headers: member('hyshin') });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.visits.map((v) => `${v.memberCode}:${v.day}`)).toEqual(['A:2026-11-26', 'B:2026-11-25']);
+    const bad = await call(db, { method: 'GET', url: '/api/lunch-visits?scope=team', headers: { referer: `${ORIGIN}/` } });
+    expect(bad.statusCode).toBe(403);
+  });
+
   it('DB 오류는 일반 문구 500', async () => {
     const db = { from: () => { const q = { select: () => q, eq: () => q, gte: () => q, order: () => q, then: (r) => r({ data: null, error: { message: 'permission denied' } }) }; return q; } };
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});

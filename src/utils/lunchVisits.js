@@ -142,3 +142,26 @@ export function isRegularSpot(spot, regulars = []) {
   const name = normalizeName(spot.name);
   return regulars.some((g) => g.spotIds.includes(spot.id) || (name && g.name === name));
 }
+
+/**
+ * 팀 기록(구성원 코드 포함)에서 구성원별 단골을 구한다.
+ * @param {(LunchVisit & { memberCode: string })[]} teamVisits
+ * @param {string} todayKey
+ * @returns {{ memberCode: string, regulars: ReturnType<typeof findRegularSpots> }[]}
+ */
+export function regularsByMember(teamVisits = [], todayKey) {
+  const byCode = new Map();
+  for (const v of teamVisits) {
+    if (!v?.memberCode) continue;
+    if (!byCode.has(v.memberCode)) byCode.set(v.memberCode, []);
+    byCode.get(v.memberCode).push(v);
+  }
+  return [...byCode.entries()]
+    .sort(([a], [b]) => (a < b ? -1 : 1))
+    .map(([memberCode, visits]) => ({ memberCode, regulars: findRegularSpots(visits, todayKey) }));
+}
+
+/** 이 식당을 단골로 둔 구성원 코드 목록 */
+export function regularOwners(spot, byMember = []) {
+  return byMember.filter((m) => isRegularSpot(spot, m.regulars)).map((m) => m.memberCode);
+}
