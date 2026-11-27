@@ -96,3 +96,49 @@ export function visitsFromLegacyHistory(history = {}, findSpot = () => undefined
   }
   return [...byDay.values()].map((x) => x.visit).sort((a, b) => (a.day < b.day ? 1 : -1));
 }
+
+/** 단골 기준: 최근 30일(오늘 포함) 안에 3번 이상 간 곳 */
+export const REGULAR_DAYS = 30;
+export const REGULAR_MIN_VISITS = 3;
+
+const normalizeName = (name) => String(name || '').replace(/\s+/g, '').toLowerCase();
+
+/**
+ * 최근 N일 방문 기록으로 단골 식당을 고른다. 이름(공백 무시)이 같으면 같은 식당으로 센다
+ * — 칸에서 이름만 적어 기록한 곳과 목록에서 고른 곳이 합쳐지도록.
+ * @param {LunchVisit[]} visits
+ * @param {string} todayKey YYYY-MM-DD
+ * @param {{ days?: number, min?: number }} [opts]
+ * @returns {{ name: string, spotName: string, spotIds: string[], count: number, lastDay: string }[]}
+ */
+export function findRegularSpots(visits = [], todayKey, opts = {}) {
+  const days = opts.days ?? REGULAR_DAYS;
+  const min = opts.min ?? REGULAR_MIN_VISITS;
+  const since = formatDay(new Date(parseDay(todayKey).getTime() - (days - 1) * DAY_MS));
+  const groups = new Map();
+  for (const v of visits) {
+    if (!v?.day || v.day < since || v.day > todayKey) continue;
+    const key = normalizeName(v.spotName) || v.spotId;
+    const g = groups.get(key) || { name: key, spotName: v.spotName, spotIds: [], count: 0, lastDay: '' };
+    g.count += 1;
+    if (!g.spotIds.includes(v.spotId)) g.spotIds.push(v.spotId);
+    if (v.day > g.lastDay) {
+      g.lastDay = v.day;
+      g.spotName = v.spotName;
+    }
+    groups.set(key, g);
+  }
+  return [...groups.values()]
+    .filter((g) => g.count >= min)
+    .sort((a, b) => b.count - a.count || (a.lastDay < b.lastDay ? 1 : -1));
+}
+
+/**
+ * @param {{ id: string, name: string }} spot
+ * @param {ReturnType<typeof findRegularSpots>} regulars
+ */
+export function isRegularSpot(spot, regulars = []) {
+  if (!spot) return false;
+  const name = normalizeName(spot.name);
+  return regulars.some((g) => g.spotIds.includes(spot.id) || (name && g.name === name));
+}

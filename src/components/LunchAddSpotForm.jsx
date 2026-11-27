@@ -49,7 +49,7 @@ export default function LunchAddSpotForm({
   onAdd,
   initial,
   onCancel,
-  submitLabel = '단골에 등록',
+  submitLabel = '식당 등록',
   searchCenter,
   kakaoAvailable = true,
 }) {

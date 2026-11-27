@@ -74,3 +74,43 @@ describe('kstTodayKey', () => {
     expect(kstTodayKey(new Date('2026-11-25T15:00:00.000Z'))).toBe('2026-11-26');
   });
 });
+
+describe('findRegularSpots / isRegularSpot', () => {
+  const v = (day, spotId, spotName) => ({ day, spotId, spotName });
+  const today = '2026-11-27';
+
+  it('최근 30일(오늘 포함) 3회 이상만 단골, 이름이 같으면 함께 센다', async () => {
+    const { findRegularSpots } = await import('../src/utils/lunchVisits.js');
+    const visits = [
+      v('2026-11-27', 'manual:순대실록', '순대실록'),
+      v('2026-11-20', 'kakao-1', '순대 실록'),
+      v('2026-10-29', 'kakao-1', '순대실록'), // 30일째(포함)
+      v('2026-10-28', 'kakao-1', '순대실록'), // 31일 전 — 빠짐
+      v('2026-11-25', 'y-1', '백반마을'),
+      v('2026-11-24', 'y-1', '백반마을'),
+    ];
+    const regulars = findRegularSpots(visits, today);
+    expect(regulars).toHaveLength(1);
+    expect(regulars[0]).toMatchObject({ spotName: '순대실록', count: 3, lastDay: '2026-11-27' });
+    expect(regulars[0].spotIds.sort()).toEqual(['kakao-1', 'manual:순대실록']);
+  });
+
+  it('미래 날짜는 세지 않고 기준은 바꿀 수 있다', async () => {
+    const { findRegularSpots } = await import('../src/utils/lunchVisits.js');
+    const visits = [v('2026-11-28', 'a', 'A'), v('2026-11-27', 'a', 'A'), v('2026-11-26', 'a', 'A')];
+    expect(findRegularSpots(visits, today)).toHaveLength(0);
+    expect(findRegularSpots(visits, today, { min: 2 })).toHaveLength(1);
+  });
+
+  it('isRegularSpot 은 id 또는 이름(공백 무시)으로 맞춘다', async () => {
+    const { findRegularSpots, isRegularSpot } = await import('../src/utils/lunchVisits.js');
+    const regulars = findRegularSpots(
+      [v('2026-11-27', 'x', '여의도 순대국'), v('2026-11-26', 'x', '여의도 순대국'), v('2026-11-25', 'x', '여의도 순대국')],
+      today
+    );
+    expect(isRegularSpot({ id: 'x', name: '다른 이름' }, regulars)).toBe(true);
+    expect(isRegularSpot({ id: 'kakao-9', name: '여의도순대국' }, regulars)).toBe(true);
+    expect(isRegularSpot({ id: 'y', name: '백반마을' }, regulars)).toBe(false);
+    expect(isRegularSpot(null, regulars)).toBe(false);
+  });
+});
