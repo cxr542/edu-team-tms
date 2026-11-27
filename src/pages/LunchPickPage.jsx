@@ -579,6 +579,7 @@ export default function LunchPickPage() {
     stored,
     setPreset,
     setCustomOrigin,
+    setRadius,
     resetOrigin,
     presets,
     customPresetId,
@@ -990,6 +991,7 @@ export default function LunchPickPage() {
             customPresetId={customPresetId}
             setPreset={setPreset}
             setCustomOrigin={setCustomOrigin}
+            setRadius={setRadius}
             resetOrigin={resetOrigin}
           />
         </div>

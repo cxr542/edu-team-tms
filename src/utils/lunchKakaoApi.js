@@ -1,15 +1,16 @@
 import { KAKAO_CACHE_TTL_MS, KAKAO_SEARCH_CACHE_KEY } from '../constants/lunchPick';
 
-function cacheKey(query, page, purpose = 'food') {
-  return `${purpose}|${query}|${page}`;
+// 위치·반경이 바뀌면 다른 결과라 캐시 키에 같이 넣는다.
+function cacheKey(query, page, purpose = 'food', area = '') {
+  return `${purpose}|${query}|${page}|${area}`;
 }
 
-function readCache(query, page, purpose = 'food') {
+function readCache(query, page, purpose = 'food', area = '') {
   try {
     const raw = sessionStorage.getItem(KAKAO_SEARCH_CACHE_KEY);
     if (!raw) return null;
     const store = JSON.parse(raw);
-    const entry = store[cacheKey(query, page, purpose)];
+    const entry = store[cacheKey(query, page, purpose, area)];
     if (!entry || Date.now() - entry.at > KAKAO_CACHE_TTL_MS) return null;
     return entry.data;
   } catch {
@@ -17,11 +18,11 @@ function readCache(query, page, purpose = 'food') {
   }
 }
 
-function writeCache(query, page, data, purpose = 'food') {
+function writeCache(query, page, data, purpose = 'food', area = '') {
   try {
     const raw = sessionStorage.getItem(KAKAO_SEARCH_CACHE_KEY);
     const store = raw ? JSON.parse(raw) : {};
-    store[cacheKey(query, page, purpose)] = { at: Date.now(), data };
+    store[cacheKey(query, page, purpose, area)] = { at: Date.now(), data };
     sessionStorage.setItem(KAKAO_SEARCH_CACHE_KEY, JSON.stringify(store));
   } catch {
     /* ignore */
@@ -34,7 +35,8 @@ function writeCache(query, page, data, purpose = 'food') {
  */
 export async function searchKakaoLocal({ query, page = 1, lat, lng, radius, purpose = 'food' }) {
   const q = String(query || '').trim() || '여의도역 맛집';
-  const cached = readCache(q, page, purpose);
+  const area = [lat, lng, radius].map((v) => (v == null ? '' : String(v))).join(',');
+  const cached = readCache(q, page, purpose, area);
   if (cached) return cached;
 
   const params = new URLSearchParams({ query: q, page: String(page), purpose });
@@ -53,7 +55,7 @@ export async function searchKakaoLocal({ query, page = 1, lat, lng, radius, purp
       return { places: [], available: true, error: err };
     }
     const result = { places: body.places || [], available: true, isEnd: body.meta?.is_end !== false };
-    writeCache(q, page, result, purpose);
+    writeCache(q, page, result, purpose, area);
     return result;
   } catch (e) {
     return { places: [], available: false, error: e.message || '검색 실패' };

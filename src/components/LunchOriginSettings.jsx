@@ -5,6 +5,7 @@ import {
   isNearYeouidoPreset,
   kmToRadiusM,
   LUNCH_ORIGIN_PRESETS,
+  LUNCH_RADIUS_OPTIONS,
   radiusMToKm,
 } from '../constants/lunchOrigins';
 import { lookupKakaoCoordsByName } from '../utils/lunchKakaoApi';
@@ -17,6 +18,7 @@ import { lookupKakaoCoordsByName } from '../utils/lunchKakaoApi';
  *   customPresetId: string,
  *   setPreset: (id: string) => void,
  *   setCustomOrigin: (o: { label: string, lat: number, lng: number, radiusM: number }) => void,
+ *   setRadius?: (radiusM: number) => void,
  *   resetOrigin: () => void,
  * }} props
  */
@@ -27,6 +29,7 @@ export default function LunchOriginSettings({
   customPresetId,
   setPreset,
   setCustomOrigin,
+  setRadius,
   resetOrigin,
 }) {
   const activeId = stored?.presetId || presets[0]?.id;
@@ -184,6 +187,26 @@ export default function LunchOriginSettings({
           직접 지정
         </button>
       </div>
+      {setRadius && (
+        <div className="lunch-origin-radius" role="group" aria-label="반경">
+          <span className="lunch-origin-radius__label">반경</span>
+          {LUNCH_RADIUS_OPTIONS.map((r) => (
+            <button
+              key={r.value}
+              type="button"
+              className={`lunch-origin-preset-btn${origin.radiusM === r.value ? ' is-active' : ''}`}
+              aria-pressed={origin.radiusM === r.value}
+              onClick={() => {
+                setRadius(r.value);
+                setCustomRadiusKm(String(radiusMToKm(r.value)));
+              }}
+            >
+              {r.label}
+              {r.hint && <small> · {r.hint}</small>}
+            </button>
+          ))}
+        </div>
+      )}
       <p className="lunch-origin-settings__intro">
         프리셋을 누르면 바로 적용됩니다. 다른 위치는 아래에 이름·좌표를 입력한 뒤{' '}
         <strong>적용</strong>을 누르세요.
