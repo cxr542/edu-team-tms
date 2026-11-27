@@ -7,6 +7,11 @@
 
 ## 2026-11-27
 
+### [신규] feat(lunch): 이번 주 점심 칸을 눌러 바로 기록
+
+- feat(lunch): 이번 주 점심 칸을 눌러 바로 기록
+- PR #313: https://github.com/cxr542/edu-team-tms/pull/313
+
 ### [수정] fix(lunch): 다른 메뉴와 같은 화면 모양 + 카카오 키 없을 때 안내 정리
 
 - fix(lunch): 다른 메뉴와 같은 화면 모양 + 카카오 키 없을 때 안내 정리
