@@ -33,10 +33,22 @@ export function useLunchHistory() {
     });
   }, []);
 
+  /** "여기 갈래요" 취소 — 이 식당의 브라우저 방문 표시를 지운다 */
+  const unmarkVisited = useCallback((spotId) => {
+    if (!spotId) return;
+    setHistory((prev) => {
+      if (!(spotId in prev)) return prev;
+      const next = { ...prev };
+      delete next[spotId];
+      localStorage.setItem(LUNCH_HISTORY_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   const clearHistory = useCallback(() => {
     localStorage.removeItem(LUNCH_HISTORY_KEY);
     setHistory({});
   }, []);
 
-  return { history, markVisited, clearHistory };
+  return { history, markVisited, unmarkVisited, clearHistory };
 }

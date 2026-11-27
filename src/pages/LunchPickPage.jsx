@@ -1,5 +1,17 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { MapPin, Pencil, RefreshCw, Settings2, Sparkles, Trash2, X } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Check,
+  ChevronDown,
+  MapPin,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Settings2,
+  Sparkles,
+  Trash2,
+  Undo2,
+  X,
+} from 'lucide-react';
 import LunchAddSpotForm from '../components/LunchAddSpotForm';
 import LunchOriginSettings from '../components/LunchOriginSettings';
 import {
@@ -20,6 +32,7 @@ import { formatRadiusKm, usesYeouidoSeedCatalog } from '../constants/lunchOrigin
 import { useLunchOrigin } from '../hooks/useLunchOrigin';
 import { useLunchNearbySpots } from '../hooks/useLunchNearbySpots';
 import { useLunchSpots } from '../hooks/useLunchSpots';
+import { useLunchVisits } from '../hooks/useLunchVisits';
 import {
   buildHistoryExcludeIds,
   kakaoPlaceToSpot,
@@ -28,13 +41,18 @@ import {
 import { searchKakaoLocal } from '../utils/lunchKakaoApi';
 import { getCategoryVisual } from '../utils/lunchCategoryVisual';
 import { enrichSpotWithPriceInfo, formatMenuPrice } from '../utils/lunchMenuPrice';
+import {
+  buildWeekView,
+  mergeVisitHistory,
+  topVisitedSpots,
+  visitsFromLegacyHistory,
+} from '../utils/lunchVisits';
 import './LunchPickPage.css';
 
 const TABS = [
-  { id: 'today', label: '오늘', emoji: '🍽️' },
-  { id: 'catalog', label: '단골', emoji: '⭐' },
-  { id: 'search', label: '검색', emoji: '🔍' },
-  { id: 'register', label: '등록', emoji: '➕' },
+  { id: 'today', label: '추천' },
+  { id: 'catalog', label: '단골' },
+  { id: 'find', label: '찾기·등록' },
 ];
 
 function readSessionExclude() {
@@ -221,9 +239,206 @@ function SpotCard({
   );
 }
 
+/** 카드 한 줄 요약: 종류 · 도보 · 출구 */
+function spotMetaLine(spot) {
+  return [
+    spot.category,
+    spot.walkMinutes != null ? `도보 ${spot.walkMinutes}분` : '',
+    spot.exitHint || '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+/** 대표 메뉴 한 줄(식대 이내면 가격까지) */
+function spotMenuLine(spot) {
+  const rep = spot.representativeMenu;
+  if (rep) {
+    const price = rep.priceWon != null ? ` ${formatMenuPrice(rep.priceWon)}` : '';
+    return `${rep.name}${price}${spot.priceIsEstimated ? ' (추정)' : ''}`;
+  }
+  if (spot.menuHints?.length) return spot.menuHints.slice(0, 3).join(' · ');
+  return '';
+}
+
+function PricePill({ level }) {
+  if (level === LUNCH_PRICE_WITHIN) return <span className="lunch-pill lunch-pill--ok">식대 이내</span>;
+  if (level === LUNCH_PRICE_OVER) return <span className="lunch-pill lunch-pill--over">식대 초과</span>;
+  return <span className="lunch-pill">가격 미확인</span>;
+}
+
+/** C안 — 오늘의 픽 (가로형 카드) */
+function PickHero({ spot, todayVisit, busy, onChoose, onReroll, onExclude, onUndo, onEdit }) {
+  const priced = enrichSpotWithPriceInfo(spot);
+  const visual = getCategoryVisual(priced.category, priced.tags);
+  const chosen = todayVisit?.spotId === spot.id;
+  const menu = spotMenuLine(priced);
+
+  return (
+    <article className={`lunch-hero${chosen ? ' is-chosen' : ''}`} style={{ '--lunch-card-accent': visual.accent }}>
+      <div className="lunch-hero__icon" style={{ background: visual.gradient }} aria-hidden>
+        {visual.emoji}
+      </div>
+      <div className="lunch-hero__body">
+        <p className="lunch-hero__eyebrow">
+          <Sparkles size={13} aria-hidden />
+          {chosen ? '오늘 점심으로 골랐어요' : '오늘의 픽'}
+        </p>
+        <h2 className="lunch-hero__name">
+          {priced.name}
+          {priced.source === 'custom' && <span className="lunch-pill lunch-pill--soft">내 등록</span>}
+          {priced.source === 'kakao' && <span className="lunch-pill lunch-pill--soft">주변</span>}
+        </h2>
+        <p className="lunch-hero__meta">{spotMetaLine(priced)}</p>
+        <div className="lunch-hero__menu">
+          <PricePill level={priced.priceLevel} />
+          {menu && <span>{menu}</span>}
+        </div>
+        {priced.teamNote && <p className="lunch-hero__note">“{priced.teamNote}”</p>}
+        {priced.tags?.length > 0 && (
+          <div className="lunch-hero__tags">
+            {priced.tags.map((t) => (
+              <span key={t} className="lunch-tag">
+                {LUNCH_TAGS[t]?.emoji} {LUNCH_TAGS[t]?.label || t}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="lunch-hero__actions">
+        {chosen ? (
+          <button type="button" className="lunch-btn lunch-btn--soft" onClick={onUndo} disabled={busy}>
+            <Undo2 size={15} aria-hidden />
+            선택 취소
+          </button>
+        ) : (
+          <button type="button" className="lunch-btn lunch-btn--primary" onClick={() => onChoose(spot)} disabled={busy}>
+            <Check size={15} aria-hidden />
+            여기 갈래요
+          </button>
+        )}
+        <button type="button" className="lunch-btn lunch-btn--soft" onClick={onReroll}>
+          <RefreshCw size={15} aria-hidden />
+          다시 뽑기
+        </button>
+        <div className="lunch-hero__minor">
+          {spot.mapUrl && (
+            <a className="lunch-link" href={spot.mapUrl} target="_blank" rel="noopener noreferrer">
+              <MapPin size={13} aria-hidden />
+              지도
+            </a>
+          )}
+          {!chosen && (
+            <button type="button" className="lunch-link" onClick={() => onExclude(spot)}>
+              오늘은 제외
+            </button>
+          )}
+          {onEdit && (
+            <button type="button" className="lunch-link" onClick={() => onEdit(spot)}>
+              <Pencil size={12} aria-hidden />
+              수정
+            </button>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+/** C안 — 대안 미니 카드 */
+function AltMini({ spot, busy, onChoose, onExclude }) {
+  const priced = enrichSpotWithPriceInfo(spot);
+  const visual = getCategoryVisual(priced.category, priced.tags);
+  const menu = spotMenuLine(priced);
+  return (
+    <article className="lunch-mini">
+      <div className="lunch-mini__head">
+        <span className="lunch-mini__emoji" aria-hidden>
+          {visual.emoji}
+        </span>
+        <div className="lunch-mini__title">
+          <h3>{priced.name}</h3>
+          <p>{[priced.category, priced.walkMinutes != null ? `${priced.walkMinutes}분` : ''].filter(Boolean).join(' · ')}</p>
+        </div>
+      </div>
+      {menu && <p className="lunch-mini__menu">{menu}</p>}
+      <div className="lunch-mini__actions">
+        <button type="button" className="lunch-link lunch-link--strong" onClick={() => onChoose(spot)} disabled={busy}>
+          이걸로
+        </button>
+        <button type="button" className="lunch-link" onClick={() => onExclude(spot)}>
+          제외
+        </button>
+        {spot.mapUrl && (
+          <a className="lunch-link" href={spot.mapUrl} target="_blank" rel="noopener noreferrer">
+            지도
+          </a>
+        )}
+      </div>
+    </article>
+  );
+}
+
+/** C안 오른쪽 — 이번 주 점심 · 자주 간 곳 */
+function LunchSidePanel({ week, top, serverReady, onFind }) {
+  return (
+    <aside className="lunch-side" aria-label="점심 기록">
+      <section className="lunch-side__card">
+        <h3 className="lunch-side__title">이번 주 점심</h3>
+        <ol className="lunch-week">
+          {week.map((d) => (
+            <li
+              key={d.key}
+              className={`lunch-week__day${d.isToday ? ' is-today' : ''}${d.isFuture ? ' is-future' : ''}`}
+            >
+              <span className="lunch-week__label">{d.label}</span>
+              <span className="lunch-week__spot" title={d.visit?.spotName || ''}>
+                {d.visit ? d.visit.spotName : d.isToday ? '?' : '–'}
+              </span>
+            </li>
+          ))}
+        </ol>
+        {!serverReady && (
+          <p className="lunch-side__hint">서버 기록을 불러오지 못해 이 브라우저 기록으로 보여줘요.</p>
+        )}
+      </section>
+
+      <section className="lunch-side__card">
+        <h3 className="lunch-side__title">
+          자주 간 곳 <small>최근 120일</small>
+        </h3>
+        {top.length ? (
+          <ul className="lunch-top">
+            {top.map((t) => (
+              <li key={t.spotId}>
+                <span>{t.spotName}</span>
+                <span className="lunch-top__count">{t.count}회</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="lunch-side__hint">「여기 갈래요」를 누르면 기록이 쌓여요.</p>
+        )}
+      </section>
+
+      <button type="button" className="lunch-btn lunch-btn--soft lunch-side__find" onClick={onFind}>
+        <Plus size={15} aria-hidden />
+        식당 찾기·등록
+      </button>
+    </aside>
+  );
+}
+
 export default function LunchPickPage() {
   const { spots: seedAndCustomSpots, meta, loading, error, reloadCustom } = useLunchSpots();
-  const { history, markVisited, clearHistory } = useLunchHistory();
+  const { history, markVisited, unmarkVisited, clearHistory } = useLunchHistory();
+  const {
+    visits: serverVisits,
+    today: todayKey,
+    status: visitsStatus,
+    recordToday,
+    clearToday,
+  } = useLunchVisits();
   const {
     origin,
     stored,
@@ -295,6 +510,8 @@ export default function LunchPickPage() {
   const [registerToast, setRegisterToast] = useState('');
 
   const [editingSpot, setEditingSpot] = useState(null);
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const [visitBusy, setVisitBusy] = useState(false);
 
   useEffect(() => {
     setSearchQuery(origin.searchHint || '맛집');
@@ -308,10 +525,33 @@ export default function LunchPickPage() {
     });
   }, []);
 
-  const historyExclude = useMemo(
-    () => buildHistoryExcludeIds(Object.keys(history), history, filters.historySkipDays),
-    [history, filters.historySkipDays]
+  const serverReady = visitsStatus === 'ready';
+
+  /** 서버 기록 + 브라우저 기록을 합친 식당별 마지막 방문 (추천 제외용) */
+  const mergedHistory = useMemo(
+    () => mergeVisitHistory(serverReady ? serverVisits : [], history),
+    [serverReady, serverVisits, history]
   );
+
+  const historyExclude = useMemo(
+    () => buildHistoryExcludeIds(Object.keys(mergedHistory), mergedHistory, filters.historySkipDays),
+    [mergedHistory, filters.historySkipDays]
+  );
+
+  /** 화면에 보여줄 방문 기록: 서버 우선, 못 쓰면 브라우저 기록으로 근사 */
+  const displayVisits = useMemo(() => {
+    if (serverReady) return serverVisits;
+    if (visitsStatus === 'loading') return [];
+    const byId = new Map(catalogSpots.map((s) => [s.id, s]));
+    return visitsFromLegacyHistory(history, (id) => byId.get(id));
+  }, [serverReady, visitsStatus, serverVisits, history, catalogSpots]);
+
+  const todayVisit = useMemo(
+    () => displayVisits.find((v) => v.day === todayKey) || null,
+    [displayVisits, todayKey]
+  );
+  const weekView = useMemo(() => buildWeekView(todayKey, displayVisits), [todayKey, displayVisits]);
+  const topSpots = useMemo(() => topVisitedSpots(displayVisits, 3), [displayVisits]);
 
   const spotsForPick = useMemo(
     () => spots.map((s) => enrichSpotWithPriceInfo(s)),
@@ -324,9 +564,14 @@ export default function LunchPickPage() {
     setPick(result);
   }, [spotsForPick, filters, sessionExclude, historyExclude]);
 
+  const runPickRef = useRef(runPick);
+  runPickRef.current = runPick;
+
+  // 자동 다시 뽑기: 목록·조건·제외가 바뀔 때, 서버 기록을 처음 받았을 때.
+  // "여기 갈래요"로 방문 기록만 바뀔 때는 다시 뽑지 않는다(고른 식당이 사라지지 않게).
   useEffect(() => {
-    if (!spotsLoading && spotsForPick.length) runPick();
-  }, [spotsLoading, spotsForPick, runPick]);
+    if (!spotsLoading && spotsForPick.length) runPickRef.current();
+  }, [spotsLoading, spotsForPick, filters, sessionExclude, visitsStatus]);
 
   useEffect(() => {
     if (!spotsLoading && !spots.length) {
@@ -346,13 +591,52 @@ export default function LunchPickPage() {
 
   const handleExclude = (spot) => {
     persistSessionExclude((prev) => new Set([...prev, spot.id]));
-    runPick();
   };
 
-  const handleVisit = (spot) => {
+  /** "여기 갈래요" — 서버에 오늘 점심으로 기록하고 브라우저에도 표시. 추천은 다시 뽑지 않는다. */
+  const handleVisit = async (spot) => {
     markVisited(spot.id);
-    runPick();
+    if (!serverReady) {
+      setRegisterToast(`「${spot.name}」을(를) 이 브라우저에 기록했어요. (서버 기록 사용 불가)`);
+      return;
+    }
+    setVisitBusy(true);
+    const r = await recordToday(spot);
+    setVisitBusy(false);
+    if (!r.ok) setRegisterToast(`서버에 기록하지 못했어요: ${r.message}`);
   };
+
+  /** 오늘 이미 고른 식당이 있으면 그걸 크게 보여준다 */
+  const todaySpot = useMemo(() => {
+    if (!todayVisit) return null;
+    const found = catalogSpots.find((s) => s.id === todayVisit.spotId) || spots.find((s) => s.id === todayVisit.spotId);
+    return found || { id: todayVisit.spotId, name: todayVisit.spotName, category: todayVisit.category || '' };
+  }, [todayVisit, catalogSpots, spots]);
+  const heroSpot = todaySpot || pick.primary;
+  const altSpots = useMemo(
+    () =>
+      [pick.primary, ...pick.alternatives]
+        .filter((s) => s && s.id !== heroSpot?.id)
+        .slice(0, 3),
+    [pick, heroSpot]
+  );
+
+  const handleUndoToday = async () => {
+    if (todayVisit) unmarkVisited(todayVisit.spotId);
+    if (!serverReady) return;
+    setVisitBusy(true);
+    const r = await clearToday();
+    setVisitBusy(false);
+    if (!r.ok) setRegisterToast(`기록을 취소하지 못했어요: ${r.message}`);
+  };
+
+  const togglePriceWithin = () =>
+    setFilters((f) => ({ ...f, priceLevel: f.priceLevel === LUNCH_PRICE_WITHIN ? 0 : LUNCH_PRICE_WITHIN }));
+
+  const activeExtraFilters =
+    (filters.maxWalkMinutes > 0 ? 1 : 0) +
+    (filters.historySkipDays !== DEFAULT_LUNCH_FILTERS.historySkipDays ? 1 : 0) +
+    (filters.priceLevel === LUNCH_PRICE_OVER ? 1 : 0);
 
   const handleAddSpot = useCallback(
     (input) => {
@@ -469,43 +753,37 @@ export default function LunchPickPage() {
 
   return (
     <main className="lunch-pick-main">
-      <header className="lunch-pick-header">
-        <div className="lunch-pick-header__brand">
-          <span className="lunch-pick-header__icon" aria-hidden>
-            🍱
-          </span>
-          <div>
-            <h1>오늘 뭐 먹지</h1>
-            <p className="lunch-pick-header__tagline">{origin.label} 점심, 한 번에 골라요</p>
-          </div>
+      <header className="lunch-top-bar">
+        <div className="lunch-top-bar__title">
+          <h1>오늘 뭐 먹지</h1>
+          <p>
+            <MapPin size={13} aria-hidden />
+            {origin.label} · 반경 {formatRadiusKm(origin.radiusM)} · 단골 {catalogCount}곳
+            {customCount > 0 && ` (내 등록 ${customCount})`}
+            <button
+              type="button"
+              className="lunch-link"
+              onClick={() => setShowOriginSettings((v) => !v)}
+              aria-expanded={showOriginSettings}
+            >
+              <Settings2 size={12} aria-hidden />
+              {showOriginSettings ? '닫기' : '위치 변경'}
+            </button>
+          </p>
         </div>
-        <div className="lunch-pick-stats">
-          <span className="lunch-pick-stat">
-            <strong>{origin.label}</strong>
-            <small>기준 위치</small>
-          </span>
-          <span className="lunch-pick-stat">
-            <strong>{catalogCount}</strong>
-            <small>단골 맛집</small>
-          </span>
-          <span className="lunch-pick-stat lunch-pick-stat--accent">
-            <strong>{(LUNCH_ALLOWANCE_WON / 1000).toFixed(0)}k</strong>
-            <small>식대 기준</small>
-          </span>
-        </div>
-        <p className="lunch-pick-lead">
-          반경 {formatRadiusKm(origin.radiusM)}
-          {customCount > 0 && ` · 내 등록 ${customCount}곳`}
-        </p>
-        <button
-          type="button"
-          className="lunch-pick-settings-toggle"
-          onClick={() => setShowOriginSettings((v) => !v)}
-          aria-expanded={showOriginSettings}
-        >
-          <Settings2 size={14} aria-hidden />
-          {showOriginSettings ? '기준 위치 닫기' : '기준 위치 변경'}
-        </button>
+        <nav className="lunch-seg" aria-label="점심 메뉴">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className={`lunch-seg__btn${tab === t.id ? ' is-active' : ''}`}
+              onClick={() => setTab(t.id)}
+              aria-pressed={tab === t.id}
+            >
+              {t.label}
+            </button>
+          ))}
+        </nav>
       </header>
 
       {showOriginSettings && (
@@ -531,7 +809,7 @@ export default function LunchPickPage() {
         </p>
       )}
 
-      {!kakaoAvailable && tab === 'search' && (
+      {!kakaoAvailable && tab === 'find' && (
         <p className="lunch-pick-banner" role="status">
           카카오 지도 검색 API가 설정되지 않았습니다. 단골 목록·오늘 추천은 그대로 사용할 수 있습니다.
         </p>
@@ -547,52 +825,18 @@ export default function LunchPickPage() {
         <p className="lunch-pick-banner lunch-pick-banner--info" role="status">
           {nearbyKakaoAvailable ? (
             <>
-              <strong>{origin.label}</strong> 반경 {formatRadiusKm(origin.radiusM)} 주변 맛집{' '}
-              {nearbySpots.length}곳 (오늘 추천). 단골 탭에는 팀 시드 {seedSpots.length}곳이 그대로
-              있습니다.
+              <strong>{origin.label}</strong> 주변 {nearbySpots.length}곳에서 추천해요. 단골 탭에는 팀 시드{' '}
+              {seedSpots.length}곳이 그대로 있습니다.
             </>
           ) : (
             <>
-              카카오 API가 필요합니다. <strong>{origin.label}</strong> 주변 추천은 검색·등록으로
-              채우고, 단골 탭에서 팀 시드 {seedSpots.length}곳을 확인하세요.
-            </>
-          )}
-          {nearbySpots.length === 0 && seedSpots.length > 0 && (
-            <>
-              {' '}
-              파크원·여의도역이면 상단 <strong>오케스트로 (파크원타워2)</strong> 프리셋을 눌러
-              보세요.
+              카카오 API가 필요합니다. <strong>{origin.label}</strong> 주변 추천은 찾기·등록으로 채우고, 단골
+              탭에서 팀 시드 {seedSpots.length}곳을 확인하세요.
             </>
           )}
           {nearbyError && ` (${nearbyError})`}
         </p>
       )}
-
-      {stored?.presetId === 'custom' && useSeedCatalog && tab === 'today' && !spotsLoading && (
-        <p className="lunch-pick-banner lunch-pick-banner--info" role="status">
-          좌표가 여의도 근처라 <strong>팀 시드 목록</strong>으로 추천합니다. 프리셋{' '}
-          <strong>오케스트로 (파크원타워2)</strong>를 누르면 설정이 더 분명해집니다.
-        </p>
-      )}
-
-      <nav className="lunch-pick-tabs" aria-label="점심 메뉴">
-        <div className="lunch-pick-tabs__track">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              className={`lunch-pick-tab${tab === t.id ? ' is-active' : ''}`}
-              onClick={() => setTab(t.id)}
-              aria-label={t.label}
-            >
-              <span className="lunch-pick-tab__emoji" aria-hidden>
-                {t.emoji}
-              </span>
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </nav>
 
       {spotsLoading && <p className="lunch-pick-status">맛집 목록 불러오는 중…</p>}
       {error && (
@@ -602,186 +846,181 @@ export default function LunchPickPage() {
       )}
 
       {!spotsLoading && !error && tab === 'today' && (
-        <div className="lunch-pick-panel">
-          <section className="lunch-filters" aria-label="필터">
-            <p className="lunch-filters__title">오늘 조건</p>
-            <div className="lunch-filters__row">
-              <label>
-                식대 (13,000원)
-                <select
-                  value={filters.priceLevel}
-                  onChange={(e) => setFilters((f) => ({ ...f, priceLevel: Number(e.target.value) }))}
-                  className="form-input"
-                >
-                  {PRICE_LEVELS.map((p) => (
-                    <option key={p.value} value={p.value}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                도보
-                <select
-                  value={filters.maxWalkMinutes}
-                  onChange={(e) =>
-                    setFilters((f) => ({ ...f, maxWalkMinutes: Number(e.target.value) }))
-                  }
-                  className="form-input"
-                >
-                  {WALK_MAX_OPTIONS.map((w) => (
-                    <option key={w.value} value={w.value}>
-                      {w.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                최근 방문
-                <select
-                  value={filters.historySkipDays}
-                  onChange={(e) =>
-                    setFilters((f) => ({ ...f, historySkipDays: Number(e.target.value) }))
-                  }
-                  className="form-input"
-                >
-                  {HISTORY_SKIP_DAYS_OPTIONS.map((h) => (
-                    <option key={h.value} value={h.value}>
-                      {h.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <div className="lunch-filters__tags">
+        <div className="lunch-c">
+          <div className="lunch-c__main">
+            <section className="lunch-chips" aria-label="오늘 조건">
+              <button
+                type="button"
+                className={`lunch-chip${filters.priceLevel === LUNCH_PRICE_WITHIN ? ' is-on is-strong' : ''}`}
+                onClick={togglePriceWithin}
+                aria-pressed={filters.priceLevel === LUNCH_PRICE_WITHIN}
+              >
+                {LUNCH_ALLOWANCE_WON.toLocaleString('ko-KR')}원 이내
+              </button>
               {Object.entries(LUNCH_TAGS).map(([key, { label, emoji }]) => (
                 <button
                   key={key}
                   type="button"
-                  className={`lunch-tag-btn${filters.tags.includes(key) ? ' is-on' : ''}`}
+                  className={`lunch-chip${filters.tags.includes(key) ? ' is-on' : ''}`}
                   onClick={() => toggleTag(key)}
+                  aria-pressed={filters.tags.includes(key)}
                 >
-                  {emoji} {label}
+                  <span aria-hidden>{emoji}</span> {label}
                 </button>
               ))}
-            </div>
-            <div className="lunch-filters__actions">
-              <button type="button" className="lunch-btn lunch-btn--cta" onClick={runPick}>
-                <RefreshCw size={18} aria-hidden />
-                다시 뽑기
-              </button>
               <button
                 type="button"
-                className="btn btn-ghost"
-                onClick={() => {
-                  persistSessionExclude(new Set());
-                  runPick();
-                }}
+                className={`lunch-chip lunch-chip--more${showMoreFilters ? ' is-open' : ''}`}
+                onClick={() => setShowMoreFilters((v) => !v)}
+                aria-expanded={showMoreFilters}
               >
-                제외 초기화
+                조건 더보기{activeExtraFilters > 0 ? ` ${activeExtraFilters}` : ''}
+                <ChevronDown size={13} aria-hidden />
               </button>
-              <button type="button" className="btn btn-ghost" onClick={clearHistory}>
-                방문 기록 삭제
-              </button>
-            </div>
-            <p className="lunch-filters__hint">
-              후보 {pick.poolSize}곳 · 세션 제외 {sessionExclude.size}곳
-            </p>
-          </section>
+            </section>
 
-          {pick.primary ? (
-            <div className="lunch-results">
-              <p className="lunch-results__notice" role="note">
-                추천 식당은 실제 식당명과 식당을 찾을 수 있도록 도움을 주는 키워드 혼합으로
-                구성되어 있습니다.
-              </p>
-
-              <SpotCard
-                spot={pick.primary}
-                variant="primary"
-                onVisit={handleVisit}
-                onExclude={handleExclude}
-                onEdit={pick.primary.source === 'custom' ? handleStartEdit : undefined}
-                onRemove={pick.primary.source === 'custom' ? handleRemoveCustom : undefined}
-              />
-              {pick.alternatives.length > 0 && (
-                <>
-                  <h2 className="lunch-results__heading">이것도 어때요?</h2>
-                  <div className="lunch-alt-grid">
-                    {pick.alternatives.map((s) => (
-                      <SpotCard
-                        key={s.id}
-                        spot={s}
-                        variant="alt"
-                        onVisit={handleVisit}
-                        onExclude={handleExclude}
-                        onEdit={s.source === 'custom' ? handleStartEdit : undefined}
-                        onRemove={s.source === 'custom' ? handleRemoveCustom : undefined}
-                      />
+            {showMoreFilters && (
+              <section className="lunch-more" aria-label="상세 조건">
+                <label>
+                  식대
+                  <select
+                    value={filters.priceLevel}
+                    onChange={(e) => setFilters((f) => ({ ...f, priceLevel: Number(e.target.value) }))}
+                    className="form-input"
+                  >
+                    {PRICE_LEVELS.map((p) => (
+                      <option key={p.value} value={p.value}>
+                        {p.label}
+                      </option>
                     ))}
-                  </div>
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="lunch-empty" role="status">
-              <span className="lunch-empty__emoji" aria-hidden>
-                🥲
-              </span>
-              <p className="lunch-empty__title">조건에 맞는 맛집이 없어요</p>
-              <p className="lunch-empty__hint">
-                {!useSeedCatalog && !nearbyKakaoAvailable
-                  ? '카카오 API 키를 설정하거나 검색 탭에서 맛집을 찾아 단골에 추가해 보세요. 단골 탭에 팀 시드가 남아 있을 수 있습니다.'
-                  : '필터를 완화하거나 제외·방문 기록을 초기화해 보세요. 반경(km)을 넓혀도 됩니다.'}
-                {seedSpots.length > 0 && !useSeedCatalog && (
+                  </select>
+                </label>
+                <label>
+                  도보
+                  <select
+                    value={filters.maxWalkMinutes}
+                    onChange={(e) => setFilters((f) => ({ ...f, maxWalkMinutes: Number(e.target.value) }))}
+                    className="form-input"
+                  >
+                    {WALK_MAX_OPTIONS.map((w) => (
+                      <option key={w.value} value={w.value}>
+                        {w.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  최근 방문
+                  <select
+                    value={filters.historySkipDays}
+                    onChange={(e) => setFilters((f) => ({ ...f, historySkipDays: Number(e.target.value) }))}
+                    className="form-input"
+                  >
+                    {HISTORY_SKIP_DAYS_OPTIONS.map((h) => (
+                      <option key={h.value} value={h.value}>
+                        {h.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div className="lunch-more__actions">
+                  <span>
+                    후보 {pick.poolSize}곳 · 오늘 제외 {sessionExclude.size}곳
+                  </span>
+                  <button type="button" className="lunch-link" onClick={() => persistSessionExclude(new Set())}>
+                    제외 초기화
+                  </button>
+                  <button
+                    type="button"
+                    className="lunch-link"
+                    onClick={() => {
+                      if (window.confirm('이 브라우저의 방문 표시를 지울까요? (서버 기록은 그대로예요)')) clearHistory();
+                    }}
+                  >
+                    브라우저 방문 표시 지우기
+                  </button>
+                </div>
+              </section>
+            )}
+
+            {heroSpot ? (
+              <>
+                <PickHero
+                  spot={heroSpot}
+                  todayVisit={todayVisit}
+                  busy={visitBusy}
+                  onChoose={handleVisit}
+                  onReroll={runPick}
+                  onExclude={handleExclude}
+                  onUndo={handleUndoToday}
+                  onEdit={heroSpot.source === 'custom' ? handleStartEdit : undefined}
+                />
+                {altSpots.length > 0 && (
                   <>
-                    {' '}
-                    여의도라면 기준 위치에서 <strong>오케스트로 (파크원타워2)</strong> 프리셋을
-                    선택하세요.
+                    <h2 className="lunch-c__heading">{todayVisit ? '다른 후보' : '이것도 괜찮아요'}</h2>
+                    <div className="lunch-mini-grid">
+                      {altSpots.map((s) => (
+                        <AltMini key={s.id} spot={s} busy={visitBusy} onChoose={handleVisit} onExclude={handleExclude} />
+                      ))}
+                    </div>
                   </>
                 )}
-                {customCount === 0 && (
-                  <>
-                    {' '}
-                    개발 서버는 <strong>localhost:3000</strong> 고정입니다. 다른 포트로
-                    접속하면 등록한 단골은 origin마다 따로 저장됩니다.
-                  </>
-                )}
-              </p>
-            </div>
-          )}
+                <p className="lunch-c__footnote">
+                  추천 식당은 실제 식당명과 찾는 데 도움이 되는 키워드가 섞여 있어요.
+                </p>
+              </>
+            ) : (
+              <div className="lunch-empty" role="status">
+                <span className="lunch-empty__emoji" aria-hidden>
+                  🥲
+                </span>
+                <p className="lunch-empty__title">조건에 맞는 맛집이 없어요</p>
+                <p className="lunch-empty__hint">
+                  {!useSeedCatalog && !nearbyKakaoAvailable
+                    ? '카카오 API 키를 설정하거나 찾기·등록에서 맛집을 단골에 추가해 보세요.'
+                    : '조건을 줄이거나 「조건 더보기」에서 제외를 초기화해 보세요.'}
+                  {seedSpots.length > 0 && !useSeedCatalog && (
+                    <>
+                      {' '}
+                      여의도라면 위치 변경에서 <strong>오케스트로 (파크원타워2)</strong>를 고르세요.
+                    </>
+                  )}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <LunchSidePanel
+            week={weekView}
+            top={topSpots}
+            serverReady={serverReady || visitsStatus === 'loading'}
+            onFind={() => setTab('find')}
+          />
         </div>
       )}
 
       {!spotsLoading && !error && tab === 'catalog' && (
-        <div className="lunch-pick-panel">
-          <p className="lunch-catalog-intro">
-            {useSeedCatalog ? (
-              <>
-                팀 시드 {seedCount}곳
-                {customCount > 0 && ` + 내가 등록 ${customCount}곳`}
-              </>
-            ) : (
-              <>
-                {origin.label} 주변 {nearbySpots.length}곳
-                {customCount > 0 && ` + 내가 등록 ${customCount}곳`}
-              </>
-            )}
-          </p>
-          <input
-            type="search"
-            className="form-input lunch-catalog-search"
-            placeholder="이름·메뉴·종류 검색"
-            value={catalogQuery}
-            onChange={(e) => setCatalogQuery(e.target.value)}
-          />
+        <div className="lunch-pick-panel lunch-pick-panel--narrow">
+          <div className="lunch-panel-head">
+            <p className="lunch-catalog-intro">
+              {useSeedCatalog ? `팀 시드 ${seedCount}곳` : `${origin.label} 주변 ${nearbySpots.length}곳`}
+              {customCount > 0 && ` + 내가 등록 ${customCount}곳`}
+            </p>
+            <input
+              type="search"
+              className="form-input lunch-catalog-search"
+              placeholder="이름·메뉴·종류 검색"
+              value={catalogQuery}
+              onChange={(e) => setCatalogQuery(e.target.value)}
+            />
+          </div>
           <div className="lunch-catalog-grid">
             {catalogFiltered.map((s) => (
               <SpotCard
                 key={s.id}
                 spot={s}
                 variant="alt"
-                onVisit={(spot) => markVisited(spot.id)}
+                onVisit={handleVisit}
                 onEdit={s.source === 'custom' ? handleStartEdit : undefined}
                 onRemove={s.source === 'custom' ? handleRemoveCustom : undefined}
               />
@@ -790,56 +1029,50 @@ export default function LunchPickPage() {
         </div>
       )}
 
-      {!spotsLoading && tab === 'search' && (
-        <div className="lunch-pick-panel">
-          <p className="lunch-search-hint">
-            검색 중심: {origin.label} · 반경 {formatRadiusKm(origin.radiusM)}
-          </p>
-          <div className="lunch-search-bar">
-            <input
-              type="search"
-              className="form-input"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && runSearch()}
-              placeholder="예: 파크원타워 맛집, 국밥"
-            />
-            <button type="button" className="btn btn-primary" onClick={runSearch} disabled={searchLoading}>
-              검색
-            </button>
-          </div>
-          {searchLoading && <p className="lunch-pick-status">검색 중…</p>}
-          {searchError && (
-            <p className="lunch-pick-status lunch-pick-status--error">{searchError}</p>
-          )}
-          <div className="lunch-catalog-grid">
-            {searchResults.map((s) => (
-              <SpotCard
-                key={s.id}
-                spot={s}
-                variant="alt"
-                onAddToCatalog={handleAddFromSearch}
+      {!spotsLoading && tab === 'find' && (
+        <div className="lunch-find">
+          <section className="lunch-pick-panel">
+            <h2 className="lunch-register-title">주변 식당 찾기</h2>
+            <p className="lunch-search-hint">
+              {origin.label} 기준 반경 {formatRadiusKm(origin.radiusM)}
+            </p>
+            <div className="lunch-search-bar">
+              <input
+                type="search"
+                className="form-input"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && runSearch()}
+                placeholder="파크원타워 맛집, 국밥"
               />
-            ))}
-          </div>
-        </div>
-      )}
+              <button type="button" className="btn btn-primary" onClick={runSearch} disabled={searchLoading}>
+                검색
+              </button>
+            </div>
+            {searchLoading && <p className="lunch-pick-status">검색 중…</p>}
+            {searchError && <p className="lunch-pick-status lunch-pick-status--error">{searchError}</p>}
+            <div className="lunch-catalog-grid">
+              {searchResults.map((s) => (
+                <SpotCard key={s.id} spot={s} variant="alt" onAddToCatalog={handleAddFromSearch} />
+              ))}
+            </div>
+          </section>
 
-      {!spotsLoading && tab === 'register' && (
-        <div className="lunch-pick-panel">
-          <h2 className="lunch-register-title">신규 식당 등록</h2>
-          <p className="lunch-register-lead">
-            등록한 식당은 이 브라우저의 단골 목록에 합쳐집니다. 팀 공유는 JSON 백업 후 시드 파일에 반영하세요.
-          </p>
-          <LunchAddSpotForm
-            onAdd={handleAddSpot}
-            submitLabel="단골에 등록"
-            searchCenter={{
-              lat: origin.center.lat,
-              lng: origin.center.lng,
-              radiusM: origin.radiusM,
-            }}
-          />
+          <section className="lunch-pick-panel">
+            <h2 className="lunch-register-title">직접 등록</h2>
+            <p className="lunch-register-lead">
+              등록한 식당은 이 브라우저의 단골 목록에 합쳐집니다. 팀 공유는 JSON 백업 후 시드 파일에 반영하세요.
+            </p>
+            <LunchAddSpotForm
+              onAdd={handleAddSpot}
+              submitLabel="단골에 등록"
+              searchCenter={{
+                lat: origin.center.lat,
+                lng: origin.center.lng,
+                radiusM: origin.radiusM,
+              }}
+            />
+          </section>
         </div>
       )}
 
