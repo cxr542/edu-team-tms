@@ -18,6 +18,7 @@ import LunchOriginSettings from '../components/LunchOriginSettings';
 import {
   DEFAULT_LUNCH_FILTERS,
   HISTORY_SKIP_DAYS_OPTIONS,
+  LUNCH_INCLUDE_KAKAO_KEY,
   LUNCH_SESSION_EXCLUDE_KEY,
   LUNCH_TAGS,
   LUNCH_ALLOWANCE_WON,
@@ -37,6 +38,7 @@ import { useLunchVisits } from '../hooks/useLunchVisits';
 import {
   buildHistoryExcludeIds,
   kakaoPlaceToSpot,
+  mergeKakaoIntoCatalog,
   recommendLunch,
 } from '../utils/lunchRecommend';
 import { probeKakaoLocal, searchKakaoLocal } from '../utils/lunchKakaoApi';
@@ -582,12 +584,28 @@ export default function LunchPickPage() {
     customPresetId,
   } = useLunchOrigin();
   const useSeedCatalog = usesYeouidoSeedCatalog(origin);
+  const [includeKakao, setIncludeKakao] = useState(() => {
+    try {
+      return localStorage.getItem(LUNCH_INCLUDE_KAKAO_KEY) !== '0';
+    } catch {
+      return true;
+    }
+  });
+  const toggleIncludeKakao = () =>
+    setIncludeKakao((v) => {
+      try {
+        localStorage.setItem(LUNCH_INCLUDE_KAKAO_KEY, v ? '0' : '1');
+      } catch {
+        /* ignore */
+      }
+      return !v;
+    });
   const {
     nearby: nearbySpots,
     loading: nearbyLoading,
     error: nearbyError,
     available: nearbyKakaoAvailable,
-  } = useLunchNearbySpots(origin, useSeedCatalog);
+  } = useLunchNearbySpots(origin, useSeedCatalog, includeKakao);
   const { addSpot, removeSpot } = useLunchCustomSpots();
 
   const seedSpots = useMemo(
@@ -601,7 +619,7 @@ export default function LunchPickPage() {
 
   /** 오늘 추천·필터용 */
   const spots = useMemo(() => {
-    if (useSeedCatalog) return seedAndCustomSpots;
+    if (useSeedCatalog) return includeKakao ? mergeKakaoIntoCatalog(seedAndCustomSpots, nearbySpots) : seedAndCustomSpots;
     const seen = new Set();
     const merged = [];
     for (const s of [...nearbySpots, ...customSpotsList]) {
@@ -610,7 +628,7 @@ export default function LunchPickPage() {
       merged.push(s);
     }
     return merged;
-  }, [useSeedCatalog, seedAndCustomSpots, nearbySpots, customSpotsList]);
+  }, [useSeedCatalog, includeKakao, seedAndCustomSpots, nearbySpots, customSpotsList]);
 
   /** 단골 탭: 팀 시드는 기준 위치와 무관하게 항상 표시 + 주변(카카오) + 내 등록 */
   const catalogSpots = useMemo(() => {
@@ -627,7 +645,8 @@ export default function LunchPickPage() {
     return merged;
   }, [useSeedCatalog, seedAndCustomSpots, seedSpots, nearbySpots, customSpotsList]);
 
-  const spotsLoading = loading || (!useSeedCatalog && nearbyLoading);
+  // 여의도에서 카카오 식당을 합칠 때도 다 불러온 뒤 뽑는다(뽑힌 식당이 바로 바뀌지 않게).
+  const spotsLoading = loading || ((!useSeedCatalog || includeKakao) && nearbyLoading);
 
   const [tab, setTab] = useState('today');
   const [showOriginSettings, setShowOriginSettings] = useState(false);
@@ -1093,6 +1112,13 @@ export default function LunchPickPage() {
                     ))}
                   </select>
                 </label>
+                {useSeedCatalog && nearbyKakaoAvailable && (
+                  <label className="lunch-more__check">
+                    <input type="checkbox" checked={includeKakao} onChange={toggleIncludeKakao} />
+                    카카오 근처 식당도 추천에 넣기
+                    {includeKakao && nearbySpots.length > 0 && <small>(카카오 {nearbySpots.length}곳 · 팀 목록 우선)</small>}
+                  </label>
+                )}
                 <div className="lunch-more__actions">
                   <span>
                     후보 {pick.poolSize}곳 · 오늘 제외 {sessionExclude.size}곳

@@ -5,6 +5,8 @@ export const LUNCH_HISTORY_KEY = 'tms-lunch-history-v1';
 export const LUNCH_SESSION_EXCLUDE_KEY = 'tms-lunch-session-exclude-v1';
 
 export const LUNCH_CUSTOM_SPOTS_KEY = 'tms-lunch-custom-spots-v1';
+/** 여의도 팀 목록에 카카오 근처 식당을 합칠지(브라우저별, 기본 켜짐) */
+export const LUNCH_INCLUDE_KAKAO_KEY = 'tms-lunch-include-kakao-v1';
 
 /** 회사 점심 식대 (원) */
 export const LUNCH_ALLOWANCE_WON = 13000;

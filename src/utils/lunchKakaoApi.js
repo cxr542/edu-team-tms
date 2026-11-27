@@ -52,7 +52,7 @@ export async function searchKakaoLocal({ query, page = 1, lat, lng, radius, purp
       const err = body.hint ? `${body.error} — ${body.hint}` : body.error || res.statusText;
       return { places: [], available: true, error: err };
     }
-    const result = { places: body.places || [], available: true };
+    const result = { places: body.places || [], available: true, isEnd: body.meta?.is_end !== false };
     writeCache(q, page, result, purpose);
     return result;
   } catch (e) {

@@ -106,7 +106,7 @@ export function pickWithPricePriority(pool, priceLevelFilter, count, random = Ma
 export function recommendLunch(spots, filters, sessionExclude, random = Math.random) {
   const excludeIds = new Set([...sessionExclude, ...(filters.excludeIds || [])]);
   const merged = { ...filters, excludeIds };
-  const pool = filterSpots(spots, merged);
+  const pool = balanceKakaoWeights(filterSpots(spots, merged));
   if (!pool.length) {
     return { primary: null, alternatives: [], poolSize: 0 };
   }
@@ -154,4 +154,48 @@ export function kakaoPlaceToSpot(place) {
     weight: 0.5,
     source: 'kakao',
   };
+}
+
+/** 카카오 장소 URL 의 장소 번호(같은 식당 판별용) */
+function kakaoPlaceIdFromUrl(url) {
+  const m = String(url || '').match(/place\.map\.kakao\.com\/(\d+)/);
+  return m ? m[1] : '';
+}
+
+const normalizeSpotName = (name) => String(name || '').replace(/\s+/g, '').toLowerCase();
+
+/**
+ * 팀 목록에 카카오 근처 식당을 덧붙인다. 같은 식당(이름 또는 카카오 장소 번호가 같음)은 팀 목록 것을 남긴다.
+ * 가중치는 뽑을 때(balanceKakaoWeights) 조건을 거친 후보 기준으로 낮춘다.
+ * @param {LunchSpot[]} base
+ * @param {LunchSpot[]} kakao
+ */
+export function mergeKakaoIntoCatalog(base, kakao) {
+  const names = new Set(base.map((s) => normalizeSpotName(s.name)));
+  const placeIds = new Set(base.map((s) => kakaoPlaceIdFromUrl(s.mapUrl)).filter(Boolean));
+  const ids = new Set(base.map((s) => s.id));
+  const extra = kakao.filter((s) => {
+    if (ids.has(s.id) || names.has(normalizeSpotName(s.name))) return false;
+    const pid = kakaoPlaceIdFromUrl(s.mapUrl);
+    return !(pid && placeIds.has(pid));
+  });
+  return extra.length ? [...base, ...extra] : base;
+}
+
+const KAKAO_SHARE = 0.3;
+
+/**
+ * 카카오 식당은 메뉴·가격·태그가 없으니, 후보 안에서 카카오 식당 가중치 합이
+ * 팀 식당 가중치 합의 30%를 넘지 않게 낮춘다(팀 식당이 없으면 그대로).
+ * @param {LunchSpot[]} pool
+ */
+export function balanceKakaoWeights(pool) {
+  const kakao = pool.filter((s) => s.source === 'kakao');
+  if (!kakao.length || kakao.length === pool.length) return pool;
+  const teamWeight = pool.reduce((sum, s) => (s.source === 'kakao' ? sum : sum + (s.weight ?? 1)), 0);
+  const kakaoWeight = kakao.reduce((sum, s) => sum + (s.weight ?? 1), 0);
+  const cap = teamWeight * KAKAO_SHARE;
+  if (kakaoWeight <= cap) return pool;
+  const ratio = cap / kakaoWeight;
+  return pool.map((s) => (s.source === 'kakao' ? { ...s, weight: (s.weight ?? 1) * ratio } : s));
 }

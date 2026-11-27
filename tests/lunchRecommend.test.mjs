@@ -3,7 +3,9 @@ import { LUNCH_PRICE_OVER, LUNCH_PRICE_UNKNOWN, LUNCH_PRICE_WITHIN } from '../sr
 import {
   buildHistoryExcludeIds,
   filterSpots,
+  balanceKakaoWeights,
   kakaoPlaceToSpot,
+  mergeKakaoIntoCatalog,
   pickWeightedRandom,
   pickWithPricePriority,
   recommendLunch,
@@ -146,5 +148,39 @@ describe('filterSpots', () => {
       excludeIds: new Set(),
     });
     expect(list.map((s) => s.id).sort()).toEqual(['a', 'c']);
+  });
+});
+
+describe('mergeKakaoIntoCatalog', () => {
+  const team = [
+    { id: 't1', name: '여의도 순대국', weight: 1, mapUrl: 'http://place.map.kakao.com/111' },
+    { id: 't2', name: '백반마을', weight: 1 },
+  ];
+  const kakao = (id, name, url) => ({ id: `kakao-${id}`, name, weight: 0.5, source: 'kakao', mapUrl: url });
+
+  it('같은 이름(공백 무시)이나 같은 카카오 장소는 팀 목록 것만 남긴다', () => {
+    const out = mergeKakaoIntoCatalog(team, [
+      kakao('1', '여의도순대국', 'http://place.map.kakao.com/999'),
+      kakao('2', '다른이름', 'http://place.map.kakao.com/111'),
+      kakao('3', '새식당', 'http://place.map.kakao.com/333'),
+    ]);
+    expect(out.map((s) => s.id)).toEqual(['t1', 't2', 'kakao-3']);
+  });
+
+  it('뽑을 후보 안에서 카카오 식당 가중치 합은 팀 식당 합의 30% 이하', () => {
+    const many = Array.from({ length: 45 }, (_, i) => kakao(`n${i}`, `식당${i}`, ''));
+    const pool = balanceKakaoWeights(mergeKakaoIntoCatalog(team, many));
+    const kakaoWeight = pool.filter((s) => s.source === 'kakao').reduce((a, s) => a + s.weight, 0);
+    expect(pool).toHaveLength(47);
+    expect(kakaoWeight).toBeCloseTo(0.6, 9);
+    // 이미 충분히 낮으면 그대로, 팀 식당이 없으면 그대로
+    const few = [...team, kakao('x', '한곳', '')].map((s) => ({ ...s, weight: s.source ? 0.1 : 1 }));
+    expect(balanceKakaoWeights(few)).toBe(few);
+    const onlyKakao = [kakao('y', 'a', ''), kakao('z', 'b', '')];
+    expect(balanceKakaoWeights(onlyKakao)).toBe(onlyKakao);
+  });
+
+  it('카카오 결과가 없으면 팀 목록 그대로', () => {
+    expect(mergeKakaoIntoCatalog(team, [])).toBe(team);
   });
 });
